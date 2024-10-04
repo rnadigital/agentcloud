@@ -204,6 +204,19 @@ export async function addAgentApi(req, res, next) {
 		req.params.resourceSlug
 	);
 
+	const existingVariablePromises = variableIds.map(async (id: string) => {
+		const variable = await getVariableById(req.params.resourceSlug, id);
+		if (!variable) {
+			throw new Error(`Variable with ID ${id} not found`);
+		}
+	});
+
+	try {
+		await Promise.all(existingVariablePromises);
+	} catch (error) {
+		return dynamicResponse(req, res, 400, { error: error.message });
+	}
+
 	const addedAgent = await addAgent({
 		_id: newAgentId,
 		orgId: res.locals.matchingOrg.id,
@@ -317,6 +330,19 @@ export async function editAgentApi(req, res, next) {
 
 	if (!agent) {
 		return dynamicResponse(req, res, 400, { error: 'AgentId not valid' });
+	}
+
+	const existingVariablePromises = variableIds.map(async (id: string) => {
+		const variable = await getVariableById(req.params.resourceSlug, id);
+		if (!variable) {
+			throw new Error(`Variable with ID ${id} not found`);
+		}
+	});
+
+	try {
+		await Promise.all(existingVariablePromises);
+	} catch (error) {
+		return dynamicResponse(req, res, 400, { error: error.message });
 	}
 
 	const existingVariableIds = new Set(agent?.variableIds?.map(v => v.toString()) || []);

@@ -266,6 +266,19 @@ export async function addTaskApi(req, res, next) {
 		variable: toObjectId(field.variable)
 	}));
 
+	const existingVariablePromises = variableIds.map(async (id: string) => {
+		const variable = await getVariableById(req.params.resourceSlug, id);
+		if (!variable) {
+			throw new Error(`Variable with ID ${id} not found`);
+		}
+	});
+
+	try {
+		await Promise.all(existingVariablePromises);
+	} catch (error) {
+		return dynamicResponse(req, res, 400, { error: error.message });
+	}
+
 	const addedTask = await addTask({
 		orgId: res.locals.matchingOrg.id,
 		teamId: toObjectId(req.params.resourceSlug),
@@ -432,6 +445,20 @@ export async function editTaskApi(req, res, next) {
 	const existingVariableIds = new Set((existingTask?.variableIds || []).map(v => v.toString()));
 	const newVariableIds = new Set(variableIds);
 	const newVariableIdsArray = Array.from([...existingVariableIds, ...newVariableIds]);
+
+	const existingVariablePromises = newVariableIdsArray.map(async (id: string) => {
+		const variable = await getVariableById(req.params.resourceSlug, id);
+		console.log(variable);
+		if (!variable) {
+			throw new Error(`Variable with ID ${id} not found`);
+		}
+	});
+
+	try {
+		await Promise.all(existingVariablePromises);
+	} catch (error) {
+		return dynamicResponse(req, res, 400, { error: error.message });
+	}
 
 	if (newVariableIdsArray.length > 0) {
 		const updatePromises = newVariableIdsArray.map(async (id: string) => {

@@ -125,16 +125,16 @@ export default function CrewAppForm({
 	const taskIDs = tasksState?.map(t => t.value);
 	const selectedTasks = taskIDs?.map(t => taskChoices.find(tc => tc._id === t));
 	const variableIdsOfSelectedTasks = selectedTasks?.map(t => t?.variableIds || []).flat();
-	const variablesOfSelectedTasks = variableIdsOfSelectedTasks?.map(v =>
-		variableChoices?.find(vc => vc._id === v)
-	);
+	const variablesOfSelectedTasks = variableIdsOfSelectedTasks
+		?.map(v => variableChoices?.find(vc => vc._id === v))
+		.filter(v => v !== undefined);
 
 	const agentIds = agentsState?.map(a => a.value);
 	const selectedAgents = agentIds?.map(a => agentChoices.find(ac => ac._id === a));
 	const variableIdsOfSelectedAgents = selectedAgents?.map(a => a?.variableIds || []).flat();
-	const variablesOfSelectedAgents = variableIdsOfSelectedAgents?.map(v =>
-		variableChoices?.find(vc => vc._id === v)
-	);
+	const variablesOfSelectedAgents = variableIdsOfSelectedAgents
+		?.map(v => variableChoices?.find(vc => vc._id === v))
+		.filter(v => v !== undefined);
 
 	const combinedVariables = Array.from(
 		new Set([...(variablesOfSelectedTasks || []), ...(variablesOfSelectedAgents || [])])

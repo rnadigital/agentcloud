@@ -89,7 +89,7 @@ export async function sessionData(req, res, _next) {
 				const variables = await Promise.all(variablePromise);
 
 				variables.forEach(variable => {
-					if (!crewAppVariables.some(v => (v._id as ObjectId).equals(variable._id))) {
+					if (variable && !crewAppVariables.some(v => (v._id as ObjectId).equals(variable._id))) {
 						crewAppVariables.push(variable);
 					}
 				});
