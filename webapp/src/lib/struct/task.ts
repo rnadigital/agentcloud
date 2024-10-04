@@ -43,4 +43,5 @@ export interface Task {
 	isStructuredOutput?: boolean;
 	displayOnlyFinalOutput?: boolean;
 	variableIds?: (ObjectId | string)[];
+	dateCreated?: Date;
 }
