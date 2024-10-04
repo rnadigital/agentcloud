@@ -172,10 +172,10 @@ export async function discoverSchemaApi(req, res, next) {
 }
 
 function extractWebhookDetails(responseData) {
-	const jobId = responseData.data.jobId || '';
-	const datasourceId = responseData.data.connection ? responseData.data.connection.id : '';
-	const recordsLoaded = responseData.data.recordsCommitted || 0;
-	const logUrl = responseData.data.connection ? responseData.data.connection.url : '';
+	const jobId = responseData?.data?.jobId || '';
+	const datasourceId = responseData?.data?.connection?.id || '';
+	const recordsLoaded = responseData?.data?.recordsCommitted || 0;
+	const logUrl = responseData?.data?.connection?.url || '';
 	return { jobId, datasourceId, recordsLoaded, logUrl };
 }
 
