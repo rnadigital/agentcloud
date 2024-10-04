@@ -226,7 +226,8 @@ export async function addAgentApi(req, res, next) {
 					linkedId: newAgentId
 				}
 			: null,
-		variableIds: (variableIds || []).map(toObjectId)
+		variableIds: (variableIds || []).map(toObjectId),
+		dateCreated: new Date()
 	});
 
 	if (variableIds && variableIds.length > 0) {
