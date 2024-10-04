@@ -375,7 +375,8 @@ export async function addAppApi(req, res, next) {
 				maxRPM: null,
 				verbose: false,
 				allowDelegation: false,
-				variableIds: (variableIds || []).map(toObjectId)
+				variableIds: (variableIds || []).map(toObjectId),
+				dateCreated: new Date()
 			});
 		} else {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
@@ -650,7 +651,8 @@ export async function editAppApi(req, res, next) {
 				maxRPM: null,
 				verbose: false,
 				allowDelegation: false,
-				variableIds: (variableIds || []).map(toObjectId)
+				variableIds: (variableIds || []).map(toObjectId),
+				dateCreated: new Date()
 			});
 		} else {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });

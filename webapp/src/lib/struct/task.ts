@@ -45,4 +45,5 @@ export interface Task {
 	displayOnlyFinalOutput?: boolean;
 	variableIds?: (ObjectId | string)[];
 	taskOutputVariableName?: string;
+	dateCreated?: Date;
 }

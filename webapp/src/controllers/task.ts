@@ -303,6 +303,7 @@ export async function addTaskApi(req, res, next) {
 		formFields: formFieldsWithObjectIdVariables,
 		isStructuredOutput,
 		variableIds: (variableIds || []).map(toObjectId),
+		dateCreated: new Date(),
 		taskOutputVariableName
 	});
 
