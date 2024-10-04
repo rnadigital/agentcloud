@@ -25,7 +25,7 @@ async function getAirbyteInternalApi() {
 		}
 	});
 	client = await api.init();
-	client.defaults.baseURL = `${process.env.AIRBYTE_WEB_URL}/api`;
+	client.defaults.baseURL = `${process.env.AIRBYTE_API_URL}/api`;
 	return client;
 }
 

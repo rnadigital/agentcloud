@@ -1,6 +1,6 @@
 'use strict';
 
-import { getAirbyteAuthToken } from 'airbyte/api';
+import getAirbyteInternalApi from './internal';
 
 //TODO: can we download this json or will it change? Will it break things?
 export default async function getConnectors() {
@@ -10,33 +10,18 @@ export default async function getConnectors() {
 }
 
 export async function getConnectorSpecification(sourceDefinitionId: string) {
-	let schema;
-	try {
-		const body = {
-			workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID,
-			sourceDefinitionId: sourceDefinitionId
-		};
-		const res = await fetch(
-			`${process.env.AIRBYTE_WEB_URL}/api/v1/source_definition_specifications/get`,
-			{
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					Authorization: `Bearer ${await getAirbyteAuthToken()}`
-				},
-				body: JSON.stringify(body)
-			}
-		);
-		schema = await res.json();
-		console.log('schema', JSON.stringify(schema, null, 2));
-		if (schema.connectionSpecification) {
-			schema.connectionSpecification.$schema = 'http://json-schema.org/draft-07/schema#';
-		}
-	} catch (e) {
-		console.error(e);
-		schema = null;
+	const internalApi = await getAirbyteInternalApi();
+	const getSourceDefinitionSpecificationBody = {
+		workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID,
+		sourceDefinitionId: sourceDefinitionId
+	}
+	const sourceDefinitionRes = await internalApi
+		.getSourceDefinitionSpecification(null, getSourceDefinitionSpecificationBody)
+		.then(res => res.data);
+	if (sourceDefinitionRes.connectionSpecification) {
+		sourceDefinitionRes.connectionSpecification.$schema = 'http://json-schema.org/draft-07/schema#';
 	}
 	return {
-		schema
+		schema: sourceDefinitionRes
 	};
 }

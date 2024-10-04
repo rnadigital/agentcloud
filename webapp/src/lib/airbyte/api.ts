@@ -74,7 +74,9 @@ async function getAirbyteApi(type: AirbyteApiType) {
 		}
 	});
 	const client = await api.init();
-	client.defaults.baseURL = `${process.env.AIRBYTE_WEB_URL}/api/public/v1`;
+	if (process.env.AIRBYTE_WEB_URL !== 'https://api.airbyte.com') {
+		client.defaults.baseURL = `${process.env.AIRBYTE_WEB_URL}/api/public/v1`;
+	}
 	return (apiCache[type] = client);
 }
 

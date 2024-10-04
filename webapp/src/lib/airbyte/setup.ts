@@ -9,9 +9,9 @@ import * as dns from 'node:dns';
 import * as util from 'node:util';
 const lookup = util.promisify(dns.lookup);
 
-import { getAirbyteAuthToken } from 'airbyte/api';
-import { parse } from 'ip6addr';
+import getAirbyteApi, { AirbyteApiType, getAirbyteAuthToken } from 'airbyte/api';
 import SecretProviderFactory from 'lib/secret';
+import getAirbyteInternalApi from './internal';
 
 dotenv.config({ path: '.env' });
 
@@ -23,80 +23,16 @@ logdebug.log = console.debug.bind(console);
 const logerror = debug('webapp:airbyte:setup:error');
 logerror.log = console.error.bind(console);
 
-const authorizationHeader = `Basic ${Buffer.from(`${process.env.AIRBYTE_USERNAME.trim()}:${process.env.AIRBYTE_PASSWORD.trim()}`).toString('base64')}`;
 const provider = process.env.MESSAGE_QUEUE_PROVIDER;
 export const destinationDefinitionId =
 	provider === 'rabbitmq'
 		? 'e06ad785-ad6f-4647-b2e8-3027a5c59454' // RabbitMQ destination id
 		: '356668e2-7e34-47f3-a3b0-67a8a481b692'; // Google Pub/Sub destination id
 
-// Function to fetch instance configuration
-async function fetchInstanceConfiguration() {
-	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/api/v1/instance_configuration`, {
-		headers: { Authorization: authorizationHeader }
-	});
-	if (!response || response.status !== 200) {
-		log('Unable to fetch airbyte instance configuration, waiting & restarting...');
-		await new Promise(res => setTimeout(res, 60000));
-		process.exit(1);
-	}
-	return response.json();
-}
-
-// Function to skip the setup screen
-async function skipSetupScreen() {
-	const response = await fetch(
-		`${process.env.AIRBYTE_WEB_URL}/api/v1/instance_configuration/setup`,
-		{
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				Authorization: authorizationHeader
-			},
-			body: JSON.stringify({
-				email: 'example@example.org',
-				anonymousDataCollection: false,
-				securityCheck: 'ignored',
-				organizationName: 'example',
-				initialSetupComplete: true,
-				displaySetupWizard: false
-			})
-		}
-	);
-	return response.json();
-}
-
 // Function to fetch workspaces
 async function fetchWorkspaces() {
-	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/api/public/v1/workspaces`, {
-		method: 'GET',
-		headers: { Authorization: `Bearer ${await getAirbyteAuthToken()}` }
-	});
-	return response.json();
-}
-
-// Function to fetch applications
-async function fetchApplications() {
-	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/api/public/v1/applications`, {
-		method: 'GET',
-		headers: { Authorization: `Bearer ${await getAirbyteAuthToken()}` }
-	});
-	return response.json();
-}
-
-// Function to fetch applications
-export async function listLatestSourceDefinitions() {
-	const response = await fetch(
-		`${process.env.AIRBYTE_WEB_URL}/api/v1/source_definitions/list_latest`,
-		{
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				Authorization: `Bearer ${await getAirbyteAuthToken()}`
-			}
-		}
-	);
-	return response.json();
+	const workspacesApi = await getAirbyteApi(AirbyteApiType.WORKSPACES);
+	return workspacesApi.listWorkspaces().then(res => res.data);
 }
 
 // Function to fetch the destination list
@@ -149,20 +85,6 @@ async function deleteDestination(destinationId: string) {
 async function getDestinationConfiguration(provider: string) {
 	if (provider === 'rabbitmq') {
 		let host: any = process.env.AIRBYTE_RABBITMQ_HOST || process.env.RABBITMQ_HOST || '0.0.0.0';
-		try {
-			//Note: just parsing to see if it throws, we don't need to actually know the ip kind
-			const ipParsed = parse(host);
-			const ipKind = ipParsed.kind();
-		} catch (e) {
-			// host = (await lookup(host, { family: 4 }))?.address;
-			// if (!host) {
-			// 	log(
-			// 		'Error getting host in getDestinationConfiguration host: %s, process.env.AIRBYTE_RABBITMQ_HOST: %s',
-			// 		host,
-			// 		process.env.AIRBYTE_RABBITMQ_HOST
-			// 	);
-			// }
-		}
 		log('getDestinationConfiguration host %s', host);
 		return {
 			routing_key: 'key',
@@ -214,76 +136,45 @@ async function getDestinationConfiguration(provider: string) {
 
 // Function to update webhook URLs
 async function updateWebhookUrls(workspaceId: string) {
-	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/api/v1/workspaces/update`, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-			Authorization: `Bearer ${await getAirbyteAuthToken()}`
-		},
-		body: JSON.stringify({
-			workspaceId,
-			notificationSettings: {
-				sendOnSuccess: {
-					notificationType: ['slack'],
-					slackConfiguration: {
-						webhook: `${process.env.WEBAPP_WEBHOOK_HOST || process.env.URL_APP}/webhook/sync-successful`
-					}
-				},
-				sendOnBreakingChangeSyncsDisabled: {
-					notificationType: ['slack'],
-					slackConfiguration: {
-						webhook: `${process.env.WEBAPP_WEBHOOK_HOST || process.env.URL_APP}/webhook/sync-problem?event=sendOnBreakingChangeSyncsDisabled`
-					}
-				},
-				sendOnBreakingChangeWarning: {
-					notificationType: ['slack'],
-					slackConfiguration: {
-						webhook: `${process.env.WEBAPP_WEBHOOK_HOST || process.env.URL_APP}/webhook/sync-problem?event=sendOnBreakingChangeWarning`
-					}
-				},
-				sendOnFailure: {
-					notificationType: ['slack'],
-					slackConfiguration: {
-						webhook: `${process.env.WEBAPP_WEBHOOK_HOST || process.env.URL_APP}/webhook/sync-problem?event=sendOnFailure`
-					}
+	const internalApi = await getAirbyteInternalApi();
+	const updateWorkspaceBody = {
+		workspaceId,
+		notificationSettings: {
+			sendOnSuccess: {
+				notificationType: ['slack'],
+				slackConfiguration: {
+					webhook: `${process.env.WEBAPP_WEBHOOK_HOST || process.env.URL_APP}/webhook/sync-successful`
+				}
+			},
+			sendOnBreakingChangeSyncsDisabled: {
+				notificationType: ['slack'],
+				slackConfiguration: {
+					webhook: `${process.env.WEBAPP_WEBHOOK_HOST || process.env.URL_APP}/webhook/sync-problem?event=sendOnBreakingChangeSyncsDisabled`
+				}
+			},
+			sendOnBreakingChangeWarning: {
+				notificationType: ['slack'],
+				slackConfiguration: {
+					webhook: `${process.env.WEBAPP_WEBHOOK_HOST || process.env.URL_APP}/webhook/sync-problem?event=sendOnBreakingChangeWarning`
+				}
+			},
+			sendOnFailure: {
+				notificationType: ['slack'],
+				slackConfiguration: {
+					webhook: `${process.env.WEBAPP_WEBHOOK_HOST || process.env.URL_APP}/webhook/sync-problem?event=sendOnFailure`
 				}
 			}
-		})
-	});
-	return response.json();
+		}
+	};
+	const updateWorkspaceRes = await internalApi
+		.updateWorkspace(null, updateWorkspaceBody)
+		.then(res => res.data);
+	return updateWorkspaceRes;
 }
 
 // Main logic to handle Airbyte setup and configuration
 export async function init() {
 	try {
-		if (!process.env.AIRBYTE_CLIENT_ID || !process.env.AIRBYTE_CLIENT_SERET) {
-			const existingApplications = await fetchApplications();
-			const defaultApplication = existingApplications.applications.find(
-				app => app?.name === 'Default User Application'
-			);
-			if (!defaultApplication) {
-				log(
-					'AIRBYTE_CLIENT_ID or AIRBYTE_CLIENT_SECRET not set and default application not found in airbyte api'
-				);
-				process.exit(1);
-			}
-			process.env.AIRBYTE_CLIENT_ID = defaultApplication.clientId;
-			process.env.AIRBYTE_CLIENT_SECRET = defaultApplication.clientSecret;
-		}
-
-		// Get instance configuration
-		const instanceConfiguration = await fetchInstanceConfiguration();
-		log('instanceConfiguration', instanceConfiguration);
-
-		const initialSetupComplete = instanceConfiguration.initialSetupComplete;
-
-		log('INITIAL_SETUP_COMPLETE', initialSetupComplete);
-
-		if (!initialSetupComplete) {
-			log('Skipping airbyte setup screen...');
-			await skipSetupScreen();
-		}
-
 		// Get workspaces
 		const workspacesList = await fetchWorkspaces();
 		log('workspacesList: %s', workspacesList);
@@ -353,6 +244,7 @@ export async function init() {
 		// Update webhook URLs
 		const updatedWebhookUrls = await updateWebhookUrls(airbyteAdminWorkspaceId);
 		log('UPDATED_WEBHOOK_URLS', JSON.stringify(updatedWebhookUrls));
+
 	} catch (error) {
 		logerror('Error during Airbyte configuration:', error);
 	}
