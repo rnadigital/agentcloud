@@ -38,7 +38,7 @@ async function fetchWorkspaces() {
 // Function to fetch the destination list
 async function fetchDestinationList(workspaceId: string) {
 	const response = await fetch(
-		`${process.env.AIRBYTE_WEB_URL}/api/public/v1/destinations?workspaceId=${encodeURIComponent(workspaceId)}`,
+		`${process.env.AIRBYTE_API_URL}/api/public/v1/destinations?workspaceId=${encodeURIComponent(workspaceId)}`,
 		{
 			method: 'GET',
 			headers: {
@@ -53,7 +53,7 @@ async function fetchDestinationList(workspaceId: string) {
 // Function to create a destination
 async function createDestination(workspaceId: string, provider: string) {
 	const destinationConfiguration = await getDestinationConfiguration(provider);
-	const response = await fetch(`${process.env.AIRBYTE_WEB_URL}/api/public/v1/destinations`, {
+	const response = await fetch(`${process.env.AIRBYTE_API_URL}/api/public/v1/destinations`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -72,7 +72,7 @@ async function createDestination(workspaceId: string, provider: string) {
 // Function to deletea destination
 async function deleteDestination(destinationId: string) {
 	const response = await fetch(
-		`${process.env.AIRBYTE_WEB_URL}/api/public/v1/destinations/${destinationId}`,
+		`${process.env.AIRBYTE_API_URL}/api/public/v1/destinations/${destinationId}`,
 		{
 			method: 'DELETE',
 			headers: {

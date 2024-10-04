@@ -35,17 +35,20 @@ export async function getAirbyteAuthToken() {
 		return token;
 	}
 	log('Token not found in cache, fetching new token...');
-	return fetch(`${process.env.AIRBYTE_WEB_URL}/api/v1/applications/token`, {
-		method: 'POST',
-		headers: {
-			'content-type': 'application/json'
-		},
-		body: JSON.stringify({
-			client_id: process.env.AIRBYTE_CLIENT_ID,
-			client_secret: process.env.AIRBYTE_CLIENT_SECRET,
-			grant: 'client_credentials'
-		})
-	})
+	return fetch(
+		`${process.env.AIRBYTE_WEB_URL}${process.env.AIRBYTE_WEB_URL === 'https://api.airbyte.com' ? '' : '/api'}/v1/applications/token`,
+		{
+			method: 'POST',
+			headers: {
+				'content-type': 'application/json'
+			},
+			body: JSON.stringify({
+				client_id: process.env.AIRBYTE_CLIENT_ID,
+				client_secret: process.env.AIRBYTE_CLIENT_SECRET,
+				grant: 'client_credentials'
+			})
+		}
+	)
 		.then(res => res.json())
 		.then(async json => {
 			log('getAirbyteAuthToken json:', JSON.stringify(json, null, 2));
@@ -109,7 +112,7 @@ export async function fetchAllAirbyteJobs(options?: Partial<ListJobsBody>) {
 			hasMore = false;
 			break;
 		}
-		// if the response had a "next" property, which is a URL like 'airbyte-server:8001/api/public/v1/jobs?limit=100&offset=100'
+		// if the response had a "next" property, which is a URL like '/api/public/v1/jobs?limit=100&offset=100'
 		let newOffset;
 		try {
 			// convert to a url and extract the "offset" query string parameter
