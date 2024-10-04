@@ -171,74 +171,12 @@ export async function discoverSchemaApi(req, res, next) {
 	});
 }
 
-function extractWebhookSuccesfulDetails(data) {
-	// Initialize variables
-	let jobId = '';
-	let datasourceId = '';
-	let recordsLoaded = 0;
-
-	// Parse through each section to find relevant data
-	data.forEach(section => {
-		if (section.text && section.text.text) {
-			if (section.text.text.includes('Sync completed:')) {
-				const regex = /connections\/([\w-]+)\|([\w-]+)/;
-				const match = section.text.text.match(regex);
-				if (match) {
-					datasourceId = match[2]; // Changed to extract the ID after the pipe
-					jobId = match[1]; // Assuming the other ID is the job ID for clarity
-				}
-			}
-			if (section.text.text.includes('Sync Summary:')) {
-				const summaryRegex = /(\d+) record\(s\) loaded/;
-				const summaryMatch = section.text.text.match(summaryRegex);
-				if (summaryMatch) {
-					recordsLoaded = parseInt(summaryMatch[1], 10);
-				}
-			}
-		}
-	});
-
-	return { jobId, datasourceId, recordsLoaded };
-}
-
-function extractWebhookFailureDetails(data) {
-	// Initialize variables
-	let jobId = '';
-	let datasourceId = '';
-	let errorMessage = '';
-	let logUrl = '';
-
-	const text = data.text;
-
-	// Extract the connection ID (datasourceId)
-	const datasourceRegex = /connection ([\w]+) from/;
-	const datasourceMatch = text.match(datasourceRegex);
-	if (datasourceMatch) {
-		datasourceId = datasourceMatch[1];
-	}
-
-	// Extract the error message
-	const errorRegex = /This happened with (.+) - please review/;
-	const errorMatch = text.match(errorRegex);
-	if (errorMatch) {
-		errorMessage = errorMatch[1];
-	}
-
-	// Extract the job ID
-	const jobIdRegex = /Job ID: (\d+)/;
-	const jobIdMatch = text.match(jobIdRegex);
-	if (jobIdMatch) {
-		jobId = jobIdMatch[1];
-	}
-
-	// Extract the log URL
-	const urlRegex = /You can access its logs here: (http[^\s]+)/;
-	const urlMatch = text.match(urlRegex);
-	if (urlMatch) {
-		logUrl = urlMatch[1];
-	}
-
-	return { jobId, datasourceId, errorMessage, logUrl };
+function extractWebhookDetails(responseData) {
+	const jobId = responseData.data.jobId || '';
+	const datasourceId = responseData.data.connection ? responseData.data.connection.id : '';
+	const recordsLoaded = responseData.data.recordsCommitted || 0;
+	const logUrl = responseData.data.connection ? responseData.data.connection.url : '';
+	return { jobId, datasourceId, recordsLoaded, logUrl };
 }
 
 export async function handleSuccessfulSyncWebhook(req, res, next) {
@@ -246,9 +184,7 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 
 	//TODO: validate some kind of webhook key
 
-	const { jobId, datasourceId, recordsLoaded } = extractWebhookSuccesfulDetails(
-		req.body?.blocks || []
-	);
+	const { jobId, datasourceId, recordsLoaded } = extractWebhookDetails(req.body?.blocks || []);
 	const noDataToSync = recordsLoaded === 0;
 	if (jobId && datasourceId) {
 		const datasource = await unsafeGetDatasourceById(datasourceId);
@@ -325,11 +261,9 @@ export async function handleProblemWebhook(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
-	const { jobId, datasourceId, errorMessage, logUrl } = extractWebhookFailureDetails(
-		req.body || {}
-	);
+	const { jobId, datasourceId, logUrl } = extractWebhookDetails(req.body || {});
 
-	log('extractWebhookFailureDetails', { jobId, datasourceId, errorMessage, logUrl });
+	log('extractWebhookDetails', { jobId, datasourceId, logUrl });
 
 	if (datasourceId) {
 		const datasource = await unsafeGetDatasourceById(datasourceId);
@@ -345,7 +279,6 @@ export async function handleProblemWebhook(req, res, next) {
 			event: req.query.event,
 			properties: {
 				text: req?.body?.text, //raw text from airbytes garbage unformatted webhooks
-				errorMessage, //extracted error
 				jobId, //airbyte job id
 				datasourceId, //datasource mongo id
 				datasourceName: datasource?.name, //datasource name
