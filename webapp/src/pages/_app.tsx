@@ -64,7 +64,7 @@ export default function App({ Component, pageProps }) {
 										newestOnTop={true}
 										pauseOnFocusLoss={false}
 										pauseOnHover={true}
-										hideLoadingBar={true}
+										// hideLoadingBar={true}
 										limit={3}
 									/>
 									<ThemeProvider>
