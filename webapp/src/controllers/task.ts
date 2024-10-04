@@ -283,7 +283,8 @@ export async function addTaskApi(req, res, next) {
 			: null,
 		formFields: formFields,
 		isStructuredOutput,
-		variableIds: (variableIds || []).map(toObjectId)
+		variableIds: (variableIds || []).map(toObjectId),
+		dateCreated: new Date()
 	});
 
 	if (variableIds && variableIds.length > 0) {

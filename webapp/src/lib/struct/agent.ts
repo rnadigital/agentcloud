@@ -32,6 +32,7 @@ export type Agent = {
 	hidden?: boolean;
 	group?: any[];
 	variableIds?: (ObjectId | string)[];
+	dateCreated?: Date;
 };
 
 // export type Agent = {
