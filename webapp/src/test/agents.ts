@@ -21,13 +21,152 @@ beforeAll(()=>{
 })
 
 describe("Agents Tests", () => {
-    test.only("Add an agent", async ()=>{
+    test.only("Can't add agent with empty modelid", async ()=>{
         const account1Object = await getInitialData(accountDetails.account1_email);
 
         const teamTools = await getToolsByTeam(account1Object.resourceSlug);
         const toolIds = teamTools.map(tool => (tool._id))
 
-        console.log(toolIds);
+        let body, url, response, responseJson;
+        url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/agent/add`
+        body = {
+            toolIds,
+            name: "AddBasicAgent",
+            role: "AddBasicAgent",
+            goal: "AddBasicAgent",
+            backstory: "AddBasicAgent",
+            modelId: '', //emptymodelId
+        }
+
+        response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
+        expect(response.status).toBe(400);
+    });
+
+    test.only("Can't add agent with invalid modelid", async ()=>{
+        const account1Object = await getInitialData(accountDetails.account1_email);
+
+        const teamTools = await getToolsByTeam(account1Object.resourceSlug);
+        const toolIds = teamTools.map(tool => (tool._id))
+
+        let body, url, response, responseJson;
+        url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/agent/add`
+        body = {
+            toolIds,
+            name: "AddBasicAgent",
+            role: "AddBasicAgent",
+            goal: "AddBasicAgent",
+            backstory: "AddBasicAgent",
+            modelId: 'aaaaaaaaaaaaaaaaaaaaaaaa', //this modelId doesn't exist
+        }
+
+        response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
+        expect(response.status).toBe(400);
+    });
+
+    test.only("add with valid modelId", async ()=>{
+        const account1Object = await getInitialData(accountDetails.account1_email);
+        let body, url, response, responseJson;
+        url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/model/add`;
+		body = {
+			name: 'testModel1',
+			model: 'gpt-4o',
+			config: {
+				model: 'gpt-4o',
+				api_key: 'abcdefg'
+			},
+			type: ModelType.OPENAI
+		};
+
+		const addModelResponse = await makeFetch(
+			url,
+			fetchTypes.POST,
+			accountDetails.account1_email,
+			body
+		);
+
+        expect(addModelResponse.status).toBe(200);
+        responseJson = await addModelResponse.json();
+        expect(responseJson?._id).toBeDefined();
+        const modelId = responseJson._id; //the added item ID of the model
+
+        const teamTools = await getToolsByTeam(account1Object.resourceSlug);
+        const toolIds = teamTools.map(tool => (tool._id))
+
+        url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/agent/add`
+        body = {
+            toolIds,
+            name: "AddBasicAgent",
+            role: "AddBasicAgent",
+            goal: "AddBasicAgent",
+            backstory: "AddBasicAgent",
+            modelId
+        }
+
+        response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
+        expect(response.status).toBe(200); //successfully add model
+        responseJson = await response.json();
+        expect(responseJson?._id).toBeDefined(); //make sure that the 200 response isn't a redirect to login or any other response than a success for adding agent
+
+        //clean up tests by removing agent and model that were added
+        url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/agent/${responseJson._id}`;
+        body={
+            agentId: responseJson._id
+        };
+        response = await makeFetch(url, fetchTypes.DELETE, accountDetails.account1_email, body);
+        expect(response.status).toBe(200);
+
+        url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/model/${modelId}`;
+        body = {
+            modelId
+        }
+
+        response = await makeFetch(url, fetchTypes.DELETE, accountDetails.account1_email, body);
+        expect(response.status).toBe(200);
+    });
+
+    test.only("can't add agent with invalid permissions", async ()=>{
+        const account1Object = await getInitialData(accountDetails.account1_email);
+        let body, url, response, responseJson;
+        url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/model/add`;
+		body = {
+			name: 'testModel1',
+			model: 'gpt-4o',
+			config: {
+				model: 'gpt-4o',
+				api_key: 'abcdefg'
+			},
+			type: ModelType.OPENAI
+		};
+
+		const addModelResponse = await makeFetch(
+			url,
+			fetchTypes.POST,
+			accountDetails.account1_email,
+			body
+		);
+
+        expect(addModelResponse.status).toBe(200);
+        responseJson = await addModelResponse.json();
+        expect(responseJson?._id).toBeDefined();
+        const modelId = responseJson._id; //the added item ID of the model
+
+        const teamTools = await getToolsByTeam(account1Object.resourceSlug);
+        const toolIds = teamTools.map(tool => (tool._id))
+
+        url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/agent/add`
+        body = {
+            toolIds,
+            name: "AddBasicAgent",
+            role: "AddBasicAgent",
+            goal: "AddBasicAgent",
+            backstory: "AddBasicAgent",
+            modelId
+        }
+
+        response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
+        expect(response.status).toBe(200); //successfully add model
+        responseJson = await response.json();
+        expect(responseJson?._id).toBeDefined(); //make sure that the 200 response isn't a redirect to login or any other response than a success for adding agent
     });
 
     test.only("Update an agent", async ()=>{
@@ -39,10 +178,6 @@ describe("Agents Tests", () => {
     });
 
     test.only("Can't edit agent without permissions", async ()=>{
-
-    });
-
-    test.only("Add an agent with invalid body", async ()=>{
 
     });
 

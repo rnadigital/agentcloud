@@ -34,7 +34,7 @@ afterAll(async () => {
 				accountDetails.account11_email
 			] 
 		}
-	});
+	});   
 	await db.client().close();
 });
 

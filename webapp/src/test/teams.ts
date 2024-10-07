@@ -40,10 +40,8 @@ describe('team tests', () => {
 
 		const stripeCustomerId = 'sk_12345'; //testing flags set stripe customer ID to null, need to set it to set the plan
 		const plan = SubscriptionPlan.TEAMS;
-		setStripeCustomerId(initialData?.accountData?.account?._id, stripeCustomerId);
-		setStripePlan(stripeCustomerId, plan);
-
-		const newAccount = await getAccountByEmail(accountDetails.account1_email);
+		await setStripeCustomerId(initialData?.accountData?.account?._id, stripeCustomerId);
+		await setStripePlan(stripeCustomerId, plan);
 
 		const url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/team/add`;
 		const body = {
@@ -54,6 +52,7 @@ describe('team tests', () => {
 		const response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
 
 		const responseJson = await response.json();
+		console.log(responseJson);
 		expect(response.status).toBe(200);
 		expect(responseJson?._id).toBeDefined();
 		expect(responseJson?.orgId).toBeDefined();
@@ -191,6 +190,23 @@ describe('team tests', () => {
 		const addAgentResponse = await response.json();
 		expect(addAgentResponse?.redirect).toBeDefined();
 		expect(addAgentResponse?._id).toBeDefined();
+		
+
+		//clean up the db by deleting all the added elements
+		
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/agent/${addAgentResponse._id}`;
+		body={
+			agentId: addAgentResponse._id
+		}
+		response = await makeFetch(url, fetchTypes.DELETE, accountDetails.account1_email, body);
+		expect(response.status).toBe(200);
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/model/${addModelResponseJson._id}`;
+		body={
+			modelId: addModelResponseJson._id
+		}
+		response= await makeFetch(url, fetchTypes.DELETE, accountDetails.account1_email, body);
+		expect(response.status).toBe(200);
+		
 	});
 
 	test.only('testing TEAM_ADMIN permissions', async () => {
@@ -340,6 +356,5 @@ describe('team tests', () => {
 			}
 		}
 	
-		const teamMembers = await getTeamWithMembers(resourceSlug);
 	});
 });

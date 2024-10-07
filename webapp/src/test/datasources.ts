@@ -3,7 +3,7 @@ import * as db from '../db/index';
 import { addTeam, getTeamById, getTeamWithMembers } from '../db/team';
 import { getAccountByEmail, setStripeCustomerId, setStripePlan } from '../db/account';
 import { SubscriptionPlan } from '../lib/struct/billing';
-import { getInitialData, makeFetch, fetchTypes, accountDetails, setInitialData, updateAllAccountCsrf } from './helpers';
+import { getInitialData, makeFetch, fetchTypes, accountDetails, setInitialData, updateAllAccountCsrf, wait } from './helpers';
 import dotenv from 'dotenv';
 import { URLSearchParams } from 'url';
 import toObjectId from '../lib/misc/toobjectid';
@@ -21,17 +21,20 @@ beforeAll(()=>{
     updateAllAccountCsrf();
 })
 
+const SECONDS = 1000;
+
 describe("Datasource Tests", () => {
 
     test.only("Upload a file", async ()=>{
         const account1Object = await getInitialData(accountDetails.account1_email);
         //create model to be used for embedding
+        let body;
         let url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/model/add`;
         let config = {
             model: 'fast-bge-small-en',
             api_key: 'abcdefg'
         }
-	    let body = {
+	    body = {
 			name: 'testModel1',
 			model: 'fast-bge-small-en',
 			config: config,
@@ -83,15 +86,36 @@ describe("Datasource Tests", () => {
             body: formData
         })
 
-        console.log(response);
         expect(response.status).toBe(200);
 
         responseJson = await response.json();
 
-        console.log(responseJson);
 
         expect(responseJson?.datasourceId).toBeDefined();
-    });
+        const datasourceId = responseJson.datasourceId;
+        
+        // //TODO: find a better way to wait for embedding to be completed
+        // let ready=false;
+        // while(!ready){
+        //     url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/datasource/${datasourceId}.json`
+        //     response = await makeFetch(url, fetchTypes.GET, accountDetails.account1_email);
+        //     responseJson = await response.json();
+        //     if(responseJson?.status === "ready"){
+        //         ready = true;
+        //         break;
+        //     }
+        //     else{
+        //         wait(1 * SECONDS); //wait 1 second if the datasource isn't ready
+        //     }
+        // };
+        //once the datasource is classed as ready then delete it to clean up the db and the vector-db
+        url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/datasource/${datasourceId}`;
+        body={
+            datasourceId
+        };
+        response = await makeFetch(url, fetchTypes.DELETE, accountDetails.account1_email, body);
+        expect(response.status).toBe(200);
+    }, 60 * SECONDS);
 
 
     test.only("Make Connection", async () => {//make a connection with airbyte
