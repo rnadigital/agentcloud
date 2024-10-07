@@ -48,18 +48,30 @@ export default function Session(props: SessionProps) {
 	const activeTask = useActiveTask(messages);
 	const requiredHumanInput = activeTask?.requiresHumanInput;
 
-	const bottomRef = useRef<HTMLDivElement>(null);
-
-	const paramsArray =
-		app?.variables &&
-		app.variables
-			.filter(v => app.kickOffVariablesIds?.map(id => id.toString()).includes(v.id.toString()))
-			.map(v => ({ name: v.name, defaultValue: v.defaultValue, id: v.id }));
-
 	const [sessionVariableFormOpen, setSessionVariableFormOpen] = useState(false);
 
+	const bottomRef = useRef<HTMLDivElement>(null);
+	const extractVariableInfo = v => ({
+		name: v.name,
+		defaultValue: v.defaultValue,
+		id: v.id
+	});
+
+	const kickOffVariableIds = app?.kickOffVariablesIds?.map(id => id.toString()) || [];
+
+	const paramsArray = app?.variables
+		?.filter(v => {
+			if (app?.type === AppType.CHAT) {
+				return true;
+			}
+			return kickOffVariableIds.includes(v.id.toString());
+		})
+		.map(extractVariableInfo);
+
 	useEffect(() => {
-		const appHasVariables = app?.kickOffVariablesIds?.length > 0 && messages.length === 0;
+		const hasKickOffVariables = kickOffVariableIds.length > 0 && messages.length === 0;
+		const isChatType = app?.type === AppType.CHAT;
+		const appHasVariables = hasKickOffVariables || (isChatType && paramsArray.length > 0);
 		setSessionVariableFormOpen(appHasVariables);
 	}, [app, sessionId]);
 
