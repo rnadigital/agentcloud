@@ -47,6 +47,7 @@ export type Account = {
 	oauth?: OAuthRecordType;
 	permissions: Binary;
 	onboarded: boolean;
+	dateCreated?: Date;
 };
 
 export function AccountCollection(): any {
