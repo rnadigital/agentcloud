@@ -144,11 +144,10 @@ async function main() {
 				try {
 					const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
 					const jobBody = {
-						connectionId: job.connectionId,
-						jobType: 'reset'
+						jobId: job.jobId
 					};
-					const resetJob = await jobsApi.createJob(null, jobBody).then(res => res.data);
-					log('resetJob', resetJob);
+					const resetJob = await jobsApi.cancelJob(jobBody).then(res => res.data);
+					log('cancelJob', resetJob);
 				} catch (e) {
 					// Continue but log a warning if the reset job api call fails
 					console.warn(e);

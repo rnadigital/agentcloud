@@ -6,6 +6,7 @@ import { addModel, deleteModelById, getModelById, getModelsByTeam, updateModel }
 import dotenv from 'dotenv';
 import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
+import { pricingMatrix } from 'struct/billing';
 import { ModelType, ModelTypeRequirements } from 'struct/model';
 import { ModelEmbeddingLength, ModelList } from 'struct/model';
 import { chainValidations, PARENT_OBJECT_FIELD_NAME, validateField } from 'utils/validationutils';
@@ -62,8 +63,11 @@ export async function modelAddPage(app, req, res, next) {
 	return app.render(req, res, `/${req.params.resourceSlug}/model/add`);
 }
 
+//need to add checks for stripe plan
 export async function modelAddApi(req, res, next) {
 	let { name, model, config, type } = req.body;
+	let { stripePlan } = res?.locals?.account?.stripe || {};
+
 	let validationError = chainValidations(
 		req.body,
 		[
@@ -79,6 +83,10 @@ export async function modelAddApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
+	if (!stripePlan || !pricingMatrix[stripePlan].llmModels.includes(type)) {
+		return dynamicResponse(req, res, 403, { error: 'This model is not avialable on this plan' });
+	}
+
 	const configValidations = Object.entries(ModelTypeRequirements[type])
 		.filter((en: any) => en[1].optional !== true)
 		.map(en => ({ field: en[0], validation: { notEmpty: true } }));
@@ -88,6 +96,10 @@ export async function modelAddApi(req, res, next) {
 		if (validationErrorConfig) {
 			return dynamicResponse(req, res, 400, { error: validationErrorConfig });
 		}
+	}
+
+	if (!stripePlan || !pricingMatrix[stripePlan].llmModels.includes(type)) {
+		return dynamicResponse(req, res, 403, { error: 'This model is not avialable on this plan' });
 	}
 
 	// Insert model to db
@@ -110,6 +122,7 @@ export async function modelAddApi(req, res, next) {
 
 export async function editModelApi(req, res, next) {
 	let { name, model, config, type } = req.body;
+	let { stripePlan } = res?.locals?.account?.stripe || {};
 
 	let validationError = chainValidations(
 		req.body,
@@ -122,6 +135,10 @@ export async function editModelApi(req, res, next) {
 	);
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
+	if (!stripePlan || !pricingMatrix[stripePlan]?.llmModels.includes(type)) {
+		return dynamicResponse(req, res, 403, { error: 'This model is not avialable on this plan' });
 	}
 
 	const configValidations = Object.entries(ModelTypeRequirements[type])

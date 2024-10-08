@@ -60,7 +60,7 @@ export function initSocket(rawHttpServer) {
 			);
 		socket.request['locals'].isSocket = true;
 		socket.request['locals'].socket = socket;
-		log('socket locals %O', socket.request['locals']);
+		// log('socket locals %O', socket.request['locals']);
 		next();
 	});
 	io.use((socket, next) => {

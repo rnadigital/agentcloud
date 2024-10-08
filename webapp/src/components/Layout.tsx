@@ -431,7 +431,7 @@ export default withRouter(function Layout(props) {
 					<div className='hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col'>
 						{/* Sidebar component, swap this element with another sidebar if you like */}
 						<div
-							className='flex grow flex-col gap-y-5 overflow-y-auto bg-gray-900 px-6 pb-4 dark:border-r dark:border-slate-600'
+							className='flex grow flex-col gap-y-5 overflow-y-auto bg-gray-900 px-6 pb-4 dark:border-r dark:border-slate-600 scrollbar-thin scrollbar-thumb-slate-400 scrollbar-track-gray-900'
 							ref={scrollRef}
 						>
 							<div className='bg-gray-900 h-24 fixed z-50 w-[286px] left-0'>

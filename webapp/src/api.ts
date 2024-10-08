@@ -654,6 +654,16 @@ export function syncDatasource(body, dispatch, errorCallback, router) {
 }//@TEST
 
 // Airbyte
+export function getConnectors(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/${body.resourceSlug}/airbyte/connectors.json`,
+		'GET',
+		null,
+		dispatch,
+		errorCallback,
+		router
+	);
+}
 export function getSpecification(body, dispatch, errorCallback, router) {
 	const queryString = new URLSearchParams({
 		sourceDefinitionId: body.sourceDefinitionId
@@ -831,9 +841,32 @@ export function getTeamModels(body, dispatch: GetTeamModelsDispatch, errorCallba
 	);
 }//@TEST
 
+//get the vector storage usage on a team basis
+export function getVectorStorageTeam(body, dispatch, errorCallback, router){
+	return ApiCall(
+		`/${body.resourceSlug}/team/vectorstorage.json`,
+		'GET',
+		null,
+		dispatch,
+		errorCallback,
+		router
+	)
+}
+
 export function getOrg(body, dispatch, errorCallback, router) {
 	return ApiCall(`/${body.resourceSlug}/org.json`, 'GET', null, dispatch, errorCallback, router);
 }//@TEST
+
+export function getAllTeamVectorStorage(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/${body.resourceSlug}/org/teamvectorusage.json`,
+		'GET',
+		null,
+		dispatch,
+		errorCallback,
+		router
+	)
+}
 export function editOrg(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.resourceSlug}/forms/org/edit`,
@@ -858,6 +891,16 @@ export function editOrgMember(body, dispatch, errorCallback, router) {
 	return ApiCall(
 		`/${body.get('resourceSlug')}/forms/org/${body.get('memberId')}/edit`,
 		'POST',
+		body,
+		dispatch,
+		errorCallback,
+		router
+	);
+}//@TEST
+export function deleteOrgMember(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/${body.resourceSlug}/forms/org/invite`,
+		'DELETE',
 		body,
 		dispatch,
 		errorCallback,

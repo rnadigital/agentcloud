@@ -326,6 +326,7 @@ export default function router(server, app) {
 	const teamRouter = Router({ mergeParams: true, caseSensitive: true });
 
 	//airbyte proxy routes
+	teamRouter.get('/airbyte/connectors.json', airbyteProxyController.connectorsJson);
 	teamRouter.get('/airbyte/specification', airbyteProxyController.specificationJson);
 	teamRouter.get('/airbyte/schema', airbyteProxyController.discoverSchemaApi);
 	teamRouter.get('/airbyte/jobs', airbyteProxyController.listJobsApi);
@@ -587,6 +588,7 @@ export default function router(server, app) {
 	//team
 	teamRouter.get('/team', teamController.teamPage.bind(null, app));
 	teamRouter.get('/team.json', teamController.teamJson);
+	teamRouter.get('/team/vectorstorage.json', teamController.vectorStorageJson);
 	teamRouter.get('/team/models.json', teamController.teamModelsJson);
 	teamRouter.get(
 		'/team/:memberId([a-f0-9]{24}).json',
@@ -617,7 +619,7 @@ export default function router(server, app) {
 		teamController.inviteTeamMemberApi
 	);
 	teamRouter.delete(
-		'/forms/team/invite',
+		'/forms/team/invite', //TODO: change to be a :memberId route for delete, duh
 		hasPerms.one(Permissions.REMOVE_TEAM_MEMBER),
 		checkSubscriptionPlan([SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE]),
 		teamController.deleteTeamMemberApi
@@ -647,20 +649,27 @@ export default function router(server, app) {
 		hasPerms.one(Permissions.EDIT_ORG),
 		orgController.editOrgApi
 	);
+	teamRouter.get('/org/teamvectorusage.json', orgController.vectorStorageAllTeams);
 	teamRouter.get(
 		'/org/:memberId([a-f0-9]{24}).json',
-		hasPerms.one(Permissions.EDIT_TEAM_MEMBER),
+		hasPerms.one(Permissions.EDIT_ORG_MEMBER),
 		orgController.orgMemberJson
 	);
 	teamRouter.get(
 		'/org/:memberId([a-f0-9]{24})/edit',
-		hasPerms.one(Permissions.EDIT_TEAM_MEMBER),
+		hasPerms.one(Permissions.EDIT_ORG_MEMBER),
 		orgController.memberEditPage.bind(null, app)
 	);
 	teamRouter.post(
 		'/forms/org/:memberId([a-f0-9]{24})/edit',
 		hasPerms.one(Permissions.EDIT_TEAM_MEMBER),
 		orgController.editOrgMemberApi
+	);
+	teamRouter.delete(
+		'/forms/org/invite', //TODO: change to be a :memberId route for delete, duh
+		hasPerms.one(Permissions.REMOVE_ORG_MEMBER),
+		checkSubscriptionPlan([SubscriptionPlan.TEAMS, SubscriptionPlan.ENTERPRISE]),
+		orgController.deleteOrgMemberApi
 	);
 
 	//assets

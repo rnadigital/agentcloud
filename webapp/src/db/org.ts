@@ -102,6 +102,10 @@ export function getAllOrgMembers(teamId: db.IdOrStr, orgId: db.IdOrStr): Promise
 		.toArray();
 }
 
+export function getAllOrgTeams(orgId: db.IdOrStr): Promise<Org> {
+	return OrgCollection().findOne({ _id: toObjectId(orgId) }, { teamIds: 1, _id: 0 });
+}
+
 export function addTeamToOrg(orgId: db.IdOrStr, teamId: db.IdOrStr): Promise<any> {
 	return OrgCollection().updateOne(
 		{
@@ -110,38 +114,6 @@ export function addTeamToOrg(orgId: db.IdOrStr, teamId: db.IdOrStr): Promise<any
 		{
 			$addToSet: {
 				teamIds: toObjectId(teamId)
-			}
-		}
-	);
-}
-
-export function addOrgAdmin(orgId: db.IdOrStr, accountId: db.IdOrStr): Promise<any> {
-	return OrgCollection().updateOne(
-		{
-			_id: toObjectId(orgId)
-		},
-		{
-			$push: {
-				admins: toObjectId(accountId) //Note: is the members array now redeundant that we have memberIds in the permissions map?
-			},
-			$set: {
-				[`permissions.${accountId}`]: new Binary(new Permission(REGISTERED_USER.base64).array)
-			}
-		}
-	);
-}
-
-export function removeOrgAdmin(orgId: db.IdOrStr, accountId: db.IdOrStr): Promise<any> {
-	return OrgCollection().updateOne(
-		{
-			_id: toObjectId(orgId)
-		},
-		{
-			$pullAll: {
-				admins: [toObjectId(accountId)]
-			},
-			$unset: {
-				[`permissions.${accountId}`]: ''
 			}
 		}
 	);

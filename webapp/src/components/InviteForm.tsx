@@ -42,6 +42,7 @@ export default function InviteForm({ callback }: { callback?: Function }) {
 			hasPermission //plan has permission
 		});
 		if (!stripePlan || !hasPermission) {
+			setInviting(false);
 			return setSubscriptionModalOpen(true);
 		}
 		if (!email || !name) {

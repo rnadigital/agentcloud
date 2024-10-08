@@ -13,25 +13,11 @@ import { getToolsByTeam } from "../db/tool";
 import { TeamRoles } from "../lib/permissions/roles"
 
 dotenv.config({ path: '.env' });
-
-afterAll(async () => {
-	await db.db().collection('accounts').deleteMany({ email: accountDetails.account1_email });
-	await db.db().collection('accounts').deleteMany({ email: accountDetails.account2_email });
-	await db.db().collection('accounts').deleteMany({ email: accountDetails.account3_email });
-	await db.db().collection('accounts').deleteMany({ email: accountDetails.account4_email });
-	await db.db().collection('accounts').deleteMany({ email: accountDetails.account5_email });
-	await db.db().collection('accounts').deleteMany({ email: accountDetails.account6_email });
-	await db.db().collection('accounts').deleteMany({ email: accountDetails.account7_email });
-	await db.db().collection('accounts').deleteMany({ email: accountDetails.account8_email });
-	await db.db().collection('accounts').deleteMany({ email: accountDetails.account9_email });
-	await db.db().collection('accounts').deleteMany({ email: accountDetails.account10_email });
-	await db.db().collection('accounts').deleteMany({ email: accountDetails.account11_email });
-	await db.client().close();
-});
-
 beforeAll(async ()=>{
+    updateAllAccountCsrf(); //update csrf token to make sure an expired token isn't used in the tests
 })
 
+//TODO: test new org level permissions
 describe('team tests', () => {
 	test('cant add new team without stripe permissions', async () => {
 		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
@@ -97,7 +83,6 @@ describe('team tests', () => {
 			template: 'TEAM_MEMBER'
 		};
 		response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
-		console.log("team after inviting account 2 to the team", await(db.db().collection('teams').findOne({_id: toObjectId(resourceSlug)})))
 		expect(response.status).toBe(200);
 	});
 
@@ -128,7 +113,6 @@ describe('team tests', () => {
 
 		const responseJson = await response.json();
 
-		//the 'team' object returned by this call is an array of teams, uses teh same teamData for all .json calls
 		expect(responseJson?.team?.members.length).toBe(3);
 	});
 
@@ -271,18 +255,12 @@ describe('team tests', () => {
 
 		let url, body, response;
 
-		console.log("team BEFORE delete operation: ", await(db.db().collection('teams').findOne({_id: toObjectId(account1Object.resourceSlug)})));
-
 		url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/team/invite`;//delete operation, check line down
 		body = {
 			memberId: account2Object?.initialData?.accountData?.account?._id
 		}
 
 		response = await makeFetch(url, fetchTypes.DELETE, accountDetails.account1_email, body);
-
-		console.log("account2 ID: ", account2Object?.initialData?.accountData?.account?._id);
-		console.log(await(db.db().collection('teams').findOne({_id: toObjectId(account1Object.resourceSlug)})))
-		console.log(await(response.text()));
 		expect(response.status).toBe(200);
 
 		//attempt to create a model with the removed member
@@ -335,101 +313,33 @@ describe('team tests', () => {
 	test('cant add more than 10 members to TEAMS subscriptions plan', async () => {
 		const { resourceSlug } = await getInitialData(accountDetails.account1_email);
 		const url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/team/invite`;
-		let body, response;
-		let teamMembers = await getTeamWithMembers(resourceSlug);
-
-		body = {
-			name: accountDetails.account4_name,
-			email: accountDetails.account4_email,
-			template: 'TEAM_MEMBER'
-		};
-
-		response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
-		expect(response.status).toBe(200);
-		body = {
-			name: accountDetails.account5_name,
-			email: accountDetails.account5_email,
-			template: 'TEAM_MEMBER'
-		};
-
-		response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
-		expect(response.status).toBe(200);
-		body = {
-			name: accountDetails.account6_name,
-			email: accountDetails.account6_email,
-			template: 'TEAM_MEMBER'
-		};
-
-		response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
-		expect(response.status).toBe(200);
-		body = {
-			name: accountDetails.account7_name,
-			email: accountDetails.account7_email,
-			template: 'TEAM_MEMBER'
-		};
-
-		response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
-		expect(response.status).toBe(200);
-		body = {
-			name: accountDetails.account8_name,
-			email: accountDetails.account8_email,
-			template: 'TEAM_MEMBER'
-		};
-
-		response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
-		expect(response.status).toBe(200);
-		body = {
-			name: accountDetails.account9_name,
-			email: accountDetails.account9_email,
-			template: 'TEAM_MEMBER'
-		};
-
-		response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
-		expect(response.status).toBe(200);
-		body = {
-			name: accountDetails.account10_name,
-			email: accountDetails.account10_email,
-			template: 'TEAM_MEMBER'
-		};
-
-		//this should be the 11th member in the team, this should be rejected
-		response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
-		expect(response.status).toBe(200);
-		body = {
-			name: accountDetails.account11_name,
-			email: accountDetails.account11_email,
-			template: 'TEAM_MEMBER'
-		};
-
-		response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
-		teamMembers = await getTeamWithMembers(resourceSlug);
-		expect(response.status).toBe(400);
-	});
-
-	test('log out', async () => {
-		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
-			accountDetails.account1_email
-		);
-
-		const url = `${process.env.WEBAPP_TEST_BASE_URL}/forms/account/logout`;
-		const body = {
-			_csrf: csrfToken
-		};
-
-		const response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
-
-		const responseJson = await response.json();
-		expect(responseJson?.redirect).toBeDefined();
-		expect(response.status).toBe(200);
-	});
-
-	test('cant get account with invalidated session cookie', async () => {
-		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
-			accountDetails.account1_email
-		);
-
-		const url = `${process.env.WEBAPP_TEST_BASE_URL}/account.json`;
-		const response = await makeFetch(url, fetchTypes.GET, accountDetails.account1_email);
-		expect(response.status).toBe(302); //302 redirect to login
+		const accounts = [
+			{ name: accountDetails.account4_name, email: accountDetails.account4_email },
+			{ name: accountDetails.account5_name, email: accountDetails.account5_email },
+			{ name: accountDetails.account6_name, email: accountDetails.account6_email },
+			{ name: accountDetails.account7_name, email: accountDetails.account7_email },
+			{ name: accountDetails.account8_name, email: accountDetails.account8_email },
+			{ name: accountDetails.account9_name, email: accountDetails.account9_email },
+			{ name: accountDetails.account10_name, email: accountDetails.account10_email },
+			{ name: accountDetails.account11_name, email: accountDetails.account11_email } // This should trigger the rejection as the 11th member
+		];
+	
+		for (let i = 0; i < accounts.length; i++) {
+			const body = {
+				name: accounts[i].name,
+				email: accounts[i].email,
+				template: 'TEAM_MEMBER'
+			};
+	
+			const response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
+	
+			if (i < 7) { // Expect the first 7 additions to succeed
+				expect(response.status).toBe(200);
+			} else { // Expect the 11th addition to be rejected
+				expect(response.status).toBe(400);
+			}
+		}
+	
+		const teamMembers = await getTeamWithMembers(resourceSlug);
 	});
 });

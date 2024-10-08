@@ -47,6 +47,7 @@ export type Account = {
 	oauth?: OAuthRecordType;
 	permissions: Binary;
 	onboarded: boolean;
+	dateCreated?: Date;
 };
 
 export function AccountCollection(): any {
@@ -250,6 +251,33 @@ export function pullAccountTeam(
 			$pull: {
 				'orgs.$[org].teams': {
 					id: toObjectId(teamId)
+				}
+			}
+		},
+		{
+			arrayFilters: [
+				{
+					'org.id': toObjectId(orgId)
+				}
+			]
+		}
+	);
+}
+
+//multiple variant of ^. Might race if called with ID list rather than pulling the whole org but meh
+export function pullAccountTeams(
+	userId: db.IdOrStr,
+	orgId: db.IdOrStr,
+	teamIds: db.IdOrStr[]
+): Promise<any> {
+	return AccountCollection().updateOne(
+		{
+			_id: toObjectId(userId)
+		},
+		{
+			$pull: {
+				'orgs.$[org].teams': {
+					id: { $in: teamIds.map(toObjectId) }
 				}
 			}
 		},
