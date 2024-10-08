@@ -3,7 +3,7 @@ import * as db from '../db/index';
 import { addTeam, getTeamById, getTeamWithMembers } from '../db/team';
 import { getAccountByEmail, setStripeCustomerId, setStripePlan } from '../db/account';
 import { SubscriptionPlan } from '../lib/struct/billing';
-import { getInitialData, makeFetch, fetchTypes, accountDetails, setInitialData, updateAllAccountCsrf } from './helpers';
+import { getInitialData, makeFetch, fetchTypes, accountDetails, setInitialData, updateAllAccountCsrf} from './helpers';
 import dotenv from 'dotenv';
 import { URLSearchParams } from 'url';
 import toObjectId from '../lib/misc/toobjectid';
@@ -58,13 +58,14 @@ describe('Model Tests', () => {
         expect(addModelResponseJson?.error).toBeDefined();
     });
 
-    test("Test valid models with the FREE plan", async () => {
+    test.only("Test valid models with the FREE plan", async () => {
         const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account3_email
 		);
+		let body;
 
         let url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/add`;
-		let body = {
+		body = {
 			name: 'testModel1',
 			model: 'gpt-4o',
 			config: {
@@ -82,17 +83,28 @@ describe('Model Tests', () => {
 		);
 
         expect(addModelResponse.status).toBe(200);
+		const addModelResponseJson = await addModelResponse.json();
+		expect(addModelResponseJson?._id).toBeDefined();
+		
+		//clean up db with model delete
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/${addModelResponseJson._id}`;
+		body = {
+			modelId: addModelResponseJson._id
+		}
+		let response = await makeFetch(url, fetchTypes.DELETE, accountDetails.account3_email, body);
+		expect(response.status).toBe(200);
     });
 
     
 
-    test("Test valid embedding models with the FREE plan", async () => {
+    test.only("Test valid embedding models with the FREE plan", async () => {
         const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account3_email
 		);
+		let addModelResponseJson, body, addModelResponse, url, deleteModelResponse;
 
-        let url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/add`;
-		let body = {
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/add`;
+		body = {
 			name: 'testModel1-FREE-EMBED',
 			model: 'text-embedding-3-small',
 			config: {
@@ -102,7 +114,7 @@ describe('Model Tests', () => {
 			type: ModelType.OPENAI
 		};
 
-		let addModelResponse = await makeFetch(
+		addModelResponse = await makeFetch(
 			url,
 			fetchTypes.POST,
 			accountDetails.account3_email,
@@ -110,6 +122,20 @@ describe('Model Tests', () => {
 		);
 
         expect(addModelResponse.status).toBe(200);
+		addModelResponseJson = await addModelResponse.json();
+		expect(addModelResponseJson?._id).toBeDefined();
+
+		//clean up after test
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/${addModelResponseJson._id}`;
+		body = {
+			modelId: addModelResponseJson._id
+		};
+		deleteModelResponse = await makeFetch(url, fetchTypes.DELETE, accountDetails.account3_email, body);
+		expect(deleteModelResponse.status).toBe(200);
+		
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/add`;
+
+
 		body = {
 			name: 'testModel2-FREE-EMBED',
 			model: 'text-embedding-3-large',
@@ -128,6 +154,17 @@ describe('Model Tests', () => {
 		);
 
         expect(addModelResponse.status).toBe(200);
+		addModelResponseJson = await addModelResponse.json();
+		expect(addModelResponseJson?._id).toBeDefined();
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/${addModelResponseJson._id}`;
+		body = {
+			modelId: addModelResponseJson._id
+		};
+		deleteModelResponse = await makeFetch(url, fetchTypes.DELETE, accountDetails.account3_email, body);
+		expect(deleteModelResponse.status).toBe(200);
+		
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/add`;
+
 		body = {
 			name: 'testModel3-FREE-EMBED',
 			model: 'text-embedding-ada-002',
@@ -146,6 +183,17 @@ describe('Model Tests', () => {
 		);
 
         expect(addModelResponse.status).toBe(200);
+		addModelResponseJson = await addModelResponse.json();
+		expect(addModelResponseJson?._id).toBeDefined();
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/${addModelResponseJson._id}`;
+		body = {
+			modelId: addModelResponseJson._id
+		};
+		deleteModelResponse = await makeFetch(url, fetchTypes.DELETE, accountDetails.account3_email, body);
+		expect(deleteModelResponse.status).toBe(200);
+		
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/add`;
+
     });
 
 
@@ -160,10 +208,10 @@ describe('Model Tests', () => {
 		const plan = SubscriptionPlan.PRO;
 		setStripeCustomerId(initialData?.accountData?.account?._id, stripeCustomerId);
 		setStripePlan(stripeCustomerId, plan);
+		let url, body, addModelResponse, addModelResponseJson;
 
-
-        let url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/add`;
-		let body = {
+        url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/add`;
+		body = {
 			name: 'testModel1',
 			model: 'gemini-1.5-pro',
 			config: {
@@ -173,27 +221,28 @@ describe('Model Tests', () => {
 			type: ModelType.GOOGLE_AI
 		};
 
-		const addModelResponse = await makeFetch(
+		addModelResponse = await makeFetch(
 			url,
 			fetchTypes.POST,
 			accountDetails.account3_email,
 			body
 		);
-        const addModelResponseJson = await addModelResponse.json();
+        addModelResponseJson = await addModelResponse.json();
 
 
         expect(addModelResponse.status).toBe(403);
         expect(addModelResponseJson?.error).toBeDefined();
     })
 
-    test("Test valid models with PRO plan", async () => {
+    test.only("Test valid models with PRO plan", async () => {
 		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account3_email
 		);
+		let addModelResponseJson, addModelResponse, url, body, deleteModelResponse;
 
 
-        let url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/add`;
-		let body = {
+        url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/add`;
+		body = {
 			name: 'testModel1',
 			model: 'claude-3-5-sonnet-20240620',
 			config: {
@@ -203,7 +252,7 @@ describe('Model Tests', () => {
 			type: ModelType.ANTHROPIC
 		};
 
-		const addModelResponse = await makeFetch(
+		addModelResponse = await makeFetch(
 			url,
 			fetchTypes.POST,
 			accountDetails.account3_email,
@@ -212,15 +261,26 @@ describe('Model Tests', () => {
 
 
         expect(addModelResponse.status).toBe(200);
+		addModelResponseJson = await addModelResponse.json();
+		expect(addModelResponseJson._id).toBeDefined();
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/${addModelResponseJson._id}`;
+		body = {
+			modelId: addModelResponseJson._id
+		};
+		deleteModelResponse = await makeFetch(url, fetchTypes.DELETE, accountDetails.account3_email, body);
+		expect(deleteModelResponse.status).toBe(200);
+		
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/add`;
+
     });
 
 
     //switch the plan to TEAMS, test adding valid models that are off limits for FREE and for PRO and add custom models
-    test("Test all models with TEAMS plan", async ()=> {
+    test.only("Test all models with TEAMS plan", async ()=> {
         const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account3_email
 		);
-
+		let addModelResponseJson, url, body, addModelResponse, deleteModelResponse;
         //set org to pro plan
         const stripeCustomerId = initialData?.accountData?.account?.stripe?.stripeCustomerId || ""; 
 		const plan = SubscriptionPlan.TEAMS;
@@ -228,19 +288,19 @@ describe('Model Tests', () => {
 		setStripePlan(stripeCustomerId, plan);
 
 
-        let url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/add`;
+        url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/add`;
         let config = {
             model: 'gpt-4o-mini',
             api_key: 'abcdefg'
         }
-		let body = {
+		body = {
 			name: 'testModel1',
 			model: 'gpt-4o-mini',
 			config: config,
 			type: ModelType.OPENAI
 		};
 
-		let addModelResponse = await makeFetch(
+		addModelResponse = await makeFetch(
 			url,
 			fetchTypes.POST,
 			accountDetails.account3_email,
@@ -248,6 +308,17 @@ describe('Model Tests', () => {
 		);
 
         expect(addModelResponse.status).toBe(200);
+		addModelResponseJson = await addModelResponse.json();
+		expect(addModelResponseJson._id).toBeDefined();
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/${addModelResponseJson._id}`;
+		body = {
+			modelId: addModelResponseJson._id
+		};
+		deleteModelResponse = await makeFetch(url, fetchTypes.DELETE, accountDetails.account3_email, body);
+		expect(deleteModelResponse.status).toBe(200);
+		
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/add`;
+
         config = {
             model: 'fast-bge-small-en',
             api_key: 'abcdefg'
@@ -267,6 +338,17 @@ describe('Model Tests', () => {
 		);
 
         expect(addModelResponse.status).toBe(200);
+		addModelResponseJson = await addModelResponse.json();
+		expect(addModelResponseJson._id).toBeDefined();
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/${addModelResponseJson._id}`;
+		body = {
+			modelId: addModelResponseJson._id
+		};
+		deleteModelResponse = await makeFetch(url, fetchTypes.DELETE, accountDetails.account3_email, body);
+		expect(deleteModelResponse.status).toBe(200);
+		
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/add`;
+
         let ollamaConfig = {
             model: 'llama2',
             api_key: 'abcdefg',
@@ -287,6 +369,17 @@ describe('Model Tests', () => {
 		);
 
         expect(addModelResponse.status).toBe(200);
+		addModelResponseJson = await addModelResponse.json();
+		expect(addModelResponseJson._id).toBeDefined();
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/${addModelResponseJson._id}`;
+		body = {
+			modelId: addModelResponseJson._id
+		};
+		deleteModelResponse = await makeFetch(url, fetchTypes.DELETE, accountDetails.account3_email, body);
+		expect(deleteModelResponse.status).toBe(200);
+		
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/add`;
+
 	    body = {
 			name: 'testModel1',
 			model: 'claude-3-5-sonnet-20240620',
@@ -305,6 +398,17 @@ describe('Model Tests', () => {
 		);
 
         expect(addModelResponse.status).toBe(200);
+		addModelResponseJson = await addModelResponse.json();
+		expect(addModelResponseJson._id).toBeDefined();
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/${addModelResponseJson._id}`;
+		body = {
+			modelId: addModelResponseJson._id
+		};
+		deleteModelResponse = await makeFetch(url, fetchTypes.DELETE, accountDetails.account3_email, body);
+		expect(deleteModelResponse.status).toBe(200);
+		
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/add`;
+
         const groqConfig = {
             groq_api_key: 'abcdegs',
             model: 'llama3-70b-8192'
@@ -325,6 +429,17 @@ describe('Model Tests', () => {
 		);
 
         expect(addModelResponse.status).toBe(200);
+		addModelResponseJson = await addModelResponse.json();
+		expect(addModelResponseJson._id).toBeDefined();
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/${addModelResponseJson._id}`;
+		body = {
+			modelId: addModelResponseJson._id
+		};
+		deleteModelResponse = await makeFetch(url, fetchTypes.DELETE, accountDetails.account3_email, body);
+		expect(deleteModelResponse.status).toBe(200);
+		
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/add`;
+
 	    body = {
             name: 'testModel1',
 			model: 'gemini-1.5-pro',
@@ -347,6 +462,17 @@ describe('Model Tests', () => {
 			body
 		);
         expect(addModelResponse.status).toBe(200);
+		addModelResponseJson = await addModelResponse.json();
+		expect(addModelResponseJson._id).toBeDefined();
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/${addModelResponseJson._id}`;
+		body = {
+			modelId: addModelResponseJson._id
+		};
+		deleteModelResponse = await makeFetch(url, fetchTypes.DELETE, accountDetails.account3_email, body);
+		expect(deleteModelResponse.status).toBe(200);
+		
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/add`;
+
 	    body = {
             name: 'testModel1',
 			model: 'gemini-1.5-pro',
@@ -365,6 +491,17 @@ describe('Model Tests', () => {
 		);
 
         expect(addModelResponse.status).toBe(200);
+		addModelResponseJson = await addModelResponse.json();
+		expect(addModelResponseJson._id).toBeDefined();
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/${addModelResponseJson._id}`;
+		body = {
+			modelId: addModelResponseJson._id
+		};
+		deleteModelResponse = await makeFetch(url, fetchTypes.DELETE, accountDetails.account3_email, body);
+		expect(deleteModelResponse.status).toBe(200);
+		
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/add`;
+
 	    body = {
             name: 'testModel1',
 			model: 'gpt-4o-mini',
@@ -388,6 +525,17 @@ describe('Model Tests', () => {
 		);
 
         expect(addModelResponse.status).toBe(200);
+		addModelResponseJson = await addModelResponse.json();
+		expect(addModelResponseJson._id).toBeDefined();
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/${addModelResponseJson._id}`;
+		body = {
+			modelId: addModelResponseJson._id
+		};
+		deleteModelResponse = await makeFetch(url, fetchTypes.DELETE, accountDetails.account3_email, body);
+		expect(deleteModelResponse.status).toBe(200);
+		
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/model/add`;
+
     })
 
 
