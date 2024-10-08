@@ -9,6 +9,8 @@ jobs:
   integration-tests:
     name: Build and install dependencies
     runs-on: ubuntu-latest
+    env:
+        TERM: xterm
     permissions:
       contents: read
       security-events: write
