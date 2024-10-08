@@ -9,9 +9,6 @@ jobs:
   integration-tests:
     name: Build app and run integration tests
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        firefox: [ '84.0', 'devedition-84.0b1', 'latest-beta', 'latest-devedition', 'latest-nightly', 'latest-esr', 'latest' ]
     env:
         TERM: xterm
     permissions:
