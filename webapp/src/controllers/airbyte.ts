@@ -186,7 +186,9 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 
 	//TODO: validate some kind of webhook key
 
-	const { jobId, datasourceId, recordsLoaded } = await extractWebhookDetails(req.body?.blocks || []);
+	const { jobId, datasourceId, recordsLoaded } = await extractWebhookDetails(
+		req.body?.blocks || []
+	);
 	const noDataToSync = recordsLoaded === 0;
 	if (jobId && datasourceId) {
 		const datasource = await unsafeGetDatasourceById(datasourceId);

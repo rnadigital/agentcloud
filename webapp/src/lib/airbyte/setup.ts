@@ -11,6 +11,7 @@ const lookup = util.promisify(dns.lookup);
 
 import getAirbyteApi, { AirbyteApiType, getAirbyteAuthToken } from 'airbyte/api';
 import SecretProviderFactory from 'lib/secret';
+
 import getAirbyteInternalApi from './internal';
 
 dotenv.config({ path: '.env' });
@@ -244,7 +245,6 @@ export async function init() {
 		// Update webhook URLs
 		const updatedWebhookUrls = await updateWebhookUrls(airbyteAdminWorkspaceId);
 		log('UPDATED_WEBHOOK_URLS', JSON.stringify(updatedWebhookUrls));
-
 	} catch (error) {
 		logerror('Error during Airbyte configuration:', error);
 	}

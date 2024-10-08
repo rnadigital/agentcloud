@@ -14,7 +14,7 @@ export async function getConnectorSpecification(sourceDefinitionId: string) {
 	const getSourceDefinitionSpecificationBody = {
 		workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID,
 		sourceDefinitionId: sourceDefinitionId
-	}
+	};
 	const sourceDefinitionRes = await internalApi
 		.getSourceDefinitionSpecification(null, getSourceDefinitionSpecificationBody)
 		.then(res => res.data);
