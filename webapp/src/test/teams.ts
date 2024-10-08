@@ -52,7 +52,6 @@ describe('team tests', () => {
 		const response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body);
 
 		const responseJson = await response.json();
-		console.log(responseJson);
 		expect(response.status).toBe(200);
 		expect(responseJson?._id).toBeDefined();
 		expect(responseJson?.orgId).toBeDefined();
