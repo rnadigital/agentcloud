@@ -654,6 +654,16 @@ export function syncDatasource(body, dispatch, errorCallback, router) {
 }//@TEST
 
 // Airbyte
+export function getConnectors(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/${body.resourceSlug}/airbyte/connectors.json`,
+		'GET',
+		null,
+		dispatch,
+		errorCallback,
+		router
+	);
+}
 export function getSpecification(body, dispatch, errorCallback, router) {
 	const queryString = new URLSearchParams({
 		sourceDefinitionId: body.sourceDefinitionId
