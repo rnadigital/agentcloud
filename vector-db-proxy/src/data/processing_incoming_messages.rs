@@ -4,16 +4,16 @@ use crate::adaptors::mongo::queries::{
 };
 use crate::data::helpers::hash_string_to_uuid;
 use crate::data::unstructuredio::apis::chunk_text;
+use crate::embeddings::helpers::format_for_n8n;
 use crate::embeddings::models::EmbeddingModels;
 use crate::embeddings::utils::{embed_bulk_insert_unstructured_response, embed_text};
 use crate::init::env_variables::GLOBAL_DATA;
-use crate::utils::conversions::convert_serde_value_to_hashmap_string;
 use crate::vector_databases::models::{Point, SearchRequest, SearchType, VectorDatabaseStatus};
 use crate::vector_databases::vector_database::VectorDatabase;
 use anyhow::anyhow;
 use crossbeam::channel::Receiver;
 use mongodb::Database;
-use serde_json::{to_string, Value};
+use serde_json::{to_vec, Value};
 use std::collections::HashMap;
 use std::io::Cursor;
 use std::sync::Arc;
@@ -22,7 +22,7 @@ use tokio::sync::RwLock;
 pub async fn embed_text_construct_point(
     mongo_conn: Arc<RwLock<Database>>,
     vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
-    data: &HashMap<String, String>,
+    data: &HashMap<String, Value>,
     embedding_field_name: &String,
     datasource_id: Option<String>,
     embedding_model: EmbeddingModels,
@@ -40,7 +40,7 @@ pub async fn embed_text_construct_point(
                     let unstructuredio_api_key =
                         Some(global_data.unstructuredio_api_key).filter(|s| !s.is_empty());
                     //    write value to buffer
-                    let buffer = Cursor::new(value.as_bytes().to_vec());
+                    let buffer = Cursor::new(to_vec(&value)?);
                     let handle = tokio::task::spawn_blocking(move || {
                         let response = chunk_text(
                             unstructuredio_url,
@@ -74,9 +74,9 @@ pub async fn embed_text_construct_point(
                         }
                     }
                 } else {
-                    let string_values = to_string(&payload)?;
-                    payload.insert("metadata".to_string(), string_values);
-                    payload.insert("content".to_string(), value.clone());
+                    //This is a very specific case for bookstack/n8n where the metadata must be
+                    // structured in this way
+                    payload = format_for_n8n(payload);
                 }
                 // Embedding data
                 let embedding_vec =
@@ -102,7 +102,7 @@ pub async fn embed_text_construct_point(
 async fn handle_embedding(
     mongo_connection: Arc<RwLock<Database>>,
     vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
-    metadata: HashMap<String, String>,
+    metadata: HashMap<String, Value>,
     embedding_field_name: String,
     datasource_id: String,
     embedding_model_name: String,
@@ -199,14 +199,12 @@ pub async fn process_incoming_messages(
                                         data_obj = pubsub_is_obj.to_owned();
                                     }
                                 }
-                                // Convert metadata to hashmap string
-                                let mut metadata =
-                                    convert_serde_value_to_hashmap_string(data_obj.to_owned());
 
+                                let mut metadata = HashMap::from_iter(data_obj);
                                 // If we find a primary key associated with the datasource, use
                                 // as vector index so that we do not create duplicates
                                 if let Some(list_of_primary_keys) = embedding_config.primary_key {
-                                    let list_of_primary_key_values: Vec<String> =
+                                    let list_of_primary_key_values: Vec<Value> =
                                         list_of_primary_keys
                                             .iter()
                                             .map(|k| metadata.get(k).cloned().unwrap())
@@ -220,7 +218,7 @@ pub async fn process_incoming_messages(
                                         );
                                         metadata.insert(
                                             String::from("index"),
-                                            json_string_hash.to_string(),
+                                            Value::String(json_string_hash),
                                         );
                                     }
                                 };

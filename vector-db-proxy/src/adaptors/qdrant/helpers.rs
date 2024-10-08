@@ -3,7 +3,7 @@ use qdrant_client::client::QdrantClient;
 use qdrant_client::qdrant::point_id::PointIdOptions;
 use qdrant_client::qdrant::vectors::VectorsOptions;
 use qdrant_client::qdrant::{PointId, PointStruct, ScrollPoints, ScrollResponse};
-use serde_json::json;
+use serde_json::{json, to_string, Value};
 use std::collections::HashMap;
 use uuid::Uuid;
 
@@ -74,13 +74,14 @@ pub fn get_scroll_results(result: ScrollResponse) -> Result<Vec<ScrollResults>> 
 
 pub async fn construct_point_struct(
     vector: &Vec<f32>,
-    payload: HashMap<String, String>,
+    payload: HashMap<String, Value>,
     vector_name: Option<EmbeddingModels>,
-    index: Option<String>,
+    index: Option<Value>,
 ) -> Option<PointStruct> {
     if !payload.is_empty() {
         let vector_id = index.map_or(PointId::from(Uuid::new_v4().to_string()), |id| {
-            PointId::from(id)
+            println!("UUID: {:?}", to_string(&id).unwrap().replace("\"", ""));
+            PointId::from(to_string(&id).unwrap().replace("\"", ""))
         });
         match vector_name {
             Some(embedding_model) => {

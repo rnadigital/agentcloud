@@ -177,11 +177,21 @@ impl VectorDatabase for PineconeClient {
             match search_request.search_type {
                 SearchType::ChunkedRow => {
                     // Collect indices into a Vec<&str>
-                    let indices: Vec<&str> =
-                        points.iter().filter_map(|p| p.index.as_deref()).collect();
+                    let indices: Result<Vec<String>, _> = points
+                        .iter()
+                        .map(|p| {
+                            p.index
+                                .as_ref()
+                                .ok_or("Index is None")?
+                                .as_str()
+                                .ok_or("Index is not a string")
+                                .map(|s| s.to_string())
+                        })
+                        .collect();
+
                     println!("Ids to delete {:?}", indices);
                     //println!("namespace to delete from {:?}", &namespace.clone());
-                    for idx in indices {
+                    for idx in indices.unwrap() {
                         // Use the collected ids directly in the delete_by_id method
                         let mut fields = BTreeMap::new();
                         fields.insert(

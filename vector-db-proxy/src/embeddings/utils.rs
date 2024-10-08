@@ -1,3 +1,10 @@
+use crate::adaptors::mongo::queries::{get_model, increment_by_one};
+use crate::data::unstructuredio::models::UnstructuredIOResponse;
+use crate::embeddings::helpers::format_for_n8n;
+use crate::embeddings::models::{EmbeddingModels, FastEmbedModels};
+use crate::init::env_variables::GLOBAL_DATA;
+use crate::vector_databases::models::{Point, SearchRequest, SearchType, VectorDatabaseStatus};
+use crate::vector_databases::vector_database::VectorDatabase;
 use anyhow::{anyhow, Result};
 use async_openai::config::OpenAIConfig;
 use async_openai::types::CreateEmbeddingRequestArgs;
@@ -7,20 +14,14 @@ use ort::{
     CUDAExecutionProvider, CoreMLExecutionProvider, ExecutionProvider, ExecutionProviderDispatch,
     ROCmExecutionProvider,
 };
-use serde_json::to_string;
+use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc as arc;
 use std::sync::Arc;
 use tokio::sync::mpsc;
 use tokio::sync::RwLock;
 use tokio::task;
-
-use crate::adaptors::mongo::queries::{get_model, increment_by_one};
-use crate::data::unstructuredio::models::UnstructuredIOResponse;
-use crate::embeddings::models::{EmbeddingModels, FastEmbedModels};
-use crate::init::env_variables::GLOBAL_DATA;
-use crate::vector_databases::models::{Point, SearchRequest, SearchType, VectorDatabaseStatus};
-use crate::vector_databases::vector_database::VectorDatabase;
+use uuid::Uuid;
 
 async fn fastembed_models(
     model: &FastEmbedModels,
@@ -236,7 +237,7 @@ pub async fn embed_bulk_insert_unstructured_response(
     vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
     mongo_client: Arc<RwLock<Database>>,
     embedding_model: EmbeddingModels,
-    metadata: Option<HashMap<String, String>>,
+    metadata: Option<HashMap<String, Value>>,
     search_type: SearchType,
 ) {
     let mongo_connection = mongo_client.read().await;
@@ -255,38 +256,52 @@ pub async fn embed_bulk_insert_unstructured_response(
             // Initialise vector database client
             let vector_database = Arc::clone(&vector_database_client);
             let vector_database_client = vector_database.read().await;
+            let search_request = SearchRequest::new(search_type.clone(), datasource_id.to_string());
             let mut points_to_upload: Vec<Point> = vec![];
             // Construct point to upload
-            for i in 0..list_of_text.len() {
-                // Construct metadata hashmap
-                let file_metadata = documents.get(i).unwrap();
-                let mut metadata_map = HashMap::from(file_metadata);
-                if let Some(existing_metadata) = metadata.clone() {
-                    metadata_map.extend(existing_metadata)
+            for (i, file_metadata) in list_of_text.iter().enumerate() {
+                let mut point_metadata: HashMap<String, Value> = HashMap::new();
+                // Ensure the Value is an Object and extract the Map
+                // Converting the unstructured response to a Map<String, serde_json::Value>
+                if let Ok(Value::Object(map)) = serde_json::to_value(file_metadata) {
+                    point_metadata = map.into_iter().collect();
+                } else {
+                    if let Ok(content) = serde_json::to_string(file_metadata) {
+                        point_metadata.insert(
+                            "content".to_string(),
+                            Value::String(content.replace("\"", "")),
+                        );
+                    } else {
+                        log::warn!("File is neither an object nor a string value. Ignoring...");
+                        continue;
+                    }
                 }
-                let string_values = to_string(&metadata_map).unwrap();
-                let mut point_metadata = HashMap::new();
-                point_metadata.insert("metadata".to_string(), string_values);
-                point_metadata.insert(
-                    "content".to_string(),
-                    metadata_map.get("content").unwrap().to_string(),
-                );
+                if let Some(existing_metadata) = metadata.clone() {
+                    point_metadata.extend(existing_metadata)
+                }
+
+                //This is a very specific case for bookstack/n8n where the metadata must be
+                // structured in this way
+                point_metadata = format_for_n8n(point_metadata);
+
                 // Embed text and return vector
                 let embedding_vector = embeddings.get(i);
                 if let Some(vector) = embedding_vector {
                     let point = Point::new(
-                        metadata_map.get("index").map_or(None, |id| Some(id.to_owned())),
+                        point_metadata
+                            .get("index")
+                            .map_or(Some(Value::String(Uuid::new_v4().to_string())), |id| {
+                                Some(Value::String(id.to_string()))
+                            }),
                         vector.to_vec(),
                         Some(point_metadata),
                     );
                     points_to_upload.push(point)
                 }
-                let search_request =
-                    SearchRequest::new(search_type.clone(), datasource_id.to_string());
 
                 //Attempt vector database insert
                 if let Ok(bulk_insert_status) = vector_database_client
-                    .bulk_insert_points(search_request, points_to_upload.clone())
+                    .bulk_insert_points(search_request.clone(), points_to_upload.clone())
                     .await
                 {
                     match bulk_insert_status {
