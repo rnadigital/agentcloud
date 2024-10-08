@@ -534,7 +534,7 @@ export default function CreateDatasourceForm({
 														data.planAvailable === true ? 'text-green-800' : 'text-orange-800'
 													)}
 												>
-													{!data.planAvailable ? (
+													{data.planAvailable ? (
 														<span className='flex mx-0.5'>
 															<CheckCircleIcon className='mt-0.5 h-4 w-4 me-1' /> Available
 														</span>
