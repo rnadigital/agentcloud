@@ -1,0 +1,37 @@
+
+name: Run Webapp Integration Tests
+
+on:
+  pull_request:
+    branches: [ "more-integration-tests" ]
+
+jobs:
+  integration-tests:
+    name: Build and install dependencies
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set environment variables
+        run: ./setemptyenv.sh
+
+      - name: Install webapp dependencies
+        working-directory: ./webapp
+        run: npm install
+
+      - name: run ./install.sh
+        run: ./install.sh
+
+      - name: Run integration tests
+        working-directory: ./webapp
+        run: npm run test:integration
