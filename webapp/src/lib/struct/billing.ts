@@ -239,7 +239,7 @@ export const pricingMatrix: PricingMatrix = {
 		],
 		maxFileUploadBytes: 25 * 1024 * 1024, //25MB
 		maxVectorStorageBytes: 1 * 1024 * 1024 * 1024, //1GB
-		maxFunctionTools: 1,
+		maxFunctionTools: 10,
 		storageLocations: ['US'],
 		llmModels: [ModelType.OPENAI, ModelType.ANTHROPIC],
 		embeddingModels: [ModelType.OPENAI, ModelType.ANTHROPIC],
@@ -253,13 +253,13 @@ export const pricingMatrix: PricingMatrix = {
 	[SubscriptionPlan.TEAMS]: {
 		users: 10,
 		orgs: 1,
-		teams: 1000,
+		teams: 3,
 		fileUploads: true,
 		dataConnections: true,
 		allowedConnectors: [],
 		maxFileUploadBytes: 50 * 1024 * 1024, //50MB
 		maxVectorStorageBytes: 10 * 1024 * 1024 * 1024, //10GB
-		maxFunctionTools: 10,
+		maxFunctionTools: 20,
 		storageLocations: ['US'],
 		llmModels: ModelTypes,
 		embeddingModels: ModelTypes,

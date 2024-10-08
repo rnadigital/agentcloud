@@ -155,13 +155,6 @@ class ApiCredentials(BaseModel):
     base_url: Optional[str] = Field(alias="endpointURL")
 
 
-class Credentials(BaseModel):
-    id: Optional[PyObjectId] = Field(alias="_id", default=None)
-    model_config = ConfigDict(extra='ignore')
-    type: Optional[Platforms] = Field(default=Platforms.ChatOpenAI)
-    credentials: Optional[ApiCredentials] = None
-
-
 class ModelType(str, Enum):
     llm = 'llm'
     embedding = 'embedding'
@@ -258,7 +251,7 @@ class Crew(BaseModel):
     tasks: Optional[List[PyObjectId]] = None
     agents: Optional[List[PyObjectId]] = None
     process: Optional[Process] = Process.Sequential
-    managerLLM: Optional[Model] = None
+    managerModelId: Optional[PyObjectId] = None
     functionCallingLLM: Optional[Callable] = None
     verbose: Optional[Union[int, bool]] = False
     memory: Optional[bool] = False
@@ -267,17 +260,16 @@ class Crew(BaseModel):
     maxRPM: Optional[int] = None
     language: Optional[str] = "en"
     fullOutput: Optional[bool] = False
-    full_output: Optional[bool] = Field(alias="fullOutput", defalut=False)
+    full_output: Optional[bool] = Field(alias="fullOutput", default=False)
     stepCallback: Optional[Callable] = None
     shareCrew: Optional[bool] = False
     modelId: Optional[PyObjectId] = Field(alias="managerModelId", default=None)
 
 
 class Session(BaseModel):
-    id: Optional[PyObjectId] = Field(alias="_id", default=None)
-    model_config = ConfigDict(extra='ignore')
-    crewId: Crew
-    appId: Optional[PyObjectId] = None
+    id: PyObjectId = Field(alias="_id", default=None)
+    appId: PyObjectId = None
+    variables: Optional[Dict[str, str]] = None
 
 
 class Datasource(BaseModel):
@@ -304,6 +296,12 @@ class ChatAppConfig(BaseModel):
     agentId: PyObjectId
     conversationStarters: list[str] = Field(default_factory=list)
     maxMessages: int = Field(default=30)
+
+
+class Variable(BaseModel):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    name: str
+    value: str
 
 
 class App(BaseModel):

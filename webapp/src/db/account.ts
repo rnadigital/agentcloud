@@ -47,6 +47,7 @@ export type Account = {
 	oauth?: OAuthRecordType;
 	permissions: Binary;
 	onboarded: boolean;
+	dateCreated?: Date;
 };
 
 export function AccountCollection(): any {
@@ -78,6 +79,18 @@ export async function getAccountTeamMember(
 		{
 			_id: toObjectId(userId),
 			'orgs.teams.id': toObjectId(teamId)
+		},
+		{
+			projection: { passwordHash: 0 }
+		}
+	);
+}
+
+export async function getAccountOrgMember(userId: db.IdOrStr, orgId: db.IdOrStr): Promise<Account> {
+	return AccountCollection().findOne(
+		{
+			_id: toObjectId(userId),
+			'orgs.id': toObjectId(orgId)
 		},
 		{
 			projection: { passwordHash: 0 }
@@ -188,6 +201,42 @@ export function pushAccountTeam(
 	);
 }
 
+export function editAccountsTeam(
+	teamId: db.IdOrStr,
+	orgId: db.IdOrStr,
+	update: Partial<AccountTeam>
+) {
+	return AccountCollection().updateMany(
+		{
+			'orgs.teams.id': toObjectId(teamId)
+		},
+		{
+			$set: {
+				'orgs.$[org].teams.$[team].name': update.name
+			}
+		},
+		{
+			arrayFilters: [{ 'org.id': toObjectId(orgId) }, { 'team.id': toObjectId(teamId) }]
+		}
+	);
+}
+
+export function editAccountsOrg(orgId: db.IdOrStr, update: Partial<AccountTeam>) {
+	return AccountCollection().updateMany(
+		{
+			'orgs.id': toObjectId(orgId)
+		},
+		{
+			$set: {
+				'orgs.$[org].name': update.name
+			}
+		},
+		{
+			arrayFilters: [{ 'org.id': toObjectId(orgId) }]
+		}
+	);
+}
+
 //NOTE: will leave dangling orgs if removed from all teams in an org, but we filter these on the FE.
 export function pullAccountTeam(
 	userId: db.IdOrStr,
@@ -202,6 +251,33 @@ export function pullAccountTeam(
 			$pull: {
 				'orgs.$[org].teams': {
 					id: toObjectId(teamId)
+				}
+			}
+		},
+		{
+			arrayFilters: [
+				{
+					'org.id': toObjectId(orgId)
+				}
+			]
+		}
+	);
+}
+
+//multiple variant of ^. Might race if called with ID list rather than pulling the whole org but meh
+export function pullAccountTeams(
+	userId: db.IdOrStr,
+	orgId: db.IdOrStr,
+	teamIds: db.IdOrStr[]
+): Promise<any> {
+	return AccountCollection().updateOne(
+		{
+			_id: toObjectId(userId)
+		},
+		{
+			$pull: {
+				'orgs.$[org].teams': {
+					id: { $in: teamIds.map(toObjectId) }
 				}
 			}
 		},

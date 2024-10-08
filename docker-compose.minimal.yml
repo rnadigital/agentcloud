@@ -50,8 +50,3 @@ volumes:
   redis_data:
   datasource_files:
   qdrant_data:
-
-networks:
-  default:
-    external: true
-    name: airbyte_airbyte_internal

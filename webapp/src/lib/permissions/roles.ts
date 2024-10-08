@@ -5,24 +5,30 @@ import Permissions from 'permissions/permissions';
 const ROOT = new Permission();
 ROOT.setAll(Permission.allPermissions);
 
-const NOT_LOGGED_IN = new Permission();
+// Used for role template name
+const ORG_OWNER = new Permission();
+ORG_OWNER.setAll(ORG_BITS);
 
-const REGISTERED_USER = new Permission();
-REGISTERED_USER.setAll([
-	Permissions.EDIT_ORG,
+const ORG_ADMIN = new Permission();
+ORG_ADMIN.setAll([
+	Permissions.ORG_ADMIN,
 	Permissions.CREATE_TEAM,
 	Permissions.EDIT_TEAM,
 	Permissions.DELETE_TEAM
 ]);
 
-const ORG_ADMIN = new Permission();
-ORG_ADMIN.setAll([Permissions.CREATE_TEAM, Permissions.EDIT_TEAM, Permissions.DELETE_TEAM]);
+const ORG_MEMBER = new Permission();
+// Org member doesn't have any permission, if this is ever set, its just to remove the admin perms
+
+// Used for role template name
+const TEAM_OWNER = new Permission();
+TEAM_OWNER.setAll(ORG_BITS);
+
+const TEAM_ADMIN = new Permission();
+TEAM_ADMIN.setAll(TEAM_BITS);
 
 const TEAM_MEMBER = new Permission();
 TEAM_MEMBER.setAll([
-	// Permissions.ADD_TEAM_MEMBER,
-	// Permissions.EDIT_TEAM_MEMBER,
-	// Permissions.REMOVE_TEAM_MEMBER,
 	Permissions.CREATE_APP,
 	Permissions.EDIT_APP,
 	Permissions.DELETE_APP,
@@ -43,31 +49,54 @@ TEAM_MEMBER.setAll([
 	Permissions.SYNC_DATASOURCE,
 	Permissions.DELETE_DATASOURCE,
 	Permissions.UPLOAD_ASSET,
-	Permissions.DELETE_ASSET
+	Permissions.DELETE_ASSET,
+	Permissions.CREATE_VARIABLE,
+	Permissions.EDIT_VARIABLE,
+	Permissions.DELETE_VARIABLE
 ]);
 
-const TEAM_ADMIN = new Permission();
-TEAM_ADMIN.setAll(TEAM_BITS);
+const NOT_LOGGED_IN = new Permission();
+export const REGISTERED_USER = new Permission();
 
-const Roles: any = Object.seal(
+export const TeamRoles: any = Object.seal(
 	Object.freeze(
 		Object.preventExtensions({
-			ROOT,
-			NOT_LOGGED_IN,
-			REGISTERED_USER,
-
-			ORG_ADMIN,
 			TEAM_MEMBER,
 			TEAM_ADMIN
 		})
 	)
 );
 
-export type RoleKey = keyof typeof Roles;
+export const OrgRoles: any = Object.seal(
+	Object.freeze(
+		Object.preventExtensions({
+			ORG_ADMIN,
+			ORG_MEMBER
+		})
+	)
+);
 
-export const RoleOptions = [
+export const roleNameMap = {
+	[ROOT.base64]: 'Root',
+
+	[ORG_ADMIN.base64]: 'Org Admin',
+	[TEAM_ADMIN.base64]: 'Team Admin',
+	[TEAM_MEMBER.base64]: 'Team Member',
+
+	//Note: technical resaons
+	[REGISTERED_USER.base64]: 'Registered User',
+	[NOT_LOGGED_IN.base64]: 'Not Logged In'
+};
+
+export type TeamRoleKey = keyof typeof TeamRoles;
+export type OrgRoleKey = keyof typeof OrgRoles;
+
+export const OrgRoleOptions = [
+	{ label: 'Org Admin', value: 'ORG_ADMIN' },
+	{ label: 'Org Member', value: 'ORG_MEMBER' }
+];
+
+export const TeamRoleOptions = [
 	{ label: 'Team Member', value: 'TEAM_MEMBER' },
 	{ label: 'Team Admin', value: 'TEAM_ADMIN' }
 ];
-
-export default Roles;

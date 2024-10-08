@@ -3,9 +3,7 @@
 import Permission from '@permission';
 import debug from 'debug';
 import { ORG_BITS, TEAM_BITS } from 'permissions/bits';
-import Metadata from 'permissions/metadata';
 import Permissions from 'permissions/permissions';
-import Roles from 'permissions/roles';
 const log = debug('webapp:middleware:auth:setpermissions');
 
 export default function setPermissions(req, res, next) {

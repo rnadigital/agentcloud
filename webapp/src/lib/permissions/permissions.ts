@@ -18,6 +18,9 @@ const Permissions = Object.seal(
 			CREATE_TEAM: 40,
 			EDIT_TEAM: 45,
 			DELETE_TEAM: 50,
+			ADD_ORG_MEMBER: 51,
+			EDIT_ORG_MEMBER: 52,
+			REMOVE_ORG_MEMBER: 53,
 
 			// Team level perms
 			ADD_TEAM_MEMBER: 55,
@@ -55,6 +58,10 @@ const Permissions = Object.seal(
 
 			UPLOAD_ASSET: 195,
 			DELETE_ASSET: 200,
+
+			CREATE_VARIABLE: 205,
+			EDIT_VARIABLE: 210,
+			DELETE_VARIABLE: 215,
 
 			DUMMY_BIT: 255 // Just padding
 		})

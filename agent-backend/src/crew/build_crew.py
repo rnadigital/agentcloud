@@ -2,8 +2,8 @@ import json
 import logging
 from io import BytesIO
 import uuid
+from typing import Any, List, Set, Type, Optional
 from pprint import pprint
-from typing import Any, List, Set, Type
 from datetime import datetime
 
 from crewai import Agent, Task, Crew
@@ -46,7 +46,7 @@ class CrewAIBuilder:
             tools: Dict[Set[models.mongo.PyObjectId], models.mongo.Tool],
             datasources: Dict[Set[models.mongo.PyObjectId], models.mongo.Datasource],
             models: Dict[Set[models.mongo.PyObjectId], models.mongo.Model],
-            credentials: Dict[Set[models.mongo.PyObjectId], models.mongo.Credentials],
+            input_variables: Optional[Dict[str, str]],
             chat_history: List[Dict],
             socket: Any = None
     ):
@@ -58,7 +58,7 @@ class CrewAIBuilder:
         self.tools_models = tools
         self.datasources_models = datasources
         self.models_models = models
-        self.credentials_models = credentials
+        self.input_variables = input_variables
         self.chat_history = chat_history
         self.socket = socket
         self.crew = None
@@ -214,12 +214,20 @@ class CrewAIBuilder:
                 try:
                     task_model = json_schema_to_pydantic(json.loads(task.expectedOutput))
                     output_pydantic = task_model
+
+                    # Because expectedOutput is JSON schema in this case, curly braces cause json objects to appear as
+                    # interpolatable variables in crew's "interpolate_inputs", hence convert/escape to html entity code
+                    task.expected_output = (task.expectedOutput
+                                            .replace('{', '&lcub;')
+                                            .replace('}', '&rcub;'))
                 except Exception:
                     output_pydantic = None
 
             self.crew_tasks[key] = Task(
-                **task.model_dump(exclude_none=True, exclude_unset=True,
-                                exclude={"id", "context", "requiresHumanInput", "displayOnlyFinalOutput", "storeTaskOutput", "taskOutputFileName", "isStructuredOutput"}),
+                **task.model_dump(exclude_none=True, exclude_unset=True, exclude={
+                    "id", "context", "requiresHumanInput", "displayOnlyFinalOutput",
+                    "storeTaskOutput", "taskOutputFileName", "isStructuredOutput"
+                }),
                 agent=agent_obj,
                 tools=task_tools_objs.values(),
                 context=context_task_objs,
@@ -287,17 +295,19 @@ class CrewAIBuilder:
                 tasks=self.crew_chat_tasks + list(self.crew_tasks.values()),
                 **self.crew_model.model_dump(
                     exclude_none=True, exclude_unset=True,
-                    exclude={"id", "tasks", "agents"}
+                    exclude={"id", "tasks", "agents", "managerModelId"}
                 ),
-                manager_llm=match_key(self.crew_models, keyset(self.crew_model.id)),
+                manager_llm=self.crew_models.get('manager_llm'),
                 agentcloud_socket=self.socket,
-                agentcloud_session_id=self.session_id
+                agentcloud_session_id=self.session_id,
+                stop_generating_check=self.stop_generating_check
             )
             print('---')
             print('Crew attributes:')
             pprint(self.crew.__dict__)
             print('---')
         except ValidationError as ve:
+            logging.error(ve)
             self.send_to_sockets(text=f"""Validation Error:
             ``` 
             {str(ve)}
@@ -336,7 +346,8 @@ class CrewAIBuilder:
         )
 
     def run_crew(self):
-        crew_output = self.crew.kickoff()
+        crew_output = self.crew.kickoff(inputs=self.input_variables if self.input_variables else None)
+
         if self.crew_model.fullOutput: # Note: do we need/want this check?
             self.send_to_sockets(
                 text=crew_output.raw,

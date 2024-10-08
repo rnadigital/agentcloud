@@ -15,6 +15,7 @@ import { removeAgentFromCrews } from 'db/crew';
 import { getModelById } from 'db/model';
 import { getModelsByTeam } from 'db/model';
 import { getToolsById, getToolsByTeam } from 'db/tool';
+import { getVariableById, getVariablesByTeam, updateVariable } from 'db/variable';
 import toObjectId from 'lib/misc/toobjectid';
 import StorageProviderFactory from 'lib/storage';
 import { chainValidations } from 'lib/utils/validationutils';
@@ -25,17 +26,21 @@ import { CollectionName } from 'struct/db';
 
 import { cloneAssetInStorageProvider } from './asset';
 
+export type AgentsDataReturnType = Awaited<ReturnType<typeof agentsData>>;
+
 export async function agentsData(req, res, _next) {
-	const [agents, models, tools] = await Promise.all([
+	const [agents, models, tools, variables] = await Promise.all([
 		getAgentsByTeam(req.params.resourceSlug),
 		getModelsByTeam(req.params.resourceSlug),
-		getToolsByTeam(req.params.resourceSlug)
+		getToolsByTeam(req.params.resourceSlug),
+		getVariablesByTeam(req.params.resourceSlug)
 	]);
 	return {
 		csrf: req.csrfToken(),
 		agents,
 		models,
-		tools
+		tools,
+		variables
 	};
 }
 
@@ -68,17 +73,21 @@ export async function agentAddPage(app, req, res, next) {
 	return app.render(req, res, `/${req.params.resourceSlug}/agent/add`);
 }
 
+export type AgentDataReturnType = Awaited<ReturnType<typeof agentData>>;
+
 export async function agentData(req, res, _next) {
-	const [agent, models, tools] = await Promise.all([
+	const [agent, models, tools, variables] = await Promise.all([
 		getAgentById(req.params.resourceSlug, req.params.agentId),
 		getModelsByTeam(req.params.resourceSlug),
-		getToolsByTeam(req.params.resourceSlug)
+		getToolsByTeam(req.params.resourceSlug),
+		getVariablesByTeam(req.params.resourceSlug)
 	]);
 	return {
 		csrf: req.csrfToken(),
 		agent,
 		models,
-		tools
+		tools,
+		variables
 	};
 }
 
@@ -124,6 +133,7 @@ export async function addAgentApi(req, res, next) {
 		verbose,
 		allowDelegation,
 		iconId,
+		variableIds,
 		cloning
 	} = req.body;
 
@@ -144,6 +154,15 @@ export async function addAgentApi(req, res, next) {
 					asArray: true,
 					ofType: 'string',
 					customError: 'Invalid Tools'
+				}
+			},
+			{
+				field: 'variableIds',
+				validation: {
+					hasLength: 24,
+					asArray: true,
+					ofType: 'string',
+					customError: 'Invalid Variables'
 				}
 			}
 		],
@@ -206,8 +225,22 @@ export async function addAgentApi(req, res, next) {
 					filename: attachedIconToAgent.filename,
 					linkedId: newAgentId
 				}
-			: null
+			: null,
+		variableIds: (variableIds || []).map(toObjectId),
+		dateCreated: new Date()
 	});
+
+	if (variableIds && variableIds.length > 0) {
+		const updatePromises = variableIds.map(async (id: string) => {
+			const variable = await getVariableById(req.params.resourceSlug, id);
+			const updatedVariable = {
+				...variable,
+				usedInAgents: [...(variable.usedInAgents || []), addedAgent.insertedId]
+			};
+			return updateVariable(req.params.resourceSlug, id, updatedVariable);
+		});
+		await Promise.all(updatePromises);
+	}
 
 	return dynamicResponse(req, res, 302, {
 		_id: addedAgent.insertedId,
@@ -225,6 +258,7 @@ export async function addAgentApi(req, res, next) {
  * @apiParam {String} systemMessage Definition of skills, tasks, boundaries, outputs
  */
 export async function editAgentApi(req, res, next) {
+	console.log('Trigger edit');
 	const {
 		toolIds,
 		name,
@@ -237,7 +271,8 @@ export async function editAgentApi(req, res, next) {
 		maxRPM,
 		verbose,
 		allowDelegation,
-		iconId
+		iconId,
+		variableIds
 	} = req.body;
 
 	let validationError = chainValidations(
@@ -252,6 +287,15 @@ export async function editAgentApi(req, res, next) {
 			{
 				field: 'toolIds',
 				validation: { notEmpty: true, hasLength: 24, asArray: true, customError: 'Invalid Tools' }
+			},
+			{
+				field: 'variableIds',
+				validation: {
+					hasLength: 24,
+					asArray: true,
+					ofType: 'string',
+					customError: 'Invalid Variables'
+				}
 			}
 		],
 		{ name: 'Name', modelId: 'Model', functionModelId: 'Function Calling Model' }
@@ -271,11 +315,35 @@ export async function editAgentApi(req, res, next) {
 	}
 
 	const agent = await getAgentById(req.params.resourceSlug, req.params.agentId);
+
 	if (!agent) {
 		return dynamicResponse(req, res, 400, { error: 'AgentId not valid' });
 	}
 
-	//todo: revisit
+	const existingVariableIds = new Set(agent?.variableIds?.map(v => v.toString()) || []);
+	const newVariableIds = new Set(variableIds);
+
+	const updatePromises = [...existingVariableIds, ...newVariableIds].map(async (id: string) => {
+		const variable = await getVariableById(req.params.resourceSlug, id);
+		const usedInAgents = variable?.usedInAgents
+			? new Set(variable.usedInAgents?.map(v => v.toString()))
+			: new Set([]);
+
+		if (existingVariableIds.has(id) && !newVariableIds.has(id)) {
+			usedInAgents.delete(req.params.agentId);
+		} else if (!existingVariableIds.has(id) && newVariableIds.has(id)) {
+			usedInAgents.add(req.params.agentId);
+		}
+
+		const updatedVariable = {
+			...variable,
+			usedInAgents: Array.from(usedInAgents, id => toObjectId(id))
+		};
+		return updateVariable(req.params.resourceSlug, id, updatedVariable);
+	});
+
+	await Promise.all(updatePromises);
+
 	let attachedIconToApp = agent?.icon;
 	if (agent?.icon?.id.toString() !== iconId) {
 		const collectionType = CollectionName.Agents;
@@ -301,7 +369,8 @@ export async function editAgentApi(req, res, next) {
 		verbose: verbose === true,
 		allowDelegation: allowDelegation === true,
 		toolIds: foundTools.map(t => t._id),
-		icon: iconId ? attachedIconToApp : null
+		icon: iconId ? attachedIconToApp : null,
+		variableIds: (variableIds || []).map(toObjectId)
 	});
 
 	if (oldAgent?.icon?.id && oldAgent?.icon?.id?.toString() !== iconId) {
@@ -335,6 +404,21 @@ export async function deleteAgentApi(req, res, next) {
 	await removeAgentFromCrews(req.params.resourceSlug, agentId);
 
 	const oldAgent = await deleteAgentByIdReturnAgent(req.params.resourceSlug, agentId);
+
+	if (oldAgent.variableIds?.length > 0) {
+		const updatePromises = oldAgent.variableIds.map(async (id: string) => {
+			const variable = await getVariableById(req.params.resourceSlug, id);
+			const usedInAgents = variable?.usedInAgents.map(a => a.toString());
+			if (usedInAgents?.length > 0) {
+				const newUsedInAgents = usedInAgents.filter(a => a !== agentId);
+				return updateVariable(req.params.resourceSlug, id, {
+					usedInAgents: newUsedInAgents.map(a => toObjectId(a))
+				});
+			}
+			return null;
+		});
+		await Promise.all(updatePromises);
+	}
 
 	if (oldAgent?.icon) {
 		await deleteAssetById(oldAgent.icon.id);

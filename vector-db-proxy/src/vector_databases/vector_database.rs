@@ -43,6 +43,10 @@ pub trait VectorDatabase: Send + Sync {
         search_request: SearchRequest,
         point: Point,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError>;
+    async fn delete_point(
+        &self,
+        search_request: SearchRequest,
+    ) -> Result<VectorDatabaseStatus, VectorDatabaseError>;
     async fn bulk_insert_points(
         &self,
         search_request: SearchRequest,

@@ -9,33 +9,35 @@ import { useSocketContext } from 'context/socket';
 import debug from 'debug';
 import useActiveTask from 'hooks/session/useActiveTask';
 import Head from 'next/head';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useRouter } from 'next/router';
 import React, { useEffect, useRef, useState } from 'react';
 import ContentLoader from 'react-content-loader';
 import { toast } from 'react-toastify';
-import { App, AppType } from 'struct/app';
+import { AppType } from 'struct/app';
 import { SessionStatus } from 'struct/session';
 const log = debug('webapp:socket');
+import SessionVariableForm from 'components/session/SessionVariableForm';
+import { SessionDataReturnType, SessionJsonReturnType } from 'controllers/session';
 
-export default function Session(props) {
+interface SessionProps extends SessionDataReturnType {
+	sessionId: string;
+	resourceSlug: string;
+}
+
+export default function Session(props: SessionProps) {
 	const scrollContainerRef = useRef(null);
+	const { sessionId, resourceSlug } = props;
 
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const router = useRouter();
-	const { resourceSlug } = router.query;
 	const [_chatContext, setChatContext]: any = useChatContext();
 	const path = usePathname();
 	const isShared = path.startsWith('/s/');
-	const hasAppSegment = path.includes('/app');
-	const [lastSeenMessageId, setLastSeenMessageId] = useState(null);
-	const [error, setError] = useState();
-	// @ts-ignore
-	const { sessionId } = router.query;
-	const [currentSessionId, setCurrentSessionId] = useState(sessionId);
-	const [session, setSession] = useState(props.session);
-	const [app, setApp]: [App, Function] = useState(props.app);
+
+	const [session, setSession] = useState<SessionJsonReturnType>();
+	const [app, setApp] = useState(session?.app);
 	const [authorAvatarMap, setAuthorAvatarMap] = useState({});
 
 	const [loading, setLoading] = useState(false);
@@ -43,11 +45,20 @@ export default function Session(props) {
 	const [socketContext]: any = useSocketContext();
 	const [messages, setMessages] = useState([]);
 	const [terminated, setTerminated] = useState(props?.session?.status === SessionStatus.TERMINATED);
-	const [isAtBottom, setIsAtBottom] = useState(true);
 	const activeTask = useActiveTask(messages);
 	const requiredHumanInput = activeTask?.requiresHumanInput;
 
 	const bottomRef = useRef<HTMLDivElement>(null);
+
+	const paramsArray =
+		app?.variables && app.variables.map(v => ({ name: v.name, defaultValue: v.defaultValue }));
+
+	const [sessionVariableFormOpen, setSessionVariableFormOpen] = useState(false);
+
+	useEffect(() => {
+		const appHasVariables = app?.variables && app.variables.length > 0 && messages.length === 0;
+		setSessionVariableFormOpen(appHasVariables);
+	}, [app, sessionId]);
 
 	useEffect(() => {
 		const scrollToBottom = () => {
@@ -68,20 +79,16 @@ export default function Session(props) {
 	const chatBusyState = messages?.length === 0 || sentLastMessage || !lastMessageFeedback;
 
 	async function joinSessionRoom() {
-		console.log('joinSessionRoom', sessionId);
 		socketContext.emit('join_room', sessionId);
 	}
 	async function leaveSessionRoom(room) {
 		socketContext.emit('leave_room', room);
 	}
 	function handleSocketMessage(message) {
-		// console.log('Received chat message %O', JSON.stringify(message, null, 2));
 		if (!message) {
 			return;
 		}
-		if (isAtBottom && message?._id) {
-			setLastSeenMessageId(message._id);
-		}
+
 		if (isShared && showConversationStarters) {
 			setShowConversationStarters(false);
 		}
@@ -130,7 +137,7 @@ export default function Session(props) {
 
 	function scrollToBottom(behavior: string = 'instant') {
 		//scroll to bottom when messages added (if currently at bottom)
-		if (scrollContainerRef && scrollContainerRef.current && isAtBottom) {
+		if (scrollContainerRef && scrollContainerRef.current) {
 			scrollContainerRef.current.scrollTo({
 				left: 0,
 				top: scrollContainerRef.current.scrollHeight,
@@ -167,7 +174,6 @@ export default function Session(props) {
 	}
 
 	function handleSocketStart() {
-		console.log('handleSocketStart');
 		socketContext.on('connect', joinSessionRoom);
 		socketContext.on('reconnect', joinSessionRoom);
 		socketContext.on('message', handleSocketMessage);
@@ -196,7 +202,7 @@ export default function Session(props) {
 				setChatContext(res);
 				setTerminated(res?.session?.status === SessionStatus.TERMINATED);
 			},
-			setError,
+			() => {},
 			router
 		);
 		API.getMessages(
@@ -220,9 +226,9 @@ export default function Session(props) {
 						return _m;
 					})
 					.sort((ma, mb) => ma.ts - mb.ts);
-				if (sortedMessages && sortedMessages.length > 0) {
-					setLastSeenMessageId(sortedMessages[sortedMessages.length - 1]._id);
-				}
+				// if (sortedMessages && sortedMessages.length > 0) {
+				// 	setLastSeenMessageId(sortedMessages[sortedMessages.length - 1]._id);
+				// }
 				if (!sortedMessages.slice(0, 4).some(message => message.incoming === true)) {
 					setShowConversationStarters(true);
 				}
@@ -232,7 +238,7 @@ export default function Session(props) {
 					scrollToBottom('smooth');
 				}, 200);
 			},
-			setError,
+			() => {},
 			router
 		);
 	}
@@ -243,13 +249,6 @@ export default function Session(props) {
 			handleSocketStop();
 		};
 	}, [resourceSlug, router?.query?.sessionId, router.asPath]);
-	useEffect(() => {
-		if (currentSessionId !== router?.query?.sessionId) {
-			setMessages([]);
-			setLoading(true);
-			setCurrentSessionId(router?.query?.sessionId); //TODO: should this use a state ref and check the old vs .current state?
-		}
-	}, [router?.query?.sessionId]);
 
 	function stopGenerating() {
 		API.cancelSession(
@@ -262,7 +261,7 @@ export default function Session(props) {
 				setTerminated(true);
 				//generating stopped
 			},
-			setError,
+			() => {},
 			router
 		);
 	}
@@ -286,16 +285,68 @@ export default function Session(props) {
 		return true;
 	}
 
+	const handleSessionVariableSubmit = async variables => {
+		if (isShared) {
+			await API.publicUpdateSession(
+				{ sessionId, resourceSlug, ...session, variables },
+				null,
+				null,
+				router
+			);
+			await API.publicStartSession(
+				{ sessionId, resourceSlug, appType: app.type },
+				null,
+				null,
+				router
+			);
+		} else {
+			await API.updateSession(
+				{
+					_csrf: csrf,
+					resourceSlug,
+					sessionId,
+					...session,
+					variables
+				},
+				null,
+				toast.error,
+				router
+			);
+			await API.startSession(
+				{
+					_csrf: csrf,
+					resourceSlug,
+					sessionId,
+					appType: app.type
+				},
+				null,
+				toast.error,
+				router
+			);
+		}
+		setSessionVariableFormOpen(false);
+	};
+
+	async function fetchSession() {
+		await API.getSession({ resourceSlug, sessionId }, setSession, () => {}, router);
+	}
+
+	useEffect(() => {
+		fetchSession();
+	}, [resourceSlug, sessionId]);
+
 	return (
 		<>
 			<Head>
 				<title>{app?.name || 'Agentcloud'}</title>
 			</Head>
-
 			<div
 				className='-mx-3 sm:-mx-6 lg:-mx-8 -my-10 flex flex-col flex-1 align-center'
 				style={{ maxHeight: 'calc(100vh - 110px)' }}
 			>
+				{sessionVariableFormOpen && (
+					<SessionVariableForm variables={paramsArray} onSubmit={handleSessionVariableSubmit} />
+				)}
 				<div className='overflow-y-auto py-2'>
 					{messages &&
 						messages.map((m, mi, marr) => {
@@ -335,13 +386,15 @@ export default function Session(props) {
 								/>
 							);
 						})}
-					{(chatBusyState || loading) && !terminated && (
+
+					{(chatBusyState || loading) && !terminated && !sessionVariableFormOpen && (
 						<div className='text-center pb-6 pt-8 '>
 							<span className='inline-block animate-bounce ad-100 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
 							<span className='inline-block animate-bounce ad-300 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
 							<span className='inline-block animate-bounce ad-500 h-4 w-2 mx-1 rounded-full bg-indigo-600 opacity-75'></span>
 						</div>
 					)}
+
 					{requiredHumanInput &&
 						!chatBusyState &&
 						!loading &&
@@ -351,61 +404,62 @@ export default function Session(props) {
 
 					<div ref={bottomRef} />
 				</div>
-				{!(requiredHumanInput && activeTask?.formFields?.length > 0) && (
-					<div className='flex flex-col mt-auto pt-4 border-t mb-2 dark:border-slate-700'>
-						<div className='flex flex-row justify-center'>
-							<div className='flex flex-col xl:basis-1/2 lg:basis-3/4 basis-full gap-2'>
-								{showConversationStarters &&
-									(!chatBusyState || !session) &&
-									app?.chatAppConfig?.conversationStarters && (
-										<div className='w-full flex items-center gap-2 py-1'>
-											<div className='dark:text-gray-50 text-sm'>Suggested prompts:</div>
-											<ConversationStarters
-												session={session}
-												app={app}
-												sendMessage={message => sendMessage(message, null)}
-												conversationStarters={app?.chatAppConfig?.conversationStarters}
-											/>
-										</div>
-									)}
+				{!(requiredHumanInput && activeTask?.formFields?.length > 0) &&
+					!sessionVariableFormOpen && (
+						<div className='flex flex-col mt-auto pt-4 border-t mb-2 dark:border-slate-700'>
+							<div className='flex flex-row justify-center'>
+								<div className='flex flex-col xl:basis-1/2 lg:basis-3/4 basis-full gap-2'>
+									{showConversationStarters &&
+										(!chatBusyState || !session) &&
+										app?.chatAppConfig?.conversationStarters && (
+											<div className='w-full flex items-center gap-2 py-1'>
+												<div className='dark:text-gray-50 text-sm'>Suggested prompts:</div>
+												<ConversationStarters
+													session={session}
+													app={app}
+													sendMessage={message => sendMessage(message, null)}
+													conversationStarters={app?.chatAppConfig?.conversationStarters}
+												/>
+											</div>
+										)}
 
-								<div className='min-w-0 flex-1 h-full'>
-									{messages ? (
-										terminated ? (
-											<p
-												id='session-terminated'
-												className='text-center h-full me-14 pb-2 pt-1 dark:text-white'
-											>
-												This session was terminated.
-											</p>
+									<div className='min-w-0 flex-1 h-full'>
+										{messages ? (
+											terminated ? (
+												<p
+													id='session-terminated'
+													className='text-center h-full me-14 pb-2 pt-1 dark:text-white'
+												>
+													This session was terminated.
+												</p>
+											) : (
+												<SessionChatbox
+													app={app}
+													scrollToBottom={scrollToBottom}
+													lastMessageFeedback={lastMessageFeedback}
+													chatBusyState={chatBusyState}
+													stopGenerating={stopGenerating}
+													onSubmit={sendMessage}
+													showConversationStarters={showConversationStarters}
+												/>
+											)
 										) : (
-											<SessionChatbox
-												app={app}
-												scrollToBottom={scrollToBottom}
-												lastMessageFeedback={lastMessageFeedback}
-												chatBusyState={chatBusyState}
-												stopGenerating={stopGenerating}
-												onSubmit={sendMessage}
-												showConversationStarters={showConversationStarters}
-											/>
-										)
-									) : (
-										<ContentLoader
-											speed={2}
-											width={'100%'}
-											height={30}
-											viewBox='0 0 100% 10'
-											backgroundColor='#e5e5e5'
-											foregroundColor='#ffffff'
-										>
-											<rect x='0' y='10' rx='5' width='100%' height='10' />
-										</ContentLoader>
-									)}
+											<ContentLoader
+												speed={2}
+												width={'100%'}
+												height={30}
+												viewBox='0 0 100% 10'
+												backgroundColor='#e5e5e5'
+												foregroundColor='#ffffff'
+											>
+												<rect x='0' y='10' rx='5' width='100%' height='10' />
+											</ContentLoader>
+										)}
+									</div>
 								</div>
 							</div>
 						</div>
-					</div>
-				)}
+					)}
 			</div>
 		</>
 	);
@@ -420,5 +474,5 @@ export async function getServerSideProps({
 	locales,
 	defaultLocale
 }) {
-	return JSON.parse(JSON.stringify({ props: res?.locals?.data || {} }));
+	return JSON.parse(JSON.stringify({ props: { ...res?.locals?.data, ...query } || {} }));
 }

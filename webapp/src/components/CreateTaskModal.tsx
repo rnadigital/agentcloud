@@ -4,6 +4,7 @@ import * as API from '@api';
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
 import TaskForm from 'components/TaskForm';
 import { useAccountContext } from 'context/account';
+import { TasksDataReturnType } from 'controllers/task';
 import { useRouter } from 'next/router';
 import { Fragment, useEffect, useState } from 'react';
 
@@ -12,9 +13,9 @@ export default function CreateTaskModal({ open, setOpen, callback }) {
 	const { account, csrf } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
-	const [state, dispatch] = useState({});
+	const [state, dispatch] = useState<TasksDataReturnType>();
 	const [error, setError] = useState();
-	const { tools, tasks, agents } = state as any;
+	const { tools, tasks, agents, variables } = state || {};
 
 	async function fetchTaskFormData() {
 		await API.getTasks({ resourceSlug }, dispatch, setError, router);
@@ -66,6 +67,7 @@ export default function CreateTaskModal({ open, setOpen, callback }) {
 											agents={agents}
 											fetchTaskFormData={fetchTaskFormData}
 											taskChoices={tasks}
+											variables={variables}
 										/>
 									</div>
 								</div>

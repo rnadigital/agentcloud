@@ -30,7 +30,7 @@ export function getModelById(teamId: db.IdOrStr, modelId: db.IdOrStr): Promise<M
 	});
 }
 
-export function getModelsByTeam(teamId: db.IdOrStr): Promise<Model> {
+export function getModelsByTeam(teamId: db.IdOrStr): Promise<Model[]> {
 	return ModelCollection()
 		.find({
 			teamId: toObjectId(teamId)

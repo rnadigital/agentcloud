@@ -2,7 +2,9 @@
 
 import { dynamicResponse } from '@dr';
 import { getAgentById, getAgentsByTeam } from 'db/agent';
+import { getAppsByTeam } from 'db/app';
 import { attachAssetToObject, getAssetById } from 'db/asset';
+import { getCrewsByTeam } from 'db/crew';
 import {
 	addTask,
 	deleteTaskById,
@@ -12,25 +14,29 @@ import {
 	updateTask
 } from 'db/task';
 import { getReadyToolsById, getToolsByTeam } from 'db/tool';
+import { getVariableById, getVariablesByTeam, updateVariable } from 'db/variable';
 import { chainValidations } from 'lib/utils/validationutils';
 import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
 import { CollectionName } from 'struct/db';
-import { SharingMode } from 'struct/sharing';
 
-import { checkCanAccessApp, Session, unsafeGetSessionById } from '../db/session';
+import { checkCanAccessApp, unsafeGetSessionById } from '../db/session';
+
+export type TasksDataReturnType = Awaited<ReturnType<typeof tasksData>>;
 
 export async function tasksData(req, res, _next) {
-	const [tasks, tools, agents] = await Promise.all([
+	const [tasks, tools, agents, variables] = await Promise.all([
 		getTasksByTeam(req.params.resourceSlug),
 		getToolsByTeam(req.params.resourceSlug),
-		getAgentsByTeam(req.params.resourceSlug)
+		getAgentsByTeam(req.params.resourceSlug),
+		getVariablesByTeam(req.params.resourceSlug)
 	]);
 	return {
 		csrf: req.csrfToken(),
 		tools,
 		tasks,
-		agents
+		agents,
+		variables
 	};
 }
 
@@ -54,18 +60,20 @@ export async function tasksJson(req, res, next) {
 }
 
 export async function taskData(req, res, _next) {
-	const [task, tools, agents, tasks] = await Promise.all([
+	const [task, tools, agents, tasks, variables] = await Promise.all([
 		getTaskById(req.params.resourceSlug, req.params.taskId),
 		getToolsByTeam(req.params.resourceSlug),
 		getAgentsByTeam(req.params.resourceSlug),
-		getTasksByTeam(req.params.resourceSlug)
+		getTasksByTeam(req.params.resourceSlug),
+		getVariablesByTeam(req.params.resourceSlug)
 	]);
 	return {
 		csrf: req.csrfToken(),
 		tools,
 		task,
 		tasks,
-		agents
+		agents,
+		variables
 	};
 }
 
@@ -150,8 +158,16 @@ export async function addTaskApi(req, res, next) {
 					customError: 'Invalid Tools'
 				}
 			},
+			{
+				field: 'variableIds',
+				validation: {
+					hasLength: 24,
+					asArray: true,
+					ofType: 'string',
+					customError: 'Invalid Variables'
+				}
+			},
 			{ field: 'asyncExecution', validation: { ofType: 'boolean' } },
-			{ field: 'agentId', validation: { notEmpty: true, ofType: 'string' } },
 			{ field: 'iconId', validation: { ofType: 'string' } },
 			{
 				field: 'context',
@@ -215,14 +231,15 @@ export async function addTaskApi(req, res, next) {
 		taskOutputFileName,
 		formFields,
 		isStructuredOutput,
-		displayOnlyFinalOutput
+		displayOnlyFinalOutput,
+		variableIds
 	} = req.body;
 
 	const formattedTaskOutputFileName = taskOutputFileName && taskOutputFileName.replace(/\s+/g, '_');
 
 	if (toolIds) {
 		if (!Array.isArray(toolIds) || toolIds.some(id => typeof id !== 'string')) {
-			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+			return dynamicResponse(req, res, 400, { error: 'Invalid tools list input' });
 		}
 		// Note: will not return tools with a state of ToolState.PENDING or ToolState.ERROR
 		// const foundReadyTools = await getReadyToolsById(req.params.resourceSlug, toolIds);
@@ -231,9 +248,12 @@ export async function addTaskApi(req, res, next) {
 		// }
 	}
 
-	const foundAgent = await getAgentById(req.params.resourceSlug, agentId);
-	if (!foundAgent) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+	let foundAgent;
+	if (agentId) {
+		foundAgent = await getAgentById(req.params.resourceSlug, agentId);
+		if (!foundAgent) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid agent, agent not found' });
+		}
 	}
 
 	const newTaskId = new ObjectId();
@@ -247,7 +267,7 @@ export async function addTaskApi(req, res, next) {
 		description,
 		expectedOutput,
 		toolIds: toolIds.map(toObjectId),
-		agentId: toObjectId(agentId),
+		agentId: agentId ? toObjectId(agentId) : null,
 		context: context.map(toObjectId),
 		asyncExecution: asyncExecution === true,
 		requiresHumanInput: requiresHumanInput === true,
@@ -262,8 +282,22 @@ export async function addTaskApi(req, res, next) {
 				}
 			: null,
 		formFields: formFields,
-		isStructuredOutput
+		isStructuredOutput,
+		variableIds: (variableIds || []).map(toObjectId),
+		dateCreated: new Date()
 	});
+
+	if (variableIds && variableIds.length > 0) {
+		const updatePromises = variableIds.map(async (id: string) => {
+			const variable = await getVariableById(req.params.resourceSlug, id);
+			const updatedVariable = {
+				...variable,
+				usedInTasks: [...(variable.usedInTasks || []), addedTask.insertedId]
+			};
+			return updateVariable(req.params.resourceSlug, id, updatedVariable);
+		});
+		await Promise.all(updatePromises);
+	}
 
 	return dynamicResponse(req, res, 302, {
 		_id: addedTask.insertedId,
@@ -288,8 +322,16 @@ export async function editTaskApi(req, res, next) {
 					customError: 'Invalid Tools'
 				}
 			},
+			{
+				field: 'variableIds',
+				validation: {
+					hasLength: 24,
+					asArray: true,
+					ofType: 'string',
+					customError: 'Invalid Variables'
+				}
+			},
 			{ field: 'asyncExecution', validation: { ofType: 'boolean' } },
-			{ field: 'agentId', validation: { notEmpty: true, ofType: 'string' } },
 			{
 				field: 'context',
 				validation: {
@@ -350,25 +392,61 @@ export async function editTaskApi(req, res, next) {
 		taskOutputFileName,
 		formFields,
 		isStructuredOutput,
-		displayOnlyFinalOutput
+		displayOnlyFinalOutput,
+		variableIds
 	} = req.body;
 
 	const formattedTaskOutputFileName = taskOutputFileName && taskOutputFileName.replace(/\s+/g, '_');
 
 	const task = await getTaskById(req.params.resourceSlug, req.params.taskId);
 	if (!task) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+		return dynamicResponse(req, res, 400, { error: 'Invalid task ID, task does not exist' });
+	}
+
+	if (agentId) {
+		const foundAgent = await getAgentById(req.params.resourceSlug, agentId);
+		if (!foundAgent) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid agent, agent not found' });
+		}
 	}
 
 	if (toolIds) {
 		if (!Array.isArray(toolIds) || toolIds.some(id => typeof id !== 'string')) {
-			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+			return dynamicResponse(req, res, 400, { error: 'Invalid tools list input' });
 		}
 		// Note: will not return tools with a state of ToolState.PENDING or ToolState.ERROR
 		const foundReadyTools = await getReadyToolsById(req.params.resourceSlug, toolIds);
 		if (!foundReadyTools || foundReadyTools?.length !== toolIds.length) {
-			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+			return dynamicResponse(req, res, 400, { error: 'Invalid tools list input, tool not found' });
 		}
+	}
+
+	const existingTask = await getTaskById(req.params.resourceSlug, req.params.taskId);
+	const existingVariableIds = new Set((existingTask?.variableIds || []).map(v => v.toString()));
+	const newVariableIds = new Set(variableIds);
+	const newVariableIdsArray = Array.from([...existingVariableIds, ...newVariableIds]);
+
+	if (newVariableIdsArray.length > 0) {
+		const updatePromises = newVariableIdsArray.map(async (id: string) => {
+			const variable = await getVariableById(req.params.resourceSlug, id);
+			const usedInTasks = variable?.usedInTasks
+				? new Set(variable.usedInTasks?.map(v => v.toString()))
+				: new Set([]);
+
+			if (existingVariableIds.has(id) && !newVariableIds.has(id)) {
+				usedInTasks.delete(req.params.taskId);
+			} else if (!existingVariableIds.has(id) && newVariableIds.has(id)) {
+				usedInTasks.add(req.params.taskId);
+			}
+
+			const updatedVariable = {
+				...variable,
+				usedInTasks: Array.from(usedInTasks, id => toObjectId(id))
+			};
+			return updateVariable(req.params.resourceSlug, id, updatedVariable);
+		});
+
+		await Promise.all(updatePromises);
 	}
 
 	await updateTask(req.params.resourceSlug, req.params.taskId, {
@@ -382,9 +460,10 @@ export async function editTaskApi(req, res, next) {
 		displayOnlyFinalOutput: displayOnlyFinalOutput === true,
 		storeTaskOutput: storeTaskOutput === true,
 		taskOutputFileName: formattedTaskOutputFileName,
-		agentId: toObjectId(agentId),
+		agentId: agentId ? toObjectId(agentId) : null,
 		formFields,
-		isStructuredOutput
+		isStructuredOutput,
+		variableIds: (variableIds || []).map(toObjectId)
 	});
 
 	return dynamicResponse(req, res, 302, {
@@ -413,11 +492,26 @@ export async function deleteTaskApi(req, res, next) {
 	const { taskId } = req.body;
 
 	if (!taskId || typeof taskId !== 'string' || taskId.length !== 24) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+		return dynamicResponse(req, res, 400, { error: 'Invalid task ID' });
 	}
 
+	const task = await getTaskById(req.params.resourceSlug, taskId);
+
+	const updateVariablePromises = task.variableIds.map(async (id: string) => {
+		const variable = await getVariableById(req.params.resourceSlug, id);
+		const usedInTasks = variable?.usedInTasks.map(a => a.toString());
+		if (usedInTasks?.length > 0) {
+			const newUsedInTasks = usedInTasks.filter(a => a !== taskId);
+			return updateVariable(req.params.resourceSlug, id, {
+				usedInTasks: newUsedInTasks.map(a => toObjectId(a))
+			});
+		}
+		return null;
+	});
+
 	await Promise.all([
-		deleteTaskById(req.params.resourceSlug, taskId)
+		deleteTaskById(req.params.resourceSlug, taskId),
+		...updateVariablePromises
 		//TODO: reference handling?
 	]);
 

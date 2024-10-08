@@ -5,6 +5,7 @@ import CreateTeamModal from 'components/CreateTeamModal';
 import { useAccountContext } from 'context/account';
 import { useRouter } from 'next/router';
 import { Fragment, useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 
 const TEAM_PARENT_LOCATIONS = ['agent', 'task', 'tool', 'datasource', 'model'];
 
@@ -23,9 +24,7 @@ export default function OrgSelector({ orgs }) {
 		const matchingOrg = account?.orgs?.find(o => o.teams.some(t => t.id === resourceSlug));
 		const team = matchingOrg?.teams?.find(t => t.id === resourceSlug);
 		setTeamName(team?.name || _teamName);
-	}, [router?.query?.resourceSlug, account?.currentTeam]);
-	const [_state, dispatch] = useState();
-	const [_error, setError] = useState();
+	}, [router?.query?.resourceSlug, account?.currentTeam, _teamName]);
 	const [modalOpen, setModalOpen]: any = useState(false);
 
 	async function switchTeam(orgId, teamId) {
@@ -59,16 +58,14 @@ export default function OrgSelector({ orgs }) {
 					setTimeout(
 						async () => {
 							await refreshAccountContext();
-							if (res.canCreateModel && (!res.teamData.llmModel || !res.teamData.embeddingModel)) {
-								redirect = `/${teamId}/onboarding/configuremodels`;
-							}
-							dispatch(res);
 							router.push(redirect);
 						},
 						600 + (Date.now() - start)
 					);
 				},
-				setError,
+				() => {
+					toast.error('An error occurred when switching teams');
+				},
 				router
 			);
 		} catch (e) {

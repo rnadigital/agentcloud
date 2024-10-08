@@ -24,6 +24,7 @@ export type Session = {
 	appId?: ObjectId;
 	previewLabel?: string;
 	sharingConfig: SharingConfig;
+	variables?: { [key: string]: string };
 };
 
 export function SessionCollection(): any {
@@ -145,6 +146,22 @@ export function deleteSessionById(teamId: db.IdOrStr, sessionId: db.IdOrStr): Pr
 		_id: toObjectId(sessionId),
 		teamId: toObjectId(teamId)
 	});
+}
+
+export function updateSession(
+	teamId: db.IdOrStr,
+	sessionId: db.IdOrStr,
+	updateData: Partial<Session>
+): Promise<any> {
+	return SessionCollection().updateOne(
+		{
+			teamId: toObjectId(teamId),
+			_id: toObjectId(sessionId)
+		},
+		{
+			$set: updateData
+		}
+	);
 }
 
 export async function checkCanAccessApp(

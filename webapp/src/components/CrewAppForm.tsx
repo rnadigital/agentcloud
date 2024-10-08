@@ -10,11 +10,14 @@ import CreateAgentModal from 'components/CreateAgentModal';
 import CreateModelModal from 'components/CreateModelModal';
 import CreateTaskModal from 'components/CreateTaskModal';
 import InfoAlert from 'components/InfoAlert';
+import ModelSelect from 'components/models/ModelSelect';
+import ToolTip from 'components/shared/ToolTip';
 import SharingModeSelect from 'components/SharingModeSelect';
 import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
+import { Model } from 'db/model';
 import { useRouter } from 'next/router';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { Agent } from 'struct/agent';
@@ -24,12 +27,10 @@ import { ModelType } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
 import { Task } from 'struct/task';
 
-import ToolTip from './shared/ToolTip';
-
 export default function CrewAppForm({
 	agentChoices = [],
 	taskChoices = [],
-	/*toolChoices = [], */ modelChoices = [],
+	modelChoices = [],
 	whiteListSharingChoices = [],
 	crew = {},
 	app = {},
@@ -40,9 +41,8 @@ export default function CrewAppForm({
 }: {
 	agentChoices?: Agent[];
 	taskChoices?: Task[];
-	/*toolChoices?: any[],*/
 	crew?: any;
-	modelChoices: any;
+	modelChoices: Model[];
 	whiteListSharingChoices?: any[];
 	app?: any;
 	editing?: boolean;
@@ -53,11 +53,10 @@ export default function CrewAppForm({
 	//TODO: fix any types
 
 	const [accountContext]: any = useAccountContext();
-	const { account, csrf, teamName } = accountContext as any;
+	const { csrf } = accountContext as any;
 	const { step, setStep }: any = useStepContext();
 	const [outsideOrg, setOutsideOrg] = useState(false);
 	const [shareEmail, setShareEmail] = useState(false);
-	const [saveButtonType, setSaveButtonType] = useState('button');
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [modalOpen, setModalOpen]: any = useState(false);
@@ -73,10 +72,9 @@ export default function CrewAppForm({
 	const [appCache, setAppCache] = useState(app.cache === true);
 	const [fullOutput, setFullOutput] = useState(crew.fullOutput === true);
 	const [description, setDescription] = useState(app.description || '');
-	const [error, setError] = useState();
 	const { name, agents, tasks, verbose } = crewState || {};
-	const [verboseInt, setVerboseInt] = useState(verbose);
-	const { tags } = appState; //TODO: make it take correct stuff from appstate
+	const [verboseInt, setVerboseInt] = useState(verbose || 0);
+	const [process, setProcess] = useState(crewState?.process || ProcessImpl.SEQUENTIAL);
 	const [run, setRun] = useState(false);
 
 	function getInitialData(initData) {
@@ -126,29 +124,6 @@ export default function CrewAppForm({
 		return acc;
 	}, []);
 
-	useEffect(() => {
-		if (!app?.crew || !app) {
-			return;
-		}
-		setApp(app);
-		setCrew(app.crew);
-		setIcon(app?.icon);
-		setFullOutput(app.crew?.fullOutput);
-		const { agents, tasks, name, verbose } = app.crew;
-		setVerboseInt(verbose);
-		setDescription(app?.description);
-		setAppCache(app?.cache);
-		const { initialAgents, initialTasks } = getInitialData({ tasks, agents });
-		setAgentsState(initialAgents || []);
-		setTasksState(initialTasks);
-	}, [app?._id]);
-
-	useEffect(() => {
-		if (sharingMode !== SharingMode.WHITELIST) {
-			setSharingEmailState([]);
-		}
-	}, [sharingMode]);
-
 	async function appPost(e) {
 		e.preventDefault();
 		const body = {
@@ -156,8 +131,7 @@ export default function CrewAppForm({
 			resourceSlug,
 			name: e.target.name.value,
 			description,
-			// process: e.target.process.value,
-			process: ProcessImpl.SEQUENTIAL,
+			process,
 			agents: agentsState.map(a => a.value),
 			memory: appMemory,
 			cache: appCache,
@@ -169,7 +143,7 @@ export default function CrewAppForm({
 			sharingMode,
 			sharingEmails: sharingEmailState.map(x => x?.label.trim()).filter(x => x),
 			shareLinkShareId,
-			verbose: Number(e.target.verbose.value) || 0,
+			verbose: verboseInt,
 			fullOutput,
 			cloning: app && !editing
 		};
@@ -220,18 +194,12 @@ export default function CrewAppForm({
 	}
 
 	async function createAgentCallback(addedAgentId, body) {
-		console.log('createAgentCallback addedAgentId', addedAgentId);
 		(await fetchFormData) && fetchFormData();
 		setAgentsState(oldAgentsState => {
 			return oldAgentsState.concat({ label: body.name, value: addedAgentId });
 		});
 		setModalOpen(false);
 	}
-
-	// async function createToolCallback() { // TODO:
-	// 	await fetchFormData && fetchFormData();
-	// 	setModalOpen(false);
-	// }
 
 	async function createTaskCallback(addedTaskId, body) {
 		(await fetchFormData) && fetchFormData();
@@ -346,6 +314,12 @@ export default function CrewAppForm({
 			modal = null;
 			break;
 	}
+
+	useEffect(() => {
+		if (sharingMode !== SharingMode.WHITELIST) {
+			setSharingEmailState([]);
+		}
+	}, [sharingMode]);
 
 	return (
 		<>
@@ -463,7 +437,7 @@ export default function CrewAppForm({
 											const optionTask = taskChoices.find(tc => tc._id === data.value);
 											return (
 												<li
-													className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 justify-between flex hover:overflow-visible ${
+													className={`transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 justify-between flex hover:overflow-visible ${
 														data.isSelected ? 'bg-blue-100 text-blue-500' : 'dark:text-white'
 													}`}
 												>
@@ -527,50 +501,57 @@ export default function CrewAppForm({
 									name='verbose'
 									id='verbose'
 									defaultValue={verboseInt}
+									onChange={e => setVerboseInt(parseInt(e.target.value))}
 									className='mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 								/>
 							</div>
 
-							{/*<div className='sm:col-span-12'>
-							<label className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-								Process
-							</label>
-							<div className='mt-2'>
-								<label className='inline-flex items-center mr-6 text-sm'>
-									<input
-										type='radio'
-										name='process'
-										value={ProcessImpl.SEQUENTIAL}
-										defaultChecked={crewState.process === ProcessImpl.SEQUENTIAL}
-										onChange={(e) => { e.target.checked && setCrew(previousCrew => { return { ...previousCrew, process: ProcessImpl.SEQUENTIAL }; }); }}
-										className='form-radio'
-									/>
-									<span className='ml-2'>Sequential</span>
+							<div className='sm:col-span-12'>
+								<label className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+									Process
 								</label>
-								<label className='inline-flex items-center text-sm'>
-									<input
-										type='radio'
-										name='process'
-										value={ProcessImpl.HIERARCHICAL}
-										defaultChecked={crewState.process === ProcessImpl.HIERARCHICAL}
-										onChange={(e) => { e.target.checked && setCrew(previousCrew => { return { ...previousCrew, process: ProcessImpl.HIERARCHICAL }; }); }}
-										className='form-radio'
-									/>
-									<span className='ml-2'>Flexible</span>
-								</label>
+								<div className='mt-2'>
+									<label className='inline-flex items-center mr-6 text-sm'>
+										<input
+											type='radio'
+											name='process'
+											value={ProcessImpl.SEQUENTIAL}
+											defaultChecked={process === ProcessImpl.SEQUENTIAL}
+											onChange={e => {
+												e.target.checked && setProcess(e.target.value);
+											}}
+											className='form-radio'
+										/>
+										<span className='ml-2'>Sequential</span>
+									</label>
+									<label className='inline-flex items-center text-sm'>
+										<input
+											type='radio'
+											name='process'
+											value={ProcessImpl.HIERARCHICAL}
+											defaultChecked={process === ProcessImpl.HIERARCHICAL}
+											onChange={e => {
+												e.target.checked && setProcess(e.target.value);
+											}}
+											className='form-radio'
+										/>
+										<span className='ml-2'>Flexible</span>
+									</label>
+								</div>
 							</div>
-						</div>*/}
 
-							{/*<ModelSelect
-								models={modelChoices}
-								modelId={managerModel?.value}
-								label='Chat Manager Model'
-								onChange={model => setManagerModel(model)}
-								setModalOpen={setModalOpen}
-								callbackKey=''
-								setCallbackKey={() => {}}
-								modelFilter='llm'
-							/>*/}
+							{process === ProcessImpl.HIERARCHICAL && (
+								<ModelSelect
+									models={modelChoices}
+									modelId={managerModel?.value}
+									label='Chat Manager Model'
+									onChange={model => setManagerModel(model)}
+									setModalOpen={setModalOpen}
+									callbackKey=''
+									setCallbackKey={() => {}}
+									modelFilter='llm'
+								/>
+							)}
 
 							<div className='sm:col-span-12'>
 								<div className='mt-2'>

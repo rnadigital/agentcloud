@@ -6,21 +6,24 @@ import NewButtonSection from 'components/NewButtonSection';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
+import { AppsDataReturnType } from 'controllers/app';
+import { ObjectId } from 'mongodb';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
+import { App } from 'struct/app';
 
 export default function Apps(props) {
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
-	const { account, teamName, csrf } = accountContext as any;
+	const { teamName, csrf } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
-	const [state, dispatch] = useState(props);
+	const [state, dispatch] = useState<AppsDataReturnType>(props);
 	const [error, setError] = useState();
 	const { apps } = state;
 	const filteredApps = apps?.filter(x => !x.hidden);
 
-	async function startSession(appId) {
+	async function startSession(appId: ObjectId) {
 		await API.addSession(
 			{
 				_csrf: csrf,
@@ -112,6 +115,14 @@ export async function getServerSideProps({
 	locale,
 	locales,
 	defaultLocale
+}: {
+	req: any;
+	res: any;
+	query: any;
+	resolvedUrl: string;
+	locale: string;
+	locales: string[];
+	defaultLocale: string;
 }) {
 	return JSON.parse(JSON.stringify({ props: res?.locals?.data || {} }));
 }

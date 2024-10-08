@@ -29,7 +29,7 @@ class ChatAssistant:
         self.socket = SimpleClient()
         self.mongo_conn = start_mongo_session()
         self.chat_model: BaseLanguageModel
-        self.tools: list[BaseTool]
+        self.tools: list[BaseTool] = []
         self.system_message: str
         self.agent_name: str
         self.max_messages: int
@@ -51,7 +51,7 @@ class ChatAssistant:
     def init_app_state(self):
         session = self.mongo_conn.get_session(self.session_id)
 
-        app = self.mongo_conn.get_single_model_by_id("apps", App, session.get('appId'))
+        app = self.mongo_conn.get_single_model_by_id("apps", App, session.appId)
 
         app_config = app.chatAppConfig
         if not app_config:
@@ -64,11 +64,17 @@ class ChatAssistant:
 
         self.system_message = '\n'.join([agentcloud_agent.role, agentcloud_agent.goal, agentcloud_agent.backstory])
 
+        if session.variables:
+            self.system_message = self.system_message.format(**session.variables)
+
         model = self.mongo_conn.get_single_model_by_id("models", Model, agentcloud_agent.modelId)
         try:
             self.chat_model = language_model_factory(model)
             self.tools = list(map(self._make_langchain_tool, agentcloud_tools))
         except Exception as ce:
+            print(ce)
+            import traceback
+            print(traceback.format_exc())
             # TODO: a shared function/static class method for send_to_sockets
             send(
                 self.socket,
