@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-set -e
-set -o pipefail
-trap 'echo "An error occurred during installation. Exiting..."; exit 1; echo "Please forward relevant error logs to the Agentcloud team."' ERR SIGINT
+# set -e
+# set -o pipefail
+# trap 'echo "An error occurred during installation. Exiting..."; exit 1; echo "Please forward relevant error logs to the Agentcloud team."' ERR SIGINT
 
 # Get the width of the terminal
 terminal_width=$(tput cols)
