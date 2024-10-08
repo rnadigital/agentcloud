@@ -52,6 +52,7 @@ services:
         - GOOGLE_APPLICATION_CREDENTIALS=/app/keyfile.json
         - NEXT_PUBLIC_STORAGE_PROVIDER=local
         - NEXT_PUBLIC_LOCAL_UNSTRUCTURED=1
+        - AIRBYTE_RABBITMQ_HOST=${AIRBYTE_RABBITMQ_HOST}
     ports:
       - "127.0.0.1:3000:3000"
     depends_on:
@@ -120,6 +121,7 @@ services:
       - FUNCTION_PROVIDER=google
       - GOOGLE_FUNCTION_LOCATION=us-central1
       - SKIP_STRIPE=
+      - AIRBYTE_RABBITMQ_HOST=${AIRBYTE_RABBITMQ_HOST}
     volumes:
       - datasource_files:/tmp
 

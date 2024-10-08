@@ -94,6 +94,7 @@ GCS_BUCKET_NAME=""
 GCS_BUCKET_LOCATION=""
 STRIPE_PRICING_TABLE_ID=""
 STRIPE_PUBLISHABLE_KEY=""
+AIRBYTE_RABBITMQ_HOST=$(ifconfig | grep -v 127.0.0.1 | grep -F "inet " | awk '{print $2}' | head -n 1)
 
 # Initialize variables to indicate whether to kill specific containers
 KILL_WEBAPP_NEXT=0
