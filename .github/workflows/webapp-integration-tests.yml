@@ -3,7 +3,7 @@ name: Run Webapp Integration Tests
 
 on:
   pull_request:
-    branches: [ "more-integration-tests" ]
+    branches: [ "develop" ]
 
 jobs:
   integration-tests:
