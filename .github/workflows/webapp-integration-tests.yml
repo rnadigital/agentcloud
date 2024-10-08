@@ -7,8 +7,11 @@ on:
 
 jobs:
   integration-tests:
-    name: Build and install dependencies
+    name: Build app and run integration tests
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        firefox: [ '84.0', 'devedition-84.0b1', 'latest-beta', 'latest-devedition', 'latest-nightly', 'latest-esr', 'latest' ]
     env:
         TERM: xterm
     permissions:
@@ -18,6 +21,15 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      
+      - name: Setup firefox
+        id: setup-firefox
+        uses: browser-actions/setup-firefox@v1
+        with:
+          firefox-version: ${{ matrix.firefox }}
+      - run: |
+          echo Installed firefox versions: ${{ steps.setup-firefox.outputs.firefox-version }}
+          ${{ steps.setup-firefox.outputs.firefox-path }} --version
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -30,10 +42,3 @@ jobs:
       - name: Install webapp dependencies
         working-directory: ./webapp
         run: npm install
-
-      - name: run ./install.sh
-        run: ./install.sh
-
-      - name: Run integration tests
-        working-directory: ./webapp
-        run: npm run test:integration
