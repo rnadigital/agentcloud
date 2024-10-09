@@ -6,7 +6,6 @@ import { HandRaisedIcon } from '@heroicons/react/20/solid';
 import CreateAgentModal from 'components/CreateAgentModal';
 import CreateToolModal from 'components/modal/CreateToolModal';
 import ToolsSelect from 'components/tools/ToolsSelect';
-import { log } from 'console';
 import { useAccountContext } from 'context/account';
 import { useSocketContext } from 'context/socket';
 import { TasksDataReturnType } from 'controllers/task';
@@ -81,7 +80,7 @@ export default function TaskForm({
 	const { csrf } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
-	const [taskState, setTask] = useState<Task | undefined>(task);
+	const [taskState, setTask] = useState<Task>(task);
 	const [expectedOutput, setExpectedOutput] = useState<string>(task?.expectedOutput);
 	const [isStructuredOutput, setIsStructuredOutput] = useState(task?.isStructuredOutput);
 	const [modalOpen, setModalOpen] = useState<string>();
@@ -101,6 +100,7 @@ export default function TaskForm({
 	const requiredHumanInput = taskState?.requiresHumanInput;
 
 	const preferredAgent = agents.find(a => a?._id === taskState?.agentId);
+	const taskOutputVariable = variables.find(v => v.name === taskState?.taskOutputVariableName);
 	const [showToolConflictWarning, setShowToolConflictWarning] = useState(false);
 
 	const onInitializePane: MonacoOnInitializePane = (monacoEditorRef, editorRef, model) => {
@@ -144,8 +144,6 @@ export default function TaskForm({
 		value: v._id.toString()
 	}));
 
-	console.log(expectedOutputSelectedVariables);
-
 	const [description, setDescription] = useState(task?.description || '');
 
 	const autocompleteDescription = useAutocompleteDropdown({
@@ -179,6 +177,14 @@ export default function TaskForm({
 				autocompleteExpectedOutput.handleNewVariableCreation(newVariable);
 				break;
 			default:
+				setTask(oldTask => {
+					return {
+						...oldTask,
+						taskOutputVariableName: newVariable.label
+					};
+				});
+				fetchTaskFormData();
+				setModalOpen(null);
 				break;
 		}
 	};
@@ -197,7 +203,7 @@ export default function TaskForm({
 		const displayOnlyFinalOutput =
 			taskState?.requiresHumanInput && (!formFields || formFields.length === 0)
 				? false
-				: taskState.displayOnlyFinalOutput;
+				: taskState?.displayOnlyFinalOutput;
 
 		const body: any = {
 			_csrf: e.target._csrf.value,
@@ -218,7 +224,8 @@ export default function TaskForm({
 			variableIds:
 				Array.from(
 					new Set([...descriptionSelectedVariables, ...expectedOutputSelectedVariables])
-				) || []
+				) || [],
+			taskOutputVariableName: taskState?.taskOutputVariableName || null
 		};
 		const posthogEvent = editing ? 'updateTask' : 'createTask';
 		if (editing) {
@@ -515,6 +522,67 @@ export default function TaskForm({
 								)}
 						</div>
 
+						{!isStructuredOutput && (
+							<div className='col-span-full'>
+								<ToolTip
+									content='Save task ouput to a variable. This variable will be available in next tasks as well as arguments for tools.'
+									placement='top-start'
+									arrow={false}
+								>
+									<div className='mt-2'>
+										<div className='sm:col-span-12'>
+											<label
+												htmlFor='requiresHumanInput'
+												className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+											>
+												Assign Task Output to Variable
+											</label>
+											<Select
+												primaryColor='indigo'
+												value={
+													taskOutputVariable
+														? {
+																label: taskOutputVariable.name,
+																value: taskOutputVariable._id.toString()
+															}
+														: null
+												}
+												onChange={(v: any) => {
+													/* Note: using a unique non objectid valud e.g. "new" instead of null because
+										   isClearable selects that aren't isMultiple have an empty value of null, which conflicts
+										   and triggers the new modal every time the input is cleared */
+													if (v?.value == 'new') {
+														return setModalOpen('variable');
+													}
+													setTask(oldTask => {
+														return {
+															...oldTask,
+															taskOutputVariableName: v?.label
+														};
+													});
+												}}
+												options={[{ label: '+ Create new variable', value: 'new' }].concat(
+													variables.map(a => ({
+														label: a.name.toString(),
+														value: a._id.toString()
+													}))
+												)}
+												classNames={{
+													menuButton: () =>
+														'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-slate-800 dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
+													menu: 'absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-slate-700 dark:border-slate-600',
+													list: 'dark:bg-slate-700',
+													listGroupLabel: 'dark:bg-slate-700',
+													listItem: (value?: { isSelected?: boolean }) =>
+														`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`
+												}}
+											/>
+										</div>
+									</div>
+								</ToolTip>
+							</div>
+						)}
+
 						<div className='sm:col-span-full'>
 							<label
 								htmlFor='members'
@@ -741,7 +809,10 @@ export default function TaskForm({
 											onChange={(v: any) => {
 												setTask(oldTask => ({
 													...oldTask,
-													requiresHumanInput: v.value !== 'off'
+													requiresHumanInput: v.value !== 'off',
+													...(v.value === 'off' || v.value === 'form'
+														? { taskOutputVariableName: null }
+														: {})
 												}));
 												if (v.value === 'form') {
 													setFormFields(
@@ -776,7 +847,12 @@ export default function TaskForm({
 						{/* Form builder for human input */}
 						{requiredHumanInput && formFields?.length > 0 && (
 							<div className='col-span-full'>
-								<FormConfig formFields={formFields} setFormFields={setFormFields} />
+								<FormConfig
+									formFields={formFields}
+									setFormFields={setFormFields}
+									variables={variables}
+									fetchTaskFormData={fetchTaskFormData}
+								/>
 							</div>
 						)}
 

@@ -1,21 +1,70 @@
+import * as API from '@api';
 import { CheckCircleIcon, CheckIcon } from '@heroicons/react/24/outline';
+import { useAccountContext } from 'context/account';
 import cn from 'lib/cn';
+import { useRouter } from 'next/router';
 import React from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { toast } from 'react-toastify';
 import { Task } from 'struct/task';
 
 interface HumanInputFormProps {
 	formFields: Task['formFields'];
 	sendMessage: (e: any, reset: any) => void;
+	isShared?: boolean;
+	sessionId: string;
+	resourceSlug: string;
 }
-const StructuredInputForm = ({ formFields, sendMessage }: HumanInputFormProps) => {
+
+interface Form {
+	[key: string]: string;
+}
+
+const StructuredInputForm = ({
+	formFields,
+	sendMessage,
+	sessionId,
+	resourceSlug,
+	isShared
+}: HumanInputFormProps) => {
+	const [accountContext]: any = useAccountContext();
+	const { csrf } = accountContext as any;
 	const {
 		register,
 		handleSubmit,
 		formState: { errors },
 		control
-	} = useForm();
-	const onSubmit = data => {
+	} = useForm<Form>();
+
+	const router = useRouter();
+
+	const onSubmit = async data => {
+		const matchingFields = formFields.filter(
+			field => data.hasOwnProperty(field.name) && Boolean(field.variable)
+		);
+
+		if (matchingFields.length > 0) {
+			const variables: Record<string, string> = {};
+			matchingFields.forEach(field => {
+				variables[field.name] = data[field.name];
+			});
+			if (isShared) {
+				await API.publicUpdateSession({ sessionId, resourceSlug, variables }, null, null, router);
+			} else {
+				await API.updateSession(
+					{
+						_csrf: csrf,
+						resourceSlug,
+						sessionId,
+						variables
+					},
+					null,
+					toast.error,
+					router
+				);
+			}
+		}
+
 		const statement = formFields
 			.map(field => {
 				const value = data[field.name];
