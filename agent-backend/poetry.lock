@@ -889,7 +889,7 @@ cron = ["capturer (>=2.4)"]
 
 [[package]]
 name = "crewai"
-version = "0.41.1-post2"
+version = "0.41.1-post4"
 description = "Cutting-edge framework for orchestrating role-playing, autonomous AI agents. By fostering collaborative intelligence, CrewAI empowers agents to work together seamlessly, tackling complex tasks."
 optional = false
 python-versions = ">=3.10,<=3.13"
@@ -919,9 +919,9 @@ tools = ["crewai-tools (>=0.4.26,<0.5.0)"]
 
 [package.source]
 type = "git"
-url = "https://github.com/iandjx/crewAI.git"
-reference = "571-variable-interpolation"
-resolved_reference = "a07da6749c69e188836cbfbf3a46e783e2584331"
+url = "https://github.com/rnadigital/crewAI.git"
+reference = "develop"
+resolved_reference = "90f3413bb5d5327f3921ae2245e36ef6796b3d0b"
 
 [[package]]
 name = "curl-cffi"
@@ -6176,4 +6176,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "137fbcbf86214361087392257d7f57ffdf6f283f361e9c9c7cdb2056598a7330"
+content-hash = "c7e0bffa5c228c0b1aa59498b7ac91ff2985e9a1a6cdce9c602be38c1bd6516b"
