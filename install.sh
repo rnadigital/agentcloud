@@ -97,7 +97,9 @@ GCS_BUCKET_NAME=""
 GCS_BUCKET_LOCATION=""
 STRIPE_PRICING_TABLE_ID=""
 STRIPE_PUBLISHABLE_KEY=""
-export AIRBYTE_RABBITMQ_HOST=$(ifconfig | grep -v 127.0.0.1 | grep -F "inet " | awk '{print $2}' | head -n 1)
+export AIRBYTE_RABBITMQ_HOST=$(ip address | grep -v 127.0.0.1 | grep -F "inet " | awk '{print $2}' | cut -d'/' -f1 | head -n 1)
+
+echo "Airbyte RabbitMQ Host: ${AIRBYTE_RABBITMQ_HOST}"
 
 # Initialize variables to indicate whether to kill specific containers
 KILL_WEBAPP_NEXT=0
@@ -214,7 +216,7 @@ docker tag downloads.unstructured.io/unstructured-io/unstructured-api:latest loc
 if [ "$MINIMAL" -eq 1 ]; then
 	docker compose -f docker-compose.minimal.yml up --build -d
 else
-	docker compose up --build -d
+    docker compose up -d
 fi
 
 # At the end of the script, check the variables and kill containers if requested
