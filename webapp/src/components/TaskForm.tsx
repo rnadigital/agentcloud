@@ -203,7 +203,7 @@ export default function TaskForm({
 		const displayOnlyFinalOutput =
 			taskState?.requiresHumanInput && (!formFields || formFields.length === 0)
 				? false
-				: taskState.displayOnlyFinalOutput;
+				: taskState?.displayOnlyFinalOutput;
 
 		const body: any = {
 			_csrf: e.target._csrf.value,
