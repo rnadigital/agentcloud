@@ -250,8 +250,6 @@ impl VectorDatabase for QdrantClient {
             .collect()
             .await;
 
-        println!("Point going to qdrant: {:?}", list_of_points);
-
         match search_request.search_type {
             SearchType::ChunkedRow => {
                 let ids: Vec<PointId> =

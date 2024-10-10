@@ -8,5 +8,10 @@ pub fn format_for_n8n(metadata_map: HashMap<String, Value>) -> HashMap<String, V
         "metadata".to_string(),
         Value::Object(metadata_map_as_serde_map),
     );
+    if let Some(content) = metadata_map.get("content") {
+        new_map.insert("content".to_string(), content.to_owned());
+    } else {
+        log::warn!("Content field was not found in metadata")
+    }
     new_map
 }
