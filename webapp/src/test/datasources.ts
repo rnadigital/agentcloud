@@ -117,6 +117,14 @@ describe("Datasource Tests", () => {
         expect(response.status).toBe(200);
     }, 60 * SECONDS);
 
+    //AIRBYTE TESTS
+    //get connections.json
+
+    //getSpecification
+
+    //getJobsList
+
+    //getDatasourceSchema
 
     test.only("Make Connection", async () => {//make a connection with airbyte
 
