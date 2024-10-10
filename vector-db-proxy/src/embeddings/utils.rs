@@ -1,6 +1,6 @@
 use crate::adaptors::mongo::queries::{get_model, increment_by_one};
 use crate::data::unstructuredio::models::UnstructuredIOResponse;
-use crate::embeddings::helpers::format_for_n8n;
+use crate::embeddings::helpers::{clean_text, format_for_n8n};
 use crate::embeddings::models::{EmbeddingModels, FastEmbedModels};
 use crate::init::env_variables::GLOBAL_DATA;
 use crate::vector_databases::models::{Point, SearchRequest, SearchType, VectorDatabaseStatus};
@@ -267,10 +267,8 @@ pub async fn embed_bulk_insert_unstructured_response(
                     point_metadata = map.into_iter().collect();
                 } else {
                     if let Ok(content) = serde_json::to_string(file_metadata) {
-                        point_metadata.insert(
-                            "content".to_string(),
-                            Value::String(content.replace("\"", "")),
-                        );
+                        point_metadata
+                            .insert("content".to_string(), Value::String(clean_text(content)));
                     } else {
                         log::warn!("File is neither an object nor a string value. Ignoring...");
                         continue;

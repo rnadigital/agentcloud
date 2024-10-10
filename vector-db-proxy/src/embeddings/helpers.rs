@@ -9,17 +9,19 @@ pub fn format_for_n8n(mut metadata_map: HashMap<String, Value>) -> HashMap<Strin
         Value::Object(metadata_map_as_serde_map),
     );
     if let Some(content) = metadata_map.remove("content") {
-        new_map.insert(
-            "content"
-                .to_string()
-                .replace("\"", "")
-                .replace("\n", "")
-                .replace("\r", "")
-                .replace("\n\n", ""),
-            content.to_owned(),
-        );
+        let clean_text = clean_text(content.to_string());
+        new_map.insert("content".to_string(), Value::String(clean_text));
     } else {
         log::warn!("Content field was not found in metadata")
     }
     new_map
+}
+
+pub fn clean_text(text: String) -> String {
+    text.replace("\"", "")
+        .replace("\n", "")
+        .replace("\r", "")
+        .replace("\n\n", "")
+        .replace("\\n", "")
+        .replace("\\r", "")
 }
