@@ -36,7 +36,7 @@ pub async fn get_model(db: &Database, datasource_id: &str) -> Result<Option<Mode
         .await
     {
         Ok(Some(datasource)) => {
-            println!("Datasource retrieved from Mongo: {}", datasource._id);
+            //println!("Datasource retrieved from Mongo: {}", datasource._id);
             // If datasource is found, attempt to find the related model.
             match models_collection
                 .find_one(doc! {"_id": datasource.modelId}, None)

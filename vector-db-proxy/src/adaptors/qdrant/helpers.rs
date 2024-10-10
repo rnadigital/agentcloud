@@ -80,7 +80,6 @@ pub async fn construct_point_struct(
 ) -> Option<PointStruct> {
     if !payload.is_empty() {
         let vector_id = index.map_or(PointId::from(Uuid::new_v4().to_string()), |id| {
-            println!("UUID: {:?}", to_string(&id).unwrap().replace("\"", ""));
             PointId::from(to_string(&id).unwrap().replace("\"", ""))
         });
         match vector_name {
