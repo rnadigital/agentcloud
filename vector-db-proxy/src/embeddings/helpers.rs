@@ -1,3 +1,4 @@
+use regex::Regex;
 use serde_json::{Map, Value};
 use std::collections::HashMap;
 
@@ -18,10 +19,6 @@ pub fn format_for_n8n(mut metadata_map: HashMap<String, Value>) -> HashMap<Strin
 }
 
 pub fn clean_text(text: String) -> String {
-    text.replace("\"", "")
-        .replace("\n", "")
-        .replace("\r", "")
-        .replace("\n\n", "")
-        .replace("\\n", "")
-        .replace("\\r", "")
+    let re = Regex::new(r#"(?:[\\\"\n\r]|\\[nr])+"#).unwrap();
+    re.replace_all(&text, "").into_owned()
 }
