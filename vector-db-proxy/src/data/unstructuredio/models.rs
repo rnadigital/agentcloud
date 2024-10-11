@@ -27,7 +27,7 @@ impl From<&UnstructuredIOResponse> for HashMap<String, String> {
         // Convert fields of UnstructuredIOResponse to strings and insert them into the map
         map.insert("ac_type".to_string(), value.field_type.clone());
         map.insert("ac_element_id".to_string(), value.element_id.clone());
-        map.insert("content".to_string(), clean_text(value.text.clone()));
+        map.insert("page_content".to_string(), clean_text(value.text.clone()));
         // Convert fields of Metadata to strings and insert them into the map
         map.insert("ac_filetype".to_string(), value.metadata.filetype.clone());
         map.insert(

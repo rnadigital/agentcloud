@@ -1,6 +1,6 @@
 use crate::adaptors::mongo::queries::{get_model, increment_by_one};
 use crate::data::unstructuredio::models::UnstructuredIOResponse;
-use crate::embeddings::helpers::{clean_text, format_for_n8n};
+use crate::embeddings::helpers::clean_text;
 use crate::embeddings::models::{EmbeddingModels, FastEmbedModels};
 use crate::init::env_variables::GLOBAL_DATA;
 use crate::vector_databases::models::{Point, SearchRequest, SearchType, VectorDatabaseStatus};
@@ -277,10 +277,6 @@ pub async fn embed_bulk_insert_unstructured_response(
                 if let Some(existing_metadata) = metadata.clone() {
                     point_metadata.extend(existing_metadata)
                 }
-
-                //This is a very specific case for bookstack/n8n where the metadata must be
-                // structured in this way
-                point_metadata = format_for_n8n(point_metadata);
 
                 // Embed text and return vector
                 let embedding_vector = embeddings.get(i);

@@ -1,9 +1,11 @@
+use crate::embeddings::helpers::clean_text;
 use crate::utils::conversions::{condition_to_hash_map, convert_hashmap_to_qdrant_filters};
 use crate::vector_databases::error::VectorDatabaseError;
 use crate::vector_databases::models::Cloud::GCP;
 use pinecone_sdk::models::Cloud as PineconeCloud;
 use pinecone_sdk::models::{Metric, Vector};
 use prost_types::value::Kind;
+use prost_types::Value as ProstValue;
 use prost_types::{ListValue, Struct as Metadata, Struct};
 use qdrant_client::qdrant::Filter;
 use serde::{Deserialize, Serialize};
@@ -395,7 +397,7 @@ impl From<FilterConditions> for Metadata {
                 btree_map.insert(
                     k,
                     prost_types::Value {
-                        kind: Some(Kind::StringValue(format!("{}", v.replace("\"", "")))),
+                        kind: Some(Kind::StringValue(format!("{}", clean_text(v)))),
                     },
                 );
             }
@@ -467,7 +469,7 @@ impl From<Metadata> for Point {
         let mut hash_map = HashMap::new();
 
         for (k, v) in value.fields {
-            hash_map.insert(k, value_to_string(&v.kind).unwrap().parse().unwrap());
+            hash_map.insert(k, prost_to_serde(&v));
         }
         Point {
             index: None,
@@ -490,4 +492,58 @@ impl From<Point> for Vector {
             metadata,
         }
     }
+}
+
+fn prost_to_serde(prost_value: &ProstValue) -> Value {
+    match &prost_value.kind {
+        Some(Kind::NullValue(_)) => Value::Null,
+        Some(Kind::NumberValue(n)) => {
+            // Convert f64 to serde_json::Number, handling cases where the conversion might fail
+            serde_json::Number::from_f64(*n)
+                .map(Value::Number)
+                .unwrap_or_else(|| Value::Null)
+        }
+        Some(Kind::StringValue(s)) => Value::String(s.clone()),
+        Some(Kind::BoolValue(b)) => Value::Bool(*b),
+        Some(Kind::StructValue(struct_value)) => {
+            let map = struct_value
+                .fields
+                .iter()
+                .map(|(k, v)| (k.clone(), prost_to_serde(v)))
+                .collect();
+            Value::Object(map)
+        }
+        Some(Kind::ListValue(list_value)) => {
+            let vec = list_value.values.iter().map(prost_to_serde).collect();
+            Value::Array(vec)
+        }
+        None => Value::Null,
+    }
+}
+
+fn serde_to_prost(serde_value: &Value) -> ProstValue {
+    let kind = match serde_value {
+        Value::Null => Some(Kind::NullValue(0)),
+        Value::Bool(b) => Some(Kind::BoolValue(*b)),
+        Value::Number(n) => {
+            // Extract f64 value from serde_json::Number
+            n.as_f64()
+                .map(Kind::NumberValue)
+                .or_else(|| n.as_i64().map(|i| Kind::NumberValue(i as f64)))
+                .or_else(|| n.as_u64().map(|u| Kind::NumberValue(u as f64)))
+        }
+        Value::String(s) => Some(Kind::StringValue(s.clone())),
+        Value::Array(arr) => {
+            let values = arr.iter().map(serde_to_prost).collect();
+            Some(Kind::ListValue(ListValue { values }))
+        }
+        Value::Object(map) => {
+            let fields = map
+                .iter()
+                .map(|(k, v)| (k.clone(), serde_to_prost(v)))
+                .collect();
+            Some(Kind::StructValue(Struct { fields }))
+        }
+    };
+    ProstValue { kind }
 }

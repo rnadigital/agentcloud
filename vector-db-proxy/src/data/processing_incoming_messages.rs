@@ -4,7 +4,7 @@ use crate::adaptors::mongo::queries::{
 };
 use crate::data::helpers::hash_string_to_uuid;
 use crate::data::unstructuredio::apis::chunk_text;
-use crate::embeddings::helpers::format_for_n8n;
+use crate::embeddings::helpers::clean_text;
 use crate::embeddings::models::EmbeddingModels;
 use crate::embeddings::utils::{embed_bulk_insert_unstructured_response, embed_text};
 use crate::init::env_variables::GLOBAL_DATA;
@@ -32,7 +32,7 @@ pub async fn embed_text_construct_point(
     if !data.is_empty() {
         if let Some(_id) = datasource_id.clone() {
             // Convert embedding_field_name to lowercase
-            let mut payload = data.clone();
+            let mut payload: HashMap<String, Value> = data.clone();
             if let Some(value) = payload.remove(embedding_field_name) {
                 if let Some(chunking_config) = chunking_strategy.clone() {
                     let global_data = GLOBAL_DATA.read().await.clone();
@@ -74,10 +74,11 @@ pub async fn embed_text_construct_point(
                         }
                     }
                 } else {
-                    //This is a very specific case for bookstack/n8n where the metadata must be
-                    // structured in this way
-                    payload = format_for_n8n(payload);
-                }
+                    payload.insert(
+                        "page_content".to_string(),
+                        Value::String(clean_text(value.to_string())),
+                    );
+                };
                 // Embedding data
                 let embedding_vec =
                     embed_text(mongo_conn, _id, vec![&value.to_string()], &embedding_model).await?;
