@@ -34,13 +34,13 @@ afterAll(async () => {
 				accountDetails.account11_email
 			] 
 		}
-	});
+	});   
 	await db.client().close();
 });
 
 describe("log out and wrap up tests", ()=>{
     
-    test('log out', async () => {
+    test.only('log out', async () => {
         const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
             accountDetails.account1_email
         );
@@ -57,7 +57,7 @@ describe("log out and wrap up tests", ()=>{
         expect(response.status).toBe(200);
     });
     
-    test('cant get account with invalidated session cookie', async () => {
+    test.only('cant get account with invalidated session cookie', async () => {
         const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
             accountDetails.account1_email
         );

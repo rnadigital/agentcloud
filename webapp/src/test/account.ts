@@ -43,7 +43,7 @@ beforeAll(async () => {
 
 describe('account tests', () => {
 
-	test('register new accounts', async () => {
+	test.only('register new accounts', async () => {
 		let response = await fetch(`${process.env.WEBAPP_TEST_BASE_URL}/forms/account/register`, {
 			method: 'POST',
 			headers: {
@@ -94,7 +94,7 @@ describe('account tests', () => {
 		await db.db().collection('accounts').deleteMany({ email: accountDetails.account3_email }); //delete these accounts so we can stress test logins in the next test
 	}, 60 * SECONDS); //extended timeout due to multiple account creations
 
-	test('stress test registration with many accounts', async () => {
+	test.only('stress test registration with many accounts', async () => {
 		const accounts = [
 			{ name: accountDetails.account1_name, email: accountDetails.account1_email, password: accountDetails.account1_password },
 			{ name: accountDetails.account2_name, email: accountDetails.account2_email, password: accountDetails.account2_password },
@@ -131,7 +131,7 @@ describe('account tests', () => {
 	
 
 	//TODO: refactor this to do it with a loop
-	test('login as new users - 11 logins', async () => {
+	test.only('login as new users - 11 logins', async () => {
 		let response = await fetch(`${process.env.WEBAPP_TEST_BASE_URL}/forms/account/login`, {
 			method: 'POST',
 			headers: {
@@ -300,7 +300,7 @@ describe('account tests', () => {
 	}, 60 * SECONDS); // extended timeout due to multiple account logins
 	
 
-	test('get account', async () => {
+	test.only('get account', async () => {
 		const url = `${process.env.WEBAPP_TEST_BASE_URL}/account.json`;
 		const accounts = [
 			{ email: accountDetails.account1_email, sessionCookie: sessionCookie1 },
@@ -353,7 +353,7 @@ describe('account tests', () => {
 	//test with valid token??
 
 	//sets the role to prevent redirects to onboarding in further tests
-	test('set role - onboarding', async () => {
+	test.only('set role - onboarding', async () => {
 		const accounts = [
 			accountDetails.account1_email,
 			accountDetails.account2_email,
