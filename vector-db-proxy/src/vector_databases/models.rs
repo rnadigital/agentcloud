@@ -2,7 +2,6 @@ use crate::embeddings::helpers::clean_text;
 use crate::utils::conversions::{condition_to_hash_map, convert_hashmap_to_qdrant_filters};
 use crate::vector_databases::error::VectorDatabaseError;
 use crate::vector_databases::helpers;
-use crate::vector_databases::models::Cloud::GCP;
 use pinecone_sdk::models::Cloud as PineconeCloud;
 use pinecone_sdk::models::{Metric, Vector};
 use prost_types::value::Kind;
@@ -202,7 +201,7 @@ impl SearchRequest {
             top_k: None,
             search_response_params: None,
             region: Some(Region::US),
-            cloud: Some(GCP),
+            cloud: Some(Cloud::GCP),
         }
     }
 }
