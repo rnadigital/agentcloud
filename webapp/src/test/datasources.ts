@@ -108,6 +108,8 @@ describe("Datasource Tests", () => {
         //         wait(1 * SECONDS); //wait 1 second if the datasource isn't ready
         //     }
         // };
+
+
         //once the datasource is classed as ready then delete it to clean up the db and the vector-db
         url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/datasource/${datasourceId}`;
         body={
@@ -126,7 +128,7 @@ describe("Datasource Tests", () => {
 
     //getDatasourceSchema
 
-    test.only("Make Connection", async () => {//make a connection with airbyte
+    test.only("Make Connection", async () => {//make a connection with airbyte, connection credentials will probably have to be set in .env
 
     })
 });

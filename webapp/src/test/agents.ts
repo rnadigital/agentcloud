@@ -231,6 +231,84 @@ describe("Agents Tests", () => {
     });
 
     test.only("Can't edit agent without permissions", async ()=>{
+        const account1Object = await getInitialData(accountDetails.account1_email);
+        const account11Object = await getInitialData(accountDetails.account11_email);
+        let body, url, response, responseJson;
+        url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/model/add`;
+		body = {
+			name: 'testModel1',
+			model: 'gpt-4o',
+			config: {
+				model: 'gpt-4o',
+				api_key: 'abcdefg'
+			},
+			type: ModelType.OPENAI
+		};
+
+		const addModelResponse = await makeFetch(
+			url,
+			fetchTypes.POST,
+			accountDetails.account1_email,
+			body
+		);
+
+        expect(addModelResponse.status).toBe(200);
+        responseJson = await addModelResponse.json();
+        expect(responseJson?._id).toBeDefined();
+        const modelId = responseJson._id; //the added item ID of the model
+
+        const teamTools = await getToolsByTeam(account1Object.resourceSlug);
+        const toolIds = teamTools.map(tool => (tool._id))
+
+        url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/agent/add`
+        body = {
+            toolIds,
+            name: "AddBasicAgent",
+            role: "AddBasicAgent",
+            goal: "AddBasicAgent",
+            backstory: "AddBasicAgent",
+            modelId
+        }
+
+        response = await makeFetch(url, fetchTypes.POST, accountDetails.account1_email, body); //account 11 doesn't have permissions to add an agent to this team, recall teams tests, 10 members are invited (10 total in the team), 11 can't be invited due to subscription restrictions
+        responseJson = await response.json();
+        expect(response.status).toBe(200); //This is a successful redirect to the welcome page NOT a successful creation of the agent
+        expect(responseJson?._id).toBeDefined();
+
+        const addedAgentId = responseJson?._id;
+
+        url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/agent/${addedAgentId}/edit`;
+        body = {
+            toolIds,
+            name: "editedAddBasicAgent",
+            role: "AddBasicAgent",
+            goal: "AddBasicAgent",
+            backstory: "AddBasicAgent",
+            modelId
+        };
+
+        response = await makeFetch(url, fetchTypes.POST, accountDetails.account11_email, body);
+        responseJson = await response.json();
+        expect(response.status).toBe(200); //this is a successful redirect to the welcome page
+        expect(responseJson?.redirect).toBe('/welcome?noaccess=true'); //ensure redirect path is correct
+
+        //clean up tests by removing agent and model that were added
+
+        url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/model/${modelId}`;
+        body = {
+            modelId
+        }
+
+        response = await makeFetch(url, fetchTypes.DELETE, accountDetails.account1_email, body); //delete the model from earlier
+        expect(response.status).toBe(200);
+        url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/agent/${addedAgentId}`;
+        body = {
+            agentId: addedAgentId
+        }
+
+        response = await makeFetch(url, fetchTypes.DELETE, accountDetails.account1_email, body); //delete the model from earlier
+        responseJson = await response.json();
+        expect(response.status).toBe(200);
 
     });
 
