@@ -4416,6 +4416,7 @@ dependencies = [
  "pinecone-sdk",
  "prost-types 0.12.3",
  "qdrant-client",
+ "regex",
  "reqwest 0.12.4",
  "serde",
  "serde_json",

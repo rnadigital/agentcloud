@@ -7,6 +7,7 @@ use prost_types::value::Kind;
 use prost_types::{ListValue, Struct as Metadata, Struct};
 use qdrant_client::qdrant::Filter;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};
 use uuid::Uuid;
 
@@ -23,16 +24,16 @@ pub enum CreateDisposition {
 }
 #[derive(Clone, Deserialize, Debug)]
 pub struct Point {
-    pub index: Option<String>,
+    pub index: Option<Value>,
     pub vector: Vec<f32>,
-    pub payload: Option<HashMap<String, String>>,
+    pub payload: Option<HashMap<String, Value>>,
 }
 
 impl Point {
     pub fn new(
-        index: Option<String>,
+        index: Option<Value>,
         vector: Vec<f32>,
-        payload: Option<HashMap<String, String>>,
+        payload: Option<HashMap<String, Value>>,
     ) -> Self {
         Point {
             index,
@@ -46,7 +47,7 @@ impl Point {
 pub struct SearchResult {
     pub id: String,
     pub score: Option<f32>,
-    pub payload: Option<HashMap<String, String>>,
+    pub payload: Option<HashMap<String, Value>>,
     pub vector: Option<Vec<f32>>,
 }
 
@@ -403,7 +404,7 @@ impl From<FilterConditions> for Metadata {
         Self { fields: btree_map }
     }
 }
-impl From<Point> for BTreeMap<String, String> {
+impl From<Point> for BTreeMap<String, Value> {
     fn from(value: Point) -> Self {
         BTreeMap::from_iter(value.payload.unwrap_or(HashMap::new()))
     }
@@ -416,7 +417,10 @@ impl From<Point> for Metadata {
             btree_map.insert(
                 k,
                 prost_types::Value {
-                    kind: Some(Kind::StringValue(format!("{}", v.replace("\"", "")))),
+                    kind: Some(Kind::StringValue(format!(
+                        "{}",
+                        v.to_string().replace("\"", "")
+                    ))),
                 },
             );
         }
@@ -463,7 +467,7 @@ impl From<Metadata> for Point {
         let mut hash_map = HashMap::new();
 
         for (k, v) in value.fields {
-            hash_map.insert(k, value_to_string(&v.kind).unwrap());
+            hash_map.insert(k, value_to_string(&v.kind).unwrap().parse().unwrap());
         }
         Point {
             index: None,
@@ -477,7 +481,10 @@ impl From<Point> for Vector {
     fn from(value: Point) -> Self {
         let metadata = Some(Metadata::from(value.clone()));
         Self {
-            id: value.index.unwrap_or(Uuid::new_v4().to_string()),
+            id: value
+                .index
+                .unwrap_or(Uuid::new_v4().to_string().parse().unwrap())
+                .to_string(),
             values: value.vector,
             sparse_values: None,
             metadata,
