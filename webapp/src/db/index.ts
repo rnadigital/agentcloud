@@ -26,9 +26,9 @@ export function db() {
 export async function connectMongooseDB() {
 	try {
 		await mongoose.connect(process.env.DB_URL);
-		console.log('Mongoose connected successfully');
+		log('Mongoose connected successfully');
 	} catch (error) {
-		console.error('Mongoose connection error:', error);
-		process.exit(1); // Exit the process with failure
+		log('Mongoose connection error:', error);
+		process.exit(1);
 	}
 }
