@@ -6,7 +6,7 @@ interface VectorDb extends Document {
 	orgId: Schema.Types.ObjectId;
 	teamId: Schema.Types.ObjectId;
 	apiKey: string;
-	url: string;
+	url?: string;
 }
 
 const vectorDbschema = new Schema<VectorDb>(
