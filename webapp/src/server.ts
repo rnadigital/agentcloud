@@ -50,6 +50,7 @@ app
 	.then(async () => {
 		await airbyteSetup.init();
 		await db.connect();
+		await db.connectMongooseDB();
 		await migrate();
 		const secretProvider = SecretProviderFactory.getSecretProvider();
 		await secretProvider.init(); //Note: secret provider is first because it needs to be inited for e.g. stripe client to use

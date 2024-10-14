@@ -1,6 +1,9 @@
 'use strict';
 
 import { ObjectId } from 'mongodb';
+import mongoose, { mongo, Mongoose } from 'mongoose';
+const { Schema, Types } = mongoose;
+const MongooseObjectId = Types.ObjectId;
 
 export type DatasourceStream = {
 	syncMode: string; //TODO: enum to match airbyte api
@@ -125,10 +128,11 @@ export type UnstructuredChunkingConfig = {
 	file_type?: 'txt' | 'markdown'; //Note: only used for connectors
 };
 
-export type Datasource = {
-	_id?: ObjectId;
-	orgId?: ObjectId;
-	teamId?: ObjectId;
+export interface Datasource {
+	_id: mongoose.Types.ObjectId;
+	orgId?: mongoose.Types.ObjectId;
+	teamId?: mongoose.Types.ObjectId;
+	vectorDbId?: mongoose.Types.ObjectId;
 	name: string;
 	description?: string;
 	originalName: string;
@@ -147,8 +151,44 @@ export type Datasource = {
 	chunkingConfig?: UnstructuredChunkingConfig;
 	embeddingField?: string;
 	timeWeightField?: string;
-	modelId?: ObjectId; //model id of embedding model in models collection
-	hidden?: boolean;
+	modelId?: mongoose.Types.ObjectId; //model id of embedding model in models collection
 	streamConfig?: StreamConfigMap;
 	timeUnit?: string; //temp until we have a more robust way to limit cron frequency based on plan
-};
+	collectionIndex?: string;
+	namespace?: string;
+}
+
+const datasourceSchema = new Schema<Datasource>(
+	{
+		orgId: { type: Schema.Types.ObjectId, ref: 'Org' },
+		teamId: { type: Schema.Types.ObjectId, ref: 'Team' },
+		vectorDbId: { type: Schema.Types.ObjectId, ref: 'VectorDb' },
+		name: { type: String, required: true },
+		description: String,
+		originalName: { type: String, required: true },
+		filename: String,
+		sourceType: { type: String, required: true },
+		sourceId: { type: String, required: true },
+		destinationId: { type: String, required: true },
+		workspaceId: { type: String, required: true },
+		connectionId: { type: String, required: true },
+		recordCount: Object,
+		connectionSettings: Object,
+		createdDate: { type: Date, default: Date.now },
+		lastSyncedDate: { type: Date, default: null },
+		status: String,
+		discoveredSchema: Object,
+		chunkingConfig: Object,
+		embeddingField: String,
+		timeWeightField: String,
+		modelId: { type: Schema.Types.ObjectId, ref: 'Model' },
+		streamConfig: Object,
+		timeUnit: String,
+		collectionIndex: String,
+		namespace: String
+	},
+	{ timestamps: true }
+);
+
+export const DatasourceModel =
+	mongoose.models?.Datasource || mongoose.model('Datasource', datasourceSchema);
