@@ -11,9 +11,9 @@ const lookup = util.promisify(dns.lookup);
 
 import getAirbyteApi, { AirbyteApiType, getAirbyteAuthToken } from 'airbyte/api';
 import SecretProviderFactory from 'lib/secret';
+import { AIRBYTE_OAUTH_PROVIDERS } from 'struct/oauth';
 
 import getAirbyteInternalApi from './internal';
-import { AIRBYTE_OAUTH_PROVIDERS } from 'struct/oauth';
 
 dotenv.config({ path: '.env' });
 
