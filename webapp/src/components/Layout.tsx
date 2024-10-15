@@ -54,6 +54,8 @@ const noNavPages = [
 	'/welcome'
 ];
 
+const isFullPages = ['/register', '/login'];
+
 const agentNavigation: any[] = [
 	{
 		name: 'Apps',
@@ -166,6 +168,9 @@ export default withRouter(function Layout(props) {
 	const [sidebarOpen, setSidebarOpen] = useState(false);
 	const orgs = account?.orgs || [];
 	const scrollRef = useRef(null);
+
+	//this is temporary, will be removed once other pages are updated
+	const isRegisteringPage = isFullPages.some(p => path.includes(p));
 
 	if (!account) {
 		// return 'Loading...'; //TODO: loader?
@@ -841,9 +846,13 @@ export default withRouter(function Layout(props) {
 							</div>
 						</div>
 					)}
-					<main className='flex flex-col flex-1 py-8 sm:py-10'>
-						<div className='px-4 sm:px-6 lg:px-8 flex flex-col flex-1'>{children}</div>
-					</main>
+					{!isRegisteringPage ? (
+						<main className='flex flex-col flex-1 py-8 sm:py-10'>
+							<div className='px-4 sm:px-6 lg:px-8 flex flex-col flex-1'>{children}</div>
+						</main>
+					) : (
+						<div className='flex flex-col flex-1'>{children}</div>
+					)}
 				</div>
 			</div>
 			<div
@@ -861,7 +870,7 @@ export default withRouter(function Layout(props) {
 			<div
 				className={`transition-all duration-300 bg-gray-900 z-50 fixed w-[280px] h-screen overflow-hidden opacity-1 pointer-events-none ${switching === false ? 'opacity-0' : ''} text-center`}
 			/>
-			<div className='flex bg-gray-50 w-full dark:bg-gray-800'>
+			<div className={cn('flex bg-gray-50 w-full dark:bg-gray-800', { hidden: isRegisteringPage })}>
 				<footer
 					className={cn(
 						'mt-auto text-gray-500 text-sm px-8 sm:flex items-center py-4 max-w-7xl w-full mx-auto',
