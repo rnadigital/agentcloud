@@ -158,7 +158,7 @@ The returned data includes essential details like the paper's title, authors, ab
 				type: 'object',
 				required: ['query'],
 				properties: {
-					query: { type: 'string', description: 'The url of the website to parse'}
+					query: { type: 'string', description: 'The url of the website to parse' }
 				}
 			},
 			builtin: true
@@ -166,7 +166,7 @@ The returned data includes essential details like the paper's title, authors, ab
 		requiredParameters: {
 			required: ['api_key'],
 			properties: {
-				api_key: { type: 'string', description: 'The url of the website to parse'}
+				api_key: { type: 'string', description: 'The url of the website to parse' }
 			}
 		}
 	},
