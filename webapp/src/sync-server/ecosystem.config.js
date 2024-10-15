@@ -15,7 +15,7 @@ module.exports = {
 				'src/test'
 			],
 			env: {
-				DEBUG: 'sync-server:main',
+				DEBUG: 'webapp:*,sync-server:*',
 				DEBUG_COLORS: true
 			}
 		}

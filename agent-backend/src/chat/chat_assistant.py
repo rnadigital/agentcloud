@@ -29,7 +29,7 @@ class ChatAssistant:
         self.socket = SimpleClient()
         self.mongo_conn = start_mongo_session()
         self.chat_model: BaseLanguageModel
-        self.tools: list[BaseTool]
+        self.tools: list[BaseTool] = []
         self.system_message: str
         self.agent_name: str
         self.max_messages: int
@@ -72,6 +72,9 @@ class ChatAssistant:
             self.chat_model = language_model_factory(model)
             self.tools = list(map(self._make_langchain_tool, agentcloud_tools))
         except Exception as ce:
+            print(ce)
+            import traceback
+            print(traceback.format_exc())
             # TODO: a shared function/static class method for send_to_sockets
             send(
                 self.socket,

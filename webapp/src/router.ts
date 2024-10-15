@@ -326,6 +326,7 @@ export default function router(server, app) {
 	const teamRouter = Router({ mergeParams: true, caseSensitive: true });
 
 	//airbyte proxy routes
+	teamRouter.get('/airbyte/connectors.json', airbyteProxyController.connectorsJson);
 	teamRouter.get('/airbyte/specification', airbyteProxyController.specificationJson);
 	teamRouter.get('/airbyte/schema', airbyteProxyController.discoverSchemaApi);
 	teamRouter.get('/airbyte/jobs', airbyteProxyController.listJobsApi);

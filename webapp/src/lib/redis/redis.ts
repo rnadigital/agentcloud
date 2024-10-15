@@ -45,7 +45,10 @@ export function hdel(key, hash) {
 }
 
 //set a value on key
-export function set(key, value) {
+export function set(key, value, expiry?) {
+	if (expiry) {
+		return client.setex(key, expiry, JSON.stringify(value));
+	}
 	return client.set(key, JSON.stringify(value));
 }
 
