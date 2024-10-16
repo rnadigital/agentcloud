@@ -73,7 +73,13 @@ export default function VariableForm({
 
 	return (
 		<>
-			<form onSubmit={handleSubmit(onSubmit)}>
+			<form
+				onSubmit={e => {
+					e.preventDefault();
+					e.stopPropagation();
+					return handleSubmit(onSubmit)(e);
+				}}
+			>
 				<input type='hidden' name='_csrf' value={csrf} />
 				<div className='space-y-6'>
 					<div>

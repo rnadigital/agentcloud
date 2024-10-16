@@ -16,6 +16,7 @@ export type ChatAppConfig = {
 };
 
 export type VariableConfig = {
+	id: ObjectId;
 	name: string;
 	defaultValue: string;
 };
@@ -40,4 +41,5 @@ export type App = {
 	shareLinkShareId?: string;
 	variables?: VariableConfig[];
 	createdBy: ObjectId;
+	kickOffVariablesIds?: ObjectId[];
 };

@@ -48,15 +48,30 @@ export default function Session(props: SessionProps) {
 	const activeTask = useActiveTask(messages);
 	const requiredHumanInput = activeTask?.requiresHumanInput;
 
-	const bottomRef = useRef<HTMLDivElement>(null);
-
-	const paramsArray =
-		app?.variables && app.variables.map(v => ({ name: v.name, defaultValue: v.defaultValue }));
-
 	const [sessionVariableFormOpen, setSessionVariableFormOpen] = useState(false);
 
+	const bottomRef = useRef<HTMLDivElement>(null);
+	const extractVariableInfo = v => ({
+		name: v.name,
+		defaultValue: v.defaultValue,
+		id: v.id
+	});
+
+	const kickOffVariableIds = app?.kickOffVariablesIds?.map(id => id.toString()) || [];
+
+	const paramsArray = app?.variables
+		?.filter(v => {
+			if (app?.type === AppType.CHAT) {
+				return true;
+			}
+			return kickOffVariableIds.includes(v.id.toString());
+		})
+		.map(extractVariableInfo);
+
 	useEffect(() => {
-		const appHasVariables = app?.variables && app.variables.length > 0 && messages.length === 0;
+		const hasKickOffVariables = kickOffVariableIds.length > 0 && messages.length === 0;
+		const isChatType = app?.type === AppType.CHAT;
+		const appHasVariables = hasKickOffVariables || (isChatType && paramsArray.length > 0);
 		setSessionVariableFormOpen(appHasVariables);
 	}, [app, sessionId]);
 
@@ -273,6 +288,7 @@ export default function Session(props: SessionProps) {
 		if (!message || message.trim().length === 0) {
 			return null;
 		}
+
 		socketContext.emit('message', {
 			room: sessionId,
 			authorName: account?.name,
@@ -399,7 +415,13 @@ export default function Session(props: SessionProps) {
 						!chatBusyState &&
 						!loading &&
 						activeTask?.formFields?.length > 0 && (
-							<StructuredInputForm formFields={activeTask?.formFields} sendMessage={sendMessage} />
+							<StructuredInputForm
+								formFields={activeTask?.formFields}
+								sendMessage={sendMessage}
+								isShared={isShared}
+								resourceSlug={resourceSlug}
+								sessionId={sessionId}
+							/>
 						)}
 
 					<div ref={bottomRef} />

@@ -66,33 +66,37 @@ export async function handleRedirect(req, res, next) {
 	const app: App = await getAppById(req.params.resourceSlug, appId);
 
 	let crewId;
-	let agentId;
 	let hasVariables = false;
+
 	if (app?.type === AppType.CREW) {
 		const crew = await getCrewById(req.params.resourceSlug, app?.crewId);
-		if (crew) {
-			const agents = await getAgentsById(req.params.resourceSlug, crew.agents);
-			hasVariables = agents.some(agent => agent?.variableIds?.length > 0);
-			if (!hasVariables) {
-				const taskPromises = crew.tasks.map(t =>
-					getTaskById(req.params.resourceSlug, t.toString())
-				);
-				const tasks = await Promise.all(taskPromises);
-				hasVariables = tasks.some(task => task?.variableIds?.length > 0);
-			}
-			if (!agents) {
-				return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
-			}
-			crewId = crew._id;
-		} else {
+		if (!crew) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+		}
+		crewId = crew._id;
+
+		const kickOffVariablesIds = app.kickOffVariablesIds?.map(v => v.toString()) || [];
+		const agents = await getAgentsById(req.params.resourceSlug, crew.agents);
+		if (!agents) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+		}
+
+		const agentVariableIds = agents.flatMap(a => a.variableIds.map(v => v.toString()));
+		hasVariables = agentVariableIds.some(v => kickOffVariablesIds.includes(v));
+
+		if (!hasVariables) {
+			const tasks = await Promise.all(
+				crew.tasks.map(t => getTaskById(req.params.resourceSlug, t.toString()))
+			);
+			const taskVariableIds = tasks.flatMap(t => t.variableIds.map(v => v.toString()));
+			hasVariables = taskVariableIds.some(v => kickOffVariablesIds.includes(v));
 		}
 	} else {
 		const agent = await getAgentById(req.params.resourceSlug, app?.chatAppConfig?.agentId);
-		hasVariables = agent?.variableIds?.length > 0;
 		if (!agent) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
+		hasVariables = agent.variableIds?.length > 0;
 	}
 
 	const canAccess = await checkCanAccessApp(app?._id?.toString(), false, res.locals.account);
