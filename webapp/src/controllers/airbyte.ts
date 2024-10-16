@@ -344,14 +344,17 @@ export async function getOAuthRedirectLink(req, res, next) {
 	//generate a link to redirect the user to, use this api spec: https://reference.airbyte.com/reference/initiateoauth
 	const { sourceType } = req.body;
 
-	const redirectUrl = `https://localhost:3000/welcome`; //TODO: Set up this endpoint and redirect to it (maybe store the secret in persistent storage? But this could pose a security risk)
+	const redirectUrl = `https://app.agentcloud.dev/welcome`; //TODO: Set up this endpoint and redirect to it (maybe store the secret in persistent storage? But this could pose a security risk)
 	const workspaceId = process.env.AIRBYTE_ADMIN_WORKSPACE_ID; //create the source in this workspace
+
+	console.log("workspaceId: ", workspaceId);
+	console.log("sourceType: ", sourceType);
 
 	const body = {}; //body for the fetch request
 
 	const bearerToken = await getAirbyteAuthToken();
 
-	const requestUrl = `${process.env.AIRBYTE_API_URL}/V1/sources/initiateOAuth`;
+	const requestUrl = `${process.env.AIRBYTE_API_URL}/v1/sources/initiateOAuth`;
 
 	const getRedirectUrl = await fetch(requestUrl, {
 		method: 'POST',
@@ -363,20 +366,19 @@ export async function getOAuthRedirectLink(req, res, next) {
 		body: JSON.stringify({
 			sourceType: sourceType,
 			redirectUrl: redirectUrl,
-			workspaceId: workspaceId,
-			_csrf: req.csrfToken()
+			workspaceId: workspaceId
 		})
 	});
 
 	// const getRedirectUrlJson = await getRedirectUrl.json();
 
 	console.log('getRedirectUrl', getRedirectUrl);
+	const responseBody = await getRedirectUrl.text();
+	console.log('Response Body:', responseBody);
 	// console.log('getRedirectUrlJson', getRedirectUrlJson);
 
 	return res.json({
-		sourceType: sourceType,
-		redirectUrl: redirectUrl,
-		workspaceId: workspaceId,
+		getRedirectUrl,
 		_csrf: req.csrfToken()
 	});
 }
