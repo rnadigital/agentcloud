@@ -8,12 +8,14 @@ import SuccessAlert from 'components/SuccessAlert';
 import { useSocketContext } from 'context/socket';
 import { useThemeContext } from 'context/themecontext';
 import passwordPattern from 'lib/misc/passwordpattern';
+import Lottie from 'lottie-react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import animationData from 'animations/SignInAnimationTransparent.json';
 
 export interface LoginFormValues {
 	name: string;
@@ -61,10 +63,12 @@ export default function Login() {
 			</Head>
 
 			<div className='flex flex-1 bg-white'>
-				<div
-					id='left-frame'
-					className='w-full bg-primary-500 max-w-xl text-white pt-12 px-12 flex flex-col'
-				>
+				<div className='w-full gradient-animation max-w-xl text-white pt-12 px-12 flex flex-col relative'>
+					<Lottie
+						animationData={animationData}
+						loop={true}
+						className='absolute top-[-180px] left-0 w-full h-full opacity-50'
+					/>
 					<div className='flex items-center gap-x-2'>
 						<CubeIcon className='h-5 w-5 stroke-2' />
 						<h1 className='text-2xl font-bold'>Agent Cloud</h1>

@@ -296,3 +296,28 @@ div.bg-gray-200.border.rounded-sm.flex.space-x-1.pl-1 {
 		transform: scale(1);
 	}
 }
+
+.gradient-animation {
+    background: linear-gradient(226deg, #612d89, #4f46e5);
+    background-size: 400% 400%;
+
+    -webkit-animation: left-frame-gradient 8s ease infinite;
+    -moz-animation: left-frame-gradient 8s ease infinite;
+    animation: left-frame-gradient 8s ease infinite;
+}
+
+@-webkit-keyframes left-frame-gradient {
+    0%{background-position:94% 0%}
+    50%{background-position:7% 100%}
+    100%{background-position:94% 0%}
+}
+@-moz-keyframes left-frame-gradient {
+    0%{background-position:94% 0%}
+    50%{background-position:7% 100%}
+    100%{background-position:94% 0%}
+}
+@keyframes left-frame-gradient {
+    0%{background-position:94% 0%}
+    50%{background-position:7% 100%}
+    100%{background-position:94% 0%}
+}

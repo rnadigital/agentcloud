@@ -1,12 +1,13 @@
 import * as API from '@api';
 import { CubeIcon } from '@heroicons/react/24/outline';
+import animationData from 'animations/SignInAnimationTransparent.json';
 import ButtonSpinner from 'components/ButtonSpinner';
 import ErrorAlert from 'components/ErrorAlert';
 import InputField from 'components/form/InputField';
-import SuccessAlert from 'components/SuccessAlert';
 import { useThemeContext } from 'context/themecontext';
 import cn from 'lib/cn';
 import passwordPattern from 'lib/misc/passwordpattern';
+import Lottie from 'lottie-react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -53,10 +54,12 @@ export default function Register() {
 			</Head>
 
 			<div className='flex flex-1 bg-white'>
-				<div
-					id='left-frame'
-					className='w-full bg-primary-500 max-w-xl text-white pt-12 px-12 flex flex-col'
-				>
+				<div className='w-full gradient-animation max-w-xl text-white pt-12 px-12 flex flex-col relative'>
+					<Lottie
+						animationData={animationData}
+						loop={true}
+						className='absolute top-[-180px] left-0 w-full h-full opacity-50'
+					/>
 					<div className='flex items-center gap-x-2'>
 						<CubeIcon className='h-5 w-5 stroke-2' />
 						<h1 className='text-2xl font-bold'>Agent Cloud</h1>
