@@ -31,11 +31,7 @@ import Permissions from 'permissions/permissions';
 import { PlanLimitsKeys, pricingMatrix, SubscriptionPlan } from 'struct/billing';
 
 const unauthedMiddlewareChain = [useSession, useJWT, fetchSession, onboardedMiddleware];
-const authedMiddlewareChain = [
-	...unauthedMiddlewareChain,
-	checkSession,
-	csrfMiddleware
-];
+const authedMiddlewareChain = [...unauthedMiddlewareChain, checkSession, csrfMiddleware];
 
 import checkSessionWelcome from '@mw/auth/checksessionwelcome';
 import * as accountController from 'controllers/account';
@@ -122,8 +118,18 @@ export default function router(server, app) {
 
 	// Non team endpoints
 	server.get('/', unauthedMiddlewareChain, homeRedirect);
-	server.get('/login', unauthedMiddlewareChain,checkSessionWelcome , renderStaticPage(app, '/login'));
-	server.get('/register', unauthedMiddlewareChain, checkSessionWelcome, renderStaticPage(app, '/register'));
+	server.get(
+		'/login',
+		unauthedMiddlewareChain,
+		checkSessionWelcome,
+		renderStaticPage(app, '/login')
+	);
+	server.get(
+		'/register',
+		unauthedMiddlewareChain,
+		checkSessionWelcome,
+		renderStaticPage(app, '/register')
+	);
 	server.get('/verify', unauthedMiddlewareChain, renderStaticPage(app, '/verify'));
 	server.get(
 		'/account',
@@ -133,7 +139,8 @@ export default function router(server, app) {
 		setSubscriptionLocals,
 		csrfMiddleware,
 		accountController.accountPage.bind(null, app)
-	);	server.get(
+	);
+	server.get(
 		'/welcome',
 		unauthedMiddlewareChain,
 		setDefaultOrgAndTeam,
@@ -165,7 +172,18 @@ export default function router(server, app) {
 		checkSession,
 		setSubscriptionLocals,
 		csrfMiddleware,
-		accountController.welcomeJson,
+		accountController.welcomeJson
+	);
+
+	//Get airbyte OAuth redirect url from internal airbyte api
+	server.post(
+		`/oauthredirecturl`,
+		authedMiddlewareChain,
+		setDefaultOrgAndTeam,
+		checkSession,
+		setSubscriptionLocals,
+		csrfMiddleware,
+		airbyteProxyController.getOAuthRedirectLink
 	);
 
 	//TODO: move and rename all these
@@ -254,17 +272,24 @@ export default function router(server, app) {
 		accountController.updateRole
 	);
 
-	
 	// api key endpoints
-	accountRouter.post('/apikey/add',authedMiddlewareChain ,apiKeyController.addKeyApi);
-	accountRouter.delete('/apikey/:keyId([a-f0-9]{24})', authedMiddlewareChain, apiKeyController.deleteKeyApi);
-	accountRouter.post('/apikey/:keyId([a-f0-9]{24})/increment', authedMiddlewareChain, apiKeyController.incrementKeyApi);
-	
-	server.use('/forms/account', accountRouter);
-	server.get('/apikey/add',authedMiddlewareChain ,apiKeyController.keyAddPage.bind(null, app));
+	accountRouter.post('/apikey/add', authedMiddlewareChain, apiKeyController.addKeyApi);
+	accountRouter.delete(
+		'/apikey/:keyId([a-f0-9]{24})',
+		authedMiddlewareChain,
+		apiKeyController.deleteKeyApi
+	);
+	accountRouter.post(
+		'/apikey/:keyId([a-f0-9]{24})/increment',
+		authedMiddlewareChain,
+		apiKeyController.incrementKeyApi
+	);
 
-	server.get('/apikeys',authedMiddlewareChain ,apiKeyController.apiKeysPage.bind(null, app));
-	server.get('/apikeys.json',authedMiddlewareChain ,apiKeyController.apikeysJson);
+	server.use('/forms/account', accountRouter);
+	server.get('/apikey/add', authedMiddlewareChain, apiKeyController.keyAddPage.bind(null, app));
+
+	server.get('/apikeys', authedMiddlewareChain, apiKeyController.apiKeysPage.bind(null, app));
+	server.get('/apikeys.json', authedMiddlewareChain, apiKeyController.apikeysJson);
 
 	// public session endpoints
 	const publicAppRouter = Router({ mergeParams: true, caseSensitive: true });
@@ -283,18 +308,21 @@ export default function router(server, app) {
 		sessionController.publicSessionMessagesJson
 	);
 	//TODO: csrf?
-	publicAppRouter.post('/forms/session/:sessionId([a-f0-9]{24})/edit',
+	publicAppRouter.post(
+		'/forms/session/:sessionId([a-f0-9]{24})/edit',
 		setParamOrgAndTeam,
 		setPermissions,
 		sessionController.editSessionApi
 	);
-	publicAppRouter.get('/session/:sessionId([a-f0-9]{24}).json',
+	publicAppRouter.get(
+		'/session/:sessionId([a-f0-9]{24}).json',
 		csrfMiddleware,
 		setParamOrgAndTeam,
 		setPermissions,
 		sessionController.sessionJson
 	);
-	publicAppRouter.post('/forms/session/:sessionId([a-f0-9]{24})/start',
+	publicAppRouter.post(
+		'/forms/session/:sessionId([a-f0-9]{24})/start',
 		setParamOrgAndTeam,
 		setPermissions,
 		sessionController.startSession
@@ -349,8 +377,8 @@ export default function router(server, app) {
 		sessionController.cancelSessionApi
 	);
 
-	teamRouter.post('/forms/session/:sessionId([a-f0-9]{24})/edit',  sessionController.editSessionApi);
-	teamRouter.post('/forms/session/:sessionId([a-f0-9]{24})/start',  sessionController.startSession);
+	teamRouter.post('/forms/session/:sessionId([a-f0-9]{24})/edit', sessionController.editSessionApi);
+	teamRouter.post('/forms/session/:sessionId([a-f0-9]{24})/start', sessionController.startSession);
 
 	//agents
 	teamRouter.get('/agents', agentController.agentsPage.bind(null, app));
@@ -391,10 +419,7 @@ export default function router(server, app) {
 		taskController.taskAddPage.bind(null, app)
 	);
 	teamRouter.get('/task/:taskId([a-f0-9]{24}).json', taskController.getTaskByIdJson);
-	teamRouter.get(
-		'/task',
-		taskController.getTaskJson
-	);
+	teamRouter.get('/task', taskController.getTaskJson);
 	teamRouter.get(
 		'/task/:taskId([a-f0-9]{24})/edit',
 		hasPerms.one(Permissions.EDIT_TASK),
@@ -644,11 +669,7 @@ export default function router(server, app) {
 	//org
 	teamRouter.get('/org', orgController.orgPage.bind(null, app));
 	teamRouter.get('/org.json', orgController.orgJson);
-	teamRouter.post(
-		'/forms/org/edit',
-		hasPerms.one(Permissions.EDIT_ORG),
-		orgController.editOrgApi
-	);
+	teamRouter.post('/forms/org/edit', hasPerms.one(Permissions.EDIT_ORG), orgController.editOrgApi);
 	teamRouter.get('/org/teamvectorusage.json', orgController.vectorStorageAllTeams);
 	teamRouter.get(
 		'/org/:memberId([a-f0-9]{24}).json',
@@ -688,18 +709,15 @@ export default function router(server, app) {
 	teamRouter.get('/notifications.json', notificationController.notificationsJson);
 	teamRouter.patch('/forms/notification/seen', notificationController.markNotificationsSeenApi);
 
-	teamRouter.get(
-		'/variables.json',
-		variableController.variablesJson
-	);
+	teamRouter.get('/variables.json', variableController.variablesJson);
 
 	teamRouter.get('/variable/:variableId([a-f0-9]{24}).json', variableController.variableJson);
-	
+
 	teamRouter.get(
 		'/variable/:variableId/edit',
 		hasPerms.one(Permissions.EDIT_VARIABLE),
 		variableController.variableEditPage.bind(null, app)
-	)
+	);
 
 	teamRouter.post(
 		'/forms/variable/add',

@@ -2,7 +2,7 @@
 
 import { dynamicResponse } from '@dr';
 import { io } from '@socketio';
-import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
+import getAirbyteApi, { AirbyteApiType, getAirbyteAuthToken } from 'airbyte/api';
 import getAirbyteInternalApi from 'airbyte/internal';
 import {
 	getDatasourceByConnectionId,
@@ -338,4 +338,49 @@ export async function handleSuccessfulEmbeddingWebhook(req, res, next) {
 	}
 
 	return dynamicResponse(req, res, 200, {});
+}
+
+export async function getOAuthRedirectLink(req, res, next) {
+	//generate a link to redirect the user to, use this api spec: https://reference.airbyte.com/reference/initiateoauth
+	const { sourceType } = req.body;
+
+	const redirectUrl = `https://localhost:3000/welcome`; //TODO: Set up this endpoint and redirect to it (maybe store the secret in persistent storage? But this could pose a security risk)
+	const workspaceId = process.env.AIRBYTE_ADMIN_WORKSPACE_ID; //create the source in this workspace
+
+	const body = {}; //body for the fetch request
+
+	const bearerToken = await getAirbyteAuthToken();
+
+	const requestUrl = `${process.env.AIRBYTE_API_URL}/V1/sources/initiateOAuth`;
+
+	const getRedirectUrl = await fetch(requestUrl, {
+		method: 'POST',
+		headers: {
+			'content-type': 'application/json',
+			accept: 'application/json',
+			Authorization: `Bearer ${bearerToken}`
+		},
+		body: JSON.stringify({
+			sourceType: sourceType,
+			redirectUrl: redirectUrl,
+			workspaceId: workspaceId,
+			_csrf: req.csrfToken()
+		})
+	});
+
+	// const getRedirectUrlJson = await getRedirectUrl.json();
+
+	console.log('getRedirectUrl', getRedirectUrl);
+	// console.log('getRedirectUrlJson', getRedirectUrlJson);
+
+	return res.json({
+		sourceType: sourceType,
+		redirectUrl: redirectUrl,
+		workspaceId: workspaceId,
+		_csrf: req.csrfToken()
+	});
+}
+
+export async function handleOAuthWebhook(req, res, next) {
+	//airbyte hits the oauth callback with a secretId in the body
 }

@@ -9,10 +9,10 @@ class HubspotSecretProvider extends SecretProvider {
 	#secretClient: any;
 	#cache = {};
 
-	async getSecret(key = "", bypassCache = false): Promise<any> {
-        const clientId = process.env.OAUTH_HUBSPOT_CLIENT_ID;
-        const clientSecret = process.env.OAUTH_HUBSPOT_CLIENT_SECRET;
-		return {clientId, clientSecret};
+	async getSecret(key = '', bypassCache = false): Promise<any> {
+		const clientId = process.env.OAUTH_HUBSPOT_CLIENT_ID;
+		const clientSecret = process.env.OAUTH_HUBSPOT_CLIENT_SECRET;
+		return { clientId, clientSecret };
 	}
 }
 

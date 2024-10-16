@@ -10,11 +10,11 @@ import * as util from 'node:util';
 const lookup = util.promisify(dns.lookup);
 
 import getAirbyteApi, { AirbyteApiType, getAirbyteAuthToken } from 'airbyte/api';
+import OauthSecretProviderFactory from 'lib/oauthsecret';
 import SecretProviderFactory from 'lib/secret';
+import { AIRBYTE_OAUTH_PROVIDERS } from 'struct/oauth';
 
 import getAirbyteInternalApi from './internal';
-import { AIRBYTE_OAUTH_PROVIDERS } from 'struct/oauth';
-import OauthSecretProviderFactory from 'lib/oauthsecret';
 
 dotenv.config({ path: '.env' });
 
@@ -176,25 +176,31 @@ async function updateWebhookUrls(workspaceId: string) {
 }
 
 async function overrideOauthCreds(workspaceId, name, clientId, clientSecret) {
-	const internalApi = await getAirbyteInternalApi();
-	log("workspaceID: ", workspaceId);
-	if(workspaceId !== undefined){
-		log("workspaceID: ", workspaceId);
-		const updateOauthCredsRes = await internalApi
-		.createOrUpdateWorkspaceOAuthCredentials({
-			actorType: 'source', 
-			name, 
-			workspaceId, 
-			configuration: {
-				credentials: {
-					client_id: clientId, 
-					client_secret: clientSecret
+	log('workspaceID: ', workspaceId);
+	if (workspaceId !== undefined) {
+		log('workspaceID: ', workspaceId);
+		const updateOauthCredsRes = await fetch(
+			`${process.env.AIRBYTE_API_URL}/v1/workspaces/${workspaceId}/oauthCredentials`,
+			{
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${await getAirbyteAuthToken()}`
+				},
+				body: {
+					actorType: 'source',
+					name,
+					workspaceId,
+					configuration: {
+						credentials: {
+							client_id: clientId,
+							client_secret: clientSecret
+						}
+					}
 				}
 			}
-		})
-		.then(({ data }) => console.log(data))
-		.catch(err => console.error(err));
-		return (updateOauthCredsRes);
+		);
+		return updateOauthCredsRes;
 	}
 	return null;
 }
@@ -274,8 +280,12 @@ export async function init() {
 
 		log('Overriding default ClientID and client secret for datasource OAuth integration');
 		for (let provider in AIRBYTE_OAUTH_PROVIDERS) {
-			const {clientId, clientSecret} = OauthSecretProviderFactory.getSecretProvider(provider.toLowerCase())
-			log(`Overriding ${provider.toLowerCase()} clientId and clientSecret to ${clientId} and ${clientSecret}`)
+			const { clientId, clientSecret } = OauthSecretProviderFactory.getSecretProvider(
+				provider.toLowerCase()
+			);
+			log(
+				`Overriding ${provider.toLowerCase()} clientId and clientSecret to ${clientId} and ${clientSecret}`
+			);
 			overrideOauthCreds(airbyteAdminWorkspaceId, provider.toLowerCase(), clientId, clientSecret);
 		}
 	} catch (error) {

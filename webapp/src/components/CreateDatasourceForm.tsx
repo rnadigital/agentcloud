@@ -97,6 +97,7 @@ export default function CreateDatasourceForm({
 	const [chunkingConfig, setChunkingConfig] = useReducer(submittingReducer, {
 		...defaultChunkingOptions
 	});
+	const [oauthRedirectUrl, setOauthRedirectUrl] = useState(null);
 
 	//TODO: move into RetrievalStrategyComponent, keep the setters passed as props
 	const [toolRetriever, setToolRetriever] = useState(Retriever.SELF_QUERY);
@@ -163,6 +164,19 @@ export default function CreateDatasourceForm({
 			null
 		);
 		setLoading(false);
+	}
+
+	async function getOauthRedirectUrl(sourceType: string) {
+		await API.getOauthRedirectUrl(
+			{
+				sourceType,
+				resourceSlug,
+				_csrf: csrf
+			},
+			setOauthRedirectUrl,
+			setError,
+			router
+		);
 	}
 
 	const [connectors, setConnectors] = useState([]);
@@ -348,6 +362,8 @@ export default function CreateDatasourceForm({
 			setSubmitting(false);
 		}
 	}
+
+	async function dataSourcePostOauth(data?) {}
 
 	function getStepSection(_step) {
 		//TODO: make steps enum
@@ -614,6 +630,10 @@ export default function CreateDatasourceForm({
 														schema={spec.schema.connectionSpecification}
 														datasourcePost={datasourcePost}
 														error={error}
+														name={connector.label}
+														icon={connector.icon}
+														oauthPost={getOauthRedirectUrl}
+														redirectUrl={oauthRedirectUrl}
 													/>
 												</FormContext>
 											</>
