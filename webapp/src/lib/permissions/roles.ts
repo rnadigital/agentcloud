@@ -27,7 +27,7 @@ TEAM_OWNER.setAll(ORG_BITS);
 const TEAM_ADMIN = new Permission();
 TEAM_ADMIN.setAll(TEAM_BITS);
 
-const TEAM_MEMBER = new Permission();
+export const TEAM_MEMBER = new Permission();
 TEAM_MEMBER.setAll([
 	Permissions.CREATE_APP,
 	Permissions.EDIT_APP,
