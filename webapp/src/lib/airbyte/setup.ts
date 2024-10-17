@@ -9,8 +9,11 @@ import * as dns from 'node:dns';
 import * as util from 'node:util';
 const lookup = util.promisify(dns.lookup);
 
+import * as process from 'node:process';
+
 import getAirbyteApi, { AirbyteApiType, getAirbyteAuthToken } from 'airbyte/api';
 import SecretProviderFactory from 'lib/secret';
+import { AIRBYTE_OAUTH_PROVIDERS } from 'struct/oauth';
 
 import getAirbyteInternalApi from './internal';
 
@@ -85,7 +88,8 @@ async function deleteDestination(destinationId: string) {
 
 async function getDestinationConfiguration(provider: string) {
 	if (provider === 'rabbitmq') {
-		let host: any = process.env.AIRBYTE_RABBITMQ_HOST || process.env.RABBITMQ_HOST || '0.0.0.0';
+		log(`RabbitMQ HOST: ${process.env.AIRBYTE_RABBITMQ_HOST}`);
+		let host: string = process.env.AIRBYTE_RABBITMQ_HOST || '0.0.0.0';
 		log('getDestinationConfiguration host %s', host);
 		return {
 			routing_key: 'key',
@@ -173,6 +177,19 @@ async function updateWebhookUrls(workspaceId: string) {
 	return updateWorkspaceRes;
 }
 
+// async function overrideOauthCreds(workspaceId, name) {
+// 	const internalApi = await getAirbyteInternalApi();
+// 	log("workspaceID: ", workspaceId);
+// 	if(workspaceId !== undefined){
+// 		log("workspaceID: ", workspaceId);
+// 		const updateOauthCredsRes = await internalApi.createOrUpdateWorkspaceOAuthCredentials({actorType: 'source', name, workspaceId})
+// 		.then(({ data }) => console.log(data))
+// 		.catch(err => console.error(err));
+// 		return (updateOauthCredsRes);
+// 	}
+// 	return null;
+// }
+
 // Main logic to handle Airbyte setup and configuration
 export async function init() {
 	try {
@@ -245,6 +262,11 @@ export async function init() {
 		// Update webhook URLs
 		const updatedWebhookUrls = await updateWebhookUrls(airbyteAdminWorkspaceId);
 		log('UPDATED_WEBHOOK_URLS', JSON.stringify(updatedWebhookUrls));
+
+		// log('Overriding default ClientID and client secret for datasource OAuth integration');
+		// for (let provider in AIRBYTE_OAUTH_PROVIDERS) {
+		// 	overrideOauthCreds(airbyteAdminWorkspaceId, provider.toLowerCase());
+		// }
 	} catch (error) {
 		logerror('Error during Airbyte configuration:', error);
 	}

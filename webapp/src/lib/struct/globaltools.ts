@@ -164,9 +164,9 @@ The returned data includes essential details like the paper's title, authors, ab
 			builtin: true
 		},
 		requiredParameters: {
-			required: ['api_key'],
+			required: ['firecrawl_api_key'],
 			properties: {
-				api_key: { type: 'string', description: 'The url of the website to parse' }
+				firecrawl_api_key: { type: 'string', description: 'The url of the website to parse' }
 			}
 		}
 	},

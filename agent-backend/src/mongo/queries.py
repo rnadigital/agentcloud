@@ -12,10 +12,24 @@ from utils.model_helper import convert_dictionaries_to_models, get_models_attrib
 
 
 class MongoClientConnection(MongoConnection):
+    _instance = None  
+
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super(MongoClientConnection, cls).__new__(cls)
+        return cls._instance
+
     def __init__(self):
-        super().__init__()
-        self.mongo_client = self.connect()
-        self.db = self.mongo_client[MONGO_DB_NAME]
+        if not hasattr(self, 'initialized'):  
+            super().__init__()
+            self.mongo_client = self.connect()
+            self.db = self.mongo_client[MONGO_DB_NAME]
+            self.initialized = True   
+
+    def disconnect(self):
+        print("Disconnecting from MongoDB")
+        self.mongo_client.close()        
+        self.initialized = None  # Reset initialized status
 
     def _get_collection(self, collection_name: str) -> collection.Collection:
         return self.db[collection_name]
