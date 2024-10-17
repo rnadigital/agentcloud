@@ -16,6 +16,7 @@ import { usePostHog } from 'posthog-js/react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import animationData from 'animations/SignInAnimationTransparent.json';
+import LeftFrame from 'components/onboarding/LeftFrame';
 
 export interface LoginFormValues {
 	name: string;
@@ -63,16 +64,7 @@ export default function Login() {
 			</Head>
 
 			<div className='flex flex-1 bg-white'>
-				<div className='w-full gradient-animation max-w-xl text-white pt-12 px-12 flex flex-col relative'>
-					<Lottie
-						animationData={animationData}
-						loop={true}
-						className='absolute top-[-180px] left-0 w-full h-full opacity-50'
-					/>
-					<div className='flex items-center gap-x-2'>
-						<CubeIcon className='h-5 w-5 stroke-2' />
-						<h1 className='text-2xl font-bold'>Agent Cloud</h1>
-					</div>
+				<LeftFrame showAnimation>
 					<div className='flex justify-center h-full flex-col'>
 						<div className='text-5xl leading-normal font-bold'>Seamless Data Integration</div>
 						<div className='text-xl leading-7 mt-4'>
@@ -80,7 +72,7 @@ export default function Login() {
 							Enjoy hassle-free integration that saves you time and effort.
 						</div>
 					</div>
-				</div>
+				</LeftFrame>
 
 				<div className='flex justify-center items-center w-full text-gray-500'>
 					<div className='w-full max-w-md'>

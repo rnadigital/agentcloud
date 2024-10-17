@@ -54,7 +54,7 @@ const noNavPages = [
 	'/welcome'
 ];
 
-const isFullPages = ['/register', '/login'];
+const isFullPages = ['/register', '/login', '/onboarding'];
 
 const agentNavigation: any[] = [
 	{

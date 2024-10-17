@@ -1,9 +1,23 @@
 import * as API from '@api';
 import { ChevronRightIcon } from '@heroicons/react/20/solid';
+import ButtonSpinner from 'components/ButtonSpinner';
+import ErrorAlert from 'components/ErrorAlert';
+import InputField from 'components/form/InputField';
+import DataSourceConfigSteps from 'components/onboarding/DataSourceConfigSteps';
+import DataSourceGrid from 'components/onboarding/DataSourceGrid';
+import DataSourceOnboardingSteps from 'components/onboarding/DataSourceOnboardingSteps';
+import DataSourceSearch from 'components/onboarding/DataSourceSearch';
+import LeftFrame from 'components/onboarding/LeftFrame';
 import OnboardingSelect from 'components/onboarding/OnboardingSelect';
+import { error } from 'console';
 import { useAccountContext } from 'context/account';
 import { useThemeContext } from 'context/themecontext';
+import cn from 'lib/cn';
+import passwordPattern from 'misc/passwordpattern';
+import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { RegisterFormValues } from 'pages/register';
 import { usePostHog } from 'posthog-js/react';
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -48,57 +62,31 @@ export default function Onboarding() {
 	};
 
 	return (
-		<main className='flex items-center flex-col justify-center flex-1 dark:bg-gray-900'>
-			<img
-				src={
-					theme === 'dark'
-						? '/images/agentcloud-full-white-bg-trans.png'
-						: '/images/agentcloud-full-black-bg-trans.png'
-				}
-				alt='Agentcloud'
-				className='h-14 md:h-20'
-			/>
-			<section className='bg-white w-full max-w-[950px] rounded-lg shadow-sm p-8 flex flex-col gap-5 dark:bg-gray-700'>
-				<h1 className='font-bold text-xl md:text-2xl dark:text-white'>Welcome to AgentCloud! 🎉</h1>
-				<div className='text-gray-600 text-lg sm:text-xl dark:text-gray-50'>
-					Let&apos;s begin by getting to know your role.
-				</div>
-				<form
-					onSubmit={handleSubmit(onSubmit)}
-					className='flex flex-col gap-4 text-lg sm:text-2xl items-center'
-				>
-					<div className='flex flex-col sm:flex-row gap-2 w-full sm:items-center'>
-						<p className='w-fit font-extrabold dark:text-gray-50'>I am a</p>
-						<div className='w-fit'>
-							<OnboardingSelect<FormValues>
-								options={[
-									{ value: 'developer', label: 'Developer' },
-									{ value: 'data_engineer', label: 'Data Engineer' },
-									{ value: 'business_user', label: 'Business User' }
-								]}
-								classNames={{
-									listboxButton: 'border-none text-lg sm:text-xl font-bold',
-									listboxOptions: 'left-0 sm:text-lg'
-								}}
-								control={control}
-								name='role'
-								placeholder='Select your role'
-							/>
-						</div>
+		<>
+			<Head>
+				<title>Register</title>
+			</Head>
+
+			<div className='flex flex-1 bg-white'>
+				<LeftFrame>
+					<div className='flex h-full flex-col'>
+						<DataSourceOnboardingSteps currentStep={0} />
 					</div>
-					<hr className='my-4 w-full border-gray-200' />
-					<button
-						className='ml-auto h-10 w-24 disabled:bg-primary-200 bg-primary-500 text-white rounded-lg flex justify-center items-center text-sm'
-						type='submit'
-					>
-						<>
-							<span className='text-sm'>Next</span>
-							<ChevronRightIcon className='ml-2 h-5 w-5' />
-						</>
-					</button>
-				</form>
-			</section>
-		</main>
+				</LeftFrame>
+
+				<main className='py-14 px-28 w-full'>
+					<div className=''>
+						<div className='text-2xl mb-4'>Select Data Source</div>
+						<DataSourceConfigSteps currentStep={0} />
+					</div>
+
+					<section className='mt-6'>
+						<DataSourceSearch />
+						<DataSourceGrid />
+					</section>
+				</main>
+			</div>
+		</>
 	);
 }
 
