@@ -10,7 +10,7 @@ class MongoConnection:
 
     def connect(self) -> Optional[MongoClient]:
         try:
-            mongo_client = MongoClient(self.mongo_uri)
+            mongo_client = MongoClient(self.mongo_uri, maxPoolSize=10)
             return mongo_client
         except Exception as e:
             logging.exception(e)
