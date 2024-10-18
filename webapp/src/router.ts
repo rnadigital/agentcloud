@@ -43,6 +43,7 @@ import * as assetController from 'controllers/asset';
 import * as datasourceController from 'controllers/datasource';
 import * as modelController from 'controllers/model';
 import * as notificationController from 'controllers/notification';
+import * as oauthController from 'controllers/oauth';
 import * as orgController from 'controllers/org';
 import * as sessionController from 'controllers/session';
 import * as sharelinkController from 'controllers/sharelink';
@@ -103,6 +104,19 @@ export default function router(server, app) {
 			res.redirect(`/auth/redirect?to=${encodeURIComponent('/')}`);
 		}
 	);
+	oauthRouter.get(
+		'/hubspot',
+		passportInstance.authenticate('hubspot', {scope: ['offline', 'contacts-ro', 'contacts-rw'], redirect_uri: 'https://localhost:3000/auth/hubspot/callback'}),
+		fetchSession
+	);
+	oauthRouter.get(
+		'/hubspot/callback',
+		passportInstance.authenticate( 'hubspot', {
+			successRedirect: '/auth/hubspot/success',
+			failureRedirect: '/auth/hubspot/failure'}),
+		oauthController.hubspotDatasourceCallback,
+		//redirect back to datasource form
+	)
 	server.use('/auth', useSession, passportInstance.session(), oauthRouter);
 
 	// Body and query parsing middleware
@@ -175,16 +189,6 @@ export default function router(server, app) {
 		accountController.welcomeJson
 	);
 
-	//Get airbyte OAuth redirect url from internal airbyte api
-	server.post(
-		`/oauthredirecturl`,
-		authedMiddlewareChain,
-		setDefaultOrgAndTeam,
-		checkSession,
-		setSubscriptionLocals,
-		csrfMiddleware,
-		airbyteProxyController.getOAuthRedirectLink
-	);
 
 	//TODO: move and rename all these
 	server.post(

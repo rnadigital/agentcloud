@@ -1,6 +1,7 @@
 import ButtonSpinner from 'components/ButtonSpinner';
 import ErrorAlert from 'components/ErrorAlert';
 import dayjs from 'dayjs';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { FieldValues, useFormContext } from 'react-hook-form';
 import { Schema } from 'struct/form';
@@ -136,19 +137,13 @@ const DynamicConnectorForm = ({
 		<>
 			{name.toUpperCase() in AIRBYTE_OAUTH_PROVIDERS ? (
 				<div className='flex flex-col'>
-					<button //when the user hits this button then redirect them to the authentication link
+					<Link //when the user hits this button then redirect them to the authentication link
 						className='max-w-[25%] rounded-md disabled:bg-slate-400 bg-indigo-600 mx-3 my-5 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 mt-3'
-						onClick={() => {
-							console.log(
-								'making request to airbyte to get oauth redirect url token with sourceType: ',
-								name.toLowerCase()
-							);
-							oauthPost(name.toLowerCase());
-						}}
+						href={`/auth/${name.toLowerCase()}`}
 					>
 						{icon && <img src={icon} loading='lazy' className='inline-flex me-2 w-6 w-6' />}
 						Log in with {name}
-					</button>
+					</Link>
 				</div>
 			) : (
 				<form onSubmit={handleSubmit(onSubmit)}>

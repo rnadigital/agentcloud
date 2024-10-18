@@ -279,15 +279,15 @@ export async function init() {
 		log('UPDATED_WEBHOOK_URLS', JSON.stringify(updatedWebhookUrls));
 
 		log('Overriding default ClientID and client secret for datasource OAuth integration');
-		for (let provider in AIRBYTE_OAUTH_PROVIDERS) {
-			const { clientId, clientSecret } = OauthSecretProviderFactory.getSecretProvider(
-				provider.toLowerCase()
-			);
-			log(
-				`Overriding ${provider.toLowerCase()} clientId and clientSecret to ${clientId} and ${clientSecret}`
-			);
-			overrideOauthCreds(airbyteAdminWorkspaceId, provider.toLowerCase(), clientId, clientSecret);
-		}
+		// for (let provider in AIRBYTE_OAUTH_PROVIDERS) {
+		// 	const { clientId, clientSecret } = OauthSecretProviderFactory.getSecretProvider(
+		// 		provider.toLowerCase()
+		// 	);
+		// 	log(
+		// 		`Overriding ${provider.toLowerCase()} clientId and clientSecret to ${clientId} and ${clientSecret}`
+		// 	);
+		// 	overrideOauthCreds(airbyteAdminWorkspaceId, provider.toLowerCase(), clientId, clientSecret);
+		// }
 	} catch (error) {
 		logerror('Error during Airbyte configuration:', error);
 	}

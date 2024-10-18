@@ -340,49 +340,25 @@ export async function handleSuccessfulEmbeddingWebhook(req, res, next) {
 	return dynamicResponse(req, res, 200, {});
 }
 
-export async function getOAuthRedirectLink(req, res, next) {
-	//generate a link to redirect the user to, use this api spec: https://reference.airbyte.com/reference/initiateoauth
-	const { sourceType } = req.body;
+//this is an old implementation of airbyte oauth. If we end up going to airbyte cloud then this will be useful but until then so long as we override the oauth credentials then we'll need to use a normal passport.js auth
+// export async function getOAuthRedirectLink(req, res, next) {
+// 	//generate a link to redirect the user to, use this api spec: https://reference.airbyte.com/reference/initiateoauth
+// 	const { sourceType } = req.body;
+// 	const redirectUrl = `https://app.agentcloud.dev/welcome`; //TODO: Set up this endpoint and redirect to it (maybe store the secret in persistent storage? But this could pose a security risk)
+// 	console.log("sourceType: ", sourceType);
+// 	const workspaceId = process.env.AIRBYTE_ADMIN_WORKSPACE_ID
 
-	const redirectUrl = `https://app.agentcloud.dev/welcome`; //TODO: Set up this endpoint and redirect to it (maybe store the secret in persistent storage? But this could pose a security risk)
-	const workspaceId = process.env.AIRBYTE_ADMIN_WORKSPACE_ID; //create the source in this workspace
+// 	const sourcesApi = await getAirbyteApi(AirbyteApiType.SOURCES);
+// 	const body = {
+// 		sourceType: sourceType,
+// 		redirectUrl: redirectUrl,
+// 		workspaceId: workspaceId
+// 	}; //body for the fetch request
 
-	console.log("workspaceId: ", workspaceId);
-	console.log("sourceType: ", sourceType);
+// 	const oauthRedirect = await sourcesApi.initiateOAuth(body).then(({data}) => log(data));
+// 	return oauthRedirect;
+// }
 
-	const body = {}; //body for the fetch request
-
-	const bearerToken = await getAirbyteAuthToken();
-
-	const requestUrl = `${process.env.AIRBYTE_API_URL}/v1/sources/initiateOAuth`;
-
-	const getRedirectUrl = await fetch(requestUrl, {
-		method: 'POST',
-		headers: {
-			'content-type': 'application/json',
-			accept: 'application/json',
-			Authorization: `Bearer ${bearerToken}`
-		},
-		body: JSON.stringify({
-			sourceType: sourceType,
-			redirectUrl: redirectUrl,
-			workspaceId: workspaceId
-		})
-	});
-
-	// const getRedirectUrlJson = await getRedirectUrl.json();
-
-	console.log('getRedirectUrl', getRedirectUrl);
-	const responseBody = await getRedirectUrl.text();
-	console.log('Response Body:', responseBody);
-	// console.log('getRedirectUrlJson', getRedirectUrlJson);
-
-	return res.json({
-		getRedirectUrl,
-		_csrf: req.csrfToken()
-	});
-}
-
-export async function handleOAuthWebhook(req, res, next) {
-	//airbyte hits the oauth callback with a secretId in the body
-}
+// export async function handleOAuthWebhook(req, res, next) {
+// 	//airbyte hits the oauth callback with a secretId in the body
+// }
