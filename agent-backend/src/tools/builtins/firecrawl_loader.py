@@ -8,12 +8,9 @@ class FireCrawlLoader(BaseBuiltinTool):
 
     def __init__(self, *args, **kwargs):
         super().__init__(**kwargs)
-        print(f"KWARGS: {kwargs}")
         parameters: dict = kwargs.get("parameters")
         if parameters is not None:
-            print(f"PARAMETERS: {parameters}")
             self.__dict__['_api_key'] = parameters.get("api_key", "")
-            print(f"API KEY: {self._api_key}")
         else:
             print("Parameters was None!")
 
@@ -22,7 +19,6 @@ class FireCrawlLoader(BaseBuiltinTool):
             raise ValueError("API key is not set!") #type saftey
         
         # Use the API key for running the tool logic
-        print(f"Running tool with API key: {self._api_key} and query: {query}")
         url = "https://api.firecrawl.dev/v1/scrape"
         payload = {
         "url": query
