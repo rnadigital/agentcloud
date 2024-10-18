@@ -10,7 +10,9 @@ import * as util from 'node:util';
 const lookup = util.promisify(dns.lookup);
 
 import getAirbyteApi, { AirbyteApiType, getAirbyteAuthToken } from 'airbyte/api';
+import OauthSecretProviderFactory from 'lib/oauthsecret';
 import SecretProviderFactory from 'lib/secret';
+import { AIRBYTE_OAUTH_PROVIDERS } from 'struct/oauth';
 
 import getAirbyteInternalApi from './internal';
 
@@ -173,6 +175,36 @@ async function updateWebhookUrls(workspaceId: string) {
 	return updateWorkspaceRes;
 }
 
+async function overrideOauthCreds(workspaceId, name, clientId, clientSecret) {
+	log('workspaceID: ', workspaceId);
+	if (workspaceId !== undefined) {
+		log('workspaceID: ', workspaceId);
+		const updateOauthCredsRes = await fetch(
+			`${process.env.AIRBYTE_API_URL}/v1/workspaces/${workspaceId}/oauthCredentials`,
+			{
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${await getAirbyteAuthToken()}`
+				},
+				body: {
+					actorType: 'source',
+					name,
+					workspaceId,
+					configuration: {
+						credentials: {
+							client_id: clientId,
+							client_secret: clientSecret
+						}
+					}
+				}
+			}
+		);
+		return updateOauthCredsRes;
+	}
+	return null;
+}
+
 // Main logic to handle Airbyte setup and configuration
 export async function init() {
 	try {
@@ -245,6 +277,17 @@ export async function init() {
 		// Update webhook URLs
 		const updatedWebhookUrls = await updateWebhookUrls(airbyteAdminWorkspaceId);
 		log('UPDATED_WEBHOOK_URLS', JSON.stringify(updatedWebhookUrls));
+
+		log('Overriding default ClientID and client secret for datasource OAuth integration');
+		// for (let provider in AIRBYTE_OAUTH_PROVIDERS) {
+		// 	const { clientId, clientSecret } = OauthSecretProviderFactory.getSecretProvider(
+		// 		provider.toLowerCase()
+		// 	);
+		// 	log(
+		// 		`Overriding ${provider.toLowerCase()} clientId and clientSecret to ${clientId} and ${clientSecret}`
+		// 	);
+		// 	overrideOauthCreds(airbyteAdminWorkspaceId, provider.toLowerCase(), clientId, clientSecret);
+		// }
 	} catch (error) {
 		logerror('Error during Airbyte configuration:', error);
 	}

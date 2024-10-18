@@ -15,7 +15,7 @@ const log = debug('webapp:oauth');
 //To reduce some boilerplace in the router, allows us to just loop and create handlers for each service
 import { Strategy as GitHubStrategy } from 'passport-github';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-// import { Strategy as HubspotStrategy } from 'passport-hubspot-oauth2';
+import { Strategy as HubspotStrategy } from 'passport-hubspot-oauth2';
 // import { Strategy as StripeStrategy } from 'passport-stripe';
 
 export const OAUTH_STRATEGIES: OAuthStrategy[] = [
@@ -40,10 +40,26 @@ export const OAUTH_STRATEGIES: OAuthStrategy[] = [
 		extra: {
 			/* N/A */
 		}
-	}
+	},
 	// { strategy: StripeStrategy, secretKeys: { clientId: SecretKeys.OAUTH_STRIPE_CLIENT_ID, secret: SecretKeys.OAUTH_STRIPE_CLIENT_SECRET }, callback: stripeCallback, path: '/auth/stripe/callback', extra: { /* N/A */ } },
-	// { strategy: HubspotStrategy, secretKeys: { clientId: SecretKeys.OAUTH_HUBSPOT_CLIENT_ID, secret: SecretKeys.OAUTH_HUBSPOT_CLIENT_SECRET }, callback: hubspotCallback, path: '/auth/hubspot/callback', extra: { /* N/A */ } },
+	{
+		strategy: HubspotStrategy,
+		secretKeys: {
+			clientId: SecretKeys.OAUTH_HUBSPOT_CLIENT_ID,
+			secret: SecretKeys.OAUTH_HUBSPOT_CLIENT_SECRET
+		},
+		callback: hubspotDatasourceCallback,
+		path: '/auth/hubspot/callback',
+		extra: {
+			/* N/A */
+		}
+	}
 ];
+
+export async function hubspotDatasourceCallback(accessToken, refreshToken, done) {
+	log(`Hubspot datasource callback with accessToken: `, accessToken);
+	//create the datasouce here, call done
+}
 
 export async function githubCallback(accessToken, refreshToken, profile, done) {
 	log(`githubCallback profile: ${JSON.stringify(profile, null, '\t')}`);
