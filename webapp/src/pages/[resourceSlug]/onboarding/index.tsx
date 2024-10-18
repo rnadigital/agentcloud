@@ -19,47 +19,55 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { RegisterFormValues } from 'pages/register';
 import { usePostHog } from 'posthog-js/react';
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
-
-interface FormValues {
-	role: { label: string; value: string };
-}
+import { Connector } from 'struct/connector';
 
 export default function Onboarding() {
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
 	const { csrf } = accountContext;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
-	const posthog = usePostHog();
 
-	const { theme } = useThemeContext();
+	const [connectors, setConnectors] = useState([]);
+	const [searchInput, setSearchInput] = useState<string>();
+
+	const filteredConnectors: Connector[] = useMemo(() => {
+		return Array.from(new Set(connectors.map(connector => connector.name.toLowerCase())))
+			.map(name => connectors.find(connector => connector.name.toLowerCase() === name))
+			.filter(connector => connector.name.toLowerCase().includes(searchInput?.toLowerCase() || ''));
+	}, [connectors, searchInput]);
+
+	const [error, setError] = useState<string>();
+
+	const initConnectors = async () => {
+		try {
+			await API.getConnectors(
+				{
+					resourceSlug
+				},
+				async res => {
+					const connectorsJson = res?.sourceDefinitions;
+					if (!connectorsJson || !connectorsJson?.length) {
+						throw new Error('Falied to fetch connector list, please ensure Airbyte is running.');
+					}
+					setConnectors(connectorsJson);
+				},
+				err => {
+					setError('Falied to fetch connector list, please ensure Airbyte is running.');
+				},
+				null
+			);
+		} catch (e) {
+			console.error(e);
+			setError(e?.message || e);
+		}
+	};
 
 	useEffect(() => {
+		initConnectors();
 		refreshAccountContext();
 	}, []);
-
-	const { control, handleSubmit } = useForm<FormValues>({
-		defaultValues: {
-			role: null
-		}
-	});
-
-	const onSubmit = async (data: FormValues) => {
-		posthog.capture('onboarding', {
-			role: data.role.value
-		});
-		await API.updateRole(
-			{
-				resourceSlug,
-				role: data.role.value,
-				_csrf: csrf
-			},
-			null,
-			null,
-			router
-		);
-	};
 
 	return (
 		<>
@@ -81,8 +89,8 @@ export default function Onboarding() {
 					</div>
 
 					<section className='mt-6'>
-						<DataSourceSearch />
-						<DataSourceGrid />
+						<DataSourceSearch searchInput={searchInput} setSearchInput={setSearchInput} />
+						<DataSourceGrid connectors={filteredConnectors} />
 					</section>
 				</main>
 			</div>
