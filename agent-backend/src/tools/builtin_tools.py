@@ -16,6 +16,7 @@ class BuiltinTools:
         'search_youtube': YoutubeSearchTool,
         'search_google': SerperGoogleSearchTool,
         'apify_search_google': ApifyGoogleSearchTool,
+        'firecrawl_loader' : FireCrawlLoader,
     }
 
     @classmethod
