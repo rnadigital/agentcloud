@@ -4,6 +4,7 @@ import ButtonSpinner from 'components/ButtonSpinner';
 import ErrorAlert from 'components/ErrorAlert';
 import InputField from 'components/form/InputField';
 import DataSourceConfigSteps from 'components/onboarding/DataSourceConfigSteps';
+import DataSourceDetails from 'components/onboarding/DataSourceDetails';
 import DataSourceGrid from 'components/onboarding/DataSourceGrid';
 import DataSourceOnboardingSteps from 'components/onboarding/DataSourceOnboardingSteps';
 import DataSourceSearch from 'components/onboarding/DataSourceSearch';
@@ -11,6 +12,7 @@ import LeftFrame from 'components/onboarding/LeftFrame';
 import OnboardingSelect from 'components/onboarding/OnboardingSelect';
 import { error } from 'console';
 import { useAccountContext } from 'context/account';
+import OnboardingFormContext from 'context/onboardingform';
 import { useThemeContext } from 'context/themecontext';
 import cn from 'lib/cn';
 import passwordPattern from 'misc/passwordpattern';
@@ -31,6 +33,7 @@ export default function Onboarding() {
 
 	const [connectors, setConnectors] = useState([]);
 	const [searchInput, setSearchInput] = useState<string>();
+	const [currentStep, setCurrentStep] = useState(1);
 
 	const filteredConnectors: Connector[] = useMemo(() => {
 		return Array.from(new Set(connectors.map(connector => connector.name.toLowerCase())))
@@ -89,8 +92,20 @@ export default function Onboarding() {
 					</div>
 
 					<section className='mt-6'>
-						<DataSourceSearch searchInput={searchInput} setSearchInput={setSearchInput} />
-						<DataSourceGrid connectors={filteredConnectors} />
+						<OnboardingFormContext>
+							{currentStep === 0 && (
+								<>
+									<DataSourceSearch searchInput={searchInput} setSearchInput={setSearchInput} />
+									<DataSourceGrid connectors={filteredConnectors} />
+								</>
+							)}
+
+							{currentStep === 1 && (
+								<>
+									<DataSourceDetails />
+								</>
+							)}
+						</OnboardingFormContext>
 					</section>
 				</main>
 			</div>
