@@ -52,6 +52,7 @@ import * as taskController from 'controllers/task';
 import * as teamController from 'controllers/team';
 import * as toolController from 'controllers/tool';
 import * as variableController from 'controllers/variables';
+import OauthSecretProviderFactory from 'lib/oauthsecret';
 
 export default function router(server, app) {
 	server.use('/static', express.static('static'));
@@ -106,7 +107,7 @@ export default function router(server, app) {
 	);
 	oauthRouter.get(
 		'/hubspot',
-		passportInstance.authenticate('hubspot', {scope: ['offline', 'contacts-ro', 'contacts-rw'], redirect_uri: 'https://localhost:3000/auth/hubspot/callback'}),
+		passportInstance.authenticate('hubspot', {scope: OauthSecretProviderFactory.getProviderScopes('hubspot'), redirect_uri: 'https://localhost:3000/auth/hubspot/callback'}),
 		fetchSession
 	);
 	oauthRouter.get(
