@@ -1,5 +1,6 @@
 import * as API from '@api';
 import { ChevronRightIcon } from '@heroicons/react/20/solid';
+import { ArrowLeftIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
 import ButtonSpinner from 'components/ButtonSpinner';
 import ErrorAlert from 'components/ErrorAlert';
 import InputField from 'components/form/InputField';
@@ -107,6 +108,21 @@ export default function Onboarding() {
 							)}
 						</OnboardingFormContext>
 					</section>
+					<div className='flex mt-6'>
+						<button
+							className={cn(
+								'flex items-center gap-1',
+								currentStep === 1 ? 'text-gray-500' : 'text-primary-500'
+							)}
+						>
+							<ArrowLeftIcon className='h-4 w-4' />
+							<span>Back</span>
+						</button>
+						<button className='flex ml-auto items-center gap-1 text-primary-500'>
+							<ArrowRightIcon className='h-4 w-4' />
+							<span>Next</span>
+						</button>
+					</div>
 				</main>
 			</div>
 		</>

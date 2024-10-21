@@ -59,6 +59,7 @@
     "bullmq": "^4.13.0",
     "connect-redis": "^7.1.0",
     "cookie-parser": "^1.4.6",
+    "country-flag-icons": "^1.5.13",
     "csurf": "^1.11.0",
     "dayjs": "^1.11.11",
     "debug": "^4.3.4",
