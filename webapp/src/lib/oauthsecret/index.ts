@@ -10,8 +10,53 @@ export default class OauthSecretProviderFactory {
 
 	static getProviderScopes(provider: string = 'local') {
 		switch (provider) {
-			case 'hubspot':
-				const hubspotScopes = [
+			case 'hubspot-free':
+				const hubspotScopesBase = new Set([
+					'crm.lists.read',
+					'crm.objects.contacts.read',
+					'crm.objects.custom.read',
+					'crm.objects.deals.read',
+					'crm.objects.line_items.read',
+					'crm.objects.marketing_events.read',
+					'crm.objects.owners.read',
+					'crm.objects.quotes.read',
+					'crm.schemas.companies.read',
+					'crm.schemas.contacts.read',
+					'crm.schemas.deals.read',
+					'crm.schemas.line_items.read',
+					'crm.schemas.quotes.read',
+					'settings.currencies.read',
+					'settings.users.read',
+					'settings.users.teams.read',
+					'business-intelligence',
+					'conversations.read',
+					'crm.export',
+					'forms',
+					'forms-uploaded-files',
+					'oauth',
+					'integration-sync',
+					'media_bridge.read',
+					'sales-email-read',
+					'tickets',
+					'timeline'
+				]);
+
+				return [...hubspotScopesBase];
+			case 'hubspot-professional':
+				const hubspotScopesProfessional = [
+					'cms.knowledge_base.articles.read',
+					'cms.knowledge_base.settings.read',
+					'crm.objects.feedback_submissions.read',
+					'crm.objects.goals.read',
+					'collector.graphql_query.execute',
+					'collector.graphql_schema.read',
+					'content',
+					'ctas.read',
+					'e-commerce'
+				];
+
+			case 'hubspot-enterprise':
+				const hubspotScopesEnterprise = [
 					'crm.lists.read',
 					'crm.lists.write',
 					'crm.objects.companies.read',
@@ -52,7 +97,7 @@ export default class OauthSecretProviderFactory {
 					'files',
 					'integration-sync'
 				];
-				return hubspotScopes;
+				return hubspotScopesEnterprise;
 		}
 	}
 }

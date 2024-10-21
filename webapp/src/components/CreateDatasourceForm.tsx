@@ -50,6 +50,15 @@ const DatasourceScheduleForm = dynamic(() => import('components/DatasourceSchedu
 	ssr: false
 });
 
+export async function hubspotDatasourceCallback(accessToken, refreshToken, profile, done) {
+	console.log(`Hubspot datasource callback with accessToken: `, accessToken);
+	console.log(`Hubspot datasource callback with refreshToken: ${refreshToken}`);
+	console.log(`Hubspot Datasource callback with profile: ${JSON.stringify(profile, null, '\t')}`);
+	//create the datasouce here, call done
+
+	//need to either redirect, set a callback to the datasource form or
+}
+
 export default function CreateDatasourceForm({
 	models,
 	compact,

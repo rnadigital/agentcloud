@@ -139,9 +139,9 @@ const DynamicConnectorForm = ({
 				<div className='flex flex-col'>
 					<a //when the user hits this button then redirect them to the authentication link in a new window/tab
 						className='max-w-[25%] rounded-md disabled:bg-slate-400 bg-indigo-600 mx-3 my-5 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 mt-3'
-						href={`/auth/${name.toLowerCase()}`}
+						href={`/auth/${name.toLowerCase()}/free`}
 						target='_blank'
-						rel="noopener noreferrer"
+						rel='noopener noreferrer'
 					>
 						{icon && <img src={icon} loading='lazy' className='inline-flex me-2 w-6 w-6' />}
 						Log in with {name}

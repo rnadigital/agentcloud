@@ -106,8 +106,18 @@ export default function router(server, app) {
 		}
 	);
 	oauthRouter.get(
-		'/hubspot',
-		passportInstance.authenticate('hubspot', {scope: OauthSecretProviderFactory.getProviderScopes('hubspot'), redirect_uri: 'https://localhost:3000/auth/hubspot/callback'}),
+		'/hubspot/free',
+		passportInstance.authenticate('hubspot', {scope: OauthSecretProviderFactory.getProviderScopes('hubspot-free'), redirect_uri: 'https://localhost:3000/auth/hubspot/callback'}),
+		fetchSession
+	);
+	oauthRouter.get(
+		'/hubspot/professional',
+		passportInstance.authenticate('hubspot', {scope: OauthSecretProviderFactory.getProviderScopes('hubspot-professional'), redirect_uri: 'https://localhost:3000/auth/hubspot/callback'}),
+		fetchSession
+	);
+	oauthRouter.get(
+		'/hubspot/enterprise',
+		passportInstance.authenticate('hubspot', {scope: OauthSecretProviderFactory.getProviderScopes('hubspot-enterprise'), redirect_uri: 'https://localhost:3000/auth/hubspot/callback'}),
 		fetchSession
 	);
 	oauthRouter.get(
@@ -115,7 +125,7 @@ export default function router(server, app) {
 		passportInstance.authenticate( 'hubspot', {
 			successRedirect: '/auth/hubspot/success',
 			failureRedirect: '/auth/hubspot/failure'}),
-		oauthController.hubspotDatasourceCallback,
+		// oauthController.hubspotDatasourceCallback,
 		//redirect back to datasource form
 	)
 	server.use('/auth', useSession, passportInstance.session(), oauthRouter);
