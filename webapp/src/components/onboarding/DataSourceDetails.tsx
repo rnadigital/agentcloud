@@ -28,7 +28,10 @@ const regionOptions: { label: string; value: string; region: FlagComponent }[] =
 ];
 
 const DataSourceDetails = () => {
-	const { control } = useOnboardinFormContext<DataSourceDetailsFormValues>();
+	const { control, getValues } = useOnboardinFormContext<DataSourceDetailsFormValues>();
+
+	const k = getValues('k');
+
 	return (
 		<div className='text-gray-900 text-sm'>
 			<InputField<DataSourceDetailsFormValues>
@@ -131,6 +134,13 @@ const DataSourceDetails = () => {
 							placeholder='5'
 							type='number'
 						/>
+
+						{k >= 10 && (
+							<div className='bg-orange-50 rounded-md p-4 text-sm text-orange-800'>
+								Selecting values greater 10 can slow queries and increase token costs due to the
+								larger data volume
+							</div>
+						)}
 					</div>
 				</div>
 
