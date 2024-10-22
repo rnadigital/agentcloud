@@ -1,7 +1,7 @@
 'use strict';
 
 import { ObjectId } from 'mongodb';
-import mongoose, { mongo, Mongoose } from 'mongoose';
+import mongoose, { InferSchemaType, mongo, Mongoose } from 'mongoose';
 const { Schema, Types } = mongoose;
 const MongooseObjectId = Types.ObjectId;
 
@@ -156,6 +156,7 @@ export interface Datasource {
 	timeUnit?: string; //temp until we have a more robust way to limit cron frequency based on plan
 	collectionIndex?: string;
 	namespace?: string;
+	isByo?: boolean;
 }
 
 const datasourceSchema = new Schema<Datasource>(
@@ -185,10 +186,14 @@ const datasourceSchema = new Schema<Datasource>(
 		streamConfig: Object,
 		timeUnit: String,
 		collectionIndex: String,
-		namespace: String
+		namespace: String,
+		isByo: Boolean
 	},
 	{ timestamps: true }
 );
 
-export const DatasourceModel =
-	mongoose.models?.Datasource || mongoose.model('Datasource', datasourceSchema);
+export type VectorDbDocument = InferSchemaType<typeof datasourceSchema>;
+
+const modelName = 'VectorDb';
+
+export const DataSourceModel = mongoose.model<Datasource>(modelName, datasourceSchema);

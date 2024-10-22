@@ -55,6 +55,7 @@ import * as taskController from 'controllers/task';
 import * as teamController from 'controllers/team';
 import * as toolController from 'controllers/tool';
 import * as variableController from 'controllers/variables';
+import * as vectorDbController from 'controllers/vectordb';
 
 export default function router(server, app) {
 	server.use('/static', express.static('static'));
@@ -716,6 +717,37 @@ export default function router(server, app) {
 		hasPerms.one(Permissions.DELETE_VARIABLE),
 		variableController.deleteVariableApi
 	);
+	
+
+	teamRouter.get(
+		'/vectordb.json',
+		vectorDbController.vectorDbsJson
+	);
+
+	teamRouter.get('/vectordb/:vectorDbId([a-f0-9]{24}).json', vectorDbController.variableJson); 
+	
+	teamRouter.get(
+		'/vectordb/:vectorDbId/edit',
+		hasPerms.one(Permissions.EDIT_VECTOR_DB),
+		vectorDbController.vectorDbEditPage.bind(null, app)
+	)
+
+	teamRouter.post(
+		'/forms/vectordb/add',
+		hasPerms.one(Permissions.CREATE_VECTOR_DB),
+		vectorDbController.addVectorDbApi
+	);
+	teamRouter.post(
+		'/forms/vectordb/:vectorDbId/edit',
+		hasPerms.one(Permissions.EDIT_VECTOR_DB),
+		vectorDbController.editVectorDbApi
+	);
+	teamRouter.delete(
+		'/forms/vectordb/:vectorDbId',
+		hasPerms.one(Permissions.DELETE_VECTOR_DB),
+		vectorDbController.deleteVectorDbApi
+	);
+	
 
 	server.use(
 		'/:resourceSlug([a-f0-9]{24})',
