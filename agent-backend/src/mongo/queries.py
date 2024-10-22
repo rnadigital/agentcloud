@@ -22,6 +22,7 @@ class MongoClientConnection(MongoConnection):
 
     def __init__(self):
         if not hasattr(self, 'initialized'):  
+            print("Didn't find an existing mongo connection, creating a new one")
             super().__init__()
             self.mongo_client = self.connect()
             self.db = self.mongo_client[MONGO_DB_NAME]
