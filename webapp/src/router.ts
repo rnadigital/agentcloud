@@ -31,12 +31,9 @@ import Permissions from 'permissions/permissions';
 import { PlanLimitsKeys, pricingMatrix, SubscriptionPlan } from 'struct/billing';
 
 const unauthedMiddlewareChain = [useSession, useJWT, fetchSession, onboardedMiddleware];
-const authedMiddlewareChain = [
-	...unauthedMiddlewareChain,
-	checkSession,
-	csrfMiddleware
-];
+const authedMiddlewareChain = [...unauthedMiddlewareChain, checkSession, csrfMiddleware];
 
+import { restrictToFirstScrollableAncestor } from '@dnd-kit/modifiers';
 import checkSessionWelcome from '@mw/auth/checksessionwelcome';
 import * as accountController from 'controllers/account';
 import * as agentController from 'controllers/agent';
@@ -47,6 +44,7 @@ import * as assetController from 'controllers/asset';
 import * as datasourceController from 'controllers/datasource';
 import * as modelController from 'controllers/model';
 import * as notificationController from 'controllers/notification';
+import * as oauthController from 'controllers/oauth';
 import * as orgController from 'controllers/org';
 import * as sessionController from 'controllers/session';
 import * as sharelinkController from 'controllers/sharelink';
@@ -55,6 +53,7 @@ import * as taskController from 'controllers/task';
 import * as teamController from 'controllers/team';
 import * as toolController from 'controllers/tool';
 import * as variableController from 'controllers/variables';
+import OauthSecretProviderFactory from 'lib/oauthsecret';
 
 export default function router(server, app) {
 	server.use('/static', express.static('static'));
@@ -107,6 +106,33 @@ export default function router(server, app) {
 			res.redirect(`/auth/redirect?to=${encodeURIComponent('/')}`);
 		}
 	);
+	oauthRouter.get(
+		'/hubspot/free',
+		passportInstance.authenticate('hubspot', {scope: OauthSecretProviderFactory.getProviderScopes('hubspot-free'), redirect_uri: 'https://localhost:3000/auth/hubspot/callback'}),
+		fetchSession
+	);
+	oauthRouter.get(
+		'/hubspot/professional',
+		passportInstance.authenticate('hubspot', {scope: OauthSecretProviderFactory.getProviderScopes('hubspot-professional'), redirect_uri: 'https://localhost:3000/auth/hubspot/callback'}),
+		fetchSession
+	);
+	oauthRouter.get(
+		'/hubspot/enterprise',
+		passportInstance.authenticate('hubspot', {scope: OauthSecretProviderFactory.getProviderScopes('hubspot-enterprise'), redirect_uri: 'https://localhost:3000/auth/hubspot/callback'}),
+		fetchSession
+	);
+	oauthRouter.get(
+		'/hubspot/callback',
+		useSession,
+		useJWT,
+		fetchSession,
+		passportInstance.authenticate( 'hubspot'),
+		(_req, res) => {
+			res.redirect(`/${res.locals.account.currentTeam}/datasource/add?token=${encodeURIComponent(res.locals.datasourceOAuth.refreshToken)}&provider=${encodeURIComponent(res.locals.datasourceOAuth.provider)}`)
+		}
+		// oauthController.hubspotDatasourceCallback,
+		//redirect back to datasource form
+	)
 	server.use('/auth', useSession, passportInstance.session(), oauthRouter);
 
 	// Body and query parsing middleware
@@ -122,8 +148,18 @@ export default function router(server, app) {
 
 	// Non team endpoints
 	server.get('/', unauthedMiddlewareChain, homeRedirect);
-	server.get('/login', unauthedMiddlewareChain,checkSessionWelcome , renderStaticPage(app, '/login'));
-	server.get('/register', unauthedMiddlewareChain, checkSessionWelcome, renderStaticPage(app, '/register'));
+	server.get(
+		'/login',
+		unauthedMiddlewareChain,
+		checkSessionWelcome,
+		renderStaticPage(app, '/login')
+	);
+	server.get(
+		'/register',
+		unauthedMiddlewareChain,
+		checkSessionWelcome,
+		renderStaticPage(app, '/register')
+	);
 	server.get('/verify', unauthedMiddlewareChain, renderStaticPage(app, '/verify'));
 	server.get(
 		'/account',
@@ -133,7 +169,8 @@ export default function router(server, app) {
 		setSubscriptionLocals,
 		csrfMiddleware,
 		accountController.accountPage.bind(null, app)
-	);	server.get(
+	);
+	server.get(
 		'/welcome',
 		unauthedMiddlewareChain,
 		setDefaultOrgAndTeam,
@@ -165,8 +202,9 @@ export default function router(server, app) {
 		checkSession,
 		setSubscriptionLocals,
 		csrfMiddleware,
-		accountController.welcomeJson,
+		accountController.welcomeJson
 	);
+
 
 	//TODO: move and rename all these
 	server.post(
@@ -254,17 +292,24 @@ export default function router(server, app) {
 		accountController.updateRole
 	);
 
-	
 	// api key endpoints
-	accountRouter.post('/apikey/add',authedMiddlewareChain ,apiKeyController.addKeyApi);
-	accountRouter.delete('/apikey/:keyId([a-f0-9]{24})', authedMiddlewareChain, apiKeyController.deleteKeyApi);
-	accountRouter.post('/apikey/:keyId([a-f0-9]{24})/increment', authedMiddlewareChain, apiKeyController.incrementKeyApi);
-	
-	server.use('/forms/account', accountRouter);
-	server.get('/apikey/add',authedMiddlewareChain ,apiKeyController.keyAddPage.bind(null, app));
+	accountRouter.post('/apikey/add', authedMiddlewareChain, apiKeyController.addKeyApi);
+	accountRouter.delete(
+		'/apikey/:keyId([a-f0-9]{24})',
+		authedMiddlewareChain,
+		apiKeyController.deleteKeyApi
+	);
+	accountRouter.post(
+		'/apikey/:keyId([a-f0-9]{24})/increment',
+		authedMiddlewareChain,
+		apiKeyController.incrementKeyApi
+	);
 
-	server.get('/apikeys',authedMiddlewareChain ,apiKeyController.apiKeysPage.bind(null, app));
-	server.get('/apikeys.json',authedMiddlewareChain ,apiKeyController.apikeysJson);
+	server.use('/forms/account', accountRouter);
+	server.get('/apikey/add', authedMiddlewareChain, apiKeyController.keyAddPage.bind(null, app));
+
+	server.get('/apikeys', authedMiddlewareChain, apiKeyController.apiKeysPage.bind(null, app));
+	server.get('/apikeys.json', authedMiddlewareChain, apiKeyController.apikeysJson);
 
 	// public session endpoints
 	const publicAppRouter = Router({ mergeParams: true, caseSensitive: true });
@@ -283,18 +328,21 @@ export default function router(server, app) {
 		sessionController.publicSessionMessagesJson
 	);
 	//TODO: csrf?
-	publicAppRouter.post('/forms/session/:sessionId([a-f0-9]{24})/edit',
+	publicAppRouter.post(
+		'/forms/session/:sessionId([a-f0-9]{24})/edit',
 		setParamOrgAndTeam,
 		setPermissions,
 		sessionController.editSessionApi
 	);
-	publicAppRouter.get('/session/:sessionId([a-f0-9]{24}).json',
+	publicAppRouter.get(
+		'/session/:sessionId([a-f0-9]{24}).json',
 		csrfMiddleware,
 		setParamOrgAndTeam,
 		setPermissions,
 		sessionController.sessionJson
 	);
-	publicAppRouter.post('/forms/session/:sessionId([a-f0-9]{24})/start',
+	publicAppRouter.post(
+		'/forms/session/:sessionId([a-f0-9]{24})/start',
 		setParamOrgAndTeam,
 		setPermissions,
 		sessionController.startSession
@@ -349,8 +397,8 @@ export default function router(server, app) {
 		sessionController.cancelSessionApi
 	);
 
-	teamRouter.post('/forms/session/:sessionId([a-f0-9]{24})/edit',  sessionController.editSessionApi);
-	teamRouter.post('/forms/session/:sessionId([a-f0-9]{24})/start',  sessionController.startSession);
+	teamRouter.post('/forms/session/:sessionId([a-f0-9]{24})/edit', sessionController.editSessionApi);
+	teamRouter.post('/forms/session/:sessionId([a-f0-9]{24})/start', sessionController.startSession);
 
 	//agents
 	teamRouter.get('/agents', agentController.agentsPage.bind(null, app));
@@ -391,10 +439,7 @@ export default function router(server, app) {
 		taskController.taskAddPage.bind(null, app)
 	);
 	teamRouter.get('/task/:taskId([a-f0-9]{24}).json', taskController.getTaskByIdJson);
-	teamRouter.get(
-		'/task',
-		taskController.getTaskJson
-	);
+	teamRouter.get('/task', taskController.getTaskJson);
 	teamRouter.get(
 		'/task/:taskId([a-f0-9]{24})/edit',
 		hasPerms.one(Permissions.EDIT_TASK),
@@ -644,11 +689,7 @@ export default function router(server, app) {
 	//org
 	teamRouter.get('/org', orgController.orgPage.bind(null, app));
 	teamRouter.get('/org.json', orgController.orgJson);
-	teamRouter.post(
-		'/forms/org/edit',
-		hasPerms.one(Permissions.EDIT_ORG),
-		orgController.editOrgApi
-	);
+	teamRouter.post('/forms/org/edit', hasPerms.one(Permissions.EDIT_ORG), orgController.editOrgApi);
 	teamRouter.get('/org/teamvectorusage.json', orgController.vectorStorageAllTeams);
 	teamRouter.get(
 		'/org/:memberId([a-f0-9]{24}).json',
@@ -688,18 +729,15 @@ export default function router(server, app) {
 	teamRouter.get('/notifications.json', notificationController.notificationsJson);
 	teamRouter.patch('/forms/notification/seen', notificationController.markNotificationsSeenApi);
 
-	teamRouter.get(
-		'/variables.json',
-		variableController.variablesJson
-	);
+	teamRouter.get('/variables.json', variableController.variablesJson);
 
 	teamRouter.get('/variable/:variableId([a-f0-9]{24}).json', variableController.variableJson);
-	
+
 	teamRouter.get(
 		'/variable/:variableId/edit',
 		hasPerms.one(Permissions.EDIT_VARIABLE),
 		variableController.variableEditPage.bind(null, app)
-	)
+	);
 
 	teamRouter.post(
 		'/forms/variable/add',

@@ -2,7 +2,8 @@
 
 export enum OAUTH_PROVIDER {
 	GOOGLE = 'google',
-	GITHUB = 'github'
+	GITHUB = 'github',
+	HUBSPOT = 'hubspot'
 }
 
 export type OAuthStrategy = {

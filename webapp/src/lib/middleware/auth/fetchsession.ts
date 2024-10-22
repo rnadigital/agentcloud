@@ -5,7 +5,7 @@ import debug from 'debug';
 const log = debug('webapp:session');
 
 export default async function fetchSession(req, res, next) {
-	// log('req.session:', req.session);
+	log('req.session.passport?.user:', req.session.passport?.user);
 	if (req.session && (req.session.accountId || req.session.passport?.user)) {
 		let account: Account;
 		if (req.session.accountId) {
@@ -28,6 +28,15 @@ export default async function fetchSession(req, res, next) {
 				oauth: account.oauth,
 				permissions: account.permissions
 			};
+			if (req.session.passport?.user?.refreshToken) {
+				log('found refreshToken: ', req.session.passport?.user?.refreshToken);
+				const provider = req.session.passport?.user?.provider;
+				const refreshToken = req.session.passport?.user?.refreshToken;
+				res.locals.datasourceOAuth = {
+					provider,
+					refreshToken
+				};
+			}
 			return next();
 		}
 		req.session.destroy();
