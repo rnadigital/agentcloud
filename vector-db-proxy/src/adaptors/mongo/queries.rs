@@ -1,4 +1,4 @@
-use crate::adaptors::mongo::models::{DataSources, EmbeddingConfig, Model};
+use crate::adaptors::mongo::models::{DataSources, EmbeddingConfig, Model, VectorDb};
 use anyhow::{anyhow, Result};
 use futures_util::StreamExt;
 use mongodb::bson::doc;
@@ -222,4 +222,26 @@ pub async fn get_team_datasources(db: &Database, team_id: &str) -> Result<Vec<Da
         }
     };
     Ok(list_of_datasources)
+}
+
+pub async fn get_vector_db_details(db: &Database, team_id: &str) -> Result<Vec<VectorDb>> {
+    let mut list_of_vector_db_config: Vec<VectorDb> = vec![];
+    let vector_db_collections = db.collection::<VectorDb>("vectordb");
+    let filter = doc! {"teamId": ObjectId::from_str(team_id)?};
+    match vector_db_collections.find(filter, None).await {
+        Ok(mut vector_dbs) => {
+            while let Some(vector_db) = vector_dbs.next().await {
+                list_of_vector_db_config.push(vector_db?)
+            }
+        }
+        Err(e) => {
+            log::error!(
+                "Encountered an error when retrieving list of vector Databases for team: {}. \
+            Error: {}",
+                team_id,
+                e
+            );
+        }
+    }
+    Ok(list_of_vector_db_config)
 }

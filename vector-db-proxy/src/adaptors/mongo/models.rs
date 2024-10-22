@@ -208,3 +208,10 @@ pub struct EmbeddingConfig {
     pub primary_key: Option<Vec<String>>,
     pub chunking_strategy: Option<UnstructuredChunkingConfig>,
 }
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct VectorDb {
+    orgId: ObjectId,
+    teamId: ObjectId,
+    apiKey: String,
+    url: Option<String>,
+}
