@@ -3,7 +3,7 @@
 import debug from 'debug';
 const log = debug('webapp:db');
 import { MongoClient, ObjectId } from 'mongodb';
-import { InsertResult } from 'struct/db';
+import mongoose from 'mongoose';
 
 export type IdOrStr = string | ObjectId;
 
@@ -21,4 +21,14 @@ export function client(): MongoClient {
 
 export function db() {
 	return client() && client().db();
+}
+
+export async function connectMongooseDB() {
+	try {
+		await mongoose.connect(process.env.DB_URL);
+		log('Mongoose connected successfully');
+	} catch (error) {
+		log('Mongoose connection error:', error);
+		process.exit(1);
+	}
 }
