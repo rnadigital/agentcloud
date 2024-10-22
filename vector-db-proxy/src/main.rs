@@ -21,6 +21,7 @@ use routes::apis::{
     get_collection_info, health_check, list_collections, upsert_data_point_to_collection,
 };
 
+use crate::adaptors::mongo::models::DataSources;
 use crate::data::processing_incoming_messages::process_incoming_messages;
 use crate::init::env_variables::set_all_env_vars;
 use crate::init::env_variables::GLOBAL_DATA;
@@ -108,7 +109,7 @@ async fn main() -> std::io::Result<()> {
     let mongo_client_for_streaming = Arc::clone(&app_mongo_client);
 
     // Clones of the receiver and sender so that they can be sent to the right threads
-    let (s, r) = channel::unbounded::<(String, Option<String>, String)>();
+    let (s, r) = channel::unbounded::<(DataSources, Option<String>, String)>();
     let sender_clone = s.clone();
 
     // This is to allow the use of multiple message queues
@@ -136,13 +137,18 @@ async fn main() -> std::io::Result<()> {
     let mut handles = vec![];
     for _ in 0..(number_of_workers * 10) {
         // let receiver_clone = receiver.clone();
-        let qdrant_client_clone = Arc::clone(&vector_database_client);
+        let vector_database_client_clone = Arc::clone(&vector_database_client);
         let mongo_client_clone = Arc::clone(&app_mongo_client);
         let receiver = r.clone();
         let handle = thread::spawn(move || {
             let rt = tokio::runtime::Runtime::new().unwrap();
             rt.block_on(async {
-                process_incoming_messages(receiver, qdrant_client_clone, mongo_client_clone).await;
+                process_incoming_messages(
+                    receiver,
+                    vector_database_client_clone,
+                    mongo_client_clone,
+                )
+                .await;
             });
         });
         handles.push(handle);

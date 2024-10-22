@@ -210,8 +210,8 @@ pub struct EmbeddingConfig {
 }
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct VectorDb {
-    orgId: ObjectId,
-    teamId: ObjectId,
-    apiKey: String,
-    url: Option<String>,
+    pub orgId: ObjectId,
+    pub teamId: ObjectId,
+    pub apiKey: String,
+    pub url: Option<String>,
 }
