@@ -1,8 +1,11 @@
 import { Switch } from '@headlessui/react';
-import { PencilIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { TasksDataReturnType } from 'controllers/task';
 import cn from 'lib/cn';
 import React, { CSSProperties, forwardRef, useEffect, useState } from 'react';
 import { FormFieldConfig } from 'struct/task';
+
+import CreateVariableModal from './variables/CreateVariableModal';
 
 interface SortableItemProps {
 	id: string;
@@ -10,13 +13,16 @@ interface SortableItemProps {
 	style?: CSSProperties;
 	editItem: (id: string, newConfig: FormFieldConfig) => void;
 	deleteItem: (id: string) => void;
+	variables?: TasksDataReturnType['variables'];
+	fetchTaskFormData?: Function;
 }
 
 const SortableItem = forwardRef<HTMLDivElement, SortableItemProps>(
-	({ id, config, style, editItem, deleteItem, ...props }, ref) => {
+	({ id, config, style, editItem, deleteItem, variables, fetchTaskFormData, ...props }, ref) => {
 		const [formConfig, setFormConfig] = useState<Partial<FormFieldConfig>>(config);
 
 		const [newOptionIndex, setNewOptionIndex] = useState<number>();
+		const [newVariableModalOpen, setNewVariableModalOpen] = useState(false);
 
 		const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | boolean) => {
 			const isChecked = typeof e === 'boolean';
@@ -44,6 +50,36 @@ const SortableItem = forwardRef<HTMLDivElement, SortableItemProps>(
 				editItem(id, newConfig as FormFieldConfig);
 				return newConfig;
 			});
+		};
+
+		const handleVariableChange = e => {
+			const { value } = e.target;
+
+			if (value === 'create-new-variable') {
+				return setNewVariableModalOpen(true);
+			}
+
+			setFormConfig(prevConfig => {
+				const newConfig = {
+					...prevConfig,
+					variable: value
+				};
+				editItem(id, newConfig as FormFieldConfig);
+				return newConfig;
+			});
+		};
+
+		const handleNewVariableCreation = (newVariable: { label: string; value: string }) => {
+			setFormConfig(prevConfig => {
+				const newConfig = {
+					...prevConfig,
+					variable: newVariable.value
+				};
+				editItem(id, newConfig as FormFieldConfig);
+				return newConfig;
+			});
+			fetchTaskFormData?.();
+			setNewVariableModalOpen(false);
 		};
 
 		const addOption = () => {
@@ -117,6 +153,30 @@ const SortableItem = forwardRef<HTMLDivElement, SortableItemProps>(
 						<option value='select'>Multiple choice</option>
 						<option value='date'>Date</option>
 					</select>
+
+					{variables && (
+						<select
+							name='variable'
+							value={formConfig?.variable?.toString() || ''}
+							onChange={handleVariableChange}
+							className={cn(
+								'block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white',
+								{
+									'dark:text-gray-400 text-gray-400': !formConfig?.variable
+								}
+							)}
+						>
+							<option value='' disabled className='text-gray-400'>
+								Assign to variable
+							</option>
+							{variables.map(variable => (
+								<option key={variable._id.toString()} value={variable._id.toString()}>
+									{variable.name}
+								</option>
+							))}
+							<option value='create-new-variable'>Create new variable</option>
+						</select>
+					)}
 				</div>
 				<input
 					type='text'
@@ -236,6 +296,13 @@ const SortableItem = forwardRef<HTMLDivElement, SortableItemProps>(
 						</Switch>
 					</div>
 				</div>
+				{newVariableModalOpen && (
+					<CreateVariableModal
+						open={newVariableModalOpen}
+						setOpen={setNewVariableModalOpen}
+						callback={handleNewVariableCreation}
+					/>
+				)}
 			</div>
 		);
 	}
