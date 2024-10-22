@@ -9,11 +9,13 @@ import * as dns from 'node:dns';
 import * as util from 'node:util';
 const lookup = util.promisify(dns.lookup);
 
+import * as process from 'node:process';
+
 import getAirbyteApi, { AirbyteApiType, getAirbyteAuthToken } from 'airbyte/api';
 import SecretProviderFactory from 'lib/secret';
+import { AIRBYTE_OAUTH_PROVIDERS } from 'struct/oauth';
 
 import getAirbyteInternalApi from './internal';
-import { AIRBYTE_OAUTH_PROVIDERS } from 'struct/oauth';
 
 dotenv.config({ path: '.env' });
 
@@ -86,7 +88,8 @@ async function deleteDestination(destinationId: string) {
 
 async function getDestinationConfiguration(provider: string) {
 	if (provider === 'rabbitmq') {
-		let host: any = process.env.AIRBYTE_RABBITMQ_HOST || process.env.RABBITMQ_HOST || '0.0.0.0';
+		log(`RabbitMQ HOST: ${process.env.AIRBYTE_RABBITMQ_HOST}`);
+		let host: string = process.env.AIRBYTE_RABBITMQ_HOST || '0.0.0.0';
 		log('getDestinationConfiguration host %s', host);
 		return {
 			routing_key: 'key',
