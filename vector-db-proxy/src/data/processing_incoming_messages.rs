@@ -1,11 +1,10 @@
-use crate::adaptors::mongo::models::UnstructuredChunkingConfig;
+use crate::adaptors::mongo::models::{DataSources, Model, UnstructuredChunkingConfig};
 use crate::adaptors::mongo::queries::{
     get_model_and_embedding_key, increment_by_one, set_datasource_state,
 };
 use crate::data::helpers::hash_string_to_uuid;
 use crate::data::unstructuredio::apis::chunk_text;
 use crate::embeddings::helpers::clean_text;
-use crate::embeddings::models::EmbeddingModels;
 use crate::embeddings::utils::{embed_bulk_insert_unstructured_response, embed_text};
 use crate::init::env_variables::GLOBAL_DATA;
 use crate::vector_databases::models::{Point, SearchRequest, SearchType, VectorDatabaseStatus};
@@ -24,13 +23,13 @@ pub async fn embed_text_construct_point(
     vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
     data: &HashMap<String, Value>,
     embedding_field_name: &String,
-    datasource_id: Option<String>,
-    embedding_model: EmbeddingModels,
+    datasource: Option<DataSources>,
+    embedding_model: Model,
     chunking_strategy: Option<UnstructuredChunkingConfig>,
     search_type: SearchType,
 ) -> anyhow::Result<Option<Point>, anyhow::Error> {
     if !data.is_empty() {
-        if let Some(_id) = datasource_id.clone() {
+        if let Some(ds) = datasource {
             // Convert embedding_field_name to lowercase
             let mut payload: HashMap<String, Value> = data.clone();
             if let Some(value) = payload.remove(embedding_field_name) {
@@ -56,7 +55,7 @@ pub async fn embed_text_construct_point(
                         Ok(documents) => {
                             embed_bulk_insert_unstructured_response(
                                 documents,
-                                datasource_id.unwrap(),
+                                ds,
                                 vector_database_client.clone(),
                                 mongo_conn.clone(),
                                 embedding_model,
@@ -80,8 +79,7 @@ pub async fn embed_text_construct_point(
                     );
                 };
                 // Embedding data
-                let embedding_vec =
-                    embed_text(mongo_conn, _id, vec![&value.to_string()], &embedding_model).await?;
+                let embedding_vec = embed_text(vec![&value.to_string()], &embedding_model).await?;
                 // Construct a Point to insert into the vector DB
                 if !embedding_vec.is_empty() {
                     if let Some(vector) = embedding_vec.into_iter().next() {
@@ -105,29 +103,28 @@ async fn handle_embedding(
     vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
     metadata: HashMap<String, Value>,
     embedding_field_name: String,
-    datasource_id: String,
-    embedding_model_name: String,
+    datasource: DataSources,
+    embedding_model: Model,
     chunking_strategy: Option<UnstructuredChunkingConfig>,
 ) {
     let mongo_connection_clone = Arc::clone(&mongo_connection);
     let vector_database_clone = Arc::clone(&vector_database_client);
     let metadata = metadata.clone();
-    let datasource_id_clone = datasource_id.clone();
-    let datasource_id_clone_2 = datasource_id.clone();
     let field_path = "recordCount.failure";
     let mongo = mongo_connection_clone.read().await;
     let vector_database_client_connection = vector_database_clone.read().await;
     let search_type = chunking_strategy
         .clone()
         .map_or(SearchType::default(), |_| SearchType::ChunkedRow);
-    let search_request = SearchRequest::new(search_type.clone(), datasource_id_clone_2.clone());
+    let search_request =
+        SearchRequest::new(search_type.clone(), datasource._id.to_string().clone());
     match embed_text_construct_point(
         mongo_connection.clone(),
         vector_database_client.clone(),
         &metadata,
         &embedding_field_name,
-        Some(datasource_id_clone),
-        EmbeddingModels::from(embedding_model_name),
+        Some(datasource.clone()),
+        embedding_model,
         chunking_strategy,
         search_type,
     )
@@ -143,7 +140,7 @@ async fn handle_embedding(
                         VectorDatabaseStatus::Ok => (),
                         _ => {
                             log::warn!("An error occurred while inserting into vector database");
-                            increment_by_one(&mongo, &datasource_id_clone_2, field_path)
+                            increment_by_one(&mongo, &datasource._id.to_string(), field_path)
                                 .await
                                 .unwrap();
                         }
@@ -153,7 +150,7 @@ async fn handle_embedding(
                             "An error occurred while inserting into vector database. Error: {}",
                             e
                         );
-                        increment_by_one(&mongo, &datasource_id_clone_2, field_path)
+                        increment_by_one(&mongo, &datasource._id.to_string(), field_path)
                             .await
                             .unwrap();
                     }
@@ -162,7 +159,7 @@ async fn handle_embedding(
             None => (),
         },
         Err(e) => {
-            increment_by_one(&mongo, &datasource_id_clone_2, field_path)
+            increment_by_one(&mongo, &datasource._id.to_string(), field_path)
                 .await
                 .unwrap();
             log::error!(
@@ -174,7 +171,7 @@ async fn handle_embedding(
 }
 
 pub async fn process_incoming_messages(
-    receiver: Receiver<(String, Option<String>, String)>,
+    receiver: Receiver<(DataSources, Option<String>, String)>,
     vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
     mongo_conn: Arc<RwLock<Database>>,
 ) {
@@ -182,16 +179,16 @@ pub async fn process_incoming_messages(
     let receiver_clone = receiver.clone();
     let global_data = GLOBAL_DATA.read().await;
     while let Ok(msg) = receiver_clone.recv() {
-        let (datasource_id, stream_config_key, message) = msg;
+        let (datasource, stream_config_key, message) = msg;
+        let datasource_clone = datasource.clone();
         match serde_json::from_str(message.as_str()) {
             Ok::<Value, _>(message_data) => {
                 let mongo = mongo_connection.read().await;
-                match get_model_and_embedding_key(&mongo, datasource_id.as_str(), stream_config_key)
+                match get_model_and_embedding_key(&mongo, datasource.clone(), stream_config_key)
                     .await
                 {
                     Ok(embedding_config) => {
                         if let Some(embedding_model) = embedding_config.model {
-                            let datasources_clone = datasource_id.clone();
                             // extract metadata from message if message is coming from pubsub
                             if let Value::Object(mut data_obj) = message_data {
                                 // This is to account for airbyte sending the data in the _airbyte_data object when the destination is PubSub
@@ -233,8 +230,8 @@ pub async fn process_incoming_messages(
                                             vector_database,
                                             metadata,
                                             embedding_field_name,
-                                            datasources_clone,
-                                            embedding_model.model,
+                                            datasource.clone(),
+                                            embedding_model,
                                             embedding_config.chunking_strategy,
                                         )
                                         .await;
@@ -243,7 +240,7 @@ pub async fn process_incoming_messages(
                                         _ = embed_text_worker => {
                                             set_datasource_state(
                                                 &mongo,
-                                                datasource_id.as_str(),
+                                                datasource_clone,
                                                 "ready"
                                             ).await.unwrap();
                                             log::info!("Finished embedding task")

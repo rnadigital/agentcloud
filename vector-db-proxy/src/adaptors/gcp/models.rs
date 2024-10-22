@@ -1,4 +1,5 @@
 use crate::adaptors::gcp::pubsub::subscribe_to_topic;
+use crate::adaptors::mongo::models::DataSources;
 use crate::init::env_variables::GLOBAL_DATA;
 use crate::messages::models::{MessageQueueConnection, QueueConnectionTypes};
 use crate::messages::tasks::process_message;
@@ -43,7 +44,7 @@ pub async fn pubsub_consume(
     stream: &Arc<Mutex<MessageStream>>,
     vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
     mongo_client: Arc<RwLock<Database>>,
-    sender: Sender<(String, Option<String>, String)>,
+    sender: Sender<(DataSources, Option<String>, String)>,
 ) {
     if let Ok(mut stream) = stream.try_lock() {
         while let Some(message) = stream.next().await {

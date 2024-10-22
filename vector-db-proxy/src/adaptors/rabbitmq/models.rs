@@ -1,3 +1,4 @@
+use crate::adaptors::mongo::models::DataSources;
 use crate::adaptors::rabbitmq::client::bind_queue_to_exchange;
 use crate::init::env_variables::GLOBAL_DATA;
 use crate::messages::models::{MessageQueueConnection, QueueConnectionTypes};
@@ -53,7 +54,7 @@ pub async fn rabbit_consume(
     streaming_queue: &Channel,
     vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
     mongo_client: Arc<RwLock<Database>>,
-    sender: Sender<(String, Option<String>, String)>,
+    sender: Sender<(DataSources, Option<String>, String)>,
 ) {
     let global_data = GLOBAL_DATA.read().await;
     let queue_name = global_data.rabbitmq_stream.as_str();

@@ -59,30 +59,11 @@ pub async fn get_model(db: &Database, datasource_id: &str) -> Result<Option<Mode
 
 pub async fn get_model_and_embedding_key(
     db: &Database,
-    datasource_id: &str,
+    datasource: DataSources,
     stream_config_key: Option<String>,
 ) -> Result<EmbeddingConfig> {
-    let datasources_collection = db.collection::<DataSources>("datasources");
     let models_collection = db.collection::<Model>("models");
     let mut embedding_config = EmbeddingConfig::default();
-
-    // Fetch the datasource
-    let datasource = match datasources_collection
-        .find_one(doc! {"_id": ObjectId::from_str(datasource_id)?}, None)
-        .await
-    {
-        Ok(Some(ds)) => ds,
-        Ok(None) => {
-            log::warn!("Datasource not found for ID: {}", datasource_id);
-            return Ok(embedding_config);
-        }
-        Err(e) => {
-            log::error!("Failed to find datasource: {}", e);
-            return Err(anyhow!("Failed to find datasource: {}", e));
-        }
-    };
-
-    log::debug!("Found datasource: {}", datasource._id);
 
     // Fetch the model
     let model = match models_collection
@@ -158,9 +139,14 @@ pub async fn set_record_count_total(db: &Database, datasource_id: &str, total: i
     }
 }
 
-pub async fn set_datasource_state(db: &Database, datasource_id: &str, state: &str) -> Result<()> {
+pub async fn set_datasource_state(
+    db: &Database,
+    datasource: DataSources,
+    state: &str,
+) -> Result<()> {
     let datasources_collection = db.collection::<DataSources>("datasources");
-    let filter = doc! {"_id": ObjectId::from_str(datasource_id)?};
+    let datasource_id = datasource._id;
+    let filter = doc! {"_id": datasource_id};
     match datasources_collection
         .update_one(
             filter,
