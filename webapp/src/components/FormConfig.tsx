@@ -15,6 +15,7 @@ import {
 	verticalListSortingStrategy
 } from '@dnd-kit/sortable';
 import { PlusIcon } from '@heroicons/react/24/outline';
+import { TasksDataReturnType } from 'controllers/task';
 import React, { useState } from 'react';
 import { FormFieldConfig } from 'struct/task';
 
@@ -24,9 +25,16 @@ import SortableItem from './SortableItem';
 interface FormConfigProps {
 	formFields: Partial<FormFieldConfig>[];
 	setFormFields: Function;
+	variables: TasksDataReturnType['variables'];
+	fetchTaskFormData?: Function;
 }
 
-const FormConfig = ({ formFields, setFormFields }: FormConfigProps) => {
+const FormConfig = ({
+	formFields,
+	setFormFields,
+	variables,
+	fetchTaskFormData
+}: FormConfigProps) => {
 	const [activeId, setActiveId] = useState<string | null>(null);
 
 	const sensors = useSensors(
@@ -91,6 +99,8 @@ const FormConfig = ({ formFields, setFormFields }: FormConfigProps) => {
 							style={{ visibility: config.position === activeId ? 'hidden' : 'visible' }}
 							editItem={editItem}
 							deleteItem={deleteItem}
+							variables={variables}
+							fetchTaskFormData={fetchTaskFormData}
 						/>
 					))}
 				</div>
