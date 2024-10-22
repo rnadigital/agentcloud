@@ -337,4 +337,3 @@ class CrewAIBuilder:
             event=SocketEvents.STOP_GENERATING,
             chunk_id=str(uuid.uuid4()),
         )
-        # mongo_client.disconnect()
