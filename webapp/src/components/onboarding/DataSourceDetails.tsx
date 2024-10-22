@@ -28,9 +28,9 @@ const regionOptions: { label: string; value: string; region: FlagComponent }[] =
 ];
 
 const DataSourceDetails = () => {
-	const { control, getValues } = useOnboardinFormContext<DataSourceDetailsFormValues>();
+	const { control, watch } = useOnboardinFormContext<DataSourceDetailsFormValues>();
 
-	const k = getValues('k');
+	const k = watch('k');
 
 	return (
 		<div className='text-gray-900 text-sm'>
@@ -118,7 +118,7 @@ const DataSourceDetails = () => {
 				</div>
 
 				<div className='flex w-full items-center'>
-					<div className='w-1/2'>
+					<div className='w-1/2 self-start'>
 						<div>Top K Results</div>
 						<div className='text-gray-500'>
 							Specify how many of the top results to return from your query.

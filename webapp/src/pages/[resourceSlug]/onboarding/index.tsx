@@ -9,6 +9,7 @@ import DataSourceDetails from 'components/onboarding/DataSourceDetails';
 import DataSourceGrid from 'components/onboarding/DataSourceGrid';
 import DataSourceOnboardingSteps from 'components/onboarding/DataSourceOnboardingSteps';
 import DataSourceSearch from 'components/onboarding/DataSourceSearch';
+import EmbeddingModelSelect from 'components/onboarding/EmbeddingModelSelect';
 import LeftFrame from 'components/onboarding/LeftFrame';
 import OnboardingSelect from 'components/onboarding/OnboardingSelect';
 import { error } from 'console';
@@ -34,7 +35,7 @@ export default function Onboarding() {
 
 	const [connectors, setConnectors] = useState([]);
 	const [searchInput, setSearchInput] = useState<string>();
-	const [currentStep, setCurrentStep] = useState(1);
+	const [currentStep, setCurrentStep] = useState(3);
 
 	const filteredConnectors: Connector[] = useMemo(() => {
 		return Array.from(new Set(connectors.map(connector => connector.name.toLowerCase())))
@@ -88,8 +89,13 @@ export default function Onboarding() {
 
 				<main className='py-14 px-28 w-full'>
 					<div className=''>
-						<div className='text-2xl mb-4'>Select Data Source</div>
-						<DataSourceConfigSteps currentStep={0} />
+						{currentStep < 3 && (
+							<>
+								<div className='text-2xl mb-4'>Select Data Source</div>
+								<DataSourceConfigSteps currentStep={0} />
+							</>
+						)}
+						{currentStep >= 3 && <div className='text-2xl mb-4'>Select Your Embedding Model</div>}
 					</div>
 
 					<section className='mt-6'>
@@ -106,6 +112,8 @@ export default function Onboarding() {
 									<DataSourceDetails />
 								</>
 							)}
+
+							{currentStep === 3 && <EmbeddingModelSelect />}
 						</OnboardingFormContext>
 					</section>
 					<div className='flex mt-6'>
