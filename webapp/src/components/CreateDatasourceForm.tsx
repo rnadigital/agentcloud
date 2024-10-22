@@ -493,6 +493,7 @@ export default function CreateDatasourceForm({
 
 	const [oauthProvider, setOauthProvider] = useState(provider);
 	const [oauthToken, setOauthToken] = useState(token);
+	const [initialized, setInitialized] = useState(false);
 
 	//OAUTH LOGIC
 	useEffect(() => {
@@ -501,6 +502,9 @@ export default function CreateDatasourceForm({
 		setDatasourceName('Hubspot');
 		setDatasourceDescription('Hubspot OAuth Datasource');
 		console.log('Form token and provider', oauthProvider, oauthToken);
+		if (provider && token && !initialized) {
+			setInitialized(true); // Mark as initialized after first successful set
+		}
 	}, [provider, token]);
 
 	//once provider and token have been set this should run once
@@ -528,7 +532,7 @@ export default function CreateDatasourceForm({
 					hubspotDatasourcePost(token);
 			}
 		}
-	}, []);
+	}, [provider, token, initialized]);
 
 	function getStepSection(_step) {
 		//TODO: make steps enum
@@ -799,6 +803,8 @@ export default function CreateDatasourceForm({
 														name={connector.label}
 														icon={connector.icon}
 														redirectUrl={oauthRedirectUrl}
+														datasourceDescription={datasourceDescription}
+														datasourceName={datasourceName}
 													/>
 												</FormContext>
 											</>

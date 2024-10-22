@@ -9,6 +9,7 @@ import { AIRBYTE_OAUTH_PROVIDERS } from 'struct/oauth';
 
 import AdditionalFields from './AdditionalFields';
 import FormSection from './FormSection';
+import classNames from 'components/ClassNames';
 
 interface DynamicFormProps {
 	schema: Schema;
@@ -18,6 +19,8 @@ interface DynamicFormProps {
 	icon?: any;
 	oauthPost?: boolean;
 	redirectUrl?: boolean;
+	datasourceName?: any;
+	datasourceDescription?: any;
 }
 
 const ISODatePattern = '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$';
@@ -112,7 +115,8 @@ const DynamicConnectorForm = ({
 	error,
 	name,
 	icon,
-	oauthPost,
+	datasourceName,
+	datasourceDescription,
 	redirectUrl
 }: DynamicFormProps) => {
 	const { handleSubmit } = useFormContext();
@@ -137,17 +141,22 @@ const DynamicConnectorForm = ({
 		<>
 			{name.toUpperCase() in AIRBYTE_OAUTH_PROVIDERS ? (
 				<div className='flex flex-col'>
-					<a //when the user hits this button then redirect them to the authentication link in a new window/tab
-						className='max-w-[25%] rounded-md disabled:bg-slate-400 bg-indigo-600 mx-3 my-5 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 mt-3'
-						href={`/auth/${name.toLowerCase()}/free`}
-						target='_blank'
+					<a
+						className={classNames(
+							'max-w-[25%] rounded-md mx-3 my-5 px-5 py-3 text-sm font-semibold text-white shadow-sm',
+							datasourceName && datasourceDescription
+								? 'bg-indigo-600 hover:bg-indigo-500'
+								: 'bg-slate-400 cursor-not-allowed'
+						)}
+						href={datasourceName && datasourceDescription ? `/auth/${name.toLowerCase()}/free` : '#'}
+						target={datasourceName && datasourceDescription ? '_blank' : '_self'}
 						rel='noopener noreferrer'
+						aria-disabled={!datasourceName || !datasourceDescription} // For accessibility
 					>
 						{icon && <img src={icon} loading='lazy' className='inline-flex me-2 w-6 w-6' />}
 						Log in with {name}
 					</a>
-
-					{redirectUrl && <p>penis</p>}
+					{redirectUrl && <p>Redirecting...</p>}
 				</div>
 			) : (
 				<form onSubmit={handleSubmit(onSubmit)}>
