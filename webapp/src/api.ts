@@ -584,8 +584,12 @@ export function testDatasource(body, dispatch, errorCallback, router) {
 	);
 } //@TEST
 export function addDatasource(body, dispatch, errorCallback, router) {
+	const queryString = new URLSearchParams({
+		token: body.token,
+		provider: body.provider
+	}).toString();
 	return ApiCall(
-		`/${body.resourceSlug}/forms/datasource/add`,
+		`/${body.resourceSlug}/forms/datasource/add?${queryString}`,
 		'POST',
 		body,
 		dispatch,

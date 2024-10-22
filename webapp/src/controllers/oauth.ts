@@ -62,7 +62,9 @@ export async function hubspotDatasourceCallback(accessToken, refreshToken, profi
 	console.log(`Hubspot Datasource callback with profile: ${JSON.stringify(profile, null, '\t')}`);
 	//create the datasouce here, call done
 
+	profile.refreshToken = refreshToken;
 	//need to either redirect, set a callback to the datasource form or
+	done(null, profile);
 }
 
 export async function githubCallback(accessToken, refreshToken, profile, done) {
@@ -125,7 +127,7 @@ export async function googleCallback(accessToken, refreshToken, profile, done) {
 
 export async function serializeHandler(user, done) {
 	log('serializeHandler user', user);
-	done(null, { oauthId: user.id, provider: user.provider });
+	done(null, { oauthId: user.id, provider: user.provider, refreshToken: user?.refreshToken });
 }
 
 export async function deserializeHandler(obj, done) {

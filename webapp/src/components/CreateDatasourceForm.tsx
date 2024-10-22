@@ -31,6 +31,7 @@ import DatasourceChunkingForm from 'components/DatasourceChunkingForm';
 import { StreamsList } from 'components/DatasourceStream';
 import ToolTip from 'components/shared/ToolTip';
 import FormContext from 'context/connectorform';
+import OauthSecretProviderFactory from 'lib/oauthsecret';
 import { defaultChunkingOptions } from 'misc/defaultchunkingoptions';
 import { usePostHog } from 'posthog-js/react';
 import submittingReducer from 'utils/submittingreducer';
@@ -50,15 +51,6 @@ const DatasourceScheduleForm = dynamic(() => import('components/DatasourceSchedu
 	ssr: false
 });
 
-export async function hubspotDatasourceCallback(accessToken, refreshToken, profile, done) {
-	console.log(`Hubspot datasource callback with accessToken: `, accessToken);
-	console.log(`Hubspot datasource callback with refreshToken: ${refreshToken}`);
-	console.log(`Hubspot Datasource callback with profile: ${JSON.stringify(profile, null, '\t')}`);
-	//create the datasouce here, call done
-
-	//need to either redirect, set a callback to the datasource form or
-}
-
 export default function CreateDatasourceForm({
 	models,
 	compact,
@@ -68,7 +60,9 @@ export default function CreateDatasourceForm({
 	initialStep = 0,
 	fetchDatasources,
 	spec,
-	setSpec
+	setSpec,
+	provider,
+	token
 }: {
 	models?: any[];
 	compact?: boolean;
@@ -79,6 +73,8 @@ export default function CreateDatasourceForm({
 	fetchDatasources?: Function;
 	spec?: any;
 	setSpec?: Function;
+	provider?: string;
+	token?: string;
 }) {
 	//TODO: fix any types
 
@@ -106,7 +102,7 @@ export default function CreateDatasourceForm({
 	const [chunkingConfig, setChunkingConfig] = useReducer(submittingReducer, {
 		...defaultChunkingOptions
 	});
-	const [oauthRedirectUrl, setOauthRedirectUrl] = useState(null);
+	const [oauthRedirectUrl, setOauthRedirectUrl] = useState(false);
 
 	//TODO: move into RetrievalStrategyComponent, keep the setters passed as props
 	const [toolRetriever, setToolRetriever] = useState(Retriever.SELF_QUERY);
@@ -173,19 +169,6 @@ export default function CreateDatasourceForm({
 			null
 		);
 		setLoading(false);
-	}
-
-	async function getOauthRedirectUrl(sourceType: string) {
-		await API.getOauthRedirectUrl(
-			{
-				sourceType,
-				resourceSlug,
-				_csrf: csrf
-			},
-			setOauthRedirectUrl,
-			setError,
-			router
-		);
 	}
 
 	const [connectors, setConnectors] = useState([]);
@@ -372,7 +355,180 @@ export default function CreateDatasourceForm({
 		}
 	}
 
-	async function dataSourcePostOauth(data?) {}
+	async function hubspotDatasourcePost(token: string) {
+		const data = {
+			credentials: {
+				credentials_title: 'OAuth Credentials',
+				client_id: process.env.OAUTH_HUBSPOT_CLIENT_ID,
+				client_secret: process.env.OAUTH_HUBSPOT_CLIENT_SECRET,
+				refresh_token: token
+			}
+		};
+
+		setSubmitting(true);
+		setError(null);
+		const posthogEvent = step === 2 ? 'testDatasource' : 'createDatasource';
+		try {
+			if (step === 2) {
+				const body = {
+					sourceConfig: data,
+					_csrf: csrf,
+					connectorId: connector.value,
+					connectorName: connector.label,
+					resourceSlug,
+					scheduleType,
+					timeUnit,
+					units,
+					cronExpression,
+					datasourceName,
+					datasourceDescription,
+					embeddingField
+				};
+
+				console.log('post body: ', body);
+				//step 2, getting schema and testing connection
+				await API.testDatasource(
+					body,
+					stagedDatasource => {
+						posthog.capture(posthogEvent, {
+							datasourceName,
+							connectorId: connector?.value,
+							connectorName: connector?.label,
+							syncSchedule: scheduleType
+						});
+						if (stagedDatasource) {
+							setDatasourceId(stagedDatasource.datasourceId);
+							setDiscoveredSchema(stagedDatasource.discoveredSchema);
+							setStreamProperties(stagedDatasource.streamProperties);
+							setStep(3);
+						} else {
+							setError('Datasource connection test failed.'); //TODO: any better way to get error?
+						}
+						// nothing to toast here
+					},
+					res => {
+						posthog.capture(posthogEvent, {
+							datasourceName,
+							connectorId: connector?.value,
+							connectorName: connector?.label,
+							syncSchedule: scheduleType,
+							error: res
+						});
+						setError(res);
+					},
+					compact ? null : router
+				);
+				// callback && stagedDatasource && callback(stagedDatasource._id);
+			} else {
+				//step 4, saving datasource
+				const filteredStreamState = Object.fromEntries(
+					Object.entries(streamState).filter(
+						(e: [string, StreamConfig]) => e[1].checkedChildren.length > 0
+					)
+				);
+				const body = {
+					_csrf: csrf,
+					datasourceId: datasourceId,
+					resourceSlug,
+					scheduleType,
+					timeUnit,
+					units,
+					modelId,
+					cronExpression,
+					streamConfig: filteredStreamState,
+					datasourceName,
+					datasourceDescription,
+					embeddingField,
+					retriever: toolRetriever,
+					retriever_config: {
+						timeWeightField: toolTimeWeightField,
+						decay_rate: toolDecayRate,
+						k: topK
+					},
+					chunkingConfig,
+					enableConnectorChunking
+				};
+				const addedDatasource: any = await API.addDatasource(
+					body,
+					() => {
+						posthog.capture(posthogEvent, {
+							datasourceName,
+							connectorId: connector?.value,
+							connectorName: connector?.label,
+							numStreams: Object.keys(streamState)?.length,
+							syncSchedule: scheduleType
+						});
+						toast.success('Added datasource');
+					},
+					res => {
+						posthog.capture(posthogEvent, {
+							datasourceName,
+							connectorId: connector?.value,
+							connectorName: connector?.label,
+							syncSchedule: scheduleType,
+							numStreams: Object.keys(streamState)?.length,
+							error: res
+						});
+						toast.error(res);
+					},
+					compact ? null : router
+				);
+				callback && addedDatasource && callback(addedDatasource._id);
+			}
+		} catch (e) {
+			posthog.capture(posthogEvent, {
+				datasourceName,
+				connectorId: connector?.value,
+				connectorName: connector?.label,
+				syncSchedule: scheduleType,
+				numStreams: Object.keys(streamState)?.length,
+				error: e?.message || e
+			});
+			console.error(e);
+		} finally {
+			await new Promise(res => setTimeout(res, 750));
+			setSubmitting(false);
+		}
+	}
+
+	const [oauthProvider, setOauthProvider] = useState(provider);
+	const [oauthToken, setOauthToken] = useState(token);
+
+	//OAUTH LOGIC
+	useEffect(() => {
+		setOauthProvider(provider);
+		setOauthToken(token);
+		setDatasourceName('Hubspot');
+		setDatasourceDescription('Hubspot OAuth Datasource');
+		console.log('Form token and provider', oauthProvider, oauthToken);
+	}, [provider, token]);
+
+	//once provider and token have been set this should run once
+	useEffect(() => {
+		if (provider !== null && token !== null) {
+			setStep(2);
+			switch (provider) {
+				case 'hubspot':
+					console.log('Posting with OAuth credentials');
+					setConnector({
+						airbyte_platform: 'oss',
+						connector_definition_id: '36c891d9-4bd9-43ac-bad2-10e12756272c',
+						connector_name: 'HubSpot',
+						connector_type: 'source',
+						connector_version: '4.2.22',
+						disabled: false,
+						docker_repository: 'airbyte/source-hubspot',
+						icon: 'https://connectors.airbyte.com/files/metadata/airbyte/source-hubspot/latest/icon.svg',
+						label: 'HubSpot',
+						planAvailable: true,
+						sync_success_rate: 'high',
+						usage: 'high',
+						value: '36c891d9-4bd9-43ac-bad2-10e12756272c'
+					});
+					hubspotDatasourcePost(token);
+			}
+		}
+	}, []);
 
 	function getStepSection(_step) {
 		//TODO: make steps enum
@@ -526,6 +682,7 @@ export default function CreateDatasourceForm({
 										return setSubscriptionModalOpen(v.label);
 									}
 									setLoading(v != null);
+									console.log('v', v);
 									setConnector(v);
 									if (v) {
 										getSpecification(v.value);
@@ -641,7 +798,6 @@ export default function CreateDatasourceForm({
 														error={error}
 														name={connector.label}
 														icon={connector.icon}
-														oauthPost={getOauthRedirectUrl}
 														redirectUrl={oauthRedirectUrl}
 													/>
 												</FormContext>

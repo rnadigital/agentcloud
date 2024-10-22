@@ -16,8 +16,8 @@ interface DynamicFormProps {
 	error?: string;
 	name?: string;
 	icon?: any;
-	oauthPost: (arg: any) => Promise<void>;
-	redirectUrl?: any;
+	oauthPost?: boolean;
+	redirectUrl?: boolean;
 }
 
 const ISODatePattern = '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$';
@@ -146,6 +146,8 @@ const DynamicConnectorForm = ({
 						{icon && <img src={icon} loading='lazy' className='inline-flex me-2 w-6 w-6' />}
 						Log in with {name}
 					</a>
+
+					{redirectUrl && <p>penis</p>}
 				</div>
 			) : (
 				<form onSubmit={handleSubmit(onSubmit)}>

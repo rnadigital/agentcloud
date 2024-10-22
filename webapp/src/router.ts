@@ -33,6 +33,7 @@ import { PlanLimitsKeys, pricingMatrix, SubscriptionPlan } from 'struct/billing'
 const unauthedMiddlewareChain = [useSession, useJWT, fetchSession, onboardedMiddleware];
 const authedMiddlewareChain = [...unauthedMiddlewareChain, checkSession, csrfMiddleware];
 
+import { restrictToFirstScrollableAncestor } from '@dnd-kit/modifiers';
 import checkSessionWelcome from '@mw/auth/checksessionwelcome';
 import * as accountController from 'controllers/account';
 import * as agentController from 'controllers/agent';
@@ -122,9 +123,13 @@ export default function router(server, app) {
 	);
 	oauthRouter.get(
 		'/hubspot/callback',
-		passportInstance.authenticate( 'hubspot', {
-			successRedirect: '/auth/hubspot/success',
-			failureRedirect: '/auth/hubspot/failure'}),
+		useSession,
+		useJWT,
+		fetchSession,
+		passportInstance.authenticate( 'hubspot'),
+		(_req, res) => {
+			res.redirect(`/${res.locals.account.currentTeam}/datasource/add?token=${encodeURIComponent(res.locals.datasourceOAuth.refreshToken)}&provider=${encodeURIComponent(res.locals.datasourceOAuth.provider)}`)
+		}
 		// oauthController.hubspotDatasourceCallback,
 		//redirect back to datasource form
 	)

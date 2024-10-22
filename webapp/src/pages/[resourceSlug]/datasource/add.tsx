@@ -15,6 +15,9 @@ export default function AddDatasource(props) {
 	const { account, csrf, teamName } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
+	const [provider, setProvider] = useState(null);
+	const [token, setToken] = useState(null);
+	console.log('provider and token: ', provider, token);
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
 	const [models, setModels] = useState();
@@ -27,6 +30,15 @@ export default function AddDatasource(props) {
 	useEffect(() => {
 		fetchDatasourceFormData();
 	}, [resourceSlug]);
+
+	useEffect(() => {
+		if (typeof location != undefined) {
+			const retrievedToken = new URLSearchParams(location.search).get('token');
+			setToken(retrievedToken);
+			const retrievedProvider = new URLSearchParams(location.search).get('provider');
+			setProvider(retrievedProvider);
+		}
+	}, []);
 
 	if (models == null) {
 		return <Spinner />;
@@ -48,6 +60,8 @@ export default function AddDatasource(props) {
 				setSpec={setSpec}
 				fetchDatasourceFormData={fetchDatasourceFormData}
 				initialStep={2}
+				token={token}
+				provider={provider}
 			/>
 		</>
 	);
