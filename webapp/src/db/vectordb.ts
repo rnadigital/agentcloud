@@ -10,7 +10,7 @@ export type GetVectorDb = ReturnType<typeof getVectorDbById>;
 export function getVectorDbById(vectorDbId: db.IdOrStr) {
 	return VectorDbModel.findOne({
 		_id: toObjectId(vectorDbId)
-	}).populate('dataSources');
+	});
 }
 
 export type GetVectorDbsByTeam = ReturnType<typeof getVectorDbsByTeam>;

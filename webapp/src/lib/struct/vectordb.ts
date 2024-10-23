@@ -8,6 +8,7 @@ export interface VectorDb {
 	type: string;
 	apiKey: string;
 	url?: string;
+	name: string;
 }
 
 const vectorDbschema = new Schema<VectorDb>(
@@ -16,7 +17,8 @@ const vectorDbschema = new Schema<VectorDb>(
 		teamId: ObjectId,
 		type: { type: String, required: true },
 		apiKey: { type: String, required: true },
-		url: String
+		url: String,
+		name: String
 	},
 	{ timestamps: true }
 );
@@ -24,7 +26,11 @@ const vectorDbschema = new Schema<VectorDb>(
 export type VectorDbType = InferSchemaType<typeof vectorDbschema>;
 
 const modelName = 'VectorDb';
-// export const VectorDbModel = mongoose.models?.VectorDb || mongoose.model(modelName, vectorDbschema);
-export const VectorDbModel = mongoose.model<VectorDb>(modelName, vectorDbschema);
+const existingModel = mongoose.models[modelName] as mongoose.Model<VectorDb> | undefined;
+export const VectorDbModel: mongoose.Model<VectorDb> =
+	existingModel || mongoose.model<VectorDb>(modelName, vectorDbschema);
 
-export type VectorDbDocument = InferSchemaType<typeof vectorDbschema>;
+export type VectorDbDocument = InferSchemaType<typeof vectorDbschema> & {
+	_id: string;
+	createdAt: string;
+};

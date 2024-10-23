@@ -11,13 +11,12 @@ import {
 } from 'db/vectordb';
 import toObjectId from 'misc/toobjectid';
 import { VectorDb } from 'struct/vectordb';
-import { chainValidations } from 'utils/validationutils';
 
 export async function vectorDbsData(req, res, _next) {
 	const vectorDbs = await getVectorDbsByTeam(req.params.resourceSlug);
 	return {
 		csrf: req.csrfToken(),
-		variables: vectorDbs
+		vectorDbs
 	};
 }
 
@@ -44,7 +43,8 @@ export async function vectorDbsJson(req, res, next) {
  * GET /[resourceSlug]/vectorDb/:vectorDbId.json
  * Variable JSON data
  */
-export async function variableJson(req, res, next) {
+export async function vectorDbJson(req, res, next) {
+	console.log('getching');
 	const vectorDb = await getVectorDbById(req.params.vectorDbId);
 	if (!vectorDb) {
 		return res.status(404).json({ error: 'VectorDb not found' });
@@ -72,7 +72,8 @@ export async function addVectorDbApi(req, res, next) {
 		teamId: toObjectId(req.params.resourceSlug),
 		apiKey: req.body.apiKey,
 		url: req.body.url,
-		type: req.body.type
+		type: req.body.type,
+		name: req.body.name
 	};
 
 	try {
@@ -88,26 +89,11 @@ export async function addVectorDbApi(req, res, next) {
  * Edit an existing variable
  */
 export async function editVectorDbApi(req, res, next) {
-	const validationError = chainValidations(
-		req.body,
-		[
-			{ field: 'name', validation: { notEmpty: true, ofType: 'string' } },
-			{ field: 'defaultValue', validation: { notEmpty: true, ofType: 'string' } }
-		],
-		{
-			name: 'Variable Name',
-			defaultValue: 'Default Value'
-		}
-	);
-
-	if (validationError) {
-		return dynamicResponse(req, res, 400, { error: validationError });
-	}
-
 	const updatedVectorDB: Partial<VectorDb> = {
 		type: req.body.type,
 		apiKey: req.body.apiKey,
-		url: req.body.url
+		url: req.body.url,
+		name: req.body.name
 	};
 
 	await updateVectorDb(req.params.vectorDbId, updatedVectorDB);
@@ -119,14 +105,14 @@ export async function editVectorDbApi(req, res, next) {
  * Delete a variable
  */
 export async function deleteVectorDbApi(req, res, next) {
-	const { variableId: vectorDbId } = req.params;
+	const { vectorDbId } = req.params;
 
 	const existingVectorDb = await getVectorDbById(vectorDbId);
 	const datasources = await getDatasourcesByVectorDbId(vectorDbId);
 
 	if (!existingVectorDb) {
 		return dynamicResponse(req, res, 400, {
-			error: 'Variable does not exist'
+			error: 'VectorDB does not exist'
 		});
 	}
 

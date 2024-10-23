@@ -192,8 +192,10 @@ const datasourceSchema = new Schema<Datasource>(
 	{ timestamps: true }
 );
 
-export type VectorDbDocument = InferSchemaType<typeof datasourceSchema>;
+export type DatasourceDocument = InferSchemaType<typeof datasourceSchema>;
 
-const modelName = 'VectorDb';
+const modelName = 'datasource';
 
-export const DataSourceModel = mongoose.model<Datasource>(modelName, datasourceSchema);
+const existingModel = mongoose.models[modelName] as mongoose.Model<Datasource> | undefined;
+export const DataSourceModel: mongoose.Model<Datasource> =
+	existingModel || mongoose.model<Datasource>(modelName, datasourceSchema);
