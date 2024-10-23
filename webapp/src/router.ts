@@ -720,11 +720,11 @@ export default function router(server, app) {
 	
 
 	teamRouter.get(
-		'/vectordb.json',
+		'/vectordbs.json',
 		vectorDbController.vectorDbsJson
 	);
 
-	teamRouter.get('/vectordb/:vectorDbId([a-f0-9]{24}).json', vectorDbController.variableJson); 
+	teamRouter.get('/vectordb/:vectorDbId([a-f0-9]{24}).json', vectorDbController.vectorDbJson); 
 	
 	teamRouter.get(
 		'/vectordb/:vectorDbId/edit',
