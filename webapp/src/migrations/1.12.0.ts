@@ -1,35 +1,41 @@
-import Permission from '@permission';
 import debug from 'debug';
-import { Binary } from 'mongodb';
-import { TEAM_MEMBER } from 'permissions/roles';
-
-const log = debug('webapp:migration:1.10.0');
-
-async function updateTeamMemberPermissions(db) {
-	const teamMemberPermissions = new Permission();
-	teamMemberPermissions.setAll(TEAM_MEMBER.array);
-	const accounts = await db.collection('accounts').find().toArray();
-	for (const account of accounts) {
-		const accountPermissions = new Permission(account.permissions.buffer);
-		const isTeamMember = TEAM_MEMBER.array.some(bit => accountPermissions.get(bit));
-		if (!isTeamMember) {
-			continue;
-		}
-		const hasAllTeamMemberPermissions = TEAM_MEMBER.array.every(bit => accountPermissions.get(bit));
-		if (!hasAllTeamMemberPermissions) {
-			accountPermissions.setAll(teamMemberPermissions.array);
-			await db
-				.collection('accounts')
-				.updateOne(
-					{ _id: account._id },
-					{ $set: { permissions: new Binary(accountPermissions.array) } }
-				);
-		}
-	}
-}
+import { ObjectId } from 'mongodb';
+import { ToolType } from 'struct/tool';
+const log = debug('webapp:migration:1.12.0');
 
 export default async function (db) {
-	log('Starting migration to update TEAM_MEMBER permissions');
-	await updateTeamMemberPermissions(db);
-	log('Migration to update TEAM_MEMBER permissions completed');
+	log('Add new builtin firecrawl html scraper tool to tools db');
+
+	//add the new tool into the db with no teamId or orgId (that should default it to every org and team as an option to add)
+	await db.collection('tools').insertOne({
+		_id: new ObjectId(),
+		name: 'Firecrawl Loader',
+		description: 'This tool takes a url and parses the page for all text content',
+		type: ToolType.BUILTIN_TOOL, // Corresponds to ToolType.BUILTIN_TOOL
+		data: {
+			name: 'firecrawl_loader',
+			description: 'This tool takes a url and parses the page for all text content',
+			apiKey: '',
+			parameters: {
+				type: 'object',
+				required: ['query'],
+				properties: {
+					query: {
+						type: 'string',
+						description: 'The url of the website to parse'
+					}
+				}
+			},
+			builtin: true
+		},
+		requiredParameters: {
+			required: ['api_key'],
+			properties: {
+				api_key: {
+					type: 'string',
+					description: 'The API key required for the tool'
+				}
+			}
+		}
+	});
 }

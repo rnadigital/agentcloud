@@ -147,6 +147,30 @@ The returned data includes essential details like the paper's title, authors, ab
 		}
 	},
 	{
+		name: 'Firecrawl Loader',
+		description: 'This tool takes a url and parses the page for all text content',
+		type: ToolType.BUILTIN_TOOL,
+		data: {
+			name: 'firecrawl_loader',
+			description: 'This tool takes a url and parses the page for all text content',
+			apiKey: '',
+			parameters: {
+				type: 'object',
+				required: ['query'],
+				properties: {
+					query: { type: 'string', description: 'The url of the website to parse' }
+				}
+			},
+			builtin: true
+		},
+		requiredParameters: {
+			required: ['firecrawl_api_key'],
+			properties: {
+				firecrawl_api_key: { type: 'string', description: 'The url of the website to parse' }
+			}
+		}
+	},
+	{
 		name: 'Search Google (Apify)',
 		description: 'This tool takes a string query as input and fetches results from Google.',
 		type: ToolType.BUILTIN_TOOL,
