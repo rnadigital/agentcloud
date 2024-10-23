@@ -19,6 +19,6 @@ pub fn format_for_n8n(mut metadata_map: HashMap<String, Value>) -> HashMap<Strin
 }
 
 pub fn clean_text(text: String) -> String {
-    let re = Regex::new(r#"(?:[\\\"\n\r]|\\[nr])+"#).unwrap();
+    let re = Regex::new("(\\\\[nr]|[\\\\\"\\n\\r])+").unwrap();
     re.replace_all(&text, "").into_owned()
 }
