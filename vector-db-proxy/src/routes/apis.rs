@@ -583,10 +583,6 @@ pub async fn get_storage_size(
                 }
             }
             Ok(None) => {
-                println!(
-                    "No embedding model found for datasource: {}",
-                    datasource._id
-                );
                 continue;
             }
             Err(e) => {

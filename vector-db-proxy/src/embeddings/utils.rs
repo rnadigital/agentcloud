@@ -129,7 +129,7 @@ async fn fastembed_models(
 }
 
 pub async fn embed_text(text: Vec<&String>, model: &Model) -> Result<Vec<Vec<f32>>> {
-    let model_name = model.clone().name;
+    let model_name = model.clone().model;
     match EmbeddingModels::from(model_name.clone()) {
         EmbeddingModels::UNKNOWN => Err(anyhow!("This is an unknown model type!")),
         // Group all fast embed models together
