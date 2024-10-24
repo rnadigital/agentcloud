@@ -1,8 +1,7 @@
 'use strict';
 
 import { ObjectId } from 'mongodb';
-import mongoose, { InferSchemaType, mongo, Mongoose } from 'mongoose';
-const { Schema, Types } = mongoose;
+import { InferSchemaType, Model, model, models, mongo, Mongoose, Schema, Types } from 'mongoose';
 const MongooseObjectId = Types.ObjectId;
 
 export type DatasourceStream = {
@@ -129,10 +128,10 @@ export type UnstructuredChunkingConfig = {
 };
 
 export interface Datasource {
-	_id: mongoose.Types.ObjectId;
-	orgId?: mongoose.Types.ObjectId;
-	teamId?: mongoose.Types.ObjectId;
-	vectorDbId?: mongoose.Types.ObjectId;
+	_id: Types.ObjectId;
+	orgId?: Types.ObjectId;
+	teamId?: Types.ObjectId;
+	vectorDbId?: Types.ObjectId;
 	name: string;
 	description?: string;
 	originalName: string;
@@ -151,7 +150,7 @@ export interface Datasource {
 	chunkingConfig?: UnstructuredChunkingConfig;
 	embeddingField?: string;
 	timeWeightField?: string;
-	modelId?: mongoose.Types.ObjectId; //model id of embedding model in models collection
+	modelId?: Types.ObjectId; //model id of embedding model in models collection
 	streamConfig?: StreamConfigMap;
 	timeUnit?: string; //temp until we have a more robust way to limit cron frequency based on plan
 	collectionIndex?: string;
@@ -194,8 +193,5 @@ const datasourceSchema = new Schema<Datasource>(
 
 export type DatasourceDocument = InferSchemaType<typeof datasourceSchema>;
 
-const modelName = 'datasource';
-
-const existingModel = mongoose.models[modelName] as mongoose.Model<Datasource> | undefined;
-export const DataSourceModel: mongoose.Model<Datasource> =
-	existingModel || mongoose.model<Datasource>(modelName, datasourceSchema);
+export const DataSourceModel =
+	models?.datasource || model<Datasource>('datasource', datasourceSchema);

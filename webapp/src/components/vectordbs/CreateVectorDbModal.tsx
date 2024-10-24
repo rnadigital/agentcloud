@@ -6,7 +6,7 @@ import { Fragment, useEffect, useState } from 'react';
 
 import VectorDbForm from './VectorDbForm';
 
-export default function CreateVariableModal({ open, setOpen, callback }) {
+export default function CreateVectorDbModal({ open, setOpen, callback }) {
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const router = useRouter();

@@ -33,9 +33,11 @@ import ToolTip from 'components/shared/ToolTip';
 import FormContext from 'context/connectorform';
 import { defaultChunkingOptions } from 'misc/defaultchunkingoptions';
 import { usePostHog } from 'posthog-js/react';
+import { VectorDbDocument } from 'struct/vectordb';
 import submittingReducer from 'utils/submittingreducer';
 
 import { RagFilterSchema } from '../lib/struct/editorschemas';
+import CreateVectorDbModal from './vectordbs/CreateVectorDbModal';
 // import InfoAlert from 'components/InfoAlert';
 
 const stepList = [
@@ -59,7 +61,8 @@ export default function CreateDatasourceForm({
 	initialStep = 0,
 	fetchDatasources,
 	spec,
-	setSpec
+	setSpec,
+	vectorDbs = []
 }: {
 	models?: any[];
 	compact?: boolean;
@@ -70,10 +73,11 @@ export default function CreateDatasourceForm({
 	fetchDatasources?: Function;
 	spec?: any;
 	setSpec?: Function;
+	vectorDbs?: VectorDbDocument[];
 }) {
 	//TODO: fix any types
 
-	const [step, setStep] = useState(initialStep);
+	const [step, setStep] = useState(4);
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const { stripePlan } = account?.stripe || {};
@@ -83,13 +87,17 @@ export default function CreateDatasourceForm({
 	const [files, setFiles] = useState(null);
 	const [datasourceName, setDatasourceName] = useState('');
 	const [datasourceDescription, setDatasourceDescription] = useState('');
-	const [modalOpen, setModalOpen] = useState(false);
+	const [modelModalOpen, setModelModalOpen] = useState(false);
+	const [vectorDbModalOpen, setVectorDbModalOpen] = useState(false);
 	const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
 	const [timeUnit, setTimeUnit] = useState('day');
 	const [units, setUnits] = useState('');
 	const [cronExpression, setCronExpression] = useState('0 12 * * *');
 	const [modelId, setModelId] = useState('');
+	const [vectorDbId, setVectorDbId] = useState('');
+
 	const [topK, setTopK] = useState(3);
+	const foundVectorDb = vectorDbs && vectorDbs.find(m => m._id === vectorDbId);
 	const foundModel = models && models.find(m => m._id === modelId);
 	const [scheduleType, setScheduleType] = useState(DatasourceScheduleType.MANUAL);
 	const [enableConnectorChunking, setEnableConnectorChunking] = useState(false);
@@ -220,7 +228,7 @@ export default function CreateDatasourceForm({
 
 	const modelCallback = async addedModelId => {
 		(await fetchDatasourceFormData) && fetchDatasourceFormData();
-		setModalOpen(false);
+		setModelModalOpen(false);
 		setModelId(addedModelId);
 	};
 
@@ -394,7 +402,7 @@ export default function CreateDatasourceForm({
 							setDatasourceName('');
 							fetchDatasources();
 						}}
-						modalOpen={modalOpen}
+						modalOpen={modelModalOpen}
 					>
 						<div>
 							<label
@@ -447,7 +455,7 @@ export default function CreateDatasourceForm({
 									onChange={(v: any) => {
 										if (v?.value === null) {
 											//Create new pressed
-											return setModalOpen(true);
+											return setModelModalOpen(true);
 										}
 										setModelId(v?.value);
 									}}
@@ -663,6 +671,34 @@ export default function CreateDatasourceForm({
 							<div className='space-y-4'>
 								<div>
 									<label
+										htmlFor='modelId'
+										className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-3'
+									>
+										Vector Database<span className='text-red-700'> *</span>
+									</label>
+									<div>
+										<Select
+											isClearable
+											primaryColor={'indigo'}
+											classNames={SelectClassNames}
+											value={
+												foundVectorDb
+													? { label: foundVectorDb.name, value: foundVectorDb._id }
+													: null
+											}
+											onChange={(v: any) => {
+												if (v?.value === null) {
+													return setVectorDbModalOpen(true);
+												}
+												setVectorDbId(v?.value);
+											}}
+											options={[{ label: '+ Connect a new vectorDB', value: null }].concat(
+												vectorDbs?.map(c => ({ label: c.name, value: c._id, ...c }))
+											)}
+											formatOptionLabel={formatModelOptionLabel}
+										/>
+									</div>
+									<label
 										htmlFor='embeddingField'
 										className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
 									>
@@ -736,7 +772,7 @@ export default function CreateDatasourceForm({
 											onChange={(v: any) => {
 												if (v?.value === null) {
 													//Create new pressed
-													return setModalOpen(true);
+													return setModelModalOpen(true);
 												}
 												setModelId(v?.value);
 											}}
@@ -838,10 +874,16 @@ export default function CreateDatasourceForm({
 				buttonText='Upgrade'
 			/>
 			<CreateModelModal
-				open={modalOpen !== false}
-				setOpen={setModalOpen}
+				open={modelModalOpen !== false}
+				setOpen={setModelModalOpen}
 				callback={modelCallback}
 				modelFilter='embedding'
+			/>
+
+			<CreateVectorDbModal
+				open={vectorDbModalOpen !== false}
+				setOpen={setVectorDbModalOpen}
+				callback={modelCallback}
 			/>
 			{!hideTabs && (
 				<nav aria-label='Progress' className='mb-10'>
