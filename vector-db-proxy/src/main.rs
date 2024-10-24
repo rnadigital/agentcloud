@@ -11,8 +11,6 @@ use actix_web::{middleware::Logger, web, web::Data, App, HttpServer};
 use anyhow::Context;
 use crossbeam::channel;
 use env_logger::Env;
-use pinecone_sdk::pinecone::{PineconeClient, PineconeClientConfig};
-use qdrant_client::client::QdrantClient;
 use tokio::signal;
 use tokio::sync::RwLock;
 
@@ -28,7 +26,7 @@ use crate::init::env_variables::GLOBAL_DATA;
 use crate::messages::models::{MessageQueue, MessageQueueProvider};
 use crate::messages::tasks::get_message_queue;
 use crate::routes::apis::{create_collection, get_storage_size, scroll_data};
-use crate::vector_databases::vector_database::VectorDatabase;
+use crate::vector_databases::vector_database::{build_vector_db_client, VectorDatabase};
 use adaptors::mongo::client::start_mongo_connection;
 
 mod adaptors;
@@ -71,31 +69,12 @@ async fn main() -> std::io::Result<()> {
     let logging_level = global_data.logging_level.clone();
     let host = global_data.host.clone();
     let port = global_data.port.clone();
-
+    let vector_db = global_data.vector_database.clone();
+    let vector_db_url = global_data.vector_database_url.clone();
+    let vector_db_api_key = global_data.vector_database_api_key.clone();
     // This is to allow the use of multiple vector databases
     let vector_database_client: Arc<RwLock<dyn VectorDatabase>> =
-        match global_data.vector_database.as_str() {
-            "qdrant" => {
-                println!("Using Qdrant Vector Database");
-                let qdrant_uri = format!("{}:{}", global_data.qdrant_host, global_data.qdrant_port);
-                let client = QdrantClient::from_url(qdrant_uri.as_str());
-                Arc::new(RwLock::new(client.build().unwrap()))
-            }
-            "pinecone" => {
-                println!("Using Pinecone Vector Database");
-                let config = PineconeClientConfig {
-                    api_key: Some(global_data.clone().pinecone_api_key),
-                    ..Default::default()
-                };
-                let pinecone: PineconeClient = config.client().expect("Failed to create Pinecone");
-                Arc::new(RwLock::new(pinecone))
-            }
-            _ => panic!(
-                "No valid vector database was chosen. Expected one of `qdrant` or `pinecone`.\
-         Got `{}`",
-                global_data.vector_database
-            ),
-        };
+        build_vector_db_client(vector_db, Some(vector_db_url), Some(vector_db_api_key)).await;
 
     let mongo_connection = start_mongo_connection().await.unwrap();
     // Create Arcs to allow sending across threads

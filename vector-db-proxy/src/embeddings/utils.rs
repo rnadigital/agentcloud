@@ -1,11 +1,11 @@
 use crate::adaptors::mongo::models::{DataSources, Model};
-use crate::adaptors::mongo::queries::increment_by_one;
+use crate::adaptors::mongo::queries::{get_vector_db_details, increment_by_one};
 use crate::data::unstructuredio::models::UnstructuredIOResponse;
 use crate::embeddings::helpers::clean_text;
 use crate::embeddings::models::{EmbeddingModels, FastEmbedModels};
 use crate::init::env_variables::GLOBAL_DATA;
 use crate::vector_databases::models::{Point, SearchRequest, SearchType, VectorDatabaseStatus};
-use crate::vector_databases::vector_database::VectorDatabase;
+use crate::vector_databases::vector_database::{build_vector_db_client, VectorDatabase};
 use anyhow::{anyhow, Result};
 use async_openai::config::OpenAIConfig;
 use async_openai::types::CreateEmbeddingRequestArgs;
@@ -187,9 +187,7 @@ pub async fn embed_text_chunks_async(
         let item = arc::new(item); // Use Arc to share ownership across tasks, avoiding cloning large data
         let model_clone = model.clone();
         task::spawn(async move {
-            let processed_item = embed_text(vec![&item], &model_clone).await; // Process
-                                                                              // item asynchronously
-            tx.send(processed_item)
+            tx.send(embed_text(vec![&item], &model_clone).await)
                 .await
                 .expect("Failed to send processed item"); // Send back the result
         });
@@ -211,7 +209,7 @@ pub async fn embed_text_chunks_async(
 pub async fn embed_bulk_insert_unstructured_response(
     documents: Vec<UnstructuredIOResponse>,
     datasource: DataSources,
-    vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
+    mut vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
     mongo_client: Arc<RwLock<Database>>,
     embedding_model: Model,
     metadata: Option<HashMap<String, Value>>,
@@ -224,9 +222,6 @@ pub async fn embed_bulk_insert_unstructured_response(
     let datasource_id = datasource._id.to_string();
     match embed_text_chunks_async(list_of_text.clone(), &embedding_model).await {
         Ok(embeddings) => {
-            // Initialise vector database client
-            let vector_database = Arc::clone(&vector_database_client);
-            let vector_database_client = vector_database.read().await;
             let search_request = SearchRequest::new(search_type.clone(), datasource_id.to_string());
             let mut points_to_upload: Vec<Point> = vec![];
             // Construct point to upload
@@ -263,8 +258,30 @@ pub async fn embed_bulk_insert_unstructured_response(
                     );
                     points_to_upload.push(point)
                 }
+                if datasource.vectorDbId.is_some() {
+                    println!("There's a BYO vector DB associated with this Datasource.");
+                    println!("Updating vector DB credentials with BYO creds...");
+                    let vector_db_option_config =
+                        get_vector_db_details(&mongo_connection, datasource.vectorDbId.unwrap())
+                            .await
+                            .unwrap();
+                    if let Some(vector_db) = vector_db_option_config {
+                        let vector_database_trait = build_vector_db_client(
+                            vector_db.r#type.to_string(),
+                            vector_db.url,
+                            vector_db.apiKey,
+                        )
+                        .await;
 
-                //Attempt vector database insert
+                        vector_database_client = vector_database_trait;
+                    };
+                };
+                //TODO: Need to check if this will take up a lot of memory or not?
+                // How can we re-use these clients rather than creating a new one each time?
+
+                // Initialise vector database client
+                let vector_database = Arc::clone(&vector_database_client);
+                let vector_database_client = vector_database.read().await;
                 if let Ok(bulk_insert_status) = vector_database_client
                     .bulk_insert_points(search_request.clone(), points_to_upload.clone())
                     .await

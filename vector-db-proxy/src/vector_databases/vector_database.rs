@@ -1,11 +1,12 @@
-use crate::adaptors::mongo::models::VectorDb;
+use crate::adaptors::{pinecone, qdrant};
 use crate::vector_databases::error::VectorDatabaseError;
 use crate::vector_databases::models::*;
 use async_trait::async_trait;
-use pinecone_sdk::pinecone::{PineconeClient, PineconeClientConfig};
+use pinecone_sdk::pinecone::PineconeClient;
 use qdrant_client::client::QdrantClient;
 use std::sync::Arc;
 use tokio::sync::RwLock;
+
 pub enum VectorDatabases {
     Qdrant(Arc<RwLock<QdrantClient>>),
     Pinecone(Arc<RwLock<PineconeClient>>),
@@ -17,34 +18,6 @@ impl Clone for VectorDatabases {
         match self {
             VectorDatabases::Qdrant(client) => VectorDatabases::Qdrant(Arc::clone(client)),
             VectorDatabases::Pinecone(client) => VectorDatabases::Pinecone(Arc::clone(client)),
-            VectorDatabases::Unknown => VectorDatabases::Unknown,
-        }
-    }
-}
-
-impl VectorDatabases {
-    async fn update_credentials(&self, vector_db_config: VectorDb) -> Self {
-        match self {
-            VectorDatabases::Pinecone(_) => {
-                let client_config = PineconeClientConfig {
-                    api_key: Some(vector_db_config.apiKey),
-                    control_plane_host: vector_db_config.url,
-                    ..Default::default()
-                };
-                VectorDatabases::Pinecone(Arc::new(RwLock::new(
-                    client_config
-                        .client()
-                        .expect("Failed to create new pinecone client"),
-                )))
-            }
-            VectorDatabases::Qdrant(client) => {
-                // Acquire a read lock to clone the inner client
-                {
-                    let mut client_guard = client.write().await;
-                    client_guard.cfg.api_key = Some(vector_db_config.apiKey.clone());
-                }
-                VectorDatabases::Qdrant(Arc::clone(client))
-            }
             VectorDatabases::Unknown => VectorDatabases::Unknown,
         }
     }
@@ -98,4 +71,35 @@ pub trait VectorDatabase: Send + Sync {
         &self,
         search_request: SearchRequest,
     ) -> Result<Vec<SearchResult>, VectorDatabaseError>;
+}
+// Factory method to build Vector database client based on
+pub async fn build_vector_db_client(
+    vector_db: String,
+    url: Option<String>,
+    api_key: Option<String>,
+) -> Arc<RwLock<dyn VectorDatabase>> {
+    let vector_database_client: Arc<RwLock<dyn VectorDatabase>> = match vector_db.as_str() {
+        "qdrant" => {
+            println!("Using Qdrant Vector Database");
+            Arc::new(RwLock::new(
+                qdrant::client::build_qdrant_client(url, api_key)
+                    .await
+                    .unwrap(),
+            ))
+        }
+        "pinecone" => {
+            println!("Using Pinecone Vector Database");
+            Arc::new(RwLock::new(
+                pinecone::client::build_pinecone_client(url, api_key)
+                    .await
+                    .unwrap(),
+            ))
+        }
+        _ => panic!(
+            "No valid vector database was chosen. Expected one of `qdrant` or `pinecone`.\
+         Got `{}`",
+            vector_db
+        ),
+    };
+    vector_database_client
 }
