@@ -77,7 +77,7 @@ export default function CreateDatasourceForm({
 }) {
 	//TODO: fix any types
 
-	const [step, setStep] = useState(4);
+	const [step, setStep] = useState(initialStep);
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const { stripePlan } = account?.stripe || {};
@@ -105,6 +105,7 @@ export default function CreateDatasourceForm({
 	const [chunkingConfig, setChunkingConfig] = useReducer(submittingReducer, {
 		...defaultChunkingOptions
 	});
+	console.log(vectorDbId);
 
 	//TODO: move into RetrievalStrategyComponent, keep the setters passed as props
 	const [toolRetriever, setToolRetriever] = useState(Retriever.SELF_QUERY);
@@ -312,7 +313,8 @@ export default function CreateDatasourceForm({
 						k: topK
 					},
 					chunkingConfig,
-					enableConnectorChunking
+					enableConnectorChunking,
+					vectorDbId
 				};
 				const addedDatasource: any = await API.addDatasource(
 					body,

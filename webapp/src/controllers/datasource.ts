@@ -339,7 +339,8 @@ export async function addDatasourceApi(req, res, next) {
 		retriever_config,
 		timeUnit,
 		chunkingConfig,
-		enableConnectorChunking
+		enableConnectorChunking,
+		vectorDbId
 	} = req.body;
 
 	const currentPlan = res.locals?.subscription?.stripePlan;
@@ -465,7 +466,8 @@ export async function addDatasourceApi(req, res, next) {
 					overlap_all: overlap_all === 'true',
 					file_type
 				}
-			: null //TODO: validation
+			: null, //TODO: validation
+		vectorDbId: toObjectId(vectorDbId)
 	});
 
 	// Create the collection in qdrant
