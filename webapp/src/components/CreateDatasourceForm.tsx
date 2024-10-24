@@ -95,6 +95,7 @@ export default function CreateDatasourceForm({
 	const [cronExpression, setCronExpression] = useState('0 12 * * *');
 	const [modelId, setModelId] = useState('');
 	const [vectorDbId, setVectorDbId] = useState('');
+	const [byoVectorDb, setByoVectorDb] = useState(true);
 
 	const [topK, setTopK] = useState(3);
 	const foundVectorDb = vectorDbs && vectorDbs.find(m => m._id === vectorDbId);
@@ -105,7 +106,6 @@ export default function CreateDatasourceForm({
 	const [chunkingConfig, setChunkingConfig] = useReducer(submittingReducer, {
 		...defaultChunkingOptions
 	});
-	console.log(vectorDbId);
 
 	//TODO: move into RetrievalStrategyComponent, keep the setters passed as props
 	const [toolRetriever, setToolRetriever] = useState(Retriever.SELF_QUERY);
@@ -314,7 +314,8 @@ export default function CreateDatasourceForm({
 					},
 					chunkingConfig,
 					enableConnectorChunking,
-					vectorDbId
+					vectorDbId,
+					byoVectorDb
 				};
 				const addedDatasource: any = await API.addDatasource(
 					body,
@@ -683,6 +684,7 @@ export default function CreateDatasourceForm({
 											isClearable
 											primaryColor={'indigo'}
 											classNames={SelectClassNames}
+											isDisabled={!byoVectorDb}
 											value={
 												foundVectorDb
 													? { label: foundVectorDb.name, value: foundVectorDb._id }
@@ -699,6 +701,25 @@ export default function CreateDatasourceForm({
 											)}
 											formatOptionLabel={formatModelOptionLabel}
 										/>
+										<div className='my-2'>
+											<div className='sm:col-span-12'>
+												<label
+													htmlFor='displayOnlyFinalOutput'
+													className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+												>
+													<input
+														type='checkbox'
+														checked={!byoVectorDb}
+														onChange={e => {
+															setByoVectorDb(!byoVectorDb);
+															setVectorDbId(null);
+														}}
+														className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:bg-gray-500'
+													/>
+													Use Agent Cloud&apos;s Hosted Vector Database
+												</label>
+											</div>
+										</div>
 									</div>
 									<label
 										htmlFor='embeddingField'

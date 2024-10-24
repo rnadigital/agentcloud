@@ -29,8 +29,6 @@ export default function Datasources(props) {
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState(null);
 	const { datasources, models, vectorDbs } = state;
-	console.log('wioiot');
-	console.log(vectorDbs);
 	const filteredDatasources = datasources?.filter(x => !x.hidden);
 	const [open, setOpen] = useState(false);
 	const [spec, setSpec] = useState(null);
