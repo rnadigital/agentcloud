@@ -14,11 +14,9 @@ export default function CreateDatasourceModal({ open, setOpen, callback, initial
 	const [state, dispatch] = useState({});
 	const [vectorDbState, setVectorDbState] = useState(null);
 	const { models } = state as any;
-	const { vectorDbs } = vectorDbState as any;
+	const vectorDbs = vectorDbState?.vectorDbs || [];
 	const [forceClose, setForceClose] = useState(false);
 	const [spec, setSpec] = useState(null);
-
-	console.log(vectorDbState);
 
 	async function fetchDatasourceFormData() {
 		await API.getModels({ resourceSlug }, dispatch, toast.error, router);

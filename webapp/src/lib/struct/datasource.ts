@@ -155,7 +155,7 @@ export interface Datasource {
 	timeUnit?: string; //temp until we have a more robust way to limit cron frequency based on plan
 	collectionIndex?: string;
 	namespace?: string;
-	isByo?: boolean;
+	byoVectorDb?: boolean;
 }
 
 const datasourceSchema = new Schema<Datasource>(
@@ -186,7 +186,7 @@ const datasourceSchema = new Schema<Datasource>(
 		timeUnit: String,
 		collectionIndex: String,
 		namespace: String,
-		isByo: Boolean
+		byoVectorDb: Boolean
 	},
 	{ timestamps: true }
 );
