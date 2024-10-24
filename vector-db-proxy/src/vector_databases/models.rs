@@ -450,7 +450,7 @@ impl From<Point> for Vector {
         Self {
             id: value
                 .index
-                .unwrap_or(Uuid::new_v4().to_string().parse().unwrap())
+                .unwrap_or(Value::String(Uuid::new_v4().to_string()))
                 .to_string(),
             values: value.vector,
             sparse_values: None,

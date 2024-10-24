@@ -19,6 +19,8 @@ fn _custom_format_metadata(mut metadata_map: HashMap<String, Value>) -> HashMap<
 }
 
 pub fn clean_text(text: String) -> String {
-    let re = Regex::new(r#"(?:[\\\"\n\r]|\\[nr])+"#).unwrap();
-    re.replace_all(&text, "").into_owned()
+    let re_back_slash = Regex::new(r"\\").unwrap();
+    let re = Regex::new(r#"(?:[\\"\n\r]|\\[nr])+"#).unwrap();
+    let phase_1 = re.replace_all(&text, "").into_owned();
+    re_back_slash.replace_all(&phase_1, "").into_owned()
 }

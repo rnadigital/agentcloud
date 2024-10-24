@@ -39,7 +39,8 @@ pub async fn embed_text_construct_point(
                     let unstructuredio_api_key =
                         Some(global_data.unstructuredio_api_key).filter(|s| !s.is_empty());
                     //    write value to buffer
-                    let buffer = Cursor::new(to_vec(&value)?);
+                    let buffer =
+                        Cursor::new(to_vec(&Value::String(clean_text(value.to_string())))?);
                     let handle = tokio::task::spawn_blocking(move || {
                         let response = chunk_text(
                             unstructuredio_url,
@@ -79,7 +80,8 @@ pub async fn embed_text_construct_point(
                     );
                 };
                 // Embedding data
-                let embedding_vec = embed_text(vec![&value.to_string()], &embedding_model).await?;
+                let embedding_vec =
+                    embed_text(vec![&clean_text(value.to_string())], &embedding_model).await?;
                 // Construct a Point to insert into the vector DB
                 if !embedding_vec.is_empty() {
                     if let Some(vector) = embedding_vec.into_iter().next() {
