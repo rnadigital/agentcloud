@@ -341,7 +341,9 @@ export async function addDatasourceApi(req, res, next) {
 		chunkingConfig,
 		enableConnectorChunking,
 		vectorDbId,
-		byoVectorDb
+		byoVectorDb,
+		collectionName,
+		namespace
 	} = req.body;
 
 	const currentPlan = res.locals?.subscription?.stripePlan;
@@ -469,7 +471,9 @@ export async function addDatasourceApi(req, res, next) {
 				}
 			: null, //TODO: validation
 		vectorDbId: toObjectId(vectorDbId),
-		byoVectorDb
+		byoVectorDb,
+		collectionName,
+		namespace
 	});
 
 	// Create the collection in qdrant

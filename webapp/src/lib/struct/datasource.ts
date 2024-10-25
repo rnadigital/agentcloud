@@ -153,7 +153,7 @@ export interface Datasource {
 	modelId?: Types.ObjectId; //model id of embedding model in models collection
 	streamConfig?: StreamConfigMap;
 	timeUnit?: string; //temp until we have a more robust way to limit cron frequency based on plan
-	collectionIndex?: string;
+	collectionName?: string;
 	namespace?: string;
 	byoVectorDb?: boolean;
 }
@@ -184,7 +184,7 @@ const datasourceSchema = new Schema<Datasource>(
 		modelId: { type: Schema.Types.ObjectId, ref: 'Model' },
 		streamConfig: Object,
 		timeUnit: String,
-		collectionIndex: String,
+		collectionName: String,
 		namespace: String,
 		byoVectorDb: Boolean
 	},

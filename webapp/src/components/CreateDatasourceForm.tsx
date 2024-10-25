@@ -31,6 +31,7 @@ import DatasourceChunkingForm from 'components/DatasourceChunkingForm';
 import { StreamsList } from 'components/DatasourceStream';
 import ToolTip from 'components/shared/ToolTip';
 import FormContext from 'context/connectorform';
+import cn from 'lib/cn';
 import { defaultChunkingOptions } from 'misc/defaultchunkingoptions';
 import { usePostHog } from 'posthog-js/react';
 import { VectorDbDocument } from 'struct/vectordb';
@@ -96,8 +97,10 @@ export default function CreateDatasourceForm({
 	const [modelId, setModelId] = useState('');
 	const [vectorDbId, setVectorDbId] = useState('');
 	const [byoVectorDb, setByoVectorDb] = useState(true);
+	const [collectionName, setCollectionName] = useState('');
+	const [namespace, setNamespace] = useState('');
 
-	const [topK, setTopK] = useState(3);
+	const [topK, setTopK] = useState(initialStep);
 	const foundVectorDb = vectorDbs && vectorDbs.find(m => m._id === vectorDbId);
 	const foundModel = models && models.find(m => m._id === modelId);
 	const [scheduleType, setScheduleType] = useState(DatasourceScheduleType.MANUAL);
@@ -315,7 +318,9 @@ export default function CreateDatasourceForm({
 					chunkingConfig,
 					enableConnectorChunking,
 					vectorDbId,
-					byoVectorDb
+					byoVectorDb,
+					collectionName,
+					namespace
 				};
 				const addedDatasource: any = await API.addDatasource(
 					body,
@@ -426,6 +431,7 @@ export default function CreateDatasourceForm({
 									className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 								/>
 							</div>
+
 							<label
 								htmlFor='description'
 								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-2'
@@ -701,6 +707,50 @@ export default function CreateDatasourceForm({
 											)}
 											formatOptionLabel={formatModelOptionLabel}
 										/>
+										<div className='mt-2'>
+											<label
+												htmlFor='namespace'
+												className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+											>
+												Vector Namespace
+											</label>
+											<div>
+												<input
+													disabled={!byoVectorDb}
+													required
+													type='text'
+													name='namespace'
+													id='namespace'
+													onChange={e => setNamespace(e.target.value)}
+													value={namespace}
+													className={cn(
+														'block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white disabled:bg-gray-300'
+													)}
+												/>
+											</div>
+										</div>
+
+										<div className='mt-2'>
+											<label
+												htmlFor='collectionName'
+												className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+											>
+												Vector Collection
+											</label>
+											<div>
+												<input
+													disabled={!byoVectorDb}
+													required
+													type='text'
+													name='collectionName'
+													id='collectionName'
+													onChange={e => setCollectionName(e.target.value)}
+													value={collectionName}
+													className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white disabled:bg-gray-300'
+												/>
+											</div>
+										</div>
+
 										<div className='my-2'>
 											<div className='sm:col-span-12'>
 												<label
@@ -713,6 +763,8 @@ export default function CreateDatasourceForm({
 														onChange={e => {
 															setByoVectorDb(!byoVectorDb);
 															setVectorDbId(null);
+															setCollectionName('');
+															setNamespace('');
 														}}
 														className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:bg-gray-500'
 													/>
@@ -721,6 +773,7 @@ export default function CreateDatasourceForm({
 											</div>
 										</div>
 									</div>
+
 									<label
 										htmlFor='embeddingField'
 										className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
