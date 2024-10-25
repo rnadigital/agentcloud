@@ -2,8 +2,13 @@ import logging
 
 from models.vectordatabase import VectorDatabase
 from init.env_variables import VECTOR_DATABASE
+from typing import TYPE_CHECKING
+from langchain_core.embeddings import Embeddings
 
-def vectorstore_factory(embedding_model, collection_name, tool):
+if TYPE_CHECKING:
+    from pinecone import Index
+
+def vectorstore_factory(embedding_model: Embeddings, collection_name: str, tool: str,  api_key: str, url: str):
     match VECTOR_DATABASE:
         case VectorDatabase.Qdrant:
             from init.env_variables import QDRANT_HOST
@@ -145,14 +150,16 @@ def vectorstore_factory(embedding_model, collection_name, tool):
                 path=None,
                 collection_name=collection_name,
                 # vector_name=embedding_model.model,
-                url=QDRANT_HOST
+                url=url if url is not None else QDRANT_HOST,
+                api_key=api_key
             )
         case VectorDatabase.Pinecone:
 
-            from langchain_community.vectorstores.pinecone import Pinecone
+            from langchain_community.vectorstores.pinecone import Pinecone, _import_pinecone,_is_pinecone_v3
             from typing import List, Optional, Tuple, Dict, Union
             from langchain_community.docstore.document import Document
             from tools.retrievers.filters import create_pinecone_filters
+            
             my_filters = create_pinecone_filters(tool.ragFilters)
             def similarity_search_by_vector_with_score_with_filter(
                 self,
@@ -187,8 +194,73 @@ def vectorstore_factory(embedding_model, collection_name, tool):
                 return docs
 
             Pinecone.similarity_search_by_vector_with_score = similarity_search_by_vector_with_score_with_filter
+
+            @classmethod
+            def get_pinecone_index(
+                cls,
+                index_name: Optional[str],
+                pool_threads: int = 4,
+                api_key: Optional[str] = None,
+            ) -> Index:
+                """Return a Pinecone Index instance.
+
+                Args:
+                    index_name: Name of the index to use.
+                    pool_threads: Number of threads to use for index upsert.
+                Returns:
+                    Pinecone Index instance."""
+
+                pinecone = _import_pinecone()
+
+                if _is_pinecone_v3():
+                    pinecone_instance = pinecone.Pinecone(
+                        api_key=api_key, pool_threads=pool_threads
+                    )
+                    indexes = pinecone_instance.list_indexes()
+                    index_names = [i.name for i in indexes.index_list["indexes"]]
+                else:
+                    index_names = pinecone.list_indexes()
+
+                if index_name in index_names:
+                    index = (
+                        pinecone_instance.Index(index_name)
+                        if _is_pinecone_v3()
+                        else pinecone.Index(index_name, pool_threads=pool_threads)
+                    )
+                elif len(index_names) == 0:
+                    raise ValueError(
+                        "No active indexes found in your Pinecone project, "
+                        "are you sure you're using the right Pinecone API key and Environment? "
+                        "Please double check your Pinecone dashboard."
+                    )
+                else:
+                    raise ValueError(
+                        f"Index '{index_name}' not found in your Pinecone project. "
+                        f"Did you mean one of the following indexes: {', '.join(index_names)}"
+                    )
+                return index
+
+            Pinecone.from_existing_index = classmethod(get_pinecone_index)
+
+            def from_existing_index(
+                cls,
+                index_name: str,
+                embedding: Embeddings,
+                text_key: str = "text",
+                namespace: Optional[str] = None,
+                pool_threads: int = 4,
+                api_key: Optional[str] = None,
+            ) -> Pinecone:
+                """Load pinecone vectorstore from index name."""
+                pinecone_index = cls.get_pinecone_index(index_name, pool_threads)
+                return cls(pinecone_index, embedding, text_key, namespace)
+            
+            Pinecone.from_existing_index = classmethod(from_existing_index)
+
+
             return Pinecone.from_existing_index(
-                index_name="us-central1", #TODO: make customisable
+                api_key=api_key,
+                index_name=collection_name, #TODO: make customisable
                 embedding=embedding_model,
                 text_key="page_content", #TODO: check
                 namespace=collection_name,

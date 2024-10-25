@@ -285,6 +285,12 @@ class Datasource(BaseModel):
     workspaceId: PyObjectId
     connectionId: PyObjectId
     destinationId: PyObjectId
+    collectionName: Optional[str] = None
+    namespace: Optional[str] = None
+    byoVectorDb: Optional[bool] = None
+    
+
+class VectorDb[BaseModel]:
 
 
 class AppType(str, Enum):
