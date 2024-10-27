@@ -1,8 +1,9 @@
 import { InformationCircleIcon } from '@heroicons/react/24/outline';
+import InputField from 'components/form/InputField';
 import ToolTip from 'components/shared/ToolTip';
 import { useOnboardinFormContext } from 'context/onboardingform';
 import React, { useEffect, useState } from 'react';
-import { ModelEmbeddingLength, ModelList, modelOptions } from 'struct/model';
+import { ModelEmbeddingLength, ModelList, modelOptions, ModelTypeRequirements } from 'struct/model';
 
 import OnboardingSelect from './OnboardingSelect';
 
@@ -20,6 +21,7 @@ interface LLMConfigurationFormValues {
 	embeddingModel: LLMOption;
 	llmModelConfig: Record<string, string>;
 	embeddedModelConfig: Record<string, string>;
+	apiKey?: string;
 }
 
 const EmbeddingModelSelect = () => {
@@ -42,6 +44,16 @@ const EmbeddingModelSelect = () => {
 				...(model === 'text-embedding-3-small' ? { recommended: true } : {})
 			})) || [])
 	];
+
+	const EmbeddingModelRequiredFields =
+		embeddingType?.value &&
+		Object.keys(ModelTypeRequirements[embeddingType.value])
+			.filter(key => !ModelTypeRequirements[embeddingType.value][key].optional)
+			.map(key => {
+				const label = key.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+				const placeholder = key.endsWith('key') ? 'Paste your API key' : `Enter the ${label}`;
+				return { name: `embeddedModelConfig.${key}`, label, placeholder };
+			});
 
 	const [userSelectedEmbeddingType, setUserSelectedEmbeddingType] = useState(false);
 
@@ -100,6 +112,25 @@ const EmbeddingModelSelect = () => {
 						name='embeddingModel'
 					/>
 				</div>
+			</div>
+
+			<div>
+				{EmbeddingModelRequiredFields &&
+					EmbeddingModelRequiredFields.length > 0 &&
+					EmbeddingModelRequiredFields.map(field => (
+						<div key={field.name}>
+							<InputField<LLMConfigurationFormValues>
+								name={field.name as keyof LLMConfigurationFormValues}
+								rules={{
+									required: `${field.label} is required`
+								}}
+								label={field.label}
+								type='text'
+								control={control}
+								placeholder={field.placeholder}
+							/>
+						</div>
+					))}
 			</div>
 		</div>
 	);
