@@ -290,7 +290,14 @@ class Datasource(BaseModel):
     byoVectorDb: Optional[bool] = None
     
 
-class VectorDb[BaseModel]:
+class VectorDb(BaseModel):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    orgId: Optional[PyObjectId] = Field(default=None)
+    teamId: Optional[PyObjectId] = Field(default=None)
+    apiKey: Optional[str] = None
+    url: Optional[str] = None
+    name: str
+    type: str
 
 
 class AppType(str, Enum):

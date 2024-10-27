@@ -4,7 +4,7 @@ from mongo.client import MongoConnection
 from pymongo import collection
 from bson.objectid import ObjectId
 from init.env_variables import MONGO_DB_NAME
-from models.mongo import Agent, App, Crew, Datasource, Model, PyObjectId, Session, Task, Tool, Variable
+from models.mongo import Agent, App, Crew, Datasource, Model, PyObjectId, Session, Task, Tool, Variable, VectorDb
 from typing import List, Dict, Union, Any, Optional
 from pydantic import BaseModel
 
@@ -83,6 +83,12 @@ class MongoClientConnection(MongoConnection):
 
     def get_tool(self, toolsId: str):
         return self.get_single_model_by_id("tools", Tool, toolsId)
+    
+    def get_vector_db(self, vectorDbId: str):
+        return self.get_single_model_by_id("vectordbs", VectorDb, vectorDbId)
+    
+    def get_vector_dbs(self, vectorDbIds: List[str]):
+        return self.get_models_by_ids("vectordbs", VectorDb, vectorDbIds)
 
     def get_agent_tasks(self, taskIds: List[str]):
         return self.get_models_by_ids("tasks", Task, taskIds)
@@ -171,7 +177,7 @@ class MongoClientConnection(MongoConnection):
         except Exception as e:
             logging.exception(f"Failed to insert model into {db_collection}: {e}")
             return None
-    
+        
 
 
 def convert_id_to_ObjectId(id):
