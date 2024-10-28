@@ -165,7 +165,6 @@ const DynamicConnectorForm = ({
 						Log in with {name}
 					</a>
 					{redirectUrl && <p>Redirecting...</p>}
-					{submitting && <ButtonSpinner />}
 				</div>
 			) : (
 				<form onSubmit={handleSubmit(onSubmit)}>

@@ -7,6 +7,7 @@ import {
 	setParamOrgAndTeam
 } from '@mw/auth/checkresourceslug';
 import checkSession from '@mw/auth/checksession';
+import checkSessionWelcome from '@mw/auth/checksessionwelcome';
 import {
 	checkSubscriptionBoolean,
 	checkSubscriptionLimit,
@@ -21,6 +22,7 @@ import useJWT from '@mw/auth/usejwt';
 import useSession from '@mw/auth/usesession';
 import onboardedMiddleware from '@mw/checkonboarded';
 import homeRedirect from '@mw/homeredirect';
+import fetchDatasource from '@mw/oauth/fetchDatasource';
 import PassportManager from '@mw/passportmanager';
 import * as hasPerms from '@mw/permissions/hasperms';
 import renderStaticPage from '@mw/render/staticpage';
@@ -34,8 +36,6 @@ const unauthedMiddlewareChain = [useSession, useJWT, fetchSession, onboardedMidd
 const authedMiddlewareChain = [...unauthedMiddlewareChain, checkSession, csrfMiddleware];
 
 import { restrictToFirstScrollableAncestor } from '@dnd-kit/modifiers';
-import checkSessionWelcome from '@mw/auth/checksessionwelcome';
-import fetchDatasource from '@mw/oauth/fetchDatasource';
 import * as accountController from 'controllers/account';
 import * as agentController from 'controllers/agent';
 import * as airbyteProxyController from 'controllers/airbyte';

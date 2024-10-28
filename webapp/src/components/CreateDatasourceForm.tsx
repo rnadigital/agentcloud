@@ -362,6 +362,7 @@ export default function CreateDatasourceForm({
 	}
 
 	async function hubspotDatasourcePost(token: string) {
+		setOauthSubmitting(true);
 		const data = {
 			credentials: {
 				credentials_title: 'OAuth Credentials',
@@ -377,7 +378,6 @@ export default function CreateDatasourceForm({
 			datasourceDescription
 		);
 
-		setOauthSubmitting(true);
 		setError(null);
 		const posthogEvent = step === 2 ? 'testDatasource' : 'createDatasource';
 		try {
@@ -498,8 +498,8 @@ export default function CreateDatasourceForm({
 			});
 			console.error(e);
 		} finally {
-			await new Promise(res => setTimeout(res, 750));
 			setOauthSubmitting(false);
+			await new Promise(res => setTimeout(res, 750));
 		}
 	}
 
@@ -753,7 +753,7 @@ export default function CreateDatasourceForm({
 									);
 								}}
 							/>
-							{loading || oauthSubmitting ? (
+							{loading ? (
 								<div className='flex justify-center my-4'>
 									<ButtonSpinner size={24} />
 								</div>
@@ -830,7 +830,20 @@ export default function CreateDatasourceForm({
 									</>
 								)
 							)}
-							{oauthSubmitting && <ButtonSpinner size={50} />}
+							{oauthSubmitting && (
+								<div className='flex flex-col mt-5 items-center h-screen gap-10'>
+									<div className='flex flex-col items-center justify-center'>
+										<CheckCircleIcon className='w-20 h-20 text-green-500' />
+										<p className='mt-4 text-2xl font-semibold text-gray-700'>
+											Authentication Successful!
+										</p>
+									</div>
+									<ButtonSpinner size={50} />
+									<p className='mt-6 text-xl font-semibold text-gray-700'>
+										Testing Datasource Connection (this might take a while)
+									</p>
+								</div>
+							)}
 						</div>
 					</span>
 				);
