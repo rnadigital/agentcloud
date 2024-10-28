@@ -92,6 +92,7 @@ def construct_crew(session_id: str, socket: Any):
 
     crew_builder = CrewAIBuilder(
         session_id=session_id,
+        session=session,
         socket=socket,
         app_type=app.appType,
         crew=the_crew,

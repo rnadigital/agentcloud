@@ -6,7 +6,13 @@ import { Fragment, useEffect, useState } from 'react';
 
 import VariableForm from './VariableForm';
 
-export default function CreateVariableModal({ open, setOpen, callback }) {
+interface CreateVariableModalProps {
+	open: boolean;
+	setOpen: React.Dispatch<React.SetStateAction<any>>;
+	callback?: Function;
+}
+
+export default function CreateVariableModal({ open, setOpen, callback }: CreateVariableModalProps) {
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const router = useRouter();
