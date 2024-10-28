@@ -1,6 +1,7 @@
 import ButtonSpinner from 'components/ButtonSpinner';
 import classNames from 'components/ClassNames';
 import ErrorAlert from 'components/ErrorAlert';
+import Spinner from 'components/Spinner';
 import dayjs from 'dayjs';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -153,8 +154,6 @@ const DynamicConnectorForm = ({
 								? `/auth/${name.toLowerCase()}/free?datasourceName=${encodeURIComponent(datasourceName)}&datasourceDescription=${encodeURIComponent(datasourceDescription)}`
 								: '#'
 						}
-						target={datasourceName && datasourceDescription ? '_blank' : '_self'}
-						rel='noopener noreferrer'
 						aria-disabled={!(datasourceName && datasourceDescription)} // For accessibility
 						title={
 							!(datasourceName && datasourceDescription)
@@ -166,6 +165,7 @@ const DynamicConnectorForm = ({
 						Log in with {name}
 					</a>
 					{redirectUrl && <p>Redirecting...</p>}
+					{submitting && <ButtonSpinner />}
 				</div>
 			) : (
 				<form onSubmit={handleSubmit(onSubmit)}>

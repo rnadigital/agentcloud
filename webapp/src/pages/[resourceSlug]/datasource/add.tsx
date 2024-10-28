@@ -17,6 +17,8 @@ export default function AddDatasource(props) {
 	const { resourceSlug } = router.query;
 	const [provider, setProvider] = useState(null);
 	const [token, setToken] = useState(null);
+	const [datasourceName, setDatasourceName] = useState(null);
+	const [datasourceDescription, setDatasourceDescription] = useState(null);
 	console.log('provider and token: ', provider, token);
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
@@ -38,9 +40,11 @@ export default function AddDatasource(props) {
 			const retrievedProvider = new URLSearchParams(location.search).get('provider');
 			setProvider(retrievedProvider);
 			const retrievedName = new URLSearchParams(location.search).get('datasourceName');
+			setDatasourceName(retrievedName);
 			const retrievedDescription = new URLSearchParams(location.search).get(
 				'datasourceDescription'
 			);
+			setDatasourceDescription(retrievedDescription);
 			console.log('retrievedName: ', retrievedName);
 			console.log('retrievedDescription: ', retrievedDescription);
 		}
@@ -68,6 +72,8 @@ export default function AddDatasource(props) {
 				initialStep={2}
 				token={token}
 				provider={provider}
+				name={datasourceName}
+				description={datasourceDescription}
 			/>
 		</>
 	);

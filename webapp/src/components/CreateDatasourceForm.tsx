@@ -62,7 +62,9 @@ export default function CreateDatasourceForm({
 	spec,
 	setSpec,
 	provider,
-	token
+	token,
+	name = '',
+	description = ''
 }: {
 	models?: any[];
 	compact?: boolean;
@@ -75,6 +77,8 @@ export default function CreateDatasourceForm({
 	setSpec?: Function;
 	provider?: string;
 	token?: string;
+	name?: string;
+	description?: string;
 }) {
 	//TODO: fix any types
 
@@ -86,8 +90,8 @@ export default function CreateDatasourceForm({
 	const { resourceSlug } = router.query;
 	const [error, setError] = useState<string>(null);
 	const [files, setFiles] = useState(null);
-	const [datasourceName, setDatasourceName] = useState('');
-	const [datasourceDescription, setDatasourceDescription] = useState('');
+	const [datasourceName, setDatasourceName] = useState(name);
+	const [datasourceDescription, setDatasourceDescription] = useState(description);
 	const [modalOpen, setModalOpen] = useState(false);
 	const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
 	const [timeUnit, setTimeUnit] = useState('day');
@@ -143,6 +147,8 @@ export default function CreateDatasourceForm({
 	const [streamProperties, setStreamProperties] = useState(null);
 	const [loading, setLoading] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
+	const [oauthSubmitting, setOauthSubmitting] = useState(false);
+	const [oauthLoading, setOauthLoading] = useState(false);
 	const [streamState, setStreamReducer] = useReducer(submittingReducer, {});
 	const [formData, setFormData] = useState(null);
 
@@ -364,8 +370,14 @@ export default function CreateDatasourceForm({
 				refresh_token: token
 			}
 		};
+		console.log(
+			'Datasource name and description from the state: ',
+			datasourceName,
+			' ',
+			datasourceDescription
+		);
 
-		setSubmitting(true);
+		setOauthSubmitting(true);
 		setError(null);
 		const posthogEvent = step === 2 ? 'testDatasource' : 'createDatasource';
 		try {
@@ -487,7 +499,7 @@ export default function CreateDatasourceForm({
 			console.error(e);
 		} finally {
 			await new Promise(res => setTimeout(res, 750));
-			setSubmitting(false);
+			setOauthSubmitting(false);
 		}
 	}
 
@@ -499,11 +511,19 @@ export default function CreateDatasourceForm({
 	useEffect(() => {
 		setOauthProvider(provider);
 		setOauthToken(token);
+		setDatasourceName(name);
+		setDatasourceDescription(description);
 		console.log('Form token and provider', oauthProvider, oauthToken);
-		if (provider && token && !initialized) {
+		if (
+			provider &&
+			token &&
+			datasourceName !== '' &&
+			datasourceDescription !== '' &&
+			!initialized
+		) {
 			setInitialized(true); // Mark as initialized after first successful set
 		}
-	}, [provider, token]);
+	}, [provider, token, name, description]);
 
 	//once provider and token have been set this should run once
 	useEffect(() => {
@@ -733,7 +753,7 @@ export default function CreateDatasourceForm({
 									);
 								}}
 							/>
-							{loading ? (
+							{loading || oauthSubmitting ? (
 								<div className='flex justify-center my-4'>
 									<ButtonSpinner size={24} />
 								</div>
@@ -810,35 +830,38 @@ export default function CreateDatasourceForm({
 									</>
 								)
 							)}
+							{oauthSubmitting && <ButtonSpinner size={50} />}
 						</div>
 					</span>
 				);
 			case 3:
-				return (
-					discoveredSchema && (
-						<form
-							onSubmit={(e: any) => {
-								e.preventDefault();
-								setStep(4);
-							}}
-						>
-							<StreamsList
-								streams={discoveredSchema.catalog?.streams}
-								streamProperties={streamProperties}
-								setStreamReducer={setStreamReducer}
-							/>
-							<div className='flex justify-end'>
-								<button
-									disabled={submitting}
-									type='submit'
-									className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-								>
-									{submitting && <ButtonSpinner />}
-									Continue
-								</button>
-							</div>
-						</form>
-					)
+				return discoveredSchema ? (
+					<form
+						onSubmit={(e: any) => {
+							e.preventDefault();
+							setStep(4);
+						}}
+					>
+						<StreamsList
+							streams={discoveredSchema.catalog?.streams}
+							streamProperties={streamProperties}
+							setStreamReducer={setStreamReducer}
+						/>
+						<div className='flex justify-end'>
+							<button
+								disabled={submitting}
+								type='submit'
+								className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+							>
+								{submitting && <ButtonSpinner />}
+								Continue
+							</button>
+						</div>
+					</form>
+				) : (
+					<>
+						<p className='text-3xl text-red-700'>Testing datasource...</p>
+					</>
 				);
 			case 4:
 				return (
