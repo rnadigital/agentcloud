@@ -215,10 +215,14 @@ impl VectorDatabase for PineconeClient {
                         if let Ok(points) = query_response {
                             let ids: Vec<&str> =
                                 points.matches.iter().map(|j| j.id.as_str()).collect();
-                            let _ = index
-                                .delete_by_id(&ids, &namespace.clone().into())
-                                .await
-                                .unwrap();
+                            match index.delete_by_id(&ids, &namespace.clone().into()).await {
+                                Ok(_) => println!("Point deleted successfully"),
+                                Err(e) => println!(
+                                    "An error occurred while attempting to delete \
+                                point. Error: {}",
+                                    e
+                                ),
+                            }
                         };
                     }
                 }
