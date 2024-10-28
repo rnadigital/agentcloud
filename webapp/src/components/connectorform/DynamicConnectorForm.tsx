@@ -151,7 +151,7 @@ const DynamicConnectorForm = ({
 						)}
 						href={
 							datasourceName && datasourceDescription
-								? `/auth/${name.toLowerCase()}/free?datasourceName=${encodeURIComponent(datasourceName)}&datasourceDescription=${encodeURIComponent(datasourceDescription)}`
+								? `/auth/${name.toLowerCase()}?datasourceName=${encodeURIComponent(datasourceName)}&datasourceDescription=${encodeURIComponent(datasourceDescription)}`
 								: '#'
 						}
 						aria-disabled={!(datasourceName && datasourceDescription)} // For accessibility

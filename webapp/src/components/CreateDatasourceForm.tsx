@@ -363,14 +363,7 @@ export default function CreateDatasourceForm({
 
 	async function hubspotDatasourcePost(token: string) {
 		setOauthSubmitting(true);
-		const data = {
-			credentials: {
-				credentials_title: 'OAuth Credentials',
-				client_id: process.env.OAUTH_HUBSPOT_CLIENT_ID,
-				client_secret: process.env.OAUTH_HUBSPOT_CLIENT_SECRET,
-				refresh_token: token
-			}
-		};
+		const data = OauthSecretProviderFactory.getProviderPostData(token, oauthProvider.toLowerCase());
 		console.log(
 			'Datasource name and description from the state: ',
 			datasourceName,

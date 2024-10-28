@@ -100,4 +100,20 @@ export default class OauthSecretProviderFactory {
 				return hubspotScopesEnterprise;
 		}
 	}
+
+	static getProviderPostData(token: string, provider: string){
+		switch(provider){
+			case 'hubspot':
+				const { clientId, clientSecret } = OauthSecretProviderFactory.getSecretProvider('hubspot');
+				const data = {
+					credentials: {
+						credentials_title: 'OAuth Credentials',
+						client_id: clientId,
+						clientSecret: clientSecret,
+						refresh_token: token
+					}
+				}
+				return data;
+		}
+	}
 }

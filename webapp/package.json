@@ -84,6 +84,7 @@
     "nprogress": "^0.2.0",
     "openapi-client-axios": "^7.4.0",
     "passport": "^0.6.0",
+    "passport-forcedotcom": "^0.2.1",
     "passport-github": "^1.1.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-hubspot-oauth2": "^1.0.3",
@@ -115,8 +116,8 @@
     "socket.io-client": "^4.7.2",
     "stripe": "^14.25.0",
     "tailwind-merge": "^2.4.0",
-    "tsconfig-paths": "^4.2.0",
     "tailwind-scrollbar": "^3.1.0",
+    "tsconfig-paths": "^4.2.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": {

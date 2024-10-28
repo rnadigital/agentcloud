@@ -109,7 +109,7 @@ export default function router(server, app) {
 		}
 	);
 	oauthRouter.get(
-		'/hubspot/free',
+		'/hubspot',
 		fetchDatasource,
 		passportInstance.authenticate('hubspot', {scope: OauthSecretProviderFactory.getProviderScopes('hubspot-free')}),
 		fetchSession,
