@@ -7,12 +7,18 @@ import mongoose from 'mongoose';
 
 export type IdOrStr = string | ObjectId;
 
-let _client;
+let _client: MongoClient | null = null;
 
 export async function connect() {
-	_client = new MongoClient(process.env.DB_URL);
-	log('connecting to mongodb');
-	await _client.connect();
+	if (!_client) {
+		_client = new MongoClient(process.env.DB_URL, {
+			maxPoolSize: 10
+		});
+		log('connecting to mongodb');
+		await _client.connect();
+	} else {
+		log('mongodb connection already established');
+	}
 }
 
 export function client(): MongoClient {
