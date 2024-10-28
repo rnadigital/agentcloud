@@ -114,7 +114,7 @@ const EmbeddingModelSelect = () => {
 				</div>
 			</div>
 
-			<div>
+			<div className='mt-2'>
 				{EmbeddingModelRequiredFields &&
 					EmbeddingModelRequiredFields.length > 0 &&
 					EmbeddingModelRequiredFields.map(field => (

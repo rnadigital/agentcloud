@@ -12,6 +12,7 @@ import DataSourceSearch from 'components/onboarding/DataSourceSearch';
 import EmbeddingModelSelect from 'components/onboarding/EmbeddingModelSelect';
 import LeftFrame from 'components/onboarding/LeftFrame';
 import OnboardingSelect from 'components/onboarding/OnboardingSelect';
+import VectorDBSelection from 'components/onboarding/VectorDBSelection';
 import { error } from 'console';
 import { useAccountContext } from 'context/account';
 import OnboardingFormContext from 'context/onboardingform';
@@ -35,7 +36,7 @@ export default function Onboarding() {
 
 	const [connectors, setConnectors] = useState([]);
 	const [searchInput, setSearchInput] = useState<string>();
-	const [currentStep, setCurrentStep] = useState(3);
+	const [currentStep, setCurrentStep] = useState(4);
 
 	const filteredConnectors: Connector[] = useMemo(() => {
 		return Array.from(new Set(connectors.map(connector => connector.name.toLowerCase())))
@@ -95,7 +96,8 @@ export default function Onboarding() {
 								<DataSourceConfigSteps currentStep={0} />
 							</>
 						)}
-						{currentStep >= 3 && <div className='text-2xl mb-4'>Select Your Embedding Model</div>}
+						{currentStep === 3 && <div className='text-2xl mb-4'>Select Your Embedding Model</div>}
+						{currentStep === 4 && <div className='text-2xl mb-4'>Connect to your Vector DB</div>}
 					</div>
 
 					<section className='mt-6'>
@@ -114,6 +116,7 @@ export default function Onboarding() {
 							)}
 
 							{currentStep === 3 && <EmbeddingModelSelect />}
+							{currentStep === 4 && <VectorDBSelection />}
 						</OnboardingFormContext>
 					</section>
 					<div className='flex mt-6'>

@@ -36,6 +36,7 @@
     "@headlessui/react": "^2.1.0",
     "@heroicons/react": "^2.0.18",
     "@monaco-editor/react": "^4.6.0",
+    "@pinecone-database/connect": "^0.0.4",
     "@react-email/components": "^0.0.21",
     "@rjsf/core": "^5.15.1",
     "@rjsf/utils": "^5.15.1",
