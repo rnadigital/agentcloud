@@ -50,9 +50,7 @@ export const OAUTH_STRATEGIES: OAuthStrategy[] = [
 		},
 		callback: hubspotDatasourceCallback,
 		path: '/auth/hubspot/callback',
-		extra: {
-			/* N/A */
-		}
+		extra: {}
 	}
 ];
 
@@ -63,7 +61,6 @@ export async function hubspotDatasourceCallback(accessToken, refreshToken, profi
 	//create the datasouce here, call done
 
 	profile.refreshToken = refreshToken;
-	//need to either redirect, set a callback to the datasource form or
 	done(null, profile);
 }
 

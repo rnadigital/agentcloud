@@ -35,6 +35,7 @@ const authedMiddlewareChain = [...unauthedMiddlewareChain, checkSession, csrfMid
 
 import { restrictToFirstScrollableAncestor } from '@dnd-kit/modifiers';
 import checkSessionWelcome from '@mw/auth/checksessionwelcome';
+import fetchDatasource from '@mw/oauth/fetchDatasource';
 import * as accountController from 'controllers/account';
 import * as agentController from 'controllers/agent';
 import * as airbyteProxyController from 'controllers/airbyte';
@@ -53,6 +54,7 @@ import * as taskController from 'controllers/task';
 import * as teamController from 'controllers/team';
 import * as toolController from 'controllers/tool';
 import * as variableController from 'controllers/variables';
+import debug from 'debug';
 import OauthSecretProviderFactory from 'lib/oauthsecret';
 
 export default function router(server, app) {
@@ -108,17 +110,19 @@ export default function router(server, app) {
 	);
 	oauthRouter.get(
 		'/hubspot/free',
-		passportInstance.authenticate('hubspot', {scope: OauthSecretProviderFactory.getProviderScopes('hubspot-free'), redirect_uri: 'https://localhost:3000/auth/hubspot/callback'}),
-		fetchSession
+		fetchDatasource,
+		passportInstance.authenticate('hubspot', {scope: OauthSecretProviderFactory.getProviderScopes('hubspot-free')}),
+		fetchSession,
 	);
+	
 	oauthRouter.get(
 		'/hubspot/professional',
-		passportInstance.authenticate('hubspot', {scope: OauthSecretProviderFactory.getProviderScopes('hubspot-professional'), redirect_uri: 'https://localhost:3000/auth/hubspot/callback'}),
+		passportInstance.authenticate('hubspot', {scope: OauthSecretProviderFactory.getProviderScopes('hubspot-professional'), redirect_uri: `${process.env.URL_APP}/auth/hubspot/callback`}),
 		fetchSession
 	);
 	oauthRouter.get(
 		'/hubspot/enterprise',
-		passportInstance.authenticate('hubspot', {scope: OauthSecretProviderFactory.getProviderScopes('hubspot-enterprise'), redirect_uri: 'https://localhost:3000/auth/hubspot/callback'}),
+		passportInstance.authenticate('hubspot', {scope: OauthSecretProviderFactory.getProviderScopes('hubspot-enterprise'), redirect_uri: `${process.env.URL_APP}/auth/hubspot/callback`}),
 		fetchSession
 	);
 	oauthRouter.get(
@@ -126,13 +130,17 @@ export default function router(server, app) {
 		useSession,
 		useJWT,
 		fetchSession,
-		passportInstance.authenticate( 'hubspot'),
-		(_req, res) => {
-			res.redirect(`/${res.locals.account.currentTeam}/datasource/add?token=${encodeURIComponent(res.locals.datasourceOAuth.refreshToken)}&provider=${encodeURIComponent(res.locals.datasourceOAuth.provider)}`)
+		passportInstance.authenticate('hubspot'),
+		(req, res) => {
+			const log = debug('webapp:oauth:hubspot:callback');
+			const datasourceName = res.locals.oauthData.datasourceName || 'NOTFOUND';
+			const datasourceDescription = res.locals.oauthData.datasourceDescription || 'NOTFOUND';
+			log("Received query params \ndatasourceName: ", datasourceName, "\ndatasourceDescription: ", datasourceDescription);
+	
+			res.redirect(`/${res.locals.account.currentTeam}/datasource/add?token=${encodeURIComponent(res.locals.datasourceOAuth.refreshToken)}&provider=${encodeURIComponent(res.locals.datasourceOAuth.provider)}&datasourceName=${encodeURIComponent(datasourceName)}&datasourceDescription=${encodeURIComponent(datasourceDescription)}`);
 		}
-		// oauthController.hubspotDatasourceCallback,
-		//redirect back to datasource form
-	)
+	);
+	
 	server.use('/auth', useSession, passportInstance.session(), oauthRouter);
 
 	// Body and query parsing middleware

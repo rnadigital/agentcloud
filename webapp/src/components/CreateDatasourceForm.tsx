@@ -499,8 +499,6 @@ export default function CreateDatasourceForm({
 	useEffect(() => {
 		setOauthProvider(provider);
 		setOauthToken(token);
-		setDatasourceName('Hubspot');
-		setDatasourceDescription('Hubspot OAuth Datasource');
 		console.log('Form token and provider', oauthProvider, oauthToken);
 		if (provider && token && !initialized) {
 			setInitialized(true); // Mark as initialized after first successful set

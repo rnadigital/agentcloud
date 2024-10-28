@@ -1,4 +1,5 @@
 import ButtonSpinner from 'components/ButtonSpinner';
+import classNames from 'components/ClassNames';
 import ErrorAlert from 'components/ErrorAlert';
 import dayjs from 'dayjs';
 import Link from 'next/link';
@@ -9,7 +10,6 @@ import { AIRBYTE_OAUTH_PROVIDERS } from 'struct/oauth';
 
 import AdditionalFields from './AdditionalFields';
 import FormSection from './FormSection';
-import classNames from 'components/ClassNames';
 
 interface DynamicFormProps {
 	schema: Schema;
@@ -148,12 +148,21 @@ const DynamicConnectorForm = ({
 								? 'bg-indigo-600 hover:bg-indigo-500'
 								: 'bg-slate-400 cursor-not-allowed'
 						)}
-						href={datasourceName && datasourceDescription ? `/auth/${name.toLowerCase()}/free` : '#'}
+						href={
+							datasourceName && datasourceDescription
+								? `/auth/${name.toLowerCase()}/free?datasourceName=${encodeURIComponent(datasourceName)}&datasourceDescription=${encodeURIComponent(datasourceDescription)}`
+								: '#'
+						}
 						target={datasourceName && datasourceDescription ? '_blank' : '_self'}
 						rel='noopener noreferrer'
-						aria-disabled={!datasourceName || !datasourceDescription} // For accessibility
+						aria-disabled={!(datasourceName && datasourceDescription)} // For accessibility
+						title={
+							!(datasourceName && datasourceDescription)
+								? "Datasource name and description can't be empty"
+								: ''
+						}
 					>
-						{icon && <img src={icon} loading='lazy' className='inline-flex me-2 w-6 w-6' />}
+						{icon && <img src={icon} loading='lazy' className='inline-flex me-2 w-6' />}
 						Log in with {name}
 					</a>
 					{redirectUrl && <p>Redirecting...</p>}

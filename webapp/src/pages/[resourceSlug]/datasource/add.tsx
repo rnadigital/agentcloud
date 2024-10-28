@@ -37,6 +37,12 @@ export default function AddDatasource(props) {
 			setToken(retrievedToken);
 			const retrievedProvider = new URLSearchParams(location.search).get('provider');
 			setProvider(retrievedProvider);
+			const retrievedName = new URLSearchParams(location.search).get('datasourceName');
+			const retrievedDescription = new URLSearchParams(location.search).get(
+				'datasourceDescription'
+			);
+			console.log('retrievedName: ', retrievedName);
+			console.log('retrievedDescription: ', retrievedDescription);
 		}
 	}, []);
 
