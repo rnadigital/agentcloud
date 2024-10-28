@@ -101,8 +101,8 @@ export default class OauthSecretProviderFactory {
 		}
 	}
 
-	static getProviderPostData(token: string, provider: string){
-		switch(provider){
+	static getProviderPostData(token: string, provider: string) {
+		switch (provider) {
 			case 'hubspot':
 				const { clientId, clientSecret } = OauthSecretProviderFactory.getSecretProvider('hubspot');
 				const data = {
@@ -112,7 +112,7 @@ export default class OauthSecretProviderFactory {
 						clientSecret: clientSecret,
 						refresh_token: token
 					}
-				}
+				};
 				return data;
 		}
 	}
