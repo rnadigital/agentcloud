@@ -60,6 +60,7 @@ pub async fn process_message(
 ) {
     let mongodb_connection = mongo_client.read().await;
     let global_data = GLOBAL_DATA.read().await.clone();
+    println!("Datasource ID: {}", datasource_id);
     match get_datasource(&mongodb_connection, datasource_id).await {
         Ok(datasource) => {
             if let Some(ds) = datasource {

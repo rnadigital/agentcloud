@@ -49,9 +49,11 @@ pub async fn pubsub_consume(
         while let Some(message) = stream.next().await {
             let cloned_message = message.message.clone();
             let message_attributes = cloned_message.attributes;
+            println!("Message attributes: {:?}", message_attributes);
             if let Ok(message_string) = String::from_utf8(cloned_message.data) {
                 match message_attributes.get("_stream") {
                     Some(stream) => {
+                        println!("Stream contents: {}", stream);
                         let stream_string: String = stream.to_string();
                         let (datasource_id, stream_config_key, stream_type) =
                             match message_attributes.get("type") {
@@ -71,6 +73,7 @@ pub async fn pubsub_consume(
                         let qdrant_client = Arc::clone(&vector_database_client);
                         let mongo_client = Arc::clone(&mongo_client);
                         let sender = sender.clone();
+                        println!("Datasource ID: {}", datasource_id);
                         process_message(
                             message_string,
                             stream_type,
