@@ -119,7 +119,7 @@ pub struct DataSources {
     #[serde(default)]
     pub stream_config: Option<HashMap<String, StreamConfig>>,
     #[serde(flatten)]
-    pub extra_fields: HashMap<String, Value>,
+    pub extra_fields: bson::Document,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -191,10 +191,12 @@ pub struct FieldDescription {
     pub description: String,
     #[serde(rename = "type")]
     pub field_type: String, // escaping `type` because it's a reserved keyword in Rust
+    #[serde(flatten)]
+    pub extra_fields: HashMap<String, Value>,
 }
 
 /// Type alias for a map of field descriptions
-pub type FieldDescriptionMap = HashMap<String, FieldDescription>;
+//pub type FieldDescriptionMap = bson::Document;
 
 /// Struct representing the configuration of a stream
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -203,7 +205,7 @@ pub struct StreamConfig {
     pub primaryKey: Vec<String>,
     pub syncMode: SyncMode,
     pub cursorField: Vec<String>,
-    pub descriptionsMap: FieldDescriptionMap,
+    pub descriptionsMap: bson::Document,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
