@@ -16,6 +16,7 @@ const log = debug('webapp:oauth');
 import { Strategy as GitHubStrategy } from 'passport-github';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { Strategy as HubspotStrategy } from 'passport-hubspot-oauth2';
+import { Strategy as SalesforceStrategy } from 'passport-forcedotcom';
 // import { Strategy as StripeStrategy } from 'passport-stripe';
 
 export const OAUTH_STRATEGIES: OAuthStrategy[] = [
@@ -51,8 +52,24 @@ export const OAUTH_STRATEGIES: OAuthStrategy[] = [
 		callback: hubspotDatasourceCallback,
 		path: '/auth/hubspot/callback',
 		extra: {}
+	},
+	{
+		strategy: SalesforceStrategy,
+		secretKeys: {
+			clientId: "NOTFOUND",
+			secret: "NOTFOUND"
+		},
+		callback: salesForceDatasourceCallback,
+		path: '/auth/salesforce/callback',
+		extra: {
+			
+		}
 	}
 ];
+
+export async function salesForceDatasourceCallback(accessToken, refreshToken, profile, done){
+
+}
 
 export async function hubspotDatasourceCallback(accessToken, refreshToken, profile, done) {
 	console.log(`Hubspot datasource callback with accessToken: `, accessToken);

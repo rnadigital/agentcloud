@@ -18,6 +18,8 @@ services:
     ports:
       - "0.0.0.0:5672:5672"
       - "0.0.0.0:15672:15672"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   docker_mongo:
     restart: always
@@ -62,7 +64,7 @@ services:
       - docker_redis
     environment:
       - GOOGLE_APPLICATION_CREDENTIALS=/app/keyfile.json
-      - RABBITMQ_HOST=docker_rabbitmq
+      - RABBITMQ_HOST=host.docker.internal
       - RABBITMQ_PORT=5672
       - QUEUE_NAME=streaming
       - RABBITMQ_EXCHANGE=agentcloud
