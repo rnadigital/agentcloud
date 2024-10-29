@@ -84,7 +84,7 @@ pub async fn process_message(
                                         Some(global_data.unstructuredio_api_key)
                                             .filter(|s| !s.is_empty());
                                     let chunking_strategy: Option<UnstructuredChunkingConfig> =
-                                        ds.clone().chunkingConfig;
+                                        ds.clone().chunking_config;
                                     let handle = tokio::task::spawn_blocking(move || {
                                         let response = chunk_text(
                                             unstructuredio_url,
