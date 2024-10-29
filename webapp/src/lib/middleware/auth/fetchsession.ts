@@ -31,7 +31,10 @@ export default async function fetchSession(req, res, next) {
 			};
 			if (req.session.passport?.user?.refreshToken) {
 				// log('found refreshToken: ', req.session.passport?.user?.refreshToken);
-				const provider = req.session.passport?.user?.provider;
+				let provider = req.session.passport?.user?.provider;
+				if(provider === 'forcedotcom'){ //the passport strategy used for salesforce is forcedotcom, this is owned by salesforce but goes under a different name, so if we get 'forcedotcom' we actually mean 'salesforce'
+					provider = 'salesforce'
+				}
 				const refreshToken = req.session.passport?.user?.refreshToken;
 				res.locals.datasourceOAuth = {
 					provider,

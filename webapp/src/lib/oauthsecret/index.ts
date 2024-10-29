@@ -2,8 +2,16 @@ export default class OauthSecretProviderFactory {
 	static getSecretProvider(provider: string = 'local') {
 		switch (provider) {
 			case 'hubspot':
-				const clientId = process.env.OAUTH_HUBSPOT_CLIENT_ID;
-				const clientSecret = process.env.OAUTH_HUBSPOT_CLIENT_SECRET;
+				let clientId = process.env.OAUTH_HUBSPOT_CLIENT_ID;
+				let clientSecret = process.env.OAUTH_HUBSPOT_CLIENT_SECRET;
+				return { clientId, clientSecret };
+			case 'salesforce':
+				clientId = process.env.OAUTH_SALESFORCE_CLIENT_ID;
+				clientSecret = process.env.OAUTH_SALESFORCE_CLIENT_SECRET;
+				return { clientId, clientSecret };
+			case 'xero':
+				clientId = process.env.OAUTH_XERO_CLIENT_ID;
+				clientSecret = process.env.OAUTH_XERO_CLIENT_SECRET;
 				return { clientId, clientSecret };
 		}
 	}
@@ -102,10 +110,11 @@ export default class OauthSecretProviderFactory {
 	}
 
 	static getProviderPostData(token: string, provider: string) {
+		let data;
 		switch (provider) {
 			case 'hubspot':
-				const { clientId, clientSecret } = OauthSecretProviderFactory.getSecretProvider('hubspot');
-				const data = {
+				let { clientId, clientSecret } = OauthSecretProviderFactory.getSecretProvider('hubspot');
+				data = {
 					credentials: {
 						credentials_title: 'OAuth Credentials',
 						client_id: clientId,
@@ -114,6 +123,16 @@ export default class OauthSecretProviderFactory {
 					}
 				};
 				return data;
+			case 'salesforce':
+				clientId = OauthSecretProviderFactory.getSecretProvider('salesforce').clientId;
+				clientSecret = OauthSecretProviderFactory.getSecretProvider('salesforce').clientSecret;
+				data = {
+					sourceType: 'salesforce',
+					auth_type: 'Client',
+					client_id: 'clientId',
+					client_secret: 'ClientSecret',
+					refresh_token: 'refreshToken'
+				}
 		}
 	}
 }

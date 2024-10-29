@@ -17,6 +17,7 @@ import { Strategy as GitHubStrategy } from 'passport-github';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { Strategy as HubspotStrategy } from 'passport-hubspot-oauth2';
 import { Strategy as SalesforceStrategy } from 'passport-forcedotcom';
+import { Strategy as XeroStrategy } from 'passport-xero'
 // import { Strategy as StripeStrategy } from 'passport-stripe';
 
 export const OAUTH_STRATEGIES: OAuthStrategy[] = [
@@ -62,13 +63,37 @@ export const OAUTH_STRATEGIES: OAuthStrategy[] = [
 		callback: salesForceDatasourceCallback,
 		path: '/auth/salesforce/callback',
 		extra: {
-			
+			// for salesforce specifically scopes need to go here
+		}
+	},
+	{
+		strategy: XeroStrategy,
+		secretKeys: {
+			clientId: "NOTFOUND",
+			secret: "NOTFOUND"
+		},
+		callback: xeroDatasourceCallback,
+		path: '/auth/xero/callback',
+		extra: {
+
 		}
 	}
 ];
 
-export async function salesForceDatasourceCallback(accessToken, refreshToken, profile, done){
+export async function xeroDatasourceCallback(token, tokenSecret, profile, done) {
+	//token is what's used by airbyte
+	const xeroCallbackLog = debug("webapp:oauth:datasourceOauth:xero:callback");
+	xeroCallbackLog(`Got access token: ${token} from callback`);
 
+	profile.refreshToken = token; //even though this isn't necessarily a refreshToken it's the token we need to pass back to airbyte so keep it like this
+}
+
+export async function salesForceDatasourceCallback(accessToken, refreshToken, profile, done){
+	const salesForceCallbackLog = debug("webapp:oauth:datasourceoauth:salesforce:callback");
+	salesForceCallbackLog(`Got refreshToken: ${refreshToken} \nAnd accessToken: ${accessToken} from callback`);
+
+	profile.refreshToken = refreshToken;
+	done(null, profile);
 }
 
 export async function hubspotDatasourceCallback(accessToken, refreshToken, profile, done) {
