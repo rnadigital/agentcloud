@@ -13,11 +13,11 @@ import { addTeam } from '../db/team';
 const log = debug('webapp:oauth');
 
 //To reduce some boilerplace in the router, allows us to just loop and create handlers for each service
+import { Strategy as SalesforceStrategy } from 'passport-forcedotcom';
 import { Strategy as GitHubStrategy } from 'passport-github';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { Strategy as HubspotStrategy } from 'passport-hubspot-oauth2';
-import { Strategy as SalesforceStrategy } from 'passport-forcedotcom';
-import { Strategy as XeroStrategy } from 'passport-xero'
+import { Strategy as XeroStrategy } from 'passport-xero';
 // import { Strategy as StripeStrategy } from 'passport-stripe';
 
 export const OAUTH_STRATEGIES: OAuthStrategy[] = [
@@ -57,8 +57,8 @@ export const OAUTH_STRATEGIES: OAuthStrategy[] = [
 	{
 		strategy: SalesforceStrategy,
 		secretKeys: {
-			clientId: "NOTFOUND",
-			secret: "NOTFOUND"
+			clientId: 'NOTFOUND',
+			secret: 'NOTFOUND'
 		},
 		callback: salesForceDatasourceCallback,
 		path: '/auth/salesforce/callback',
@@ -69,14 +69,12 @@ export const OAUTH_STRATEGIES: OAuthStrategy[] = [
 	{
 		strategy: XeroStrategy,
 		secretKeys: {
-			clientId: "NOTFOUND",
-			secret: "NOTFOUND"
+			clientId: 'NOTFOUND',
+			secret: 'NOTFOUND'
 		},
 		callback: xeroDatasourceCallback,
 		path: '/auth/xero/callback',
-		extra: {
-
-		}
+		extra: {}
 	}
 	//need to add custom strategy for airtable
 	//google ads??
@@ -84,15 +82,17 @@ export const OAUTH_STRATEGIES: OAuthStrategy[] = [
 
 export async function xeroDatasourceCallback(token, tokenSecret, profile, done) {
 	//token is what's used by airbyte
-	const xeroCallbackLog = debug("webapp:oauth:datasourceOauth:xero:callback");
+	const xeroCallbackLog = debug('webapp:oauth:datasourceOauth:xero:callback');
 	xeroCallbackLog(`Got access token: ${token} from callback`);
 
 	profile.refreshToken = token; //even though this isn't necessarily a refreshToken it's the token we need to pass back to airbyte so keep it like this
 }
 
-export async function salesForceDatasourceCallback(accessToken, refreshToken, profile, done){
-	const salesForceCallbackLog = debug("webapp:oauth:datasourceoauth:salesforce:callback");
-	salesForceCallbackLog(`Got refreshToken: ${refreshToken} \nAnd accessToken: ${accessToken} from callback`);
+export async function salesForceDatasourceCallback(accessToken, refreshToken, profile, done) {
+	const salesForceCallbackLog = debug('webapp:oauth:datasourceoauth:salesforce:callback');
+	salesForceCallbackLog(
+		`Got refreshToken: ${refreshToken} \nAnd accessToken: ${accessToken} from callback`
+	);
 
 	profile.refreshToken = refreshToken;
 	done(null, profile);

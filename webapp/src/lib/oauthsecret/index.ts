@@ -136,10 +136,7 @@ export default class OauthSecretProviderFactory {
 			case 'xero':
 				clientId = OauthSecretProviderFactory.getSecretProvider('xero').clientId;
 				clientSecret = OauthSecretProviderFactory.getSecretProvider('xero').clientSecret;
-				data = {
-					
-				}
-
+				data = {};
 		}
 	}
 }
