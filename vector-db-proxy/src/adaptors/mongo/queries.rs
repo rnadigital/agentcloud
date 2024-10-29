@@ -36,7 +36,7 @@ pub async fn get_model(db: &Database, datasource_id: &str) -> Result<Option<Mode
         .await
     {
         Ok(Some(datasource)) => {
-            println!("Datasource retrieved from Mongo: {}", datasource._id);
+            println!("Datasource retrieved from Mongo: {}", datasource.id);
             // If datasource is found, attempt to find the related model.
             match models_collection
                 .find_one(doc! {"_id": datasource.model_id}, None)
@@ -82,7 +82,7 @@ pub async fn get_model_and_embedding_key(
         }
     };
 
-    log::debug!("Found datasource: {}", datasource._id);
+    log::debug!("Found datasource: {}", datasource.id);
 
     // Fetch the model
     let model = match models_collection

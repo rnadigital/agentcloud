@@ -94,7 +94,8 @@ pub struct UnstructuredChunkingConfig {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct DataSources {
-    pub _id: ObjectId,
+    #[serde(rename = "_id")]
+    pub id: ObjectId,
     pub org_id: ObjectId,
     pub team_id: ObjectId,
     pub model_id: Option<ObjectId>,
@@ -118,6 +119,7 @@ pub struct DataSources {
     pub status: String,
     #[serde(default)]
     pub stream_config: Option<HashMap<String, StreamConfig>>,
+    pub discovered_schema: bson::Document,
     #[serde(flatten)]
     pub extra_fields: bson::Document,
 }
