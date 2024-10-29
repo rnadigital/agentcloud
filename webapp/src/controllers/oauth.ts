@@ -78,6 +78,8 @@ export const OAUTH_STRATEGIES: OAuthStrategy[] = [
 
 		}
 	}
+	//need to add custom strategy for airtable
+	//google ads??
 ];
 
 export async function xeroDatasourceCallback(token, tokenSecret, profile, done) {

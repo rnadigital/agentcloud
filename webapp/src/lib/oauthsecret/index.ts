@@ -129,10 +129,17 @@ export default class OauthSecretProviderFactory {
 				data = {
 					sourceType: 'salesforce',
 					auth_type: 'Client',
-					client_id: 'clientId',
-					client_secret: 'ClientSecret',
-					refresh_token: 'refreshToken'
+					client_id: clientId,
+					client_secret: clientSecret,
+					refresh_token: token
+				};
+			case 'xero':
+				clientId = OauthSecretProviderFactory.getSecretProvider('xero').clientId;
+				clientSecret = OauthSecretProviderFactory.getSecretProvider('xero').clientSecret;
+				data = {
+					
 				}
+
 		}
 	}
 }

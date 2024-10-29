@@ -89,6 +89,7 @@
     "passport-google-oauth20": "^2.0.0",
     "passport-hubspot-oauth2": "^1.0.3",
     "passport-stripe": "^0.2.3",
+    "passport-xero": "^1.0.0-a",
     "pdf.js-extract": "^0.2.1",
     "posthog-js": "^1.88.4",
     "posthog-node": "^4.1.0",
