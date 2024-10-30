@@ -4,6 +4,7 @@ use mongodb::bson::{doc, oid::ObjectId};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
+use std::fmt::Display;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DatasourceConnectionSettings {
@@ -120,6 +121,7 @@ pub struct DataSources {
     #[serde(default)]
     pub stream_config: Option<HashMap<String, StreamConfig>>,
     pub discovered_schema: Option<bson::Document>,
+    pub vector_db_id: Option<ObjectId>,
     #[serde(flatten)]
     pub extra_fields: bson::Document,
 }
@@ -216,4 +218,29 @@ pub struct EmbeddingConfig {
     pub embedding_key: Option<String>,
     pub primary_key: Option<Vec<String>>,
     pub chunking_strategy: Option<UnstructuredChunkingConfig>,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct VectorDb {
+    pub orgId: ObjectId,
+    pub teamId: ObjectId,
+    pub apiKey: Option<String>,
+    pub url: Option<String>,
+    pub r#type: VectorDatabaseType,
+}
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub enum VectorDatabaseType {
+    Pinecone,
+    #[default]
+    Qdrant,
+}
+
+impl Display for VectorDatabaseType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let str = match self {
+            VectorDatabaseType::Pinecone => "pinecone".to_string(),
+            VectorDatabaseType::Qdrant => "qdrant".to_string(),
+        };
+        write!(f, "{}", str)
+    }
 }

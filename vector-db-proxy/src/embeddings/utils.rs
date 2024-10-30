@@ -258,11 +258,11 @@ pub async fn embed_bulk_insert_unstructured_response(
                     );
                     points_to_upload.push(point)
                 }
-                if datasource.vectorDbId.is_some() {
+                if datasource.vector_db_id.is_some() {
                     println!("There's a BYO vector DB associated with this Datasource.");
                     println!("Updating vector DB credentials with BYO creds...");
                     let vector_db_option_config =
-                        get_vector_db_details(&mongo_connection, datasource.vectorDbId.unwrap())
+                        get_vector_db_details(&mongo_connection, datasource.vector_db_id.unwrap())
                             .await
                             .unwrap();
                     if let Some(vector_db) = vector_db_option_config {
