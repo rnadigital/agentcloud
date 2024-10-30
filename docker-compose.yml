@@ -60,7 +60,6 @@ services:
       - docker_redis
     environment:
       - GOOGLE_APPLICATION_CREDENTIALS=/app/keyfile.json
-      - RABBITMQ_HOST=host.docker.internal
       - RABBITMQ_PORT=5672
       - QUEUE_NAME=streaming
       - RABBITMQ_EXCHANGE=agentcloud
