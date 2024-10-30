@@ -1,4 +1,4 @@
-use crate::adaptors::mongo::models::{DataSources, EmbeddingConfig, Model, VectorDb};
+use crate::adaptors::mongo::models::{DataSources, EmbeddingConfig, Model};
 use anyhow::{anyhow, Result};
 use futures_util::StreamExt;
 use mongodb::bson::doc;
@@ -36,10 +36,10 @@ pub async fn get_model(db: &Database, datasource_id: &str) -> Result<Option<Mode
         .await
     {
         Ok(Some(datasource)) => {
-            //println!("Datasource retrieved from Mongo: {}", datasource._id);
+            println!("Datasource retrieved from Mongo: {}", datasource.id);
             // If datasource is found, attempt to find the related model.
             match models_collection
-                .find_one(doc! {"_id": datasource.modelId}, None)
+                .find_one(doc! {"_id": datasource.model_id}, None)
                 .await
             {
                 Ok(model) => Ok(model), // Return the model if found (could be Some or None)
@@ -59,15 +59,34 @@ pub async fn get_model(db: &Database, datasource_id: &str) -> Result<Option<Mode
 
 pub async fn get_model_and_embedding_key(
     db: &Database,
-    datasource: DataSources,
+    datasource_id: &str,
     stream_config_key: Option<String>,
 ) -> Result<EmbeddingConfig> {
+    let datasources_collection = db.collection::<DataSources>("datasources");
     let models_collection = db.collection::<Model>("models");
     let mut embedding_config = EmbeddingConfig::default();
 
+    // Fetch the datasource
+    let datasource = match datasources_collection
+        .find_one(doc! {"_id": ObjectId::from_str(datasource_id)?}, None)
+        .await
+    {
+        Ok(Some(ds)) => ds,
+        Ok(None) => {
+            log::warn!("Datasource not found for ID: {}", datasource_id);
+            return Ok(embedding_config);
+        }
+        Err(e) => {
+            log::error!("Failed to find datasource: {}", e);
+            return Err(anyhow!("Failed to find datasource: {}", e));
+        }
+    };
+
+    log::debug!("Found datasource: {}", datasource.id);
+
     // Fetch the model
     let model = match models_collection
-        .find_one(doc! {"_id": datasource.modelId}, None)
+        .find_one(doc! {"_id": datasource.model_id}, None)
         .await
     {
         Ok(m) => m,
@@ -78,11 +97,11 @@ pub async fn get_model_and_embedding_key(
     };
 
     embedding_config.model = model;
-    embedding_config.embedding_key = datasource.embeddingField;
-    embedding_config.chunking_strategy = datasource.chunkingConfig;
+    embedding_config.embedding_key = datasource.embedding_field;
+    embedding_config.chunking_strategy = datasource.chunking_config;
 
     // Populate primary key if stream config exists
-    if let Some(stream_config) = datasource.streamConfig {
+    if let Some(stream_config) = datasource.stream_config {
         if let Some(config_key) = stream_config_key {
             if let Some(datasource_stream_config) = stream_config.get(config_key.as_str()) {
                 embedding_config.primary_key = Some(datasource_stream_config.primaryKey.clone());
@@ -139,14 +158,9 @@ pub async fn set_record_count_total(db: &Database, datasource_id: &str, total: i
     }
 }
 
-pub async fn set_datasource_state(
-    db: &Database,
-    datasource: DataSources,
-    state: &str,
-) -> Result<()> {
+pub async fn set_datasource_state(db: &Database, datasource_id: &str, state: &str) -> Result<()> {
     let datasources_collection = db.collection::<DataSources>("datasources");
-    let datasource_id = datasource._id;
-    let filter = doc! {"_id": datasource_id};
+    let filter = doc! {"_id": ObjectId::from_str(datasource_id)?};
     match datasources_collection
         .update_one(
             filter,
@@ -208,18 +222,4 @@ pub async fn get_team_datasources(db: &Database, team_id: &str) -> Result<Vec<Da
         }
     };
     Ok(list_of_datasources)
-}
-
-pub async fn get_vector_db_details(db: &Database, id: ObjectId) -> Result<Option<VectorDb>> {
-    let vector_db_collections = db.collection::<VectorDb>("vectordb");
-    let filter = doc! {"_id": id};
-    match vector_db_collections.find_one(filter, None).await {
-        Ok(vector_db) => Ok(vector_db),
-        Err(e) => Err(anyhow!(
-            "Encountered an error when retrieving vector DB : {}. \
-            Error: {}",
-            id.to_string(),
-            e
-        )),
-    }
 }

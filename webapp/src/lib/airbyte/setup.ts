@@ -57,6 +57,7 @@ async function fetchDestinationList(workspaceId: string) {
 // Function to create a destination
 async function createDestination(workspaceId: string, provider: string) {
 	const destinationConfiguration = await getDestinationConfiguration(provider);
+	log('getDestinationConfiguration %s', destinationConfiguration);
 	const response = await fetch(`${process.env.AIRBYTE_API_URL}/api/public/v1/destinations`, {
 		method: 'POST',
 		headers: {
@@ -216,15 +217,17 @@ export async function init() {
 		log('AIRBYTE_ADMIN_DESTINATION_ID', airbyteAdminDestination?.destinationId);
 
 		if (airbyteAdminDestination) {
-			const currentConfig = airbyteAdminDestination.connectionConfiguration;
-			const newConfig = await getDestinationConfiguration(provider);
-			console.log('newConfig', newConfig);
-			const configMismatch = Object.keys(newConfig).some(key => {
-				if (currentConfig && currentConfig[key] === '**********') {
+			const DestinationConfigCurrent = airbyteAdminDestination.connectionConfiguration;
+			const DestinationConfigNew = await getDestinationConfiguration(provider);
+			console.log('DestinationConfig', DestinationConfigNew);
+			const configMismatch = Object.keys(DestinationConfigNew).some(key => {
+				if (DestinationConfigCurrent && DestinationConfigCurrent[key] === '**********') {
 					//hidden fields
 					return false; // Skip password/credentials json comparison
 				}
-				return currentConfig && currentConfig[key] !== newConfig[key];
+				return (
+					DestinationConfigCurrent && DestinationConfigCurrent[key] !== DestinationConfigNew[key]
+				);
 			});
 			console.log('configMismatch', configMismatch);
 			if (configMismatch) {

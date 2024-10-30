@@ -165,7 +165,7 @@ async fn handle_embedding(
                 .await
                 .unwrap();
             log::error!(
-                "An error occurred while upserting  point structs to Qdrant: {}",
+                "An error occurred while upserting  point structs to vector database: {}",
                 e
             );
         }
