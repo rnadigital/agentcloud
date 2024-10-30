@@ -118,8 +118,7 @@ async fn handle_embedding(
     let search_type = chunking_strategy
         .clone()
         .map_or(SearchType::default(), |_| SearchType::ChunkedRow);
-    let search_request =
-        SearchRequest::new(search_type.clone(), datasource._id.to_string().clone());
+    let search_request = SearchRequest::new(search_type.clone(), datasource.id.to_string().clone());
     match embed_text_construct_point(
         mongo_connection.clone(),
         vector_database_client.clone(),
@@ -142,7 +141,7 @@ async fn handle_embedding(
                         VectorDatabaseStatus::Ok => (),
                         _ => {
                             log::warn!("An error occurred while inserting into vector database");
-                            increment_by_one(&mongo, &datasource._id.to_string(), field_path)
+                            increment_by_one(&mongo, &datasource.id.to_string(), field_path)
                                 .await
                                 .unwrap();
                         }
@@ -152,7 +151,7 @@ async fn handle_embedding(
                             "An error occurred while inserting into vector database. Error: {}",
                             e
                         );
-                        increment_by_one(&mongo, &datasource._id.to_string(), field_path)
+                        increment_by_one(&mongo, &datasource.id.to_string(), field_path)
                             .await
                             .unwrap();
                     }
@@ -161,7 +160,7 @@ async fn handle_embedding(
             None => (),
         },
         Err(e) => {
-            increment_by_one(&mongo, &datasource._id.to_string(), field_path)
+            increment_by_one(&mongo, &datasource.id.to_string(), field_path)
                 .await
                 .unwrap();
             log::error!(

@@ -219,7 +219,7 @@ pub async fn embed_bulk_insert_unstructured_response(
     // Construct a collection of the texts from the
     // Unstructured IO response to embed
     let list_of_text: Vec<String> = documents.iter().map(|doc| doc.text.clone()).collect();
-    let datasource_id = datasource._id.to_string();
+    let datasource_id = datasource.id.to_string();
     match embed_text_chunks_async(list_of_text.clone(), &embedding_model).await {
         Ok(embeddings) => {
             let search_request = SearchRequest::new(search_type.clone(), datasource_id.to_string());
