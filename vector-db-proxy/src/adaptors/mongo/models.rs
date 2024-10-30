@@ -119,7 +119,7 @@ pub struct DataSources {
     pub status: String,
     #[serde(default)]
     pub stream_config: Option<HashMap<String, StreamConfig>>,
-    pub discovered_schema: bson::Document,
+    pub discovered_schema: Option<bson::Document>,
     #[serde(flatten)]
     pub extra_fields: bson::Document,
 }
