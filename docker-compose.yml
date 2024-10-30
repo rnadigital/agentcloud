@@ -29,6 +29,8 @@ services:
 
   docker_redis:
     restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     image: redis:latest
     ports:
       - "127.0.0.1:6379:6379"
@@ -60,6 +62,7 @@ services:
       - docker_redis
     environment:
       - GOOGLE_APPLICATION_CREDENTIALS=/app/keyfile.json
+      - RABBITMQ_HOST=docker_rabbitmq
       - RABBITMQ_PORT=5672
       - QUEUE_NAME=streaming
       - RABBITMQ_EXCHANGE=agentcloud
@@ -122,6 +125,8 @@ services:
       - AIRBYTE_RABBITMQ_HOST=${AIRBYTE_RABBITMQ_HOST}
     volumes:
       - datasource_files:/tmp
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   webapp_syncserver:
     restart: always
@@ -230,13 +235,13 @@ services:
 
   qdrant:
     ports:
-      - '127.0.0.1:6333:6333'
-      - '127.0.0.1:6334:6334'
+      - '0.0.0.0:6333:6333'
+      - '0.0.0.0:6334:6334'
     image: qdrant/qdrant
     environment:
       - QDRANT__LOG_LEVEL=DEBUG
     volumes:
-      - qdrant_data:/qdrant_data
+      - qdrant_data:/qdrant_data 
 
   # minio:
   #   image: minio/minio
