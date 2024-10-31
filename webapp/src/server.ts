@@ -48,22 +48,22 @@ const log = debug('webapp:server');
 app
 	.prepare()
 	.then(async () => {
-		await airbyteSetup.init();
-		await db.connect();
-		await migrate();
-		const secretProvider = SecretProviderFactory.getSecretProvider();
-		await secretProvider.init(); //Note: secret provider is first because it needs to be inited for e.g. stripe client to use
-		await StripeClient.init();
-		const storageProvider = StorageProviderFactory.getStorageProvider();
-		await storageProvider.init();
-		const messageQueueProvider = MessageQueueProviderFactory.getMessageQueueProvider();
-		await messageQueueProvider.init();
-		const functionProvider = FunctionProviderFactory.getFunctionProvider();
-		await functionProvider.init();
-		await initGlobalTools();
-		await ses.init();
-		await PassportManager.init();
-		await resyncAllDatasources();
+		// await airbyteSetup.init();
+		// await db.connect();
+		// await migrate();
+		// const secretProvider = SecretProviderFactory.getSecretProvider();
+		// await secretProvider.init(); //Note: secret provider is first because it needs to be inited for e.g. stripe client to use
+		// await StripeClient.init();
+		// const storageProvider = StorageProviderFactory.getStorageProvider();
+		// await storageProvider.init();
+		// const messageQueueProvider = MessageQueueProviderFactory.getMessageQueueProvider();
+		// await messageQueueProvider.init();
+		// const functionProvider = FunctionProviderFactory.getFunctionProvider();
+		// await functionProvider.init();
+		// await initGlobalTools();
+		// await ses.init();
+		// await PassportManager.init();
+		// await resyncAllDatasources();
 
 		const server = express();
 		const rawHttpServer: http.Server = http.createServer(server);
