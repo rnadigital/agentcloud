@@ -48,11 +48,7 @@ const log = debug('webapp:server');
 app
 	.prepare()
 	.then(async () => {
-		// try {
-		// 	await airbyteSetup.init();
-		// } catch (error) {
-		// 	console.error('Error initializing airbyteSetup:', error);
-		// }
+		await airbyteSetup.init();
 
 		await db.connect();
 
