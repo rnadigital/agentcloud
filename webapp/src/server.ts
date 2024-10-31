@@ -4,17 +4,17 @@ process.on('uncaughtException', console.error).on('unhandledRejection', console.
 
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env' });
-// import { getShortCommitHash } from './lib/commit';
-// if (!process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH) {
-// 	try {
-// 		process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH = getShortCommitHash();
-// 	} catch (e) {
-// 		console.warn(
-// 			'NEXT_PUBLIC_SHORT_COMMIT_HASH not set, and failed to call getShortCommitHash:',
-// 			e
-// 		);
-// 	}
-// }
+import { getShortCommitHash } from './lib/commit';
+if (!process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH) {
+	try {
+		process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH = getShortCommitHash();
+	} catch (e) {
+		console.warn(
+			'NEXT_PUBLIC_SHORT_COMMIT_HASH not set, and failed to call getShortCommitHash:',
+			e
+		);
+	}
+}
 
 import express from 'express';
 import * as http from 'http';
@@ -48,63 +48,59 @@ const log = debug('webapp:server');
 app
 	.prepare()
 	.then(async () => {
-		try {
-			await airbyteSetup.init();
-		} catch (error) {
-			console.error('Error initializing airbyteSetup:', error);
-		}
+		// try {
+		// 	await airbyteSetup.init();
+		// } catch (error) {
+		// 	console.error('Error initializing airbyteSetup:', error);
+		// }
 
-		try {
-			await db.connect();
-		} catch (error) {
-			console.error('Error connecting to the database:', error);
-		}
+		await db.connect();
 
-		try {
-			await migrate();
-		} catch (error) {
-			console.error('Error during migration:', error);
-		}
+		// try {
+		// 	await migrate();
+		// } catch (error) {
+		// 	console.error('Error during migration:', error);
+		// }
 
-		const secretProvider = SecretProviderFactory.getSecretProvider();
-		try {
-			await secretProvider.init(); //Note: secret provider is first because it needs to be inited for e.g. stripe client to use
-		} catch (error) {
-			console.error('Error initializing secret provider:', error);
-		}
+		// const secretProvider = SecretProviderFactory.getSecretProvider();
+		// try {
+		// 	await secretProvider.init(); //Note: secret provider is first because it needs to be inited for e.g. stripe client to use
+		// } catch (error) {
+		// 	console.error('Error initializing secret provider:', error);
+		// }
 
-		try {
-			await StripeClient.init();
-		} catch (error) {
-			console.error('Error initializing Stripe client:', error);
-		}
+		// try {
+		// 	await StripeClient.init();
+		// } catch (error) {
+		// 	console.error('Error initializing Stripe client:', error);
+		// }
 
-		const storageProvider = StorageProviderFactory.getStorageProvider();
-		try {
-			await storageProvider.init();
-		} catch (error) {
-			console.error('Error initializing storage provider:', error);
-		}
+		// const storageProvider = StorageProviderFactory.getStorageProvider();
+		// try {
+		// 	await storageProvider.init();
+		// } catch (error) {
+		// 	console.error('Error initializing storage provider:', error);
+		// }
 
-		const messageQueueProvider = MessageQueueProviderFactory.getMessageQueueProvider();
-		try {
-			await messageQueueProvider.init();
-		} catch (error) {
-			console.error('Error initializing message queue provider:', error);
-		}
+		// const messageQueueProvider = MessageQueueProviderFactory.getMessageQueueProvider();
+		// try {
+		// 	await messageQueueProvider.init();
+		// } catch (error) {
+		// 	console.error('Error initializing message queue provider:', error);
+		// }
 
-		const functionProvider = FunctionProviderFactory.getFunctionProvider();
-		try {
-			await functionProvider.init();
-		} catch (error) {
-			console.error('Error initializing function provider:', error);
-		}
+		// const functionProvider = FunctionProviderFactory.getFunctionProvider();
+		// try {
+		// 	await functionProvider.init();
+		// } catch (error) {
+		// 	console.error('Error initializing function provider:', error);
+		// }
 
-		try {
-			await initGlobalTools();
-		} catch (error) {
-			console.error('Error initializing global tools:', error);
-		}
+		// try {
+		// 	await initGlobalTools();
+		// } catch (error) {
+		// 	console.error('Error initializing global tools:', error);
+		// }
 
 		// try {
 		// 	await ses.init();
