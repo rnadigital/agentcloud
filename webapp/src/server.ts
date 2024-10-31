@@ -4,17 +4,17 @@ process.on('uncaughtException', console.error).on('unhandledRejection', console.
 
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env' });
-import { getShortCommitHash } from './lib/commit';
-if (!process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH) {
-	try {
-		process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH = getShortCommitHash();
-	} catch (e) {
-		console.warn(
-			'NEXT_PUBLIC_SHORT_COMMIT_HASH not set, and failed to call getShortCommitHash:',
-			e
-		);
-	}
-}
+// import { getShortCommitHash } from './lib/commit';
+// if (!process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH) {
+// 	try {
+// 		process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH = getShortCommitHash();
+// 	} catch (e) {
+// 		console.warn(
+// 			'NEXT_PUBLIC_SHORT_COMMIT_HASH not set, and failed to call getShortCommitHash:',
+// 			e
+// 		);
+// 	}
+// }
 
 import express from 'express';
 import * as http from 'http';
@@ -48,11 +48,11 @@ const log = debug('webapp:server');
 app
 	.prepare()
 	.then(async () => {
-		// try {
-		// 	await airbyteSetup.init();
-		// } catch (error) {
-		// 	console.error('Error initializing airbyteSetup:', error);
-		// }
+		try {
+			await airbyteSetup.init();
+		} catch (error) {
+			console.error('Error initializing airbyteSetup:', error);
+		}
 
 		try {
 			await db.connect();
