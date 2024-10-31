@@ -73,11 +73,11 @@ app
 			console.error('Error initializing secret provider:', error);
 		}
 
-		// try {
-		// 	await StripeClient.init();
-		// } catch (error) {
-		// 	console.error('Error initializing Stripe client:', error);
-		// }
+		try {
+			await StripeClient.init();
+		} catch (error) {
+			console.error('Error initializing Stripe client:', error);
+		}
 
 		// const storageProvider = StorageProviderFactory.getStorageProvider();
 		// try {
