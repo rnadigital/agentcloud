@@ -86,12 +86,12 @@ app
 			console.error('Error initializing storage provider:', error);
 		}
 
-		// const messageQueueProvider = MessageQueueProviderFactory.getMessageQueueProvider();
-		// try {
-		// 	await messageQueueProvider.init();
-		// } catch (error) {
-		// 	console.error('Error initializing message queue provider:', error);
-		// }
+		const messageQueueProvider = MessageQueueProviderFactory.getMessageQueueProvider();
+		try {
+			await messageQueueProvider.init();
+		} catch (error) {
+			console.error('Error initializing message queue provider:', error);
+		}
 
 		// const functionProvider = FunctionProviderFactory.getFunctionProvider();
 		// try {
