@@ -79,12 +79,12 @@ app
 			console.error('Error initializing Stripe client:', error);
 		}
 
-		// const storageProvider = StorageProviderFactory.getStorageProvider();
-		// try {
-		// 	await storageProvider.init();
-		// } catch (error) {
-		// 	console.error('Error initializing storage provider:', error);
-		// }
+		const storageProvider = StorageProviderFactory.getStorageProvider();
+		try {
+			await storageProvider.init();
+		} catch (error) {
+			console.error('Error initializing storage provider:', error);
+		}
 
 		// const messageQueueProvider = MessageQueueProviderFactory.getMessageQueueProvider();
 		// try {
