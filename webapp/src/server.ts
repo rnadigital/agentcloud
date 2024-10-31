@@ -66,12 +66,12 @@ app
 			console.error('Error during migration:', error);
 		}
 
-		// const secretProvider = SecretProviderFactory.getSecretProvider();
-		// try {
-		// 	await secretProvider.init(); //Note: secret provider is first because it needs to be inited for e.g. stripe client to use
-		// } catch (error) {
-		// 	console.error('Error initializing secret provider:', error);
-		// }
+		const secretProvider = SecretProviderFactory.getSecretProvider();
+		try {
+			await secretProvider.init(); //Note: secret provider is first because it needs to be inited for e.g. stripe client to use
+		} catch (error) {
+			console.error('Error initializing secret provider:', error);
+		}
 
 		// try {
 		// 	await StripeClient.init();
