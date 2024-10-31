@@ -100,11 +100,11 @@ app
 			console.error('Error initializing function provider:', error);
 		}
 
-		// try {
-		// 	await initGlobalTools();
-		// } catch (error) {
-		// 	console.error('Error initializing global tools:', error);
-		// }
+		try {
+			await initGlobalTools();
+		} catch (error) {
+			console.error('Error initializing global tools:', error);
+		}
 
 		// try {
 		// 	await ses.init();
