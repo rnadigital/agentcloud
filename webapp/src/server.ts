@@ -93,12 +93,12 @@ app
 			console.error('Error initializing message queue provider:', error);
 		}
 
-		// const functionProvider = FunctionProviderFactory.getFunctionProvider();
-		// try {
-		// 	await functionProvider.init();
-		// } catch (error) {
-		// 	console.error('Error initializing function provider:', error);
-		// }
+		const functionProvider = FunctionProviderFactory.getFunctionProvider();
+		try {
+			await functionProvider.init();
+		} catch (error) {
+			console.error('Error initializing function provider:', error);
+		}
 
 		// try {
 		// 	await initGlobalTools();
