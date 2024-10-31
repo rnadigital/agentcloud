@@ -60,11 +60,11 @@ app
 			console.error('Error connecting to the database:', error);
 		}
 
-		// try {
-		// 	await migrate();
-		// } catch (error) {
-		// 	console.error('Error during migration:', error);
-		// }
+		try {
+			await migrate();
+		} catch (error) {
+			console.error('Error during migration:', error);
+		}
 
 		// const secretProvider = SecretProviderFactory.getSecretProvider();
 		// try {
