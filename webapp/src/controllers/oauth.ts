@@ -18,6 +18,7 @@ import { Strategy as GitHubStrategy } from 'passport-github';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { Strategy as HubspotStrategy } from 'passport-hubspot-oauth2';
 import { Strategy as XeroStrategy } from 'passport-xero';
+import { Strategy as SlackStrategy } from 'passport-slack';
 // import { Strategy as StripeStrategy } from 'passport-stripe';
 
 export const OAUTH_STRATEGIES: OAuthStrategy[] = [
@@ -75,10 +76,31 @@ export const OAUTH_STRATEGIES: OAuthStrategy[] = [
 		callback: xeroDatasourceCallback,
 		path: '/auth/xero/callback',
 		extra: {}
+	},
+	{
+		strategy: SlackStrategy,
+		secretKeys: {
+			clientId: 'NOTFOUND',
+			secret: 'NOTFOUND'
+		},
+		callback: slackDatasourceCallback,
+		path: '/auth/slack/callback',
+		extra: {
+
+		}
 	}
 	//need to add custom strategy for airtable
 	//google ads??
 ];
+
+export async function slackDatasourceCallback(accessToken, refreshToken, profile, done){
+	const slackCallbackLog = debug("webapp:oauth:datasourceOauth:slack:callback");
+	slackCallbackLog(`Got refreshToken ${refreshToken} from callback`);
+
+	profile.refreshToken = refreshToken;
+
+	done(null, profile);
+}
 
 export async function xeroDatasourceCallback(token, tokenSecret, profile, done) {
 	//token is what's used by airbyte
@@ -86,6 +108,8 @@ export async function xeroDatasourceCallback(token, tokenSecret, profile, done) 
 	xeroCallbackLog(`Got access token: ${token} from callback`);
 
 	profile.refreshToken = token; //even though this isn't necessarily a refreshToken it's the token we need to pass back to airbyte so keep it like this
+
+	done(null, profile);
 }
 
 export async function salesForceDatasourceCallback(accessToken, refreshToken, profile, done) {

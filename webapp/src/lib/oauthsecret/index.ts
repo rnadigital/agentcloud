@@ -2,17 +2,21 @@ export default class OauthSecretProviderFactory {
 	static getSecretProvider(provider: string = 'local') {
 		switch (provider) {
 			case 'hubspot':
-				let clientId = process.env.OAUTH_HUBSPOT_CLIENT_ID;
-				let clientSecret = process.env.OAUTH_HUBSPOT_CLIENT_SECRET;
+				let clientId = process.env.OAUTH_HUBSPOT_CLIENT_ID || "NOTFOUND";
+				let clientSecret = process.env.OAUTH_HUBSPOT_CLIENT_SECRET || "NOTFOUND";
 				return { clientId, clientSecret };
 			case 'salesforce':
-				clientId = process.env.OAUTH_SALESFORCE_CLIENT_ID;
-				clientSecret = process.env.OAUTH_SALESFORCE_CLIENT_SECRET;
+				clientId = process.env.OAUTH_SALESFORCE_CLIENT_ID || "NOTFOUND";
+				clientSecret = process.env.OAUTH_SALESFORCE_CLIENT_SECRET || "NOTFOUND";
 				return { clientId, clientSecret };
 			case 'xero':
-				clientId = process.env.OAUTH_XERO_CLIENT_ID;
-				clientSecret = process.env.OAUTH_XERO_CLIENT_SECRET;
+				clientId = process.env.OAUTH_XERO_CLIENT_ID || "NOTFOUND";
+				clientSecret = process.env.OAUTH_XERO_CLIENT_SECRET || "NOTFOUND";
 				return { clientId, clientSecret };
+			case 'slack':
+				clientId = process.env.OAUTH_SLACK_CLIENT_ID || "NOTFOUND";
+				clientSecret = process.env.OAUTH_SLACK_CLIENT_SECRET || "NOTFOUND";
+				return {clientId, clientSecret};
 		}
 	}
 
@@ -137,6 +141,12 @@ export default class OauthSecretProviderFactory {
 				clientId = OauthSecretProviderFactory.getSecretProvider('xero').clientId;
 				clientSecret = OauthSecretProviderFactory.getSecretProvider('xero').clientSecret;
 				data = {};
+			case 'slack':
+				clientId = OauthSecretProviderFactory.getSecretProvider('slack').clientId;
+				clientSecret = OauthSecretProviderFactory.getSecretProvider('slack').clientSecret;
+				data = {
+					
+				}
 		}
 	}
 }
