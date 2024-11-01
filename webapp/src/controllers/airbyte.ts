@@ -14,6 +14,7 @@ import {
 } from 'db/datasource';
 import { addNotification } from 'db/notification';
 import debug from 'debug';
+import * as airbyteSetup from 'lib/airbyte/setup';
 import posthog from 'lib/posthog';
 import { chainValidations } from 'lib/utils/validationutils';
 import toObjectId from 'misc/toobjectid';
@@ -338,4 +339,20 @@ export async function handleSuccessfulEmbeddingWebhook(req, res, next) {
 	}
 
 	return dynamicResponse(req, res, 200, {});
+}
+
+export async function checkAirbyteConnection(req, res, next) {
+	const status = await airbyteSetup.checkAirbyteStatus();
+
+	let isEnabled = process.env.NEXT_PUBLIC_IS_AIRBYTE_ENABLED === 'true';
+
+	if (status?.available && !isEnabled) {
+		isEnabled = await airbyteSetup.init();
+	}
+
+	if (!status?.available) {
+		process.env.NEXT_PUBLIC_IS_AIRBYTE_ENABLED = 'false';
+	}
+
+	return dynamicResponse(req, res, 201, { isEnabled });
 }

@@ -35,6 +35,7 @@ export default function Datasource(props) {
 	const router = useRouter();
 	const { resourceSlug, datasourceId } = router.query;
 	const [state, dispatch] = useState(props);
+	const [airbyteState, setAirbyteState] = useState(null);
 	const [jobsList, setJobsList] = useState(null);
 	const [tab, setTab] = useState(0);
 	const [schemaDiscoverState, setSchemaDiscoverState] = useState(null);
@@ -79,6 +80,7 @@ export default function Datasource(props) {
 			setError,
 			router
 		);
+		await API.checkAirbyteConnection({ resourceSlug }, setAirbyteState, setError, router);
 	}
 
 	async function fetchJobsList() {
@@ -264,7 +266,11 @@ export default function Datasource(props) {
 							</button>
 							<button
 								onClick={e => updateStreams(e, true)}
-								disabled={submitting['updateStreamssync'] || submitting['updateStreams']}
+								disabled={
+									submitting['updateStreamssync'] ||
+									submitting['updateStreams'] ||
+									!airbyteState?.isEnabled
+								}
 								type='submit'
 								className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 							>

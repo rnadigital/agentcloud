@@ -330,6 +330,7 @@ export default function router(server, app) {
 	teamRouter.get('/airbyte/specification', airbyteProxyController.specificationJson);
 	teamRouter.get('/airbyte/schema', airbyteProxyController.discoverSchemaApi);
 	teamRouter.get('/airbyte/jobs', airbyteProxyController.listJobsApi);
+	teamRouter.get('/airbyte/connection', airbyteProxyController.checkAirbyteConnection);
 
 	//sessions
 	teamRouter.get(
