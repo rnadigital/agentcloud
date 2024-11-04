@@ -92,29 +92,36 @@ pub struct UnstructuredChunkingConfig {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct DataSources {
-    pub _id: ObjectId,
-    pub orgId: ObjectId,
-    pub teamId: ObjectId,
-    pub modelId: Option<ObjectId>,
+    #[serde(rename = "_id")]
+    pub id: ObjectId,
+    pub org_id: ObjectId,
+    pub team_id: ObjectId,
+    pub model_id: Option<ObjectId>,
     pub name: String,
     pub description: Option<String>,
     pub filename: Option<String>,
-    pub originalName: String,
-    pub sourceType: String,
-    pub sourceId: Option<String>,
-    pub syncedCount: Option<i32>,
-    pub embeddedCount: Option<i32>,
-    pub destinationId: Option<String>,
-    pub workspaceId: Option<String>,
-    pub connectionId: Option<String>,
-    pub chunkingConfig: Option<UnstructuredChunkingConfig>,
-    pub lastSyncedDate: Option<DateTime>,
-    pub embeddingField: Option<String>,
-    pub timeWeightField: Option<String>,
-    pub createdDate: Option<DateTime>,
+    pub original_name: String,
+    pub source_type: String,
+    pub source_id: Option<String>,
+    pub synced_count: Option<i32>,
+    pub embedded_count: Option<i32>,
+    pub destination_id: Option<String>,
+    pub workspace_id: Option<String>,
+    pub connection_id: Option<String>,
+    #[serde(default)]
+    pub chunking_config: Option<UnstructuredChunkingConfig>,
+    pub last_synced_date: Option<DateTime>,
+    pub embedding_field: Option<String>,
+    pub time_weight_field: Option<String>,
+    pub created_date: Option<DateTime>,
     pub status: String,
-    pub streamConfig: Option<HashMap<String, StreamConfig>>,
+    #[serde(default)]
+    pub stream_config: Option<HashMap<String, StreamConfig>>,
+    pub discovered_schema: Option<bson::Document>,
+    #[serde(flatten)]
+    pub extra_fields: bson::Document,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -186,10 +193,12 @@ pub struct FieldDescription {
     pub description: String,
     #[serde(rename = "type")]
     pub field_type: String, // escaping `type` because it's a reserved keyword in Rust
+    #[serde(flatten)]
+    pub extra_fields: HashMap<String, Value>,
 }
 
 /// Type alias for a map of field descriptions
-pub type FieldDescriptionMap = HashMap<String, FieldDescription>;
+//pub type FieldDescriptionMap = bson::Document;
 
 /// Struct representing the configuration of a stream
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -198,7 +207,7 @@ pub struct StreamConfig {
     pub primaryKey: Vec<String>,
     pub syncMode: SyncMode,
     pub cursorField: Vec<String>,
-    pub descriptionsMap: FieldDescriptionMap,
+    pub descriptionsMap: bson::Document,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
