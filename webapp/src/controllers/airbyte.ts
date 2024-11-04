@@ -346,11 +346,11 @@ export async function checkAirbyteConnection(req, res, next) {
 
 	let isEnabled = process.env.NEXT_PUBLIC_IS_AIRBYTE_ENABLED === 'true';
 
-	if (status?.available && !isEnabled) {
+	if (status && !isEnabled) {
 		isEnabled = await airbyteSetup.init();
 	}
 
-	if (!status?.available) {
+	if (!status) {
 		process.env.NEXT_PUBLIC_IS_AIRBYTE_ENABLED = 'false';
 	}
 

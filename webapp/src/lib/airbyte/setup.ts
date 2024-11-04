@@ -86,12 +86,22 @@ async function deleteDestination(destinationId: string) {
 export async function checkAirbyteStatus() {
 	try {
 		const response = await fetch(`${process.env.AIRBYTE_API_URL}/api/v1/health`, {
+			method: 'GET'
+		});
+		if (response?.status !== 200) {
+			return false;
+		}
+		const workspaces = await fetch(`${process.env.AIRBYTE_API_URL}/api/v1/workspaces`, {
 			method: 'GET',
 			headers: {
-				Authorization: `Bearer ${await getAirbyteAuthToken()}`
+				accept: 'application/json',
+				authorization: `Bearer ${await getAirbyteAuthToken()}`
 			}
 		});
-		return response.json();
+		if (response?.status !== 200) {
+			return false;
+		}
+		return true;
 	} catch (error) {
 		console.log('error', error);
 	}
