@@ -17,8 +17,8 @@ import { Strategy as SalesforceStrategy } from 'passport-forcedotcom';
 import { Strategy as GitHubStrategy } from 'passport-github';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { Strategy as HubspotStrategy } from 'passport-hubspot-oauth2';
-import { Strategy as XeroStrategy } from 'passport-xero';
 import { Strategy as SlackStrategy } from 'passport-slack';
+import { Strategy as XeroStrategy } from 'passport-xero';
 // import { Strategy as StripeStrategy } from 'passport-stripe';
 
 export const OAUTH_STRATEGIES: OAuthStrategy[] = [
@@ -65,10 +65,7 @@ export const OAUTH_STRATEGIES: OAuthStrategy[] = [
 		path: '/auth/salesforce/callback',
 		extra: {
 			// for salesforce specifically scopes need to go here
-			scope: [
-				'full',
-				'refresh_token'
-			]
+			scope: ['full', 'refresh_token']
 		}
 	},
 	{
@@ -92,16 +89,14 @@ export const OAUTH_STRATEGIES: OAuthStrategy[] = [
 		},
 		callback: slackDatasourceCallback,
 		path: '/auth/slack/callback',
-		extra: {
-
-		}
+		extra: {}
 	}
 	//need to add custom strategy for airtable
 	//google ads??
 ];
 
-export async function slackDatasourceCallback(accessToken, refreshToken, profile, done){
-	const slackCallbackLog = debug("webapp:oauth:datasourceOauth:slack:callback");
+export async function slackDatasourceCallback(accessToken, refreshToken, profile, done) {
+	const slackCallbackLog = debug('webapp:oauth:datasourceOauth:slack:callback');
 	slackCallbackLog(`Got refreshToken ${refreshToken} from callback`);
 
 	profile.refreshToken = refreshToken;
@@ -112,7 +107,9 @@ export async function slackDatasourceCallback(accessToken, refreshToken, profile
 export async function xeroDatasourceCallback(token, tokenSecret, profile, done) {
 	//token is what's used by airbyte
 	const xeroCallbackLog = debug('webapp:oauth:datasourceOauth:xero:callback');
-	xeroCallbackLog(`Got access token: ${token} from callback\nAlso got tokenSecret: ${tokenSecret} (Maybe refreshToken?) from callback`);
+	xeroCallbackLog(
+		`Got access token: ${token} from callback\nAlso got tokenSecret: ${tokenSecret} (Maybe refreshToken?) from callback`
+	);
 
 	profile.refreshToken = token; //even though this isn't necessarily a refreshToken it's the token we need to pass back to airbyte so keep it like this
 
