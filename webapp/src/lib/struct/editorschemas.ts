@@ -135,6 +135,12 @@ export const StructuredOutputSchema = {
 						}
 					]
 				}
+			},
+			variables: {
+				type: 'array',
+				items: {
+					type: 'string'
+				}
 			}
 		}
 	}
