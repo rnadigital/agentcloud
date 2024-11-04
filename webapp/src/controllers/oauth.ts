@@ -58,30 +58,37 @@ export const OAUTH_STRATEGIES: OAuthStrategy[] = [
 	{
 		strategy: SalesforceStrategy,
 		secretKeys: {
-			clientId: 'NOTFOUND',
-			secret: 'NOTFOUND'
+			clientId: SecretKeys.OAUTH_SALESFORCE_CLIENT_ID,
+			secret: SecretKeys.OAUTH_SALESFORCE_CLIENT_SECRET
 		},
 		callback: salesForceDatasourceCallback,
 		path: '/auth/salesforce/callback',
 		extra: {
 			// for salesforce specifically scopes need to go here
+			scope: [
+				'full',
+				'refresh_token'
+			]
 		}
 	},
 	{
 		strategy: XeroStrategy,
 		secretKeys: {
-			clientId: 'NOTFOUND',
-			secret: 'NOTFOUND'
+			clientId: SecretKeys.OAUTH_XERO_CLIENT_ID,
+			secret: SecretKeys.OAUTH_XERO_CLIENT_SECRET
 		},
 		callback: xeroDatasourceCallback,
 		path: '/auth/xero/callback',
-		extra: {}
+		extra: {
+			consumerKey: SecretKeys.OAUTH_XERO_CLIENT_ID,
+			consumerSecret: SecretKeys.OAUTH_XERO_CLIENT_SECRET //xero has a different name for the clientId and clientSecret
+		}
 	},
 	{
 		strategy: SlackStrategy,
 		secretKeys: {
-			clientId: 'NOTFOUND',
-			secret: 'NOTFOUND'
+			clientId: SecretKeys.OAUTH_SLACK_CLIENT_ID,
+			secret: SecretKeys.OAUTH_SLACK_CLIENT_SECRET
 		},
 		callback: slackDatasourceCallback,
 		path: '/auth/slack/callback',
@@ -105,7 +112,7 @@ export async function slackDatasourceCallback(accessToken, refreshToken, profile
 export async function xeroDatasourceCallback(token, tokenSecret, profile, done) {
 	//token is what's used by airbyte
 	const xeroCallbackLog = debug('webapp:oauth:datasourceOauth:xero:callback');
-	xeroCallbackLog(`Got access token: ${token} from callback`);
+	xeroCallbackLog(`Got access token: ${token} from callback\nAlso got tokenSecret: ${tokenSecret} (Maybe refreshToken?) from callback`);
 
 	profile.refreshToken = token; //even though this isn't necessarily a refreshToken it's the token we need to pass back to airbyte so keep it like this
 
@@ -123,9 +130,7 @@ export async function salesForceDatasourceCallback(accessToken, refreshToken, pr
 }
 
 export async function hubspotDatasourceCallback(accessToken, refreshToken, profile, done) {
-	console.log(`Hubspot datasource callback with accessToken: `, accessToken);
 	console.log(`Hubspot datasource callback with refreshToken: ${refreshToken}`);
-	console.log(`Hubspot Datasource callback with profile: ${JSON.stringify(profile, null, '\t')}`);
 	//create the datasouce here, call done
 
 	profile.refreshToken = refreshToken;

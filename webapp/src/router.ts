@@ -140,7 +140,49 @@ export default function router(server, app) {
 			res.redirect(`/${res.locals.account.currentTeam}/datasource/add?token=${encodeURIComponent(res.locals.datasourceOAuth.refreshToken)}&provider=${encodeURIComponent(res.locals.datasourceOAuth.provider)}&datasourceName=${encodeURIComponent(datasourceName)}&datasourceDescription=${encodeURIComponent(datasourceDescription)}`);
 		}
 	);
-	
+	oauthRouter.get(
+		'/salesforce',
+		fetchDatasource,
+		passportInstance.authenticate('forcedotcom'),
+		fetchSession
+	);
+	oauthRouter.get(
+		'/salesforce/callback',
+		useSession,
+		useJWT,
+		fetchSession,
+		passportInstance.authenticate('forcedotcom'),
+		(req, res) => {
+			const log = debug('webapp:router:salesforce:callback');
+			const datasourceName = res.locals.oauthData.datasourceName || 'NOTFOUND';
+			const datasourceDescription = res.locals.oauthData.datasourceDescription || 'NOTFOUND';
+			log(`Recieved query params \ndatasourceName: ${datasourceName}\ndatasourceDescription: ${datasourceDescription}`);
+
+			res.redirect(`/${res.locals.account.currentTeam}/datasource/add?token=${encodeURIComponent(res.locals.datasourceOAuth.refreshToken)}&provider=${encodeURIComponent(res.locals.datasourceOAuth.provider)}&datasourceName=${encodeURIComponent(datasourceName)}&datasourceDescription=${encodeURIComponent(datasourceDescription)}`)
+		}
+	);
+	oauthRouter.get(
+		'/xero',
+		fetchDatasource,
+		passportInstance.authenticate('xero'),
+		fetchSession
+	);
+	oauthRouter.get(
+		'/xero/callback',
+		useSession,
+		useJWT,
+		fetchSession,
+		passportInstance.authenticate('xero'),
+		(req, res) => {
+			const log = debug('webapp:router:salesforce:callback');
+			const datasourceName = res.locals.oauthData.datasourceName || 'NOTFOUND';
+			const datasourceDescription = res.locals.oauthData.datasourceDescription || 'NOTFOUND';
+			log(`Recieved query params \ndatasourceName: ${datasourceName}\ndatasourceDescription: ${datasourceDescription}`);
+
+			res.redirect(`/${res.locals.account.currentTeam}/datasource/add?token=${encodeURIComponent(res.locals.datasourceOAuth.refreshToken)}&provider=${encodeURIComponent(res.locals.datasourceOAuth.provider)}&datasourceName=${encodeURIComponent(datasourceName)}&datasourceDescription=${encodeURIComponent(datasourceDescription)}`)
+		}
+	)
+
 	server.use('/auth', useSession, passportInstance.session(), oauthRouter);
 
 	// Body and query parsing middleware
