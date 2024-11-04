@@ -210,15 +210,18 @@ pub async fn get_team_datasources(db: &Database, team_id: &str) -> Result<Vec<Da
     Ok(list_of_datasources)
 }
 
-pub async fn get_vector_db_details(db: &Database, id: ObjectId) -> Result<Option<VectorDb>> {
+pub async fn get_vector_db_details(
+    db: &Database,
+    vector_db_id: ObjectId,
+) -> Result<Option<VectorDb>> {
     let vector_db_collections = db.collection::<VectorDb>("vectordb");
-    let filter = doc! {"_id": id};
+    let filter = doc! {"_id": vector_db_id};
     match vector_db_collections.find_one(filter, None).await {
         Ok(vector_db) => Ok(vector_db),
         Err(e) => Err(anyhow!(
             "Encountered an error when retrieving vector DB : {}. \
             Error: {}",
-            id.to_string(),
+            vector_db_id.to_string(),
             e
         )),
     }
