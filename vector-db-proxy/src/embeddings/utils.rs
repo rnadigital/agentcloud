@@ -1,11 +1,12 @@
 use crate::adaptors::mongo::models::{DataSources, Model};
-use crate::adaptors::mongo::queries::{get_vector_db_details, increment_by_one};
+use crate::adaptors::mongo::queries::increment_by_one;
 use crate::data::unstructuredio::models::UnstructuredIOResponse;
 use crate::embeddings::helpers::clean_text;
 use crate::embeddings::models::{EmbeddingModels, FastEmbedModels};
 use crate::init::env_variables::GLOBAL_DATA;
+use crate::vector_databases::helpers::check_byo_vector;
 use crate::vector_databases::models::{Point, SearchRequest, SearchType, VectorDatabaseStatus};
-use crate::vector_databases::vector_database::{build_vector_db_client, VectorDatabase};
+use crate::vector_databases::vector_database::VectorDatabase;
 use anyhow::{anyhow, Result};
 use async_openai::config::OpenAIConfig;
 use async_openai::types::CreateEmbeddingRequestArgs;
@@ -258,26 +259,14 @@ pub async fn embed_bulk_insert_unstructured_response(
                     );
                     points_to_upload.push(point)
                 }
-                if datasource.vector_db_id.is_some() {
-                    println!("There's a BYO vector DB associated with this Datasource.");
-                    println!("Updating vector DB credentials with BYO creds...");
-                    let vector_db_option_config =
-                        get_vector_db_details(&mongo_connection, datasource.vector_db_id.unwrap())
-                            .await
-                            .unwrap();
-                    if let Some(vector_db) = vector_db_option_config {
-                        let vector_database_trait = build_vector_db_client(
-                            vector_db.r#type.to_string(),
-                            vector_db.url,
-                            vector_db.apiKey,
-                        )
-                        .await;
-
-                        vector_database_client = vector_database_trait;
-                    };
-                };
                 //TODO: Need to check if this will take up a lot of memory or not?
                 // How can we re-use these clients rather than creating a new one each time?
+                vector_database_client = check_byo_vector(
+                    vector_database_client,
+                    datasource.clone(),
+                    &mongo_connection,
+                )
+                .await;
 
                 // Initialise vector database client
                 let vector_database = Arc::clone(&vector_database_client);
