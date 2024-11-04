@@ -71,6 +71,8 @@ pub trait VectorDatabase: Send + Sync {
         &self,
         search_request: SearchRequest,
     ) -> Result<Vec<SearchResult>, VectorDatabaseError>;
+
+    async fn display_config(&self);
 }
 // Factory method to build Vector database client based on
 pub async fn build_vector_db_client(
@@ -78,6 +80,7 @@ pub async fn build_vector_db_client(
     url: Option<String>,
     api_key: Option<String>,
 ) -> Arc<RwLock<dyn VectorDatabase>> {
+    println!("Building NEW {} vector client", vector_db);
     let vector_database_client: Arc<RwLock<dyn VectorDatabase>> = match vector_db.as_str() {
         "qdrant" => {
             println!("Using Qdrant Vector Database");

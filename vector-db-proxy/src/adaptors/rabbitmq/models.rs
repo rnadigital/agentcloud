@@ -118,13 +118,7 @@ pub async fn rabbit_consume(
                     "There was an error when consuming messages from rabbitMQ. Error: {}",
                     e
                 );
-                break; // Break out of the loop to reconnect
             }
         }
     }
-    // todo: need to implement reconnection logic
-    // // Reconnect on error
-    // self.connect(MessageQueueProvider::RABBITMQ).await;
-    // // Sleep before retrying to avoid tight loop in case of persistent issues
-    // tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
 }

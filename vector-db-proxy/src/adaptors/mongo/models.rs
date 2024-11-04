@@ -220,26 +220,31 @@ pub struct EmbeddingConfig {
     pub chunking_strategy: Option<UnstructuredChunkingConfig>,
 }
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
-pub struct VectorDb {
+#[derive(Debug, Clone, Serialize, Deserialize)]
+//#[serde(deny_unknown_fields)]
+pub struct VectorDbs {
+    pub _id: ObjectId,
     pub orgId: ObjectId,
     pub teamId: ObjectId,
     pub apiKey: Option<String>,
     pub url: Option<String>,
     pub r#type: VectorDatabaseType,
+    pub name: String,
+    pub createdAt: DateTime,
+    pub updatedAt: DateTime,
 }
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub enum VectorDatabaseType {
-    Pinecone,
+    pinecone,
     #[default]
-    Qdrant,
+    qdrant,
 }
 
 impl Display for VectorDatabaseType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let str = match self {
-            VectorDatabaseType::Pinecone => "pinecone".to_string(),
-            VectorDatabaseType::Qdrant => "qdrant".to_string(),
+            VectorDatabaseType::pinecone => "pinecone".to_string(),
+            VectorDatabaseType::qdrant => "qdrant".to_string(),
         };
         write!(f, "{}", str)
     }

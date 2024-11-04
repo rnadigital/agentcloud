@@ -1,4 +1,4 @@
-use crate::adaptors::mongo::models::{DataSources, EmbeddingConfig, Model, VectorDb};
+use crate::adaptors::mongo::models::{DataSources, EmbeddingConfig, Model, VectorDbs};
 use anyhow::{anyhow, Result};
 use futures_util::StreamExt;
 use mongodb::bson::doc;
@@ -210,19 +210,22 @@ pub async fn get_team_datasources(db: &Database, team_id: &str) -> Result<Vec<Da
     Ok(list_of_datasources)
 }
 
-pub async fn get_vector_db_details(
-    db: &Database,
-    vector_db_id: ObjectId,
-) -> Result<Option<VectorDb>> {
-    let vector_db_collections = db.collection::<VectorDb>("vectordb");
+pub async fn get_vector_db_details(db: &Database, vector_db_id: ObjectId) -> Option<VectorDbs> {
+    let vector_db_collections = db.collection::<VectorDbs>("vectordbs");
     let filter = doc! {"_id": vector_db_id};
     match vector_db_collections.find_one(filter, None).await {
-        Ok(vector_db) => Ok(vector_db),
-        Err(e) => Err(anyhow!(
-            "Encountered an error when retrieving vector DB : {}. \
-            Error: {}",
-            vector_db_id.to_string(),
-            e
-        )),
+        Ok(vector_db) => {
+            if let Some(db) = vector_db {
+                println!("Vector DB model returned: {:?}", db);
+                Some(db)
+            } else {
+                println!("Returned None....");
+                None
+            }
+        }
+        Err(e) => {
+            println!("There was an error: {}", e);
+            None
+        }
     }
 }

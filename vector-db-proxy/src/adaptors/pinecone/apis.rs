@@ -117,17 +117,24 @@ impl VectorDatabase for PineconeClient {
         let namespace = search_request.clone().collection;
         match get_index_model(&self, Region::to_str(region).to_string()).await {
             Ok(index_model) => {
+                println!("Sending to Pinecone index: {:?}", index_model);
                 let index = self.index(index_model.host.as_str()).await.unwrap();
                 match search_request.search_type {
                     SearchType::ChunkedRow => match &self.delete_point(search_request).await {
                         Ok(_) => match upsert(index, &[vector], &namespace.into()).await {
-                            Ok(_) => Ok(VectorDatabaseStatus::Ok),
+                            Ok(_) => {
+                                println!("Upsert Successful");
+                                Ok(VectorDatabaseStatus::Ok)
+                            }
                             Err(e) => Err(e),
                         },
                         Err(e) => Err(e.to_owned()),
                     },
                     _ => match upsert(index, &[vector], &namespace.into()).await {
-                        Ok(_) => Ok(VectorDatabaseStatus::Ok),
+                        Ok(_) => {
+                            println!("Upsert Successful");
+                            Ok(VectorDatabaseStatus::Ok)
+                        }
                         Err(e) => Err(e),
                     },
                 }
@@ -333,5 +340,13 @@ impl VectorDatabase for PineconeClient {
             };
         }
         Ok(vec![])
+    }
+
+    async fn display_config(&self) {
+        let list_of_index = &self.list_indexes().await.unwrap();
+        println!(
+            "Pinecone Host: {}",
+            list_of_index.clone().indexes.unwrap()[0].host
+        );
     }
 }

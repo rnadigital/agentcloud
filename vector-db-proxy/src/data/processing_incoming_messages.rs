@@ -134,6 +134,7 @@ async fn handle_embedding(
     {
         Ok(point) => match point {
             Some(p) => {
+                vector_database_client.read().await.display_config().await;
                 match vector_database_client
                     .read()
                     .await

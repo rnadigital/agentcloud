@@ -108,21 +108,25 @@ pub async fn check_byo_vector_database(
     if let Some(vector_db_id) = datasource.vector_db_id {
         println!("There's a BYO vector DB associated with this Datasource.");
         println!("Updating vector DB credentials with BYO creds...");
-        if let Ok(vector_db_option_config) = get_vector_db_details(&mongo, vector_db_id).await {
-            if let Some(vector_db) = vector_db_option_config {
-                let byo_vector_database_client = build_vector_db_client(
-                    vector_db.r#type.to_string(),
-                    vector_db.url,
-                    vector_db.apiKey,
-                )
-                .await;
-                vector_database_client = byo_vector_database_client
-            } else {
-                println!(
-                    "The vector DB ID: {} did not yield any valid documents",
-                    vector_db_id
-                );
-            }
+        if let Some(vector_db) = get_vector_db_details(&mongo, vector_db_id).await {
+            println!("Got something back from mongo");
+            //if let Some(vector_db) = vector_db_option_config {
+            //    println!("Vector DB doc: {:?}", vector_db);
+            let byo_vector_database_client = build_vector_db_client(
+                vector_db.r#type.to_string(),
+                vector_db.url,
+                vector_db.apiKey,
+            )
+            .await;
+            vector_database_client = byo_vector_database_client
+            //} else {
+            //    println!(
+            //        "The vector DB ID: {} did not yield any valid documents",
+            //        vector_db_id
+            //    );
+            //}
+        } else {
+            println!("Something is a foot!")
         }
     } else {
         println!(
