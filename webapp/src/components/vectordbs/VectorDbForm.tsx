@@ -161,7 +161,7 @@ export default function VectorDbForm({
 						<input
 							id='defaultValue'
 							type='text'
-							{...register('url', { required: true })}
+							{...register('url')}
 							className={`block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white ${errors.apiKey ? 'border-red-500' : ''}`}
 						/>
 						{errors.apiKey && <span className='text-red-500'>This field is required</span>}

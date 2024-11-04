@@ -717,7 +717,6 @@ export default function CreateDatasourceForm({
 											<div>
 												<input
 													disabled={!byoVectorDb}
-													required
 													type='text'
 													name='namespace'
 													id='namespace'
