@@ -7,7 +7,7 @@ use crate::data::unstructuredio::apis::chunk_text;
 use crate::embeddings::helpers::clean_text;
 use crate::embeddings::utils::{embed_bulk_insert_unstructured_response, embed_text};
 use crate::init::env_variables::GLOBAL_DATA;
-use crate::vector_databases::helpers::check_byo_vector;
+use crate::vector_databases::helpers::check_byo_vector_database;
 use crate::vector_databases::models::{Point, SearchRequest, SearchType, VectorDatabaseStatus};
 use crate::vector_databases::vector_database::VectorDatabase;
 use anyhow::anyhow;
@@ -115,7 +115,7 @@ async fn handle_embedding(
     let field_path = "recordCount.failure";
     let mongo = mongo_connection_clone.read().await;
     vector_database_client =
-        check_byo_vector(vector_database_client, datasource.clone(), &mongo).await;
+        check_byo_vector_database(vector_database_client, datasource.clone(), &mongo).await;
     let search_type = chunking_strategy
         .clone()
         .map_or(SearchType::default(), |_| SearchType::ChunkedRow);

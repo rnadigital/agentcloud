@@ -100,7 +100,7 @@ fn serde_to_prost(serde_value: &Value) -> ProstValue {
     ProstValue { kind }
 }
 
-pub async fn check_byo_vector(
+pub async fn check_byo_vector_database(
     mut vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
     datasource: DataSources,
     mongo: &Database,
@@ -108,20 +108,19 @@ pub async fn check_byo_vector(
     if datasource.vector_db_id.is_some() {
         println!("There's a BYO vector DB associated with this Datasource.");
         println!("Updating vector DB credentials with BYO creds...");
-        let vector_db_option_config =
-            get_vector_db_details(&mongo, datasource.vector_db_id.unwrap())
-                .await
-                .unwrap();
-        if let Some(vector_db) = vector_db_option_config {
-            let vector_database_trait = build_vector_db_client(
-                vector_db.r#type.to_string(),
-                vector_db.url,
-                vector_db.apiKey,
-            )
-            .await;
-
-            vector_database_client = vector_database_trait
-        };
+        if let Ok(vector_db_option_config) =
+            get_vector_db_details(&mongo, datasource.vector_db_id.unwrap()).await
+        {
+            if let Some(vector_db) = vector_db_option_config {
+                let byo_vector_database_client = build_vector_db_client(
+                    vector_db.r#type.to_string(),
+                    vector_db.url,
+                    vector_db.apiKey,
+                )
+                .await;
+                vector_database_client = byo_vector_database_client
+            };
+        }
     };
     vector_database_client
 }
