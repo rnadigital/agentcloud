@@ -105,12 +105,10 @@ pub async fn check_byo_vector_database(
     datasource: DataSources,
     mongo: &Database,
 ) -> Arc<RwLock<dyn VectorDatabase>> {
-    if datasource.vector_db_id.is_some() {
+    if let Some(vector_db_id) = datasource.vector_db_id {
         println!("There's a BYO vector DB associated with this Datasource.");
         println!("Updating vector DB credentials with BYO creds...");
-        if let Ok(vector_db_option_config) =
-            get_vector_db_details(&mongo, datasource.vector_db_id.unwrap()).await
-        {
+        if let Ok(vector_db_option_config) = get_vector_db_details(&mongo, vector_db_id).await {
             if let Some(vector_db) = vector_db_option_config {
                 let byo_vector_database_client = build_vector_db_client(
                     vector_db.r#type.to_string(),
