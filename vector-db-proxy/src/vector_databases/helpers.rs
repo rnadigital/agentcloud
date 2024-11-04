@@ -117,8 +117,18 @@ pub async fn check_byo_vector_database(
                 )
                 .await;
                 vector_database_client = byo_vector_database_client
-            };
+            } else {
+                println!(
+                    "The vector DB ID: {} did not yield any valid documents",
+                    vector_db_id
+                );
+            }
         }
-    };
+    } else {
+        println!(
+            "There was no vector DB ID associated with the datasource: {}",
+            datasource.id
+        );
+    }
     vector_database_client
 }
