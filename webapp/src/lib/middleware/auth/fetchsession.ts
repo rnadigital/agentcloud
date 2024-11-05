@@ -47,7 +47,7 @@ export default async function fetchSession(req, res, next) {
 			if (req.session.oauthData) {
 				const { datasourceName, datasourceDescription } = req.session.oauthData;
 				res.locals.oauthData = { datasourceName, datasourceDescription };
-				log('Retrieved oauthData from session:', res.locals.oauthData);
+				// log('Retrieved oauthData from session:', res.locals.oauthData);
 			}
 
 			return next();

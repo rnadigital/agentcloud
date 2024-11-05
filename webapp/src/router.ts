@@ -130,7 +130,7 @@ export default function router(server, app) {
 		useSession,
 		useJWT,
 		fetchSession,
-		passportInstance.authenticate('hubspot'),
+		// passportInstance.authenticate('hubspot'),
 		(req, res) => {
 			const log = debug('webapp:oauth:hubspot:callback');
 			const datasourceName = res.locals.oauthData.datasourceName || 'NOTFOUND';
@@ -151,7 +151,7 @@ export default function router(server, app) {
 		useSession,
 		useJWT,
 		fetchSession,
-		passportInstance.authenticate('forcedotcom'),
+		// passportInstance.authenticate('forcedotcom'), don't need to call verify function
 		(req, res) => {
 			const log = debug('webapp:router:salesforce:callback');
 			const datasourceName = res.locals.oauthData.datasourceName || 'NOTFOUND';
@@ -172,7 +172,7 @@ export default function router(server, app) {
 		useSession,
 		useJWT,
 		fetchSession,
-		passportInstance.authenticate('xero'),
+		// passportInstance.authenticate('xero'),
 		(req, res) => {
 			const log = debug('webapp:router:salesforce:callback');
 			const datasourceName = res.locals.oauthData.datasourceName || 'NOTFOUND';
