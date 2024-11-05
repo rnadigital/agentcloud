@@ -9,7 +9,7 @@ use crate::embeddings::utils::{embed_bulk_insert_unstructured_response, embed_te
 use crate::init::env_variables::GLOBAL_DATA;
 use crate::vector_databases::helpers::check_byo_vector_database;
 use crate::vector_databases::models::{Point, SearchRequest, SearchType, VectorDatabaseStatus};
-use crate::vector_databases::vector_database::VectorDatabase;
+use crate::vector_databases::vector_database::default_vector_db_client;
 use anyhow::anyhow;
 use crossbeam::channel::Receiver;
 use mongodb::Database;
@@ -21,7 +21,7 @@ use tokio::sync::RwLock;
 
 pub async fn embed_text_construct_point(
     mongo_conn: Arc<RwLock<Database>>,
-    vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
+    //vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
     data: &HashMap<String, Value>,
     embedding_field_name: &String,
     datasource: Option<DataSources>,
@@ -58,7 +58,7 @@ pub async fn embed_text_construct_point(
                             embed_bulk_insert_unstructured_response(
                                 documents,
                                 ds,
-                                vector_database_client.clone(),
+                                //vector_database_client.clone(),
                                 mongo_conn.clone(),
                                 embedding_model,
                                 Some(payload),
@@ -103,7 +103,7 @@ pub async fn embed_text_construct_point(
 
 async fn handle_embedding(
     mongo_connection: Arc<RwLock<Database>>,
-    mut vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
+    //mut vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
     metadata: HashMap<String, Value>,
     embedding_field_name: String,
     datasource: DataSources,
@@ -114,15 +114,24 @@ async fn handle_embedding(
     let metadata = metadata.clone();
     let field_path = "recordCount.failure";
     let mongo = mongo_connection_clone.read().await;
-    vector_database_client =
-        check_byo_vector_database(vector_database_client, datasource.clone(), &mongo).await;
+    let vector_database_client = check_byo_vector_database(datasource.clone(), &mongo)
+        .await
+        .unwrap_or(default_vector_db_client().await);
     let search_type = chunking_strategy
         .clone()
         .map_or(SearchType::default(), |_| SearchType::ChunkedRow);
-    let search_request = SearchRequest::new(search_type.clone(), datasource.id.to_string().clone());
+    let mut search_request =
+        SearchRequest::new(search_type.clone(), datasource.id.to_string().clone());
+    //TODO: add vars to search request
+    search_request.byo_vector_db = Some(true);
+    search_request.collection = datasource
+        .clone()
+        .collection_name
+        .map_or(datasource.id.to_string(), |d| d);
+    search_request.namespace = datasource.namespace.clone();
     match embed_text_construct_point(
         mongo_connection.clone(),
-        vector_database_client.clone(),
+        //vector_database_client.clone(),
         &metadata,
         &embedding_field_name,
         Some(datasource.clone()),
@@ -173,11 +182,12 @@ async fn handle_embedding(
             );
         }
     }
+    drop(vector_database_client)
 }
 
 pub async fn process_incoming_messages(
     receiver: Receiver<(DataSources, Option<String>, String)>,
-    vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
+    //vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
     mongo_conn: Arc<RwLock<Database>>,
 ) {
     let mongo_connection = Arc::clone(&mongo_conn);
@@ -228,11 +238,9 @@ pub async fn process_incoming_messages(
 
                                 if let Some(embedding_field_name) = embedding_config.embedding_key {
                                     let mongo_connection_clone = Arc::clone(&mongo_connection);
-                                    let vector_database = Arc::clone(&vector_database_client);
                                     let embed_text_worker = tokio::spawn(async move {
                                         let _ = handle_embedding(
                                             mongo_connection_clone,
-                                            vector_database,
                                             metadata,
                                             embedding_field_name,
                                             datasource.clone(),

@@ -118,6 +118,9 @@ pub struct DataSources {
     pub time_weight_field: Option<String>,
     pub created_date: Option<DateTime>,
     pub status: String,
+    pub byo_vector_db: Option<bool>,
+    pub collection_name: Option<String>,
+    pub namespace: Option<String>,
     #[serde(default)]
     pub stream_config: Option<HashMap<String, StreamConfig>>,
     pub discovered_schema: Option<bson::Document>,
@@ -238,6 +241,16 @@ pub enum VectorDatabaseType {
     pinecone,
     #[default]
     qdrant,
+    unknown,
+}
+impl From<String> for VectorDatabaseType {
+    fn from(value: String) -> Self {
+        match value.as_str() {
+            "qdrant" => VectorDatabaseType::qdrant,
+            "pinecone" => VectorDatabaseType::pinecone,
+            _ => VectorDatabaseType::unknown,
+        }
+    }
 }
 
 impl Display for VectorDatabaseType {
@@ -245,6 +258,7 @@ impl Display for VectorDatabaseType {
         let str = match self {
             VectorDatabaseType::pinecone => "pinecone".to_string(),
             VectorDatabaseType::qdrant => "qdrant".to_string(),
+            _ => "Unknown".to_string(),
         };
         write!(f, "{}", str)
     }

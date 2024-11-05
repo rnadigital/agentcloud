@@ -216,7 +216,6 @@ pub async fn get_vector_db_details(db: &Database, vector_db_id: ObjectId) -> Opt
     match vector_db_collections.find_one(filter, None).await {
         Ok(vector_db) => {
             if let Some(db) = vector_db {
-                println!("Vector DB model returned: {:?}", db);
                 Some(db)
             } else {
                 println!("Returned None....");

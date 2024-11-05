@@ -11,7 +11,6 @@ use crate::utils::file_operations;
 use crate::utils::file_operations::determine_file_type;
 use crate::utils::webhook::send_webapp_embed_ready;
 use crate::vector_databases::models::SearchType;
-use crate::vector_databases::vector_database::VectorDatabase;
 use crossbeam::channel::Sender;
 use mongodb::Database;
 use serde_json::Value;
@@ -53,7 +52,7 @@ pub async fn process_message(
     stream_type: Option<String>,
     datasource_id: &str,
     stream_config_key: Option<String>,
-    vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
+    //vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
     mongo_client: Arc<RwLock<Database>>,
     sender: Sender<(DataSources, Option<String>, String)>,
 ) {
@@ -102,7 +101,7 @@ pub async fn process_message(
                                             embed_bulk_insert_unstructured_response(
                                                 documents,
                                                 ds,
-                                                vector_database_client.clone(),
+                                                //vector_database_client.clone(),
                                                 mongo_client.clone(),
                                                 model_obj_clone,
                                                 None,

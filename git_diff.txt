@@ -1,0 +1,1383 @@
+[1mdiff --git a/vector-db-proxy/src/adaptors/gcp/models.rs b/vector-db-proxy/src/adaptors/gcp/models.rs[m
+[1mindex 2d754558..1c36bcd4 100644[m
+[1m--- a/vector-db-proxy/src/adaptors/gcp/models.rs[m
+[1m+++ b/vector-db-proxy/src/adaptors/gcp/models.rs[m
+[36m@@ -3,7 +3,6 @@[m [muse crate::adaptors::mongo::models::DataSources;[m
+ use crate::init::env_variables::GLOBAL_DATA;[m
+ use crate::messages::models::{MessageQueueConnection, QueueConnectionTypes};[m
+ use crate::messages::tasks::process_message;[m
+[31m-use crate::vector_databases::vector_database::VectorDatabase;[m
+ use crossbeam::channel::Sender;[m
+ use futures::StreamExt;[m
+ use google_cloud_pubsub::subscription::MessageStream;[m
+[36m@@ -42,7 +41,7 @@[m [mimpl MessageQueueConnection for PubSubConnect {[m
+ [m
+ pub async fn pubsub_consume([m
+     stream: &Arc<Mutex<MessageStream>>,[m
+[31m-    vector_database_client: Arc<RwLock<dyn VectorDatabase>>,[m
+[32m+[m[32m    //vector_database_client: Arc<RwLock<dyn VectorDatabase>>,[m
+     mongo_client: Arc<RwLock<Database>>,[m
+     sender: Sender<(DataSources, Option<String>, String)>,[m
+ ) {[m
+[36m@@ -71,7 +70,7 @@[m [mpub async fn pubsub_consume([m
+                                     (datasource_id, Some(stream_config_key.to_string()), None)[m
+                                 }[m
+                             };[m
+[31m-                        let qdrant_client = Arc::clone(&vector_database_client);[m
+[32m+[m[32m                        //let qdrant_client = Arc::clone(&vector_database_client);[m
+                         let mongo_client = Arc::clone(&mongo_client);[m
+                         let sender = sender.clone();[m
+                         println!("Datasource ID: {}", datasource_id);[m
+[36m@@ -80,7 +79,7 @@[m [mpub async fn pubsub_consume([m
+                             stream_type,[m
+                             datasource_id,[m
+                             stream_config_key,[m
+[31m-                            qdrant_client,[m
+[32m+[m[32m                            //qdrant_client,[m
+                             mongo_client,[m
+                             sender,[m
+                         )[m
+[1mdiff --git a/vector-db-proxy/src/adaptors/mongo/models.rs b/vector-db-proxy/src/adaptors/mongo/models.rs[m
+[1mindex 232563e0..0e0a69c8 100644[m
+[1m--- a/vector-db-proxy/src/adaptors/mongo/models.rs[m
+[1m+++ b/vector-db-proxy/src/adaptors/mongo/models.rs[m
+[36m@@ -118,6 +118,9 @@[m [mpub struct DataSources {[m
+     pub time_weight_field: Option<String>,[m
+     pub created_date: Option<DateTime>,[m
+     pub status: String,[m
+[32m+[m[32m    pub byo_vector_db: Option<bool>,[m
+[32m+[m[32m    pub collection_name: Option<String>,[m
+[32m+[m[32m    pub namespace: Option<String>,[m
+     #[serde(default)][m
+     pub stream_config: Option<HashMap<String, StreamConfig>>,[m
+     pub discovered_schema: Option<bson::Document>,[m
+[36m@@ -238,6 +241,16 @@[m [mpub enum VectorDatabaseType {[m
+     pinecone,[m
+     #[default][m
+     qdrant,[m
+[32m+[m[32m    unknown,[m
+[32m+[m[32m}[m
+[32m+[m[32mimpl From<String> for VectorDatabaseType {[m
+[32m+[m[32m    fn from(value: String) -> Self {[m
+[32m+[m[32m        match value.as_str() {[m
+[32m+[m[32m            "qdrant" => VectorDatabaseType::qdrant,[m
+[32m+[m[32m            "pinecone" => VectorDatabaseType::pinecone,[m
+[32m+[m[32m            _ => VectorDatabaseType::unknown,[m
+[32m+[m[32m        }[m
+[32m+[m[32m    }[m
+ }[m
+ [m
+ impl Display for VectorDatabaseType {[m
+[36m@@ -245,6 +258,7 @@[m [mimpl Display for VectorDatabaseType {[m
+         let str = match self {[m
+             VectorDatabaseType::pinecone => "pinecone".to_string(),[m
+             VectorDatabaseType::qdrant => "qdrant".to_string(),[m
+[32m+[m[32m            _ => "Unknown".to_string(),[m
+         };[m
+         write!(f, "{}", str)[m
+     }[m
+[1mdiff --git a/vector-db-proxy/src/adaptors/mongo/queries.rs b/vector-db-proxy/src/adaptors/mongo/queries.rs[m
+[1mindex 7cf00b54..5bff49f5 100644[m
+[1m--- a/vector-db-proxy/src/adaptors/mongo/queries.rs[m
+[1m+++ b/vector-db-proxy/src/adaptors/mongo/queries.rs[m
+[36m@@ -216,7 +216,6 @@[m [mpub async fn get_vector_db_details(db: &Database, vector_db_id: ObjectId) -> Opt[m
+     match vector_db_collections.find_one(filter, None).await {[m
+         Ok(vector_db) => {[m
+             if let Some(db) = vector_db {[m
+[31m-                println!("Vector DB model returned: {:?}", db);[m
+                 Some(db)[m
+             } else {[m
+                 println!("Returned None....");[m
+[1mdiff --git a/vector-db-proxy/src/adaptors/pinecone/apis.rs b/vector-db-proxy/src/adaptors/pinecone/apis.rs[m
+[1mindex d4ef904a..9cac743b 100644[m
+[1m--- a/vector-db-proxy/src/adaptors/pinecone/apis.rs[m
+[1m+++ b/vector-db-proxy/src/adaptors/pinecone/apis.rs[m
+[36m@@ -44,7 +44,15 @@[m [mimpl VectorDatabase for PineconeClient {[m
+             collection_name: search_request.collection.clone(),[m
+             collection_metadata: None,[m
+         };[m
+[31m-        let index_name = Region::to_str(search_request.region.unwrap_or_default());[m
+[32m+[m[32m        let region = search_request.region.unwrap_or_default();[m
+[32m+[m[32m        let namespace = search_request[m
+[32m+[m[32m            .clone()[m
+[32m+[m[32m            .namespace[m
+[32m+[m[32m            .map_or(search_request.clone().collection, |n| n);[m
+[32m+[m[32m        let index_name = search_request[m
+[32m+[m[32m            .byo_vector_db[m
+[32m+[m[32m            .map_or(Region::to_str(region), |_k| namespace.as_str())[m
+[32m+[m[32m            .to_string();[m
+         match get_index_model(&self, index_name.to_string()).await {[m
+             Ok(index_model) => {[m
+                 collection_results.status = VectorDatabaseStatus::Ok;[m
+[36m@@ -64,7 +72,15 @@[m [mimpl VectorDatabase for PineconeClient {[m
+         &self,[m
+         collection_create: CollectionCreate,[m
+     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {[m
+[31m-        let index_name = Region::to_str(collection_create.region.unwrap_or_default());[m
+[32m+[m[32m        let region = collection_create.region.unwrap_or_default();[m
+[32m+[m[32m        let namespace = collection_create[m
+[32m+[m[32m            .clone()[m
+[32m+[m[32m            .namespace[m
+[32m+[m[32m            .map_or(collection_create.clone().collection_name, |n| n);[m
+[32m+[m[32m        let index_name = collection_create[m
+[32m+[m[32m            .namespace[m
+[32m+[m[32m            .map_or(Region::to_str(region), |_k| namespace.as_str())[m
+[32m+[m[32m            .to_string();[m
+         match get_index_model(&self, index_name.to_string()).await {[m
+             Ok(_) => Ok(VectorDatabaseStatus::Ok),[m
+             Err(e) => match e {[m
+[36m@@ -95,7 +111,15 @@[m [mimpl VectorDatabase for PineconeClient {[m
+         search_request: SearchRequest,[m
+     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {[m
+         let region = search_request.clone().region.unwrap_or(Region::US);[m
+[31m-        if let Ok(index_model) = get_index_model(&self, Region::to_str(region).to_string()).await {[m
+[32m+[m[32m        let namespace = search_request[m
+[32m+[m[32m            .clone()[m
+[32m+[m[32m            .namespace[m
+[32m+[m[32m            .map_or(search_request.clone().collection, |n| n);[m
+[32m+[m[32m        let index_name = search_request[m
+[32m+[m[32m            .byo_vector_db[m
+[32m+[m[32m            .map_or(Region::to_str(region), |_k| namespace.as_str())[m
+[32m+[m[32m            .to_string();[m
+[32m+[m[32m        if let Ok(index_model) = get_index_model(&self, index_name).await {[m
+             // Need to figure out the the default index name here[m
+             let mut index = self.index(index_model.host.as_str()).await.unwrap();[m
+             let pinecone_namespace = Namespace::from(search_request.collection.as_str());[m
+[36m@@ -114,28 +138,44 @@[m [mimpl VectorDatabase for PineconeClient {[m
+     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {[m
+         let region = search_request.clone().region.unwrap_or(Region::US);[m
+         let vector = Vector::from(point);[m
+[31m-        let namespace = search_request.clone().collection;[m
+[31m-        match get_index_model(&self, Region::to_str(region).to_string()).await {[m
+[32m+[m[32m        let namespace = search_request[m
+[32m+[m[32m            .clone()[m
+[32m+[m[32m            .namespace[m
+[32m+[m[32m            .map_or(search_request.clone().collection, |n| n);[m
+[32m+[m[32m        let index_name = search_request[m
+[32m+[m[32m            .byo_vector_db[m
+[32m+[m[32m            .filter(|k| *k == true)[m
+[32m+[m[32m            .map_or(Region::to_str(region), |_| namespace.as_str())[m
+[32m+[m[32m            .to_string();[m
+[32m+[m[32m        match get_index_model(&self, index_name).await {[m
+             Ok(index_model) => {[m
+                 println!("Sending to Pinecone index: {:?}", index_model);[m
+                 let index = self.index(index_model.host.as_str()).await.unwrap();[m
+                 match search_request.search_type {[m
+[31m-                    SearchType::ChunkedRow => match &self.delete_point(search_request).await {[m
+[31m-                        Ok(_) => match upsert(index, &[vector], &namespace.into()).await {[m
+[31m-                            Ok(_) => {[m
+[31m-                                println!("Upsert Successful");[m
+[31m-                                Ok(VectorDatabaseStatus::Ok)[m
+[31m-                            }[m
+[31m-                            Err(e) => Err(e),[m
+[31m-                        },[m
+[31m-                        Err(e) => Err(e.to_owned()),[m
+[31m-                    },[m
+[32m+[m[32m                    SearchType::ChunkedRow => {[m
+[32m+[m[32m                        match &self.delete_point(search_request.clone()).await {[m
+[32m+[m[32m                            Ok(_) => match upsert(index, &[vector], &namespace.into()).await {[m
+[32m+[m[32m                                Ok(_) => {[m
+[32m+[m[32m                                    println!("Upsert Successful");[m
+[32m+[m[32m                                    Ok(VectorDatabaseStatus::Ok)[m
+[32m+[m[32m                                }[m
+[32m+[m[32m                                Err(e) => Err(e),[m
+[32m+[m[32m                            },[m
+[32m+[m[32m                            Err(e) => Err(e.to_owned()),[m
+[32m+[m[32m                        }[m
+[32m+[m[32m                    }[m
+                     _ => match upsert(index, &[vector], &namespace.into()).await {[m
+                         Ok(_) => {[m
+                             println!("Upsert Successful");[m
+                             Ok(VectorDatabaseStatus::Ok)[m
+                         }[m
+[31m-                        Err(e) => Err(e),[m
+[32m+[m[32m                        Err(e) => {[m
+[32m+[m[32m                            println!([m
+[32m+[m[32m                                "An error occurred while attempting to upsert. Error: {}",[m
+[32m+[m[32m                                e.clone()[m
+[32m+[m[32m                            );[m
+[32m+[m[32m                            Err(e)[m
+[32m+[m[32m                        }[m
+                     },[m
+                 }[m
+             }[m
+[1mdiff --git a/vector-db-proxy/src/adaptors/rabbitmq/models.rs b/vector-db-proxy/src/adaptors/rabbitmq/models.rs[m
+[1mindex 916d4520..1f0136a7 100644[m
+[1m--- a/vector-db-proxy/src/adaptors/rabbitmq/models.rs[m
+[1m+++ b/vector-db-proxy/src/adaptors/rabbitmq/models.rs[m
+[36m@@ -3,7 +3,6 @@[m [muse crate::adaptors::rabbitmq::client::bind_queue_to_exchange;[m
+ use crate::init::env_variables::GLOBAL_DATA;[m
+ use crate::messages::models::{MessageQueueConnection, QueueConnectionTypes};[m
+ use crate::messages::tasks::process_message;[m
+[31m-use crate::vector_databases::vector_database::VectorDatabase;[m
+ use amqp_serde::types::ShortStr;[m
+ use amqprs::channel::{BasicAckArguments, BasicConsumeArguments, Channel};[m
+ use crossbeam::channel::Sender;[m
+[36m@@ -52,7 +51,7 @@[m [mimpl MessageQueueConnection for RabbitConnect {[m
+ [m
+ pub async fn rabbit_consume([m
+     streaming_queue: &Channel,[m
+[31m-    vector_database_client: Arc<RwLock<dyn VectorDatabase>>,[m
+[32m+[m[32m    //vector_database_client: Arc<RwLock<dyn VectorDatabase>>,[m
+     mongo_client: Arc<RwLock<Database>>,[m
+     sender: Sender<(DataSources, Option<String>, String)>,[m
+ ) {[m
+[36m@@ -91,15 +90,13 @@[m [mpub async fn rabbit_consume([m
+                                 if let Ok(message_string) = String::from_utf8(msg.clone().to_vec())[m
+                                 {[m
+                                     let sender_clone = sender.clone();[m
+[31m-                                    let vector_database_client =[m
+[31m-                                        Arc::clone(&vector_database_client);[m
+                                     let mongo_client = Arc::clone(&mongo_client);[m
+                                     process_message([m
+                                         message_string,[m
+                                         stream_type,[m
+                                         datasource_id,[m
+                                         stream_config_key,[m
+[31m-                                        vector_database_client,[m
+[32m+[m[32m                                        //vector_database_client,[m
+                                         mongo_client,[m
+                                         sender_clone,[m
+                                     )[m
+[1mdiff --git a/vector-db-proxy/src/data/processing_incoming_messages.rs b/vector-db-proxy/src/data/processing_incoming_messages.rs[m
+[1mindex c2a30832..4b527bf2 100644[m
+[1m--- a/vector-db-proxy/src/data/processing_incoming_messages.rs[m
+[1m+++ b/vector-db-proxy/src/data/processing_incoming_messages.rs[m
+[36m@@ -9,7 +9,7 @@[m [muse crate::embeddings::utils::{embed_bulk_insert_unstructured_response, embed_te[m
+ use crate::init::env_variables::GLOBAL_DATA;[m
+ use crate::vector_databases::helpers::check_byo_vector_database;[m
+ use crate::vector_databases::models::{Point, SearchRequest, SearchType, VectorDatabaseStatus};[m
+[31m-use crate::vector_databases::vector_database::VectorDatabase;[m
+[32m+[m[32muse crate::vector_databases::vector_database::default_vector_db_client;[m
+ use anyhow::anyhow;[m
+ use crossbeam::channel::Receiver;[m
+ use mongodb::Database;[m
+[36m@@ -21,7 +21,7 @@[m [muse tokio::sync::RwLock;[m
+ [m
+ pub async fn embed_text_construct_point([m
+     mongo_conn: Arc<RwLock<Database>>,[m
+[31m-    vector_database_client: Arc<RwLock<dyn VectorDatabase>>,[m
+[32m+[m[32m    //vector_database_client: Arc<RwLock<dyn VectorDatabase>>,[m
+     data: &HashMap<String, Value>,[m
+     embedding_field_name: &String,[m
+     datasource: Option<DataSources>,[m
+[36m@@ -58,7 +58,7 @@[m [mpub async fn embed_text_construct_point([m
+                             embed_bulk_insert_unstructured_response([m
+                                 documents,[m
+                                 ds,[m
+[31m-                                vector_database_client.clone(),[m
+[32m+[m[32m                                //vector_database_client.clone(),[m
+                                 mongo_conn.clone(),[m
+                                 embedding_model,[m
+                                 Some(payload),[m
+[36m@@ -103,7 +103,7 @@[m [mpub async fn embed_text_construct_point([m
+ [m
+ async fn handle_embedding([m
+     mongo_connection: Arc<RwLock<Database>>,[m
+[31m-    mut vector_database_client: Arc<RwLock<dyn VectorDatabase>>,[m
+[32m+[m[32m    //mut vector_database_client: Arc<RwLock<dyn VectorDatabase>>,[m
+     metadata: HashMap<String, Value>,[m
+     embedding_field_name: String,[m
+     datasource: DataSources,[m
+[36m@@ -114,15 +114,24 @@[m [masync fn handle_embedding([m
+     let metadata = metadata.clone();[m
+     let field_path = "recordCount.failure";[m
+     let mongo = mongo_connection_clone.read().await;[m
+[31m-    vector_database_client =[m
+[31m-        check_byo_vector_database(vector_database_client, datasource.clone(), &mongo).await;[m
+[32m+[m[32m    let vector_database_client = check_byo_vector_database(datasource.clone(), &mongo)[m
+[32m+[m[32m        .await[m
+[32m+[m[32m        .unwrap_or(default_vector_db_client().await);[m
+     let search_type = chunking_strategy[m
+         .clone()[m
+         .map_or(SearchType::default(), |_| SearchType::ChunkedRow);[m
+[31m-    let search_request = SearchRequest::new(search_type.clone(), datasource.id.to_string().clone());[m
+[32m+[m[32m    let mut search_request =[m
+[32m+[m[32m        SearchRequest::new(search_type.clone(), datasource.id.to_string().clone());[m
+[32m+[m[32m    //TODO: add vars to search request[m
+[32m+[m[32m    search_request.byo_vector_db = Some(true);[m
+[32m+[m[32m    search_request.collection = datasource[m
+[32m+[m[32m        .clone()[m
+[32m+[m[32m        .collection_name[m
+[32m+[m[32m        .map_or(datasource.id.to_string(), |d| d);[m
+[32m+[m[32m    search_request.namespace = datasource.namespace.clone();[m
+     match embed_text_construct_point([m
+         mongo_connection.clone(),[m
+[31m-        vector_database_client.clone(),[m
+[32m+[m[32m        //vector_database_client.clone(),[m
+         &metadata,[m
+         &embedding_field_name,[m
+         Some(datasource.clone()),[m
+[36m@@ -173,11 +182,12 @@[m [masync fn handle_embedding([m
+             );[m
+         }[m
+     }[m
+[32m+[m[32m    drop(vector_database_client)[m
+ }[m
+ [m
+ pub async fn process_incoming_messages([m
+     receiver: Receiver<(DataSources, Option<String>, String)>,[m
+[31m-    vector_database_client: Arc<RwLock<dyn VectorDatabase>>,[m
+[32m+[m[32m    //vector_database_client: Arc<RwLock<dyn VectorDatabase>>,[m
+     mongo_conn: Arc<RwLock<Database>>,[m
+ ) {[m
+     let mongo_connection = Arc::clone(&mongo_conn);[m
+[36m@@ -228,11 +238,9 @@[m [mpub async fn process_incoming_messages([m
+ [m
+                                 if let Some(embedding_field_name) = embedding_config.embedding_key {[m
+                                     let mongo_connection_clone = Arc::clone(&mongo_connection);[m
+[31m-                                    let vector_database = Arc::clone(&vector_database_client);[m
+                                     let embed_text_worker = tokio::spawn(async move {[m
+                                         let _ = handle_embedding([m
+                                             mongo_connection_clone,[m
+[31m-                                            vector_database,[m
+                                             metadata,[m
+                                             embedding_field_name,[m
+                                             datasource.clone(),[m
+[1mdiff --git a/vector-db-proxy/src/embeddings/utils.rs b/vector-db-proxy/src/embeddings/utils.rs[m
+[1mindex c04eb7f8..0caf9ca6 100644[m
+[1m--- a/vector-db-proxy/src/embeddings/utils.rs[m
+[1m+++ b/vector-db-proxy/src/embeddings/utils.rs[m
+[36m@@ -6,7 +6,7 @@[m [muse crate::embeddings::models::{EmbeddingModels, FastEmbedModels};[m
+ use crate::init::env_variables::GLOBAL_DATA;[m
+ use crate::vector_databases::helpers::check_byo_vector_database;[m
+ use crate::vector_databases::models::{Point, SearchRequest, SearchType, VectorDatabaseStatus};[m
+[31m-use crate::vector_databases::vector_database::VectorDatabase;[m
+[32m+[m[32muse crate::vector_databases::vector_database::default_vector_db_client;[m
+ use anyhow::{anyhow, Result};[m
+ use async_openai::config::OpenAIConfig;[m
+ use async_openai::types::CreateEmbeddingRequestArgs;[m
+[36m@@ -210,7 +210,7 @@[m [mpub async fn embed_text_chunks_async([m
+ pub async fn embed_bulk_insert_unstructured_response([m
+     documents: Vec<UnstructuredIOResponse>,[m
+     datasource: DataSources,[m
+[31m-    mut vector_database_client: Arc<RwLock<dyn VectorDatabase>>,[m
+[32m+[m[32m    //mut vector_database_client: Arc<RwLock<dyn VectorDatabase>>,[m
+     mongo_client: Arc<RwLock<Database>>,[m
+     embedding_model: Model,[m
+     metadata: Option<HashMap<String, Value>>,[m
+[36m@@ -223,7 +223,10 @@[m [mpub async fn embed_bulk_insert_unstructured_response([m
+     let datasource_id = datasource.id.to_string();[m
+     match embed_text_chunks_async(list_of_text.clone(), &embedding_model).await {[m
+         Ok(embeddings) => {[m
+[31m-            let search_request = SearchRequest::new(search_type.clone(), datasource_id.to_string());[m
+[32m+[m[32m            let mut search_request =[m
+[32m+[m[32m                SearchRequest::new(search_type.clone(), datasource_id.to_string());[m
+[32m+[m[32m            search_request.byo_vector_db = Some(true);[m
+[32m+[m[32m            search_request.namespace = datasource.namespace.clone();[m
+             let mut points_to_upload: Vec<Point> = vec![];[m
+             // Construct point to upload[m
+             for (i, file_metadata) in list_of_text.iter().enumerate() {[m
+[36m@@ -261,12 +264,10 @@[m [mpub async fn embed_bulk_insert_unstructured_response([m
+                 }[m
+                 //TODO: Need to check if this will take up a lot of memory or not?[m
+                 // How can we re-use these clients rather than creating a new one each time?[m
+[31m-                vector_database_client = check_byo_vector_database([m
+[31m-                    vector_database_client,[m
+[31m-                    datasource.clone(),[m
+[31m-                    &mongo_connection,[m
+[31m-                )[m
+[31m-                .await;[m
+[32m+[m[32m                let vector_database_client =[m
+[32m+[m[32m                    check_byo_vector_database(datasource.clone(), &mongo_connection)[m
+[32m+[m[32m                        .await[m
+[32m+[m[32m                        .unwrap_or(default_vector_db_client().await);[m
+ [m
+                 // Initialise vector database client[m
+                 let vector_database = Arc::clone(&vector_database_client);[m
+[1mdiff --git a/vector-db-proxy/src/main.rs b/vector-db-proxy/src/main.rs[m
+[1mindex 807eadc6..4fe86cb7 100644[m
+[1m--- a/vector-db-proxy/src/main.rs[m
+[1m+++ b/vector-db-proxy/src/main.rs[m
+[36m@@ -7,7 +7,7 @@[m [muse std::sync::Arc;[m
+ use std::thread;[m
+ [m
+ use actix_cors::Cors;[m
+[31m-use actix_web::{middleware::Logger, web, web::Data, App, HttpServer};[m
+[32m+[m[32muse actix_web::{middleware::Logger, web, App, HttpServer};[m
+ use anyhow::Context;[m
+ use crossbeam::channel;[m
+ use env_logger::Env;[m
+[36m@@ -26,7 +26,6 @@[m [muse crate::init::env_variables::GLOBAL_DATA;[m
+ use crate::messages::models::{MessageQueue, MessageQueueProvider};[m
+ use crate::messages::tasks::get_message_queue;[m
+ use crate::routes::apis::{create_collection, get_storage_size, scroll_data};[m
+[31m-use crate::vector_databases::vector_database::{build_vector_db_client, VectorDatabase};[m
+ use adaptors::mongo::client::start_mongo_connection;[m
+ [m
+ mod adaptors;[m
+[36m@@ -69,20 +68,18 @@[m [masync fn main() -> std::io::Result<()> {[m
+     let logging_level = global_data.logging_level.clone();[m
+     let host = global_data.host.clone();[m
+     let port = global_data.port.clone();[m
+[31m-    let vector_db = global_data.vector_database.clone();[m
+[31m-    let vector_db_url = global_data.vector_database_url.clone();[m
+[31m-    let vector_db_api_key = global_data.vector_database_api_key.clone();[m
+[32m+[m
+     // This is to allow the use of multiple vector databases[m
+[31m-    let vector_database_client: Arc<RwLock<dyn VectorDatabase>> =[m
+[31m-        build_vector_db_client(vector_db, Some(vector_db_url), Some(vector_db_api_key)).await;[m
+[32m+[m[32m    //let vector_database_client: Arc<RwLock<dyn VectorDatabase>> =[m
+[32m+[m[32m    //    build_vector_db_client(vector_db, Some(vector_db_url), Some(vector_db_api_key)).await;[m
+ [m
+     let mongo_connection = start_mongo_connection().await.unwrap();[m
+     // Create Arcs to allow sending across threads[m
+     let app_mongo_client = Arc::new(RwLock::new(mongo_connection));[m
+ [m
+     // Clones for senders[m
+[31m-    let vector_database_for_streaming: Arc<RwLock<dyn VectorDatabase>> =[m
+[31m-        vector_database_client.clone();[m
+[32m+[m[32m    //let vector_database_for_streaming: Arc<RwLock<dyn VectorDatabase>> =[m
+[32m+[m[32m    //    vector_database_client.clone();[m
+     // Assuming[m
+     // qdrant_client implements VectorDatabase[m
+     let mongo_client_for_streaming = Arc::clone(&app_mongo_client);[m
+[36m@@ -101,7 +98,7 @@[m [masync fn main() -> std::io::Result<()> {[m
+         let _ = connection[m
+             .consume([m
+                 connection.clone(),[m
+[31m-                vector_database_for_streaming,[m
+[32m+[m[32m                //vector_database_for_streaming,[m
+                 mongo_client_for_streaming,[m
+                 sender_clone,[m
+             )[m
+[36m@@ -116,18 +113,13 @@[m [masync fn main() -> std::io::Result<()> {[m
+     let mut handles = vec![];[m
+     for _ in 0..(number_of_workers * 10) {[m
+         // let receiver_clone = receiver.clone();[m
+[31m-        let vector_database_client_clone = Arc::clone(&vector_database_client);[m
+[32m+[m[32m        //let vector_database_client_clone = Arc::clone(&vector_database_client);[m
+         let mongo_client_clone = Arc::clone(&app_mongo_client);[m
+         let receiver = r.clone();[m
+         let handle = thread::spawn(move || {[m
+             let rt = tokio::runtime::Runtime::new().unwrap();[m
+             rt.block_on(async {[m
+[31m-                process_incoming_messages([m
+[31m-                    receiver,[m
+[31m-                    vector_database_client_clone,[m
+[31m-                    mongo_client_clone,[m
+[31m-                )[m
+[31m-                .await;[m
+[32m+[m[32m                process_incoming_messages(receiver, mongo_client_clone).await;[m
+             });[m
+         });[m
+         handles.push(handle);[m
+[36m@@ -140,7 +132,7 @@[m [masync fn main() -> std::io::Result<()> {[m
+         let server = HttpServer::new(move || {[m
+             App::new()[m
+                 .wrap(Logger::default())[m
+[31m-                .app_data(Data::new(Arc::clone(&vector_database_client)))[m
+[32m+[m[32m                //.app_data(Data::new(Arc::clone(&vector_database_client)))[m
+                 .configure(init)[m
+         })[m
+         .bind(format!("{}:{}", host, port))?[m
+[1mdiff --git a/vector-db-proxy/src/messages/models.rs b/vector-db-proxy/src/messages/models.rs[m
+[1mindex ef79ef5a..946cc6ad 100644[m
+[1m--- a/vector-db-proxy/src/messages/models.rs[m
+[1m+++ b/vector-db-proxy/src/messages/models.rs[m
+[36m@@ -9,7 +9,6 @@[m [muse tokio::sync::{Mutex, RwLock};[m
+ use crate::adaptors::gcp::models::pubsub_consume;[m
+ use crate::adaptors::mongo::models::DataSources;[m
+ use crate::adaptors::rabbitmq::models::rabbit_consume;[m
+[31m-use crate::vector_databases::vector_database::VectorDatabase;[m
+ [m
+ #[derive(Clone, Copy, Debug)][m
+ pub enum MessageQueueProvider {[m
+[36m@@ -50,16 +49,16 @@[m [mimpl MessageQueue for QueueConnectionTypes {[m
+     async fn consume([m
+         &self,[m
+         streaming_queue: Self::Queue,[m
+[31m-        vector_database_client: Arc<RwLock<dyn VectorDatabase>>,[m
+[32m+[m[32m        //vector_database_client: Arc<RwLock<dyn VectorDatabase>>,[m
+         mongo_client: Arc<RwLock<Database>>,[m
+         sender: Sender<(DataSources, Option<String>, String)>,[m
+     ) {[m
+         match streaming_queue {[m
+             QueueConnectionTypes::PubSub(stream) => {[m
+[31m-                pubsub_consume(&stream, vector_database_client, mongo_client, sender).await;[m
+[32m+[m[32m                pubsub_consume(&stream, mongo_client, sender).await;[m
+             }[m
+             QueueConnectionTypes::RabbitMQ(channel) => {[m
+[31m-                rabbit_consume(&channel, vector_database_client, mongo_client, sender).await;[m
+[32m+[m[32m                rabbit_consume(&channel, mongo_client, sender).await;[m
+             }[m
+         }[m
+     }[m
+[36m@@ -73,7 +72,7 @@[m [mpub trait MessageQueue {[m
+     async fn consume([m
+         &self,[m
+         streaming_queue: Self::Queue,[m
+[31m-        vector_database_client: Arc<RwLock<dyn VectorDatabase>>,[m
+[32m+[m[32m        //vector_database_client: Arc<RwLock<dyn VectorDatabase>>,[m
+         mongo_client: Arc<RwLock<Database>>,[m
+         sender: Sender<(DataSources, Option<String>, String)>,[m
+     );[m
+[1mdiff --git a/vector-db-proxy/src/messages/tasks.rs b/vector-db-proxy/src/messages/tasks.rs[m
+[1mindex aee524e3..3930ddc3 100644[m
+[1m--- a/vector-db-proxy/src/messages/tasks.rs[m
+[1m+++ b/vector-db-proxy/src/messages/tasks.rs[m
+[36m@@ -11,7 +11,6 @@[m [muse crate::utils::file_operations;[m
+ use crate::utils::file_operations::determine_file_type;[m
+ use crate::utils::webhook::send_webapp_embed_ready;[m
+ use crate::vector_databases::models::SearchType;[m
+[31m-use crate::vector_databases::vector_database::VectorDatabase;[m
+ use crossbeam::channel::Sender;[m
+ use mongodb::Database;[m
+ use serde_json::Value;[m
+[36m@@ -53,7 +52,7 @@[m [mpub async fn process_message([m
+     stream_type: Option<String>,[m
+     datasource_id: &str,[m
+     stream_config_key: Option<String>,[m
+[31m-    vector_database_client: Arc<RwLock<dyn VectorDatabase>>,[m
+[32m+[m[32m    //vector_database_client: Arc<RwLock<dyn VectorDatabase>>,[m
+     mongo_client: Arc<RwLock<Database>>,[m
+     sender: Sender<(DataSources, Option<String>, String)>,[m
+ ) {[m
+[36m@@ -102,7 +101,7 @@[m [mpub async fn process_message([m
+                                             embed_bulk_insert_unstructured_response([m
+                                                 documents,[m
+                                                 ds,[m
+[31m-                                                vector_database_client.clone(),[m
+[32m+[m[32m                                                //vector_database_client.clone(),[m
+                                                 mongo_client.clone(),[m
+                                                 model_obj_clone,[m
+                                                 None,[m
+[1mdiff --git a/vector-db-proxy/src/routes/apis.rs b/vector-db-proxy/src/routes/apis.rs[m
+[1mindex 144cf965..5f266d09 100644[m
+[1m--- a/vector-db-proxy/src/routes/apis.rs[m
+[1m+++ b/vector-db-proxy/src/routes/apis.rs[m
+[36m@@ -10,13 +10,15 @@[m [muse crate::routes;[m
+ [m
+ use crate::adaptors::mongo::client::start_mongo_connection;[m
+ use crate::adaptors::mongo::models::Model;[m
+[31m-use crate::adaptors::mongo::queries::{get_model, get_team_datasources};[m
+[32m+[m[32muse crate::adaptors::mongo::queries::{get_datasource, get_model, get_team_datasources};[m
+ use crate::routes::helpers::format_error_message;[m
+ use crate::routes::models::CollectionStorageSizeResponse;[m
+[32m+[m[32muse crate::vector_databases::error::VectorDatabaseError;[m
+[32m+[m[32muse crate::vector_databases::helpers::check_byo_vector_database;[m
+ use crate::vector_databases::models::{[m
+     CollectionCreate, Point, SearchRequest, SearchType, VectorDatabaseStatus,[m
+ };[m
+[31m-use crate::vector_databases::vector_database::VectorDatabase;[m
+[32m+[m[32muse crate::vector_databases::vector_database::{default_vector_db_client, VectorDatabase};[m
+ use routes::models::{ResponseBody, Status};[m
+ use serde_json::json;[m
+ use std::vec;[m
+[36m@@ -56,20 +58,59 @@[m [mpub async fn health_check() -> Result<impl Responder> {[m
+ ///[m
+ /// ```[m
+ #[wherr][m
+[31m-#[get("/list-collections")][m
+[31m-pub async fn list_collections([m
+[31m-    app_data: Data<Arc<RwLock<dyn VectorDatabase>>>,[m
+[31m-) -> Result<impl Responder> {[m
+[31m-    let vector_database = app_data.get_ref().clone();[m
+[31m-    let vector_database_client = vector_database.read().await;[m
+[31m-    let results = vector_database_client.get_list_of_collections().await?;[m
+[31m-    Ok(HttpResponse::Ok()[m
+[31m-        .content_type(ContentType::json())[m
+[31m-        .json(json!(ResponseBody {[m
+[31m-            status: Status::Success,[m
+[31m-            data: Some(json!({"list_of_collection": results})),[m
+[31m-            error_message: None[m
+[31m-        })))[m
+[32m+[m[32m#[get("/list-collections/{collection_name}")][m
+[32m+[m[32mpub async fn list_collections(Path(collection_name): Path<String>) -> Result<impl Responder> {[m
+[32m+[m[32m    let datasource_id = collection_name.clone();[m
+[32m+[m[32m    let mongodb_connection = start_mongo_connection().await?;[m
+[32m+[m[32m    match get_datasource(&mongodb_connection, datasource_id.as_str()).await {[m
+[32m+[m[32m        Ok(option) => match option {[m
+[32m+[m[32m            Some(datasource) => {[m
+[32m+[m[32m                let vector_database_client =[m
+[32m+[m[32m                    check_byo_vector_database(datasource, &mongodb_connection)[m
+[32m+[m[32m                        .await[m
+[32m+[m[32m                        .unwrap_or(default_vector_db_client().await);[m
+[32m+[m[32m                let vector_database_client = vector_database_client.read().await;[m
+[32m+[m[32m                let results = vector_database_client.get_list_of_collections().await?;[m
+[32m+[m[32m                Ok(HttpResponse::Ok()[m
+[32m+[m[32m                    .content_type(ContentType::json())[m
+[32m+[m[32m                    .json(json!(ResponseBody {[m
+[32m+[m[32m                        status: Status::Success,[m
+[32m+[m[32m                        data: Some(json!({"list_of_collection": results})),[m
+[32m+[m[32m                        error_message: None[m
+[32m+[m[32m                    })))[m
+[32m+[m[32m            }[m
+[32m+[m[32m            None => Ok(HttpResponse::NotFound()[m
+[32m+[m[32m                .content_type(ContentType::json())[m
+[32m+[m[32m                .json(json!(ResponseBody {[m
+[32m+[m[32m                    status: Status::Failure,[m
+[32m+[m[32m                    data: None,[m
+[32m+[m[32m                    error_message: Some(json!({[m
+[32m+[m[32m                        "errorMessage": format!("No datasource associated with the ID : '{}'",[m
+[32m+[m[32m                            collection_name)[m
+[32m+[m[32m                    }))[m
+[32m+[m[32m                }))),[m
+[32m+[m[32m        },[m
+[32m+[m[32m        Err(e) => {[m
+[32m+[m[32m            let error_message_json = format_error_message(VectorDatabaseError::AnyhowError(e));[m
+[32m+[m[32m            Ok(HttpResponse::InternalServerError()[m
+[32m+[m[32m                .content_type(ContentType::json())[m
+[32m+[m[32m                .json(json!(ResponseBody {[m
+[32m+[m[32m                    status: Status::Failure,[m
+[32m+[m[32m                    data: None,[m
+[32m+[m[32m                    error_message: Some(match error_message_json {[m
+[32m+[m[32m                        Some(json_value) => json!({[m
+[32m+[m[32m                            "errorMessage": "An error occurred while checking if datasource \[m
+[32m+[m[32m                            exists.",[m
+[32m+[m[32m                            "errorDetails": json_value[m
+[32m+[m[32m                        }),[m
+[32m+[m[32m                        None => json!({[m
+[32m+[m[32m                            "errorMessage": "An unknown error occurred while checking if the \[m
+[32m+[m[32m                            datasource exists.".to_string()[m
+[32m+[m[32m                        }),[m
+[32m+[m[32m                    })[m
+[32m+[m[32m                })))[m
+[32m+[m[32m        }[m
+[32m+[m[32m    }[m
+ }[m
+ [m
+ ///[m
+[36m@@ -89,143 +130,214 @@[m [mpub async fn list_collections([m
+ #[wherr][m
+ #[get("/check-collection-exists/{collection_name}")][m
+ pub async fn check_collection_exists([m
+[31m-    app_data: Data<Arc<RwLock<dyn VectorDatabase>>>,[m
+[32m+[m[32m    //app_data: Data<Arc<RwLock<dyn VectorDatabase>>>,[m
+     Path(collection_name): Path<String>,[m
+ ) -> Result<HttpResponse> {[m
+     let collection_id = collection_name.clone();[m
+[31m-    let vector_database = app_data.get_ref().clone();[m
+[31m-    let vector_database_client = vector_database.read().await;[m
+[31m-    let search_request = SearchRequest::new(SearchType::Collection, collection_id);[m
+[31m-    match vector_database_client[m
+[32m+[m[32m    let mongodb_connection = start_mongo_connection().await?;[m
+[32m+[m[32m    let mut search_request = SearchRequest::new(SearchType::Collection, collection_id.clone());[m
+[32m+[m[32m    match get_datasource(&mongodb_connection, collection_id.as_str()).await {[m
+[32m+[m[32m        Ok(option) => match option {[m
+[32m+[m[32m            Some(datasource) => {[m
+[32m+[m[32m                let vector_database_client =[m
+[32m+[m[32m                    check_byo_vector_database(datasource.clone(), &mongodb_connection)[m
+[32m+[m[32m                        .await[m
+[32m+[m[32m                        .unwrap_or(default_vector_db_client().await);[m
+[32m+[m[32m                let vector_database_client = vector_database_client.read().await;[m
+[32m+[m[32m                search_request.byo_vector_db = Some(true);[m
+[32m+[m[32m                search_request.collection = datasource[m
+[32m+[m[32m                    .collection_name[m
+[32m+[m[32m                    .map_or(datasource.id.to_string(), |d| d);[m
+[32m+[m[32m                search_request.namespace = datasource.namespace;[m
+[32m+[m[32m                match vector_database_client[m
+         .check_collection_exists(search_request)[m
+         .await[m
+[31m-    {[m
+[31m-        Ok(collection_result) => match collection_result.status {[m
+[31m-            VectorDatabaseStatus::Ok => Ok(HttpResponse::Ok()[m
+[31m-                .content_type(ContentType::json())[m
+[31m-                .json(json!(ResponseBody {[m
+[31m-                    status: Status::Success,[m
+[31m-                    data: None,[m
+[31m-                    error_message: None[m
+[31m-                }))),[m
+[31m-            VectorDatabaseStatus::Error(e) => Ok(HttpResponse::NotFound()[m
+[31m-                .content_type(ContentType::json())[m
+[31m-                .json(json!(ResponseBody {[m
+[31m-                    status: Status::Failure,[m
+[31m-                    data: None,[m
+[31m-                    error_message: Some(json!({[m
+[31m-                        "errorMessage": format!("An error occurred during check operation: {}", e)[m
+[31m-                    }))[m
+[31m-                }))),[m
+[31m-            VectorDatabaseStatus::NotFound => Ok(HttpResponse::NotFound()[m
+[32m+[m[32m            {[m
+[32m+[m[32m                Ok(collection_result) => match collection_result.status {[m
+[32m+[m[32m                    VectorDatabaseStatus::Ok => Ok(HttpResponse::Ok()[m
+[32m+[m[32m                        .content_type(ContentType::json())[m
+[32m+[m[32m                        .json(json!(ResponseBody {[m
+[32m+[m[32m                            status: Status::Success,[m
+[32m+[m[32m                            data: None,[m
+[32m+[m[32m                            error_message: None[m
+[32m+[m[32m                        }))),[m
+[32m+[m[32m                    VectorDatabaseStatus::Error(e) => Ok(HttpResponse::NotFound()[m
+[32m+[m[32m                        .content_type(ContentType::json())[m
+[32m+[m[32m                        .json(json!(ResponseBody {[m
+[32m+[m[32m                            status: Status::Failure,[m
+[32m+[m[32m                            data: None,[m
+[32m+[m[32m                            error_message: Some(json!({[m
+[32m+[m[32m                                "errorMessage": format!("An error occurred during check operation: {}", e)[m
+[32m+[m[32m                            }))[m
+[32m+[m[32m                        }))),[m
+[32m+[m[32m                    VectorDatabaseStatus::NotFound => Ok(HttpResponse::NotFound()[m
+[32m+[m[32m                        .content_type(ContentType::json())[m
+[32m+[m[32m                        .json(json!(ResponseBody {[m
+[32m+[m[32m                            status: Status::Failure,[m
+[32m+[m[32m                            data: None,[m
+[32m+[m[32m                            error_message: Some(json!({[m
+[32m+[m[32m                                "errorMessage": format!("The Collection: '{}' does not exists",[m
+[32m+[m[32m                                    collection_name)[m
+[32m+[m[32m                            }))[m
+[32m+[m[32m                        }))),[m
+[32m+[m[32m                    _ => Ok(HttpResponse::BadRequest()[m
+[32m+[m[32m                        .content_type(ContentType::json())[m
+[32m+[m[32m                        .json(json!(ResponseBody {[m
+[32m+[m[32m                            status: Status::Failure,[m
+[32m+[m[32m                            data: None,[m
+[32m+[m[32m                            error_message: Some(json!({[m
+[32m+[m[32m                                "errorMessage": format!("Could not check collection exists: '{}' due to an \[m
+[32m+[m[32m                                unknown error", collection_name)[m
+[32m+[m[32m                            }))[m
+[32m+[m[32m                        }))),[m
+[32m+[m[32m                },[m
+[32m+[m[32m                Err(e) => {[m
+[32m+[m[32m                    let error_message_json = format_error_message(e.clone());[m
+[32m+[m[32m                    Ok(HttpResponse::InternalServerError()[m
+[32m+[m[32m                        .content_type(ContentType::json())[m
+[32m+[m[32m                        .json(json!(ResponseBody {[m
+[32m+[m[32m                            status: Status::Failure,[m
+[32m+[m[32m                            data: None,[m
+[32m+[m[32m                            error_message: Some(match error_message_json {[m
+[32m+[m[32m                                Some(json_value) => json!({[m
+[32m+[m[32m                                    "errorMessage": "An error occurred while checking if collection exists.",[m
+[32m+[m[32m                                    "errorDetails": json_value[m
+[32m+[m[32m                                }),[m
+[32m+[m[32m                                None => json!({[m
+[32m+[m[32m                                    "errorMessage": format!("An error occurred while checking if collection exists. \[m
+[32m+[m[32m                                    Error: {}", e)[m
+[32m+[m[32m                                })[m
+[32m+[m[32m                            })[m
+[32m+[m[32m                        })))[m
+[32m+[m[32m                }[m
+[32m+[m[32m            }[m
+[32m+[m[32m            }[m
+[32m+[m[32m            None => Ok(HttpResponse::NotFound()[m
+                 .content_type(ContentType::json())[m
+                 .json(json!(ResponseBody {[m
+                     status: Status::Failure,[m
+                     data: None,[m
+                     error_message: Some(json!({[m
+[31m-                        "errorMessage": format!("The Collection: '{}' does not exists",[m
+[32m+[m[32m                        "errorMessage": format!("The datasource: '{}' does not exists in the \[m
+[32m+[m[32m                        database",[m
+                             collection_name)[m
+                     }))[m
+                 }))),[m
+[31m-            _ => Ok(HttpResponse::BadRequest()[m
+[31m-                .content_type(ContentType::json())[m
+[31m-                .json(json!(ResponseBody {[m
+[31m-                    status: Status::Failure,[m
+[31m-                    data: None,[m
+[31m-                    error_message: Some(json!({[m
+[31m-                        "errorMessage": format!("Could not delete collection: '{}' due to an \[m
+[31m-                        unknown error", collection_name)[m
+[31m-                    }))[m
+[31m-                }))),[m
+         },[m
+[31m-        Err(e) => {[m
+[31m-            let error_message_json = format_error_message(e.clone());[m
+[31m-            Ok(HttpResponse::InternalServerError()[m
+[31m-                .content_type(ContentType::json())[m
+[31m-                .json(json!(ResponseBody {[m
+[31m-                    status: Status::Failure,[m
+[31m-                    data: None,[m
+[31m-                    error_message: Some(match error_message_json {[m
+[31m-                        Some(json_value) => json!({[m
+[31m-                            "errorMessage": "An error occurred while checking if collection exists.",[m
+[31m-                            "errorDetails": json_value[m
+[31m-                        }),[m
+[31m-                        None => json!({[m
+[31m-                            "errorMessage": format!("An error occurred while checking if collection exists. \[m
+[31m-                            Error: {}", e)[m
+[31m-                        })[m
+[31m-                    })[m
+[31m-                })))[m
+[31m-        }[m
+[32m+[m[32m        Err(e) => Ok(HttpResponse::BadRequest()[m
+[32m+[m[32m            .content_type(ContentType::json())[m
+[32m+[m[32m            .json(json!(ResponseBody {[m
+[32m+[m[32m                status: Status::Failure,[m
+[32m+[m[32m                data: None,[m
+[32m+[m[32m                error_message: Some(json!({[m
+[32m+[m[32m                    "errorMessage": format!("Could not check collection exists: '{}' due to an \[m
+[32m+[m[32m                    unknown error. Error: {}", collection_name, e)[m
+[32m+[m[32m                }))[m
+[32m+[m[32m            }))),[m
+     }[m
+ }[m
+ [m
+ #[wherr][m
+ #[post("/create-collection/")][m
+ pub async fn create_collection([m
+[31m-    app_data: Data<Arc<RwLock<dyn VectorDatabase>>>,[m
+[32m+[m[32m    //app_data: Data<Arc<RwLock<dyn VectorDatabase>>>,[m
+     data: web::Json<CollectionCreate>,[m
+ ) -> Result<HttpResponse> {[m
+     let collection_id = data.clone().collection_name;[m
+[31m-    let vector_database = app_data.get_ref().clone();[m
+[31m-    let vector_database_client = vector_database.read().await;[m
+[31m-    match vector_database_client.create_collection(data.clone()).await {[m
+[31m-        Ok(collection_result) => match collection_result {[m
+[31m-            VectorDatabaseStatus::Ok => Ok(HttpResponse::Ok()[m
+[31m-                .content_type(ContentType::json())[m
+[31m-                .json(json!(ResponseBody {[m
+[31m-                    status: Status::Success,[m
+[31m-                    data: None,[m
+[31m-                    error_message: None[m
+[31m-                }))),[m
+[31m-            VectorDatabaseStatus::Error(e) => Ok(HttpResponse::NotFound()[m
+[31m-                .content_type(ContentType::json())[m
+[31m-                .json(json!(ResponseBody {[m
+[31m-                    status: Status::Failure,[m
+[31m-                    data: None,[m
+[31m-                    error_message: Some(json!({[m
+[31m-                        "errorMessage": format!("An error occurred during create operation: {}", e)[m
+[31m-                    }))[m
+[31m-                }))),[m
+[31m-            VectorDatabaseStatus::NotFound => Ok(HttpResponse::NotFound()[m
+[31m-                .content_type(ContentType::json())[m
+[31m-                .json(json!(ResponseBody {[m
+[31m-                    status: Status::Failure,[m
+[31m-                    data: None,[m
+[31m-                    error_message: Some(json!({[m
+[31m-                        "errorMessage": format!("Collection: '{}' does not exists", collection_id)[m
+[31m-                    }))[m
+[31m-                }))),[m
+[31m-            _ => Ok(HttpResponse::InternalServerError()[m
+[32m+[m[32m    let mongodb_connection = start_mongo_connection().await?;[m
+[32m+[m[32m    let mut collection_create = data.clone();[m
+[32m+[m[32m    match get_datasource(&mongodb_connection, collection_id.as_str()).await {[m
+[32m+[m[32m        Ok(option) => match option {[m
+[32m+[m[32m            Some(datasource) => {[m
+[32m+[m[32m                let vector_database_client =[m
+[32m+[m[32m                    check_byo_vector_database(datasource.clone(), &mongodb_connection)[m
+[32m+[m[32m                        .await[m
+[32m+[m[32m                        .unwrap_or(default_vector_db_client().await);[m
+[32m+[m[32m                let vector_database_client = vector_database_client.read().await;[m
+[32m+[m[32m                collection_create.collection_name = datasource[m
+[32m+[m[32m                    .collection_name[m
+[32m+[m[32m                    .map_or(datasource.id.to_string(), |d| d);[m
+[32m+[m[32m                collection_create.namespace = datasource.namespace;[m
+[32m+[m[32m                match vector_database_client.create_collection(data.clone()).await {[m
+[32m+[m[32m                    Ok(collection_result) => match collection_result {[m
+[32m+[m[32m                        VectorDatabaseStatus::Ok => Ok(HttpResponse::Ok()[m
+[32m+[m[32m                            .content_type(ContentType::json())[m
+[32m+[m[32m                            .json(json!(ResponseBody {[m
+[32m+[m[32m                                status: Status::Success,[m
+[32m+[m[32m                                data: None,[m
+[32m+[m[32m                                error_message: None[m
+[32m+[m[32m                            }))),[m
+[32m+[m[32m                        VectorDatabaseStatus::Error(e) => Ok(HttpResponse::NotFound()[m
+[32m+[m[32m                            .content_type(ContentType::json())[m
+[32m+[m[32m                            .json(json!(ResponseBody {[m
+[32m+[m[32m                                status: Status::Failure,[m
+[32m+[m[32m                                data: None,[m
+[32m+[m[32m                                error_message: Some(json!({[m
+[32m+[m[32m                                    "errorMessage": format!("An error occurred during create operation: {}", e)[m
+[32m+[m[32m                                }))[m
+[32m+[m[32m                            }))),[m
+[32m+[m[32m                        VectorDatabaseStatus::NotFound => Ok(HttpResponse::NotFound()[m
+[32m+[m[32m                            .content_type(ContentType::json())[m
+[32m+[m[32m                            .json(json!(ResponseBody {[m
+[32m+[m[32m                                status: Status::Failure,[m
+[32m+[m[32m                                data: None,[m
+[32m+[m[32m                                error_message: Some(json!({[m
+[32m+[m[32m                                    "errorMessage": format!("Collection: '{}' does not exists", collection_id)[m
+[32m+[m[32m                                }))[m
+[32m+[m[32m                            }))),[m
+[32m+[m[32m                        _ => Ok(HttpResponse::InternalServerError()[m
+[32m+[m[32m                            .content_type(ContentType::json())[m
+[32m+[m[32m                            .json(json!(ResponseBody {[m
+[32m+[m[32m                                status: Status::Failure,[m
+[32m+[m[32m                                data: None,[m
+[32m+[m[32m                                error_message: Some(json!({[m
+[32m+[m[32m                                    "errorMessage": format!("Could not create collection: '{}' due to an \[m
+[32m+[m[32m                                    unknown error", collection_id)[m
+[32m+[m[32m                                }))[m
+[32m+[m[32m                            }))),[m
+[32m+[m[32m                    },[m
+[32m+[m[32m                    Err(e) => {[m
+[32m+[m[32m                        let error_message_json = format_error_message(e.clone());[m
+[32m+[m[32m                        Ok(HttpResponse::InternalServerError()[m
+[32m+[m[32m                            .content_type(ContentType::json())[m
+[32m+[m[32m                            .json(json!(ResponseBody {[m
+[32m+[m[32m                                status: Status::Failure,[m
+[32m+[m[32m                                data: None,[m
+[32m+[m[32m                                error_message: Some(match error_message_json {[m
+[32m+[m[32m                                    Some(json_value) => json!({[m
+[32m+[m[32m                                        "errorMessage": "An error occurred while creating collection.",[m
+[32m+[m[32m                                        "errorDetails": json_value[m
+[32m+[m[32m                                    }),[m
+[32m+[m[32m                                    None => json!({[m
+[32m+[m[32m                                        "errorMessage": format!("An error occurred while creating collection. \[m
+[32m+[m[32m                                        Error: {}", e)[m
+[32m+[m[32m                                    }),[m
+[32m+[m[32m                                })[m
+[32m+[m[32m                            })))[m
+[32m+[m[32m                    }[m
+[32m+[m[32m                }[m
+[32m+[m[32m            }[m
+[32m+[m[32m            None => Ok(HttpResponse::NotFound()[m
+                 .content_type(ContentType::json())[m
+                 .json(json!(ResponseBody {[m
+                     status: Status::Failure,[m
+                     data: None,[m
+                     error_message: Some(json!({[m
+[31m-                        "errorMessage": format!("Could not create collection: '{}' due to an \[m
+[31m-                        unknown error", collection_id)[m
+[32m+[m[32m                        "errorMessage": format!("No datasource associated with the ID : '{}'",[m
+[32m+[m[32m                            collection_id)[m
+                     }))[m
+                 }))),[m
+         },[m
+[31m-        Err(e) => {[m
+[31m-            let error_message_json = format_error_message(e.clone());[m
+[31m-            Ok(HttpResponse::InternalServerError()[m
+[31m-                .content_type(ContentType::json())[m
+[31m-                .json(json!(ResponseBody {[m
+[31m-                    status: Status::Failure,[m
+[31m-                    data: None,[m
+[31m-                    error_message: Some(match error_message_json {[m
+[31m-                        Some(json_value) => json!({[m
+[31m-                            "errorMessage": "An error occurred while creating collection.",[m
+[31m-                            "errorDetails": json_value[m
+[31m-                        }),[m
+[31m-                        None => json!({[m
+[31m-                            "errorMessage": format!("An error occurred while creating collection. \[m
+[31m-                            Error: {}", e)[m
+[31m-                        }),[m
+[31m-                    })[m
+[31m-                })))[m
+[31m-        }[m
+[32m+[m[32m        Err(e) => Ok(HttpResponse::BadRequest()[m
+[32m+[m[32m            .content_type(ContentType::json())[m
+[32m+[m[32m            .json(json!(ResponseBody {[m
+[32m+[m[32m                status: Status::Failure,[m
+[32m+[m[32m                data: None,[m
+[32m+[m[32m                error_message: Some(json!({[m
+[32m+[m[32m                    "errorMessage": format!("Could not create collection exists: '{}' due to an \[m
+[32m+[m[32m                    unknown error. Error: {}", collection_id, e)[m
+[32m+[m[32m                }))[m
+[32m+[m[32m            }))),[m
+     }[m
+ }[m
+ [m
+[36m@@ -434,14 +546,26 @@[m [mpub async fn scroll_data([m
+ #[wherr][m
+ #[delete("/collection/{dataset_id}")][m
+ pub async fn delete_collection([m
+[31m-    app_data: Data<Arc<RwLock<dyn VectorDatabase>>>,[m
+[32m+[m[32m    //app_data: Data<Arc<RwLock<dyn VectorDatabase>>>,[m
+     Path(dataset_id): Path<String>,[m
+ ) -> Result<impl Responder> {[m
+     let collection_id = dataset_id.clone();[m
+[31m-    let vector_database = app_data.get_ref().clone();[m
+[31m-    let vector_database_client = vector_database.read().await;[m
+[31m-    let search_request = SearchRequest::new(SearchType::Collection, collection_id);[m
+[31m-    match vector_database_client[m
+[32m+[m[32m    let mongodb_connection = start_mongo_connection().await?;[m
+[32m+[m[32m    match get_datasource(&mongodb_connection, collection_id.as_str()).await {[m
+[32m+[m[32m        Ok(option) => match option {[m
+[32m+[m[32m            Some(datasource) => {[m
+[32m+[m[32m                let vector_database_client =[m
+[32m+[m[32m                    check_byo_vector_database(datasource.clone(), &mongodb_connection)[m
+[32m+[m[32m                        .await[m
+[32m+[m[32m                        .unwrap_or(default_vector_db_client().await);[m
+[32m+[m[32m                let vector_database_client = vector_database_client.read().await;[m
+[32m+[m[32m                let mut search_request = SearchRequest::new(SearchType::Collection, collection_id);[m
+[32m+[m[32m                search_request.byo_vector_db = Some(true);[m
+[32m+[m[32m                search_request.collection = datasource[m
+[32m+[m[32m                    .collection_name[m
+[32m+[m[32m                    .map_or(datasource.id.to_string(), |d| d);[m
+[32m+[m[32m                search_request.namespace = datasource.namespace;[m
+[32m+[m[32m                match vector_database_client[m
+         .delete_collection(search_request)[m
+         .await[m
+     {[m
+[36m@@ -491,83 +615,149 @@[m [mpub async fn delete_collection([m
+                     dataset_id)[m
+                 }))[m
+             }))),[m
+[32m+[m[32m    }[m
+[32m+[m[32m            }[m
+[32m+[m[32m            None => Ok(HttpResponse::NotFound()[m
+[32m+[m[32m                .content_type(ContentType::json())[m
+[32m+[m[32m                .json(json!(ResponseBody {[m
+[32m+[m[32m                    status: Status::Failure,[m
+[32m+[m[32m                    data: None,[m
+[32m+[m[32m                    error_message: Some(json!({[m
+[32m+[m[32m                        "errorMessage": format!("The datasource: '{}' does not exists in the \[m
+[32m+[m[32m                        database",[m
+[32m+[m[32m                            collection_id)[m
+[32m+[m[32m                    }))[m
+[32m+[m[32m                }))),[m
+[32m+[m[32m        },[m
+[32m+[m[32m        Err(e) => Ok(HttpResponse::BadRequest()[m
+[32m+[m[32m            .content_type(ContentType::json())[m
+[32m+[m[32m            .json(json!(ResponseBody {[m
+[32m+[m[32m                status: Status::Failure,[m
+[32m+[m[32m                data: None,[m
+[32m+[m[32m                error_message: Some(json!({[m
+[32m+[m[32m                    "errorMessage": format!("Could not delete collection: '{}' due to an \[m
+[32m+[m[32m                    unknown error. Error: {}", collection_id, e)[m
+[32m+[m[32m                }))[m
+[32m+[m[32m            }))),[m
+     }[m
+ }[m
+ #[wherr][m
+ #[get("/collection-info/{dataset_id}")][m
+ pub async fn get_collection_info([m
+[31m-    app_data: Data<Arc<RwLock<dyn VectorDatabase>>>,[m
+[32m+[m[32m    //app_data: Data<Arc<RwLock<dyn VectorDatabase>>>,[m
+     Path(dataset_id): Path<String>,[m
+ ) -> Result<impl Responder> {[m
+     let collection_id = dataset_id.clone();[m
+[31m-    let vector_database = app_data.get_ref().clone();[m
+[31m-    let vector_database_client = vector_database.read().await;[m
+[31m-    let search_request = SearchRequest::new(SearchType::Collection, collection_id);[m
+[31m-    match vector_database_client[m
+[31m-        .get_collection_info(search_request)[m
+[31m-        .await[m
+[31m-    {[m
+[31m-        Ok(Some(info)) => Ok(HttpResponse::Ok()[m
+[31m-            .content_type(ContentType::json())[m
+[31m-            .json(json!(ResponseBody {[m
+[31m-                status: Status::Success,[m
+[31m-                data: Some(json!(info)),[m
+[31m-                error_message: None[m
+[31m-            }))),[m
+[31m-        Ok(None) => Ok(HttpResponse::NotFound()[m
+[32m+[m[32m    let mongodb_connection = start_mongo_connection().await?;[m
+[32m+[m[32m    match get_datasource(&mongodb_connection, collection_id.as_str()).await {[m
+[32m+[m[32m        Ok(option) => match option {[m
+[32m+[m[32m            Some(datasource) => {[m
+[32m+[m[32m                let vector_database_client =[m
+[32m+[m[32m                    check_byo_vector_database(datasource.clone(), &mongodb_connection)[m
+[32m+[m[32m                        .await[m
+[32m+[m[32m                        .unwrap_or(default_vector_db_client().await);[m
+[32m+[m[32m                let vector_database_client = vector_database_client.read().await;[m
+[32m+[m[32m                let mut search_request = SearchRequest::new(SearchType::Collection, collection_id);[m
+[32m+[m[32m                search_request.byo_vector_db = Some(true);[m
+[32m+[m[32m                search_request.collection = datasource[m
+[32m+[m[32m                    .collection_name[m
+[32m+[m[32m                    .map_or(datasource.id.to_string(), |d| d);[m
+[32m+[m[32m                search_request.namespace = datasource.namespace;[m
+[32m+[m[32m                match vector_database_client[m
+[32m+[m[32m                    .get_collection_info(search_request)[m
+[32m+[m[32m                    .await[m
+[32m+[m[32m                {[m
+[32m+[m[32m                    Ok(Some(info)) => Ok(HttpResponse::Ok()[m
+[32m+[m[32m                        .content_type(ContentType::json())[m
+[32m+[m[32m                        .json(json!(ResponseBody {[m
+[32m+[m[32m                            status: Status::Success,[m
+[32m+[m[32m                            data: Some(json!(info)),[m
+[32m+[m[32m                            error_message: None[m
+[32m+[m[32m                        }))),[m
+[32m+[m[32m                    Ok(None) => Ok(HttpResponse::NotFound()[m
+[32m+[m[32m                        .content_type(ContentType::json())[m
+[32m+[m[32m                        .json(json!(ResponseBody {[m
+[32m+[m[32m                            status: Status::Failure,[m
+[32m+[m[32m                            data: None,[m
+[32m+[m[32m                            error_message: Some(json!({[m
+[32m+[m[32m                                "errorMessage": format!("Collection: '{}' returned no information", dataset_id)[m
+[32m+[m[32m                            }))[m
+[32m+[m[32m                        }))),[m
+[32m+[m[32m                    Err(e) => {[m
+[32m+[m[32m                        let error_message_json = format_error_message(e.clone());[m
+[32m+[m[32m                        Ok(HttpResponse::InternalServerError()[m
+[32m+[m[32m                            .content_type(ContentType::json())[m
+[32m+[m[32m                            .json(json!(ResponseBody {[m
+[32m+[m[32m                                status: Status::Failure,[m
+[32m+[m[32m                                data: None,[m
+[32m+[m[32m                                error_message: Some(match error_message_json {[m
+[32m+[m[32m                                    Some(json_value) => json!({[m
+[32m+[m[32m                                        "errorMessage": "An error occurred while collecting collection info.",[m
+[32m+[m[32m                                        "errorDetails": json_value[m
+[32m+[m[32m                                    }),[m
+[32m+[m[32m                                    None => json!({[m
+[32m+[m[32m                                        "errorMessage": format!("An error occurred while collecting collection info. \[m
+[32m+[m[32m                                        Error: {}", e)[m
+[32m+[m[32m                                    })[m
+[32m+[m[32m                                })[m
+[32m+[m[32m                            })))[m
+[32m+[m[32m                    }[m
+[32m+[m[32m                }[m
+[32m+[m[32m            }[m
+[32m+[m[32m            None => Ok(HttpResponse::NotFound()[m
+[32m+[m[32m                .content_type(ContentType::json())[m
+[32m+[m[32m                .json(json!(ResponseBody {[m
+[32m+[m[32m                    status: Status::Failure,[m
+[32m+[m[32m                    data: None,[m
+[32m+[m[32m                    error_message: Some(json!({[m
+[32m+[m[32m                        "errorMessage": format!("The datasource: '{}' does not exists in the \[m
+[32m+[m[32m                        database",[m
+[32m+[m[32m                            collection_id)[m
+[32m+[m[32m                    }))[m
+[32m+[m[32m                }))),[m
+[32m+[m[32m        },[m
+[32m+[m[32m        Err(e) => Ok(HttpResponse::BadRequest()[m
+             .content_type(ContentType::json())[m
+             .json(json!(ResponseBody {[m
+                 status: Status::Failure,[m
+                 data: None,[m
+                 error_message: Some(json!({[m
+[31m-                    "errorMessage": format!("Collection: '{}' returned no information", dataset_id)[m
+[32m+[m[32m                    "errorMessage": format!("Could not get collection info for collection: '{}' \[m
+[32m+[m[32m                    due to an unknown error. Error: {}", collection_id, e)[m
+                 }))[m
+             }))),[m
+[31m-        Err(e) => {[m
+[31m-            let error_message_json = format_error_message(e.clone());[m
+[31m-            Ok(HttpResponse::InternalServerError()[m
+[31m-                .content_type(ContentType::json())[m
+[31m-                .json(json!(ResponseBody {[m
+[31m-                    status: Status::Failure,[m
+[31m-                    data: None,[m
+[31m-                    error_message: Some(match error_message_json {[m
+[31m-                        Some(json_value) => json!({[m
+[31m-                            "errorMessage": "An error occurred while collecting collection info.",[m
+[31m-                            "errorDetails": json_value[m
+[31m-                        }),[m
+[31m-                        None => json!({[m
+[31m-                            "errorMessage": format!("An error occurred while collecting collection info. \[m
+[31m-                            Error: {}", e)[m
+[31m-                        })[m
+[31m-                    })[m
+[31m-                })))[m
+[31m-        }[m
+     }[m
+ }[m
+ [m
+ #[wherr][m
+ #[get("/storage-size/{team_id}")][m
+[31m-pub async fn get_storage_size([m
+[31m-    app_data: Data<Arc<RwLock<dyn VectorDatabase>>>,[m
+[31m-    Path(team_id): Path<String>,[m
+[31m-) -> Result<impl Responder> {[m
+[32m+[m[32mpub async fn get_storage_size(Path(team_id): Path<String>) -> Result<impl Responder> {[m
+     let mut collection_size_response = CollectionStorageSizeResponse {[m
+         list_of_datasources: vec![],[m
+         total_size: 0.0,[m
+         total_points: 0,[m
+     };[m
+[31m-    let vector_database = app_data.get_ref().clone();[m
+[31m-    let vector_database_client = vector_database.read().await;[m
+     let team_id = team_id.clone();[m
+     let mongodb_connection = start_mongo_connection().await?;[m
+[32m+[m
+     let list_of_team_datasources =[m
+         get_team_datasources(&mongodb_connection, team_id.as_str()).await?;[m
+     for datasource in list_of_team_datasources {[m
+[32m+[m[32m        let vector_database_client =[m
+[32m+[m[32m            check_byo_vector_database(datasource.clone(), &mongodb_connection)[m
+[32m+[m[32m                .await[m
+[32m+[m[32m                .unwrap_or(default_vector_db_client().await);[m
+[32m+[m[32m        let vector_database_client = vector_database_client.read().await;[m
+         let model_result = get_model(&mongodb_connection, datasource.id.to_string().as_str()).await;[m
+         match model_result {[m
+             Ok(Some(embedding_model)) => {[m
+[31m-                let search_request =[m
+[32m+[m[32m                let mut search_request =[m
+                     SearchRequest::new(SearchType::Collection, datasource.id.to_string());[m
+[32m+[m[32m                search_request.byo_vector_db = Some(true);[m
+[32m+[m[32m                search_request.collection = datasource[m
+[32m+[m[32m                    .collection_name[m
+[32m+[m[32m                    .map_or(datasource.id.to_string(), |d| d);[m
+[32m+[m[32m                search_request.namespace = datasource.namespace;[m
+                 if let Ok(Some(collection_storage_info)) = vector_database_client[m
+                     .get_storage_size(search_request, embedding_model.embeddingLength as usize)[m
+                     .await[m
+[1mdiff --git a/vector-db-proxy/src/vector_databases/helpers.rs b/vector-db-proxy/src/vector_databases/helpers.rs[m
+[1mindex 26369aed..0c372afa 100644[m
+[1m--- a/vector-db-proxy/src/vector_databases/helpers.rs[m
+[1m+++ b/vector-db-proxy/src/vector_databases/helpers.rs[m
+[36m@@ -1,6 +1,6 @@[m
+ use crate::adaptors::mongo::models::DataSources;[m
+ use crate::adaptors::mongo::queries::get_vector_db_details;[m
+[31m-use crate::vector_databases::vector_database::{build_vector_db_client, VectorDatabase};[m
+[32m+[m[32muse crate::vector_databases::vector_database::{VectorDatabase, VectorDbClient};[m
+ use mongodb::Database;[m
+ use prost_types::value::Kind;[m
+ use prost_types::{ListValue, Struct, Value as ProstValue};[m
+[36m@@ -101,38 +101,32 @@[m [mfn serde_to_prost(serde_value: &Value) -> ProstValue {[m
+ }[m
+ [m
+ pub async fn check_byo_vector_database([m
+[31m-    mut vector_database_client: Arc<RwLock<dyn VectorDatabase>>,[m
+     datasource: DataSources,[m
+     mongo: &Database,[m
+[31m-) -> Arc<RwLock<dyn VectorDatabase>> {[m
+[32m+[m[32m) -> Option<Arc<RwLock<dyn VectorDatabase>>> {[m
+     if let Some(vector_db_id) = datasource.vector_db_id {[m
+[31m-        println!("There's a BYO vector DB associated with this Datasource.");[m
+[32m+[m[32m        println!([m
+[32m+[m[32m            "There's a BYO vector DB associated with the Datasource: {}",[m
+[32m+[m[32m            datasource.id[m
+[32m+[m[32m        );[m
+         println!("Updating vector DB credentials with BYO creds...");[m
+         if let Some(vector_db) = get_vector_db_details(&mongo, vector_db_id).await {[m
+[31m-            println!("Got something back from mongo");[m
+[31m-            //if let Some(vector_db) = vector_db_option_config {[m
+[31m-            //    println!("Vector DB doc: {:?}", vector_db);[m
+[31m-            let byo_vector_database_client = build_vector_db_client([m
+[31m-                vector_db.r#type.to_string(),[m
+[31m-                vector_db.url,[m
+[31m-                vector_db.apiKey,[m
+[31m-            )[m
+[31m-            .await;[m
+[31m-            vector_database_client = byo_vector_database_client[m
+[31m-            //} else {[m
+[31m-            //    println!([m
+[31m-            //        "The vector DB ID: {} did not yield any valid documents",[m
+[31m-            //        vector_db_id[m
+[31m-            //    );[m
+[31m-            //}[m
+[32m+[m[32m            let vector_db_config = VectorDbClient {[m
+[32m+[m[32m                vector_db_type: vector_db.r#type,[m
+[32m+[m[32m                url: vector_db.url,[m
+[32m+[m[32m                api_key: vector_db.apiKey,[m
+[32m+[m[32m            };[m
+[32m+[m[32m            println!("New credentials: {:?}", vector_db_config);[m
+[32m+[m[32m            Some(vector_db_config.build_vector_db_client().await)[m
+         } else {[m
+[31m-            println!("Something is a foot!")[m
+[32m+[m[32m            println!("There was an error looking up vector DB config in database");[m
+[32m+[m[32m            None[m
+         }[m
+     } else {[m
+         println!([m
+             "There was no vector DB ID associated with the datasource: {}",[m
+             datasource.id[m
+         );[m
+[32m+[m[32m        None[m
+     }[m
+[31m-    vector_database_client[m
+ }[m
+[1mdiff --git a/vector-db-proxy/src/vector_databases/models.rs b/vector-db-proxy/src/vector_databases/models.rs[m
+[1mindex 7ba3cdbe..9f84bb22 100644[m
+[1m--- a/vector-db-proxy/src/vector_databases/models.rs[m
+[1m+++ b/vector-db-proxy/src/vector_databases/models.rs[m
+[36m@@ -181,11 +181,13 @@[m [mimpl Default for SearchType {[m
+ pub struct SearchRequest {[m
+     pub search_type: SearchType,[m
+     pub collection: String,[m
+[32m+[m[32m    pub namespace: Option<String>,[m
+     pub id: Option<String>,[m
+     pub vector: Option<Vec<f32>>,[m
+     pub filters: Option<FilterConditions>,[m
+     pub search_response_params: Option<SearchResponseParams>,[m
+     pub region: Option<Region>,[m
+[32m+[m[32m    pub byo_vector_db: Option<bool>,[m
+     pub cloud: Option<Cloud>,[m
+     pub top_k: Option<u32>,[m
+ }[m
+[36m@@ -195,10 +197,12 @@[m [mimpl SearchRequest {[m
+         Self {[m
+             search_type,[m
+             collection,[m
+[32m+[m[32m            namespace: None,[m
+             id: None,[m
+             vector: None,[m
+             filters: None,[m
+             top_k: None,[m
+[32m+[m[32m            byo_vector_db: None,[m
+             search_response_params: None,[m
+             region: Some(Region::US),[m
+             cloud: Some(Cloud::GCP),[m
+[1mdiff --git a/vector-db-proxy/src/vector_databases/vector_database.rs b/vector-db-proxy/src/vector_databases/vector_database.rs[m
+[1mindex 6130eebd..6e568e7a 100644[m
+[1m--- a/vector-db-proxy/src/vector_databases/vector_database.rs[m
+[1m+++ b/vector-db-proxy/src/vector_databases/vector_database.rs[m
+[36m@@ -1,4 +1,6 @@[m
+[32m+[m[32muse crate::adaptors::mongo::models::VectorDatabaseType;[m
+ use crate::adaptors::{pinecone, qdrant};[m
+[32m+[m[32muse crate::init::env_variables::GLOBAL_DATA;[m
+ use crate::vector_databases::error::VectorDatabaseError;[m
+ use crate::vector_databases::models::*;[m
+ use async_trait::async_trait;[m
+[36m@@ -75,34 +77,59 @@[m [mpub trait VectorDatabase: Send + Sync {[m
+     async fn display_config(&self);[m
+ }[m
+ // Factory method to build Vector database client based on[m
+[31m-pub async fn build_vector_db_client([m
+[31m-    vector_db: String,[m
+[31m-    url: Option<String>,[m
+[31m-    api_key: Option<String>,[m
+[31m-) -> Arc<RwLock<dyn VectorDatabase>> {[m
+[31m-    println!("Building NEW {} vector client", vector_db);[m
+[31m-    let vector_database_client: Arc<RwLock<dyn VectorDatabase>> = match vector_db.as_str() {[m
+[31m-        "qdrant" => {[m
+[31m-            println!("Using Qdrant Vector Database");[m
+[31m-            Arc::new(RwLock::new([m
+[31m-                qdrant::client::build_qdrant_client(url, api_key)[m
+[31m-                    .await[m
+[31m-                    .unwrap(),[m
+[31m-            ))[m
+[31m-        }[m
+[31m-        "pinecone" => {[m
+[31m-            println!("Using Pinecone Vector Database");[m
+[31m-            Arc::new(RwLock::new([m
+[31m-                pinecone::client::build_pinecone_client(url, api_key)[m
+[31m-                    .await[m
+[31m-                    .unwrap(),[m
+[31m-            ))[m
+[31m-        }[m
+[31m-        _ => panic!([m
+[31m-            "No valid vector database was chosen. Expected one of `qdrant` or `pinecone`.\[m
+[31m-         Got `{}`",[m
+[31m-            vector_db[m
+[31m-        ),[m
+[32m+[m[32m#[derive(Debug)][m
+[32m+[m[32mpub struct VectorDbClient {[m
+[32m+[m[32m    pub vector_db_type: VectorDatabaseType,[m
+[32m+[m[32m    pub url: Option<String>,[m
+[32m+[m[32m    pub api_key: Option<String>,[m
+[32m+[m[32m}[m
+[32m+[m[32mpub async fn default_vector_db_client() -> Arc<RwLock<dyn VectorDatabase>> {[m
+[32m+[m[32m    let global_data = GLOBAL_DATA.read().await;[m
+[32m+[m[32m    let vector_db = global_data.vector_database.clone();[m
+[32m+[m[32m    let vector_db_type = VectorDatabaseType::from(vector_db);[m
+[32m+[m[32m    let vector_db_url = global_data.vector_database_url.clone();[m
+[32m+[m[32m    let vector_db_api_key = global_data.vector_database_api_key.clone();[m
+[32m+[m
+[32m+[m[32m    let vector_db_config = VectorDbClient {[m
+[32m+[m[32m        vector_db_type,[m
+[32m+[m[32m        url: Some(vector_db_url),[m
+[32m+[m[32m        api_key: Some(vector_db_api_key),[m
+     };[m
+[31m-    vector_database_client[m
+[32m+[m
+[32m+[m[32m    vector_db_config.build_vector_db_client().await[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32mimpl VectorDbClient {[m
+[32m+[m[32m    pub async fn build_vector_db_client(&self) -> Arc<RwLock<dyn VectorDatabase>> {[m
+[32m+[m[32m        println!("The incoming credentials are: {:?}", self);[m
+[32m+[m[32m        println!("Building NEW {} vector client", self.vector_db_type);[m
+[32m+[m[32m        let vector_database_client: Arc<RwLock<dyn VectorDatabase>> = match self[m
+[32m+[m[32m            .vector_db_type[m
+[32m+[m[32m            .to_string()[m
+[32m+[m[32m            .as_str()[m
+[32m+[m[32m        {[m
+[32m+[m[32m            "qdrant" => {[m
+[32m+[m[32m                println!("Using Qdrant Vector Database");[m
+[32m+[m[32m                Arc::new(RwLock::new([m
+[32m+[m[32m                    qdrant::client::build_qdrant_client(self.url.clone(), self.api_key.clone())[m
+[32m+[m[32m                        .await[m
+[32m+[m[32m                        .unwrap(),[m
+[32m+[m[32m                ))[m
+[32m+[m[32m            }[m
+[32m+[m[32m            "pinecone" => {[m
+[32m+[m[32m                println!("Using Pinecone Vector Database");[m
+[32m+[m[32m                Arc::new(RwLock::new([m
+[32m+[m[32m                    pinecone::client::build_pinecone_client(self.url.clone(), self.api_key.clone())[m
+[32m+[m[32m                        .await[m
+[32m+[m[32m                        .unwrap(),[m
+[32m+[m[32m                ))[m
+[32m+[m[32m            }[m
+[32m+[m[32m            _ => panic!([m
+[32m+[m[32m                "No valid vector database was chosen. Expected one of `qdrant` or `pinecone`.\[m
+[32m+[m[32m             Got `{}`",[m
+[32m+[m[32m                self.vector_db_type[m
+[32m+[m[32m            ),[m
+[32m+[m[32m        };[m
+[32m+[m[32m        vector_database_client[m
+[32m+[m[32m    }[m
+ }[m

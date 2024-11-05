@@ -6,7 +6,7 @@ use crate::embeddings::models::{EmbeddingModels, FastEmbedModels};
 use crate::init::env_variables::GLOBAL_DATA;
 use crate::vector_databases::helpers::check_byo_vector_database;
 use crate::vector_databases::models::{Point, SearchRequest, SearchType, VectorDatabaseStatus};
-use crate::vector_databases::vector_database::VectorDatabase;
+use crate::vector_databases::vector_database::default_vector_db_client;
 use anyhow::{anyhow, Result};
 use async_openai::config::OpenAIConfig;
 use async_openai::types::CreateEmbeddingRequestArgs;
@@ -210,7 +210,7 @@ pub async fn embed_text_chunks_async(
 pub async fn embed_bulk_insert_unstructured_response(
     documents: Vec<UnstructuredIOResponse>,
     datasource: DataSources,
-    mut vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
+    //mut vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
     mongo_client: Arc<RwLock<Database>>,
     embedding_model: Model,
     metadata: Option<HashMap<String, Value>>,
@@ -223,7 +223,10 @@ pub async fn embed_bulk_insert_unstructured_response(
     let datasource_id = datasource.id.to_string();
     match embed_text_chunks_async(list_of_text.clone(), &embedding_model).await {
         Ok(embeddings) => {
-            let search_request = SearchRequest::new(search_type.clone(), datasource_id.to_string());
+            let mut search_request =
+                SearchRequest::new(search_type.clone(), datasource_id.to_string());
+            search_request.byo_vector_db = Some(true);
+            search_request.namespace = datasource.namespace.clone();
             let mut points_to_upload: Vec<Point> = vec![];
             // Construct point to upload
             for (i, file_metadata) in list_of_text.iter().enumerate() {
@@ -261,12 +264,10 @@ pub async fn embed_bulk_insert_unstructured_response(
                 }
                 //TODO: Need to check if this will take up a lot of memory or not?
                 // How can we re-use these clients rather than creating a new one each time?
-                vector_database_client = check_byo_vector_database(
-                    vector_database_client,
-                    datasource.clone(),
-                    &mongo_connection,
-                )
-                .await;
+                let vector_database_client =
+                    check_byo_vector_database(datasource.clone(), &mongo_connection)
+                        .await
+                        .unwrap_or(default_vector_db_client().await);
 
                 // Initialise vector database client
                 let vector_database = Arc::clone(&vector_database_client);

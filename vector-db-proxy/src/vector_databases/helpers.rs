@@ -1,6 +1,6 @@
 use crate::adaptors::mongo::models::DataSources;
 use crate::adaptors::mongo::queries::get_vector_db_details;
-use crate::vector_databases::vector_database::{build_vector_db_client, VectorDatabase};
+use crate::vector_databases::vector_database::{VectorDatabase, VectorDbClient};
 use mongodb::Database;
 use prost_types::value::Kind;
 use prost_types::{ListValue, Struct, Value as ProstValue};
@@ -101,38 +101,32 @@ fn serde_to_prost(serde_value: &Value) -> ProstValue {
 }
 
 pub async fn check_byo_vector_database(
-    mut vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
     datasource: DataSources,
     mongo: &Database,
-) -> Arc<RwLock<dyn VectorDatabase>> {
+) -> Option<Arc<RwLock<dyn VectorDatabase>>> {
     if let Some(vector_db_id) = datasource.vector_db_id {
-        println!("There's a BYO vector DB associated with this Datasource.");
+        println!(
+            "There's a BYO vector DB associated with the Datasource: {}",
+            datasource.id
+        );
         println!("Updating vector DB credentials with BYO creds...");
         if let Some(vector_db) = get_vector_db_details(&mongo, vector_db_id).await {
-            println!("Got something back from mongo");
-            //if let Some(vector_db) = vector_db_option_config {
-            //    println!("Vector DB doc: {:?}", vector_db);
-            let byo_vector_database_client = build_vector_db_client(
-                vector_db.r#type.to_string(),
-                vector_db.url,
-                vector_db.apiKey,
-            )
-            .await;
-            vector_database_client = byo_vector_database_client
-            //} else {
-            //    println!(
-            //        "The vector DB ID: {} did not yield any valid documents",
-            //        vector_db_id
-            //    );
-            //}
+            let vector_db_config = VectorDbClient {
+                vector_db_type: vector_db.r#type,
+                url: vector_db.url,
+                api_key: vector_db.apiKey,
+            };
+            println!("New credentials: {:?}", vector_db_config);
+            Some(vector_db_config.build_vector_db_client().await)
         } else {
-            println!("Something is a foot!")
+            println!("There was an error looking up vector DB config in database");
+            None
         }
     } else {
         println!(
             "There was no vector DB ID associated with the datasource: {}",
             datasource.id
         );
+        None
     }
-    vector_database_client
 }

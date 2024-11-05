@@ -44,7 +44,15 @@ impl VectorDatabase for PineconeClient {
             collection_name: search_request.collection.clone(),
             collection_metadata: None,
         };
-        let index_name = Region::to_str(search_request.region.unwrap_or_default());
+        let region = search_request.region.unwrap_or_default();
+        let namespace = search_request
+            .clone()
+            .namespace
+            .map_or(search_request.clone().collection, |n| n);
+        let index_name = search_request
+            .byo_vector_db
+            .map_or(Region::to_str(region), |_k| namespace.as_str())
+            .to_string();
         match get_index_model(&self, index_name.to_string()).await {
             Ok(index_model) => {
                 collection_results.status = VectorDatabaseStatus::Ok;
@@ -64,7 +72,15 @@ impl VectorDatabase for PineconeClient {
         &self,
         collection_create: CollectionCreate,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
-        let index_name = Region::to_str(collection_create.region.unwrap_or_default());
+        let region = collection_create.region.unwrap_or_default();
+        let namespace = collection_create
+            .clone()
+            .namespace
+            .map_or(collection_create.clone().collection_name, |n| n);
+        let index_name = collection_create
+            .namespace
+            .map_or(Region::to_str(region), |_k| namespace.as_str())
+            .to_string();
         match get_index_model(&self, index_name.to_string()).await {
             Ok(_) => Ok(VectorDatabaseStatus::Ok),
             Err(e) => match e {
@@ -95,7 +111,15 @@ impl VectorDatabase for PineconeClient {
         search_request: SearchRequest,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
         let region = search_request.clone().region.unwrap_or(Region::US);
-        if let Ok(index_model) = get_index_model(&self, Region::to_str(region).to_string()).await {
+        let namespace = search_request
+            .clone()
+            .namespace
+            .map_or(search_request.clone().collection, |n| n);
+        let index_name = search_request
+            .byo_vector_db
+            .map_or(Region::to_str(region), |_k| namespace.as_str())
+            .to_string();
+        if let Ok(index_model) = get_index_model(&self, index_name).await {
             // Need to figure out the the default index name here
             let mut index = self.index(index_model.host.as_str()).await.unwrap();
             let pinecone_namespace = Namespace::from(search_request.collection.as_str());
@@ -114,28 +138,44 @@ impl VectorDatabase for PineconeClient {
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
         let region = search_request.clone().region.unwrap_or(Region::US);
         let vector = Vector::from(point);
-        let namespace = search_request.clone().collection;
-        match get_index_model(&self, Region::to_str(region).to_string()).await {
+        let namespace = search_request
+            .clone()
+            .namespace
+            .map_or(search_request.clone().collection, |n| n);
+        let index_name = search_request
+            .byo_vector_db
+            .filter(|k| *k == true)
+            .map_or(Region::to_str(region), |_| namespace.as_str())
+            .to_string();
+        match get_index_model(&self, index_name).await {
             Ok(index_model) => {
                 println!("Sending to Pinecone index: {:?}", index_model);
                 let index = self.index(index_model.host.as_str()).await.unwrap();
                 match search_request.search_type {
-                    SearchType::ChunkedRow => match &self.delete_point(search_request).await {
-                        Ok(_) => match upsert(index, &[vector], &namespace.into()).await {
-                            Ok(_) => {
-                                println!("Upsert Successful");
-                                Ok(VectorDatabaseStatus::Ok)
-                            }
-                            Err(e) => Err(e),
-                        },
-                        Err(e) => Err(e.to_owned()),
-                    },
+                    SearchType::ChunkedRow => {
+                        match &self.delete_point(search_request.clone()).await {
+                            Ok(_) => match upsert(index, &[vector], &namespace.into()).await {
+                                Ok(_) => {
+                                    println!("Upsert Successful");
+                                    Ok(VectorDatabaseStatus::Ok)
+                                }
+                                Err(e) => Err(e),
+                            },
+                            Err(e) => Err(e.to_owned()),
+                        }
+                    }
                     _ => match upsert(index, &[vector], &namespace.into()).await {
                         Ok(_) => {
                             println!("Upsert Successful");
                             Ok(VectorDatabaseStatus::Ok)
                         }
-                        Err(e) => Err(e),
+                        Err(e) => {
+                            println!(
+                                "An error occurred while attempting to upsert. Error: {}",
+                                e.clone()
+                            );
+                            Err(e)
+                        }
                     },
                 }
             }

@@ -181,11 +181,13 @@ impl Default for SearchType {
 pub struct SearchRequest {
     pub search_type: SearchType,
     pub collection: String,
+    pub namespace: Option<String>,
     pub id: Option<String>,
     pub vector: Option<Vec<f32>>,
     pub filters: Option<FilterConditions>,
     pub search_response_params: Option<SearchResponseParams>,
     pub region: Option<Region>,
+    pub byo_vector_db: Option<bool>,
     pub cloud: Option<Cloud>,
     pub top_k: Option<u32>,
 }
@@ -195,10 +197,12 @@ impl SearchRequest {
         Self {
             search_type,
             collection,
+            namespace: None,
             id: None,
             vector: None,
             filters: None,
             top_k: None,
+            byo_vector_db: None,
             search_response_params: None,
             region: Some(Region::US),
             cloud: Some(Cloud::GCP),

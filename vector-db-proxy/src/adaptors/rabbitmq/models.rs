@@ -3,7 +3,6 @@ use crate::adaptors::rabbitmq::client::bind_queue_to_exchange;
 use crate::init::env_variables::GLOBAL_DATA;
 use crate::messages::models::{MessageQueueConnection, QueueConnectionTypes};
 use crate::messages::tasks::process_message;
-use crate::vector_databases::vector_database::VectorDatabase;
 use amqp_serde::types::ShortStr;
 use amqprs::channel::{BasicAckArguments, BasicConsumeArguments, Channel};
 use crossbeam::channel::Sender;
@@ -52,7 +51,7 @@ impl MessageQueueConnection for RabbitConnect {
 
 pub async fn rabbit_consume(
     streaming_queue: &Channel,
-    vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
+    //vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
     mongo_client: Arc<RwLock<Database>>,
     sender: Sender<(DataSources, Option<String>, String)>,
 ) {
@@ -91,15 +90,13 @@ pub async fn rabbit_consume(
                                 if let Ok(message_string) = String::from_utf8(msg.clone().to_vec())
                                 {
                                     let sender_clone = sender.clone();
-                                    let vector_database_client =
-                                        Arc::clone(&vector_database_client);
                                     let mongo_client = Arc::clone(&mongo_client);
                                     process_message(
                                         message_string,
                                         stream_type,
                                         datasource_id,
                                         stream_config_key,
-                                        vector_database_client,
+                                        //vector_database_client,
                                         mongo_client,
                                         sender_clone,
                                     )

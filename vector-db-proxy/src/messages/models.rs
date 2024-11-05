@@ -9,7 +9,6 @@ use tokio::sync::{Mutex, RwLock};
 use crate::adaptors::gcp::models::pubsub_consume;
 use crate::adaptors::mongo::models::DataSources;
 use crate::adaptors::rabbitmq::models::rabbit_consume;
-use crate::vector_databases::vector_database::VectorDatabase;
 
 #[derive(Clone, Copy, Debug)]
 pub enum MessageQueueProvider {
@@ -50,16 +49,16 @@ impl MessageQueue for QueueConnectionTypes {
     async fn consume(
         &self,
         streaming_queue: Self::Queue,
-        vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
+        //vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
         mongo_client: Arc<RwLock<Database>>,
         sender: Sender<(DataSources, Option<String>, String)>,
     ) {
         match streaming_queue {
             QueueConnectionTypes::PubSub(stream) => {
-                pubsub_consume(&stream, vector_database_client, mongo_client, sender).await;
+                pubsub_consume(&stream, mongo_client, sender).await;
             }
             QueueConnectionTypes::RabbitMQ(channel) => {
-                rabbit_consume(&channel, vector_database_client, mongo_client, sender).await;
+                rabbit_consume(&channel, mongo_client, sender).await;
             }
         }
     }
@@ -73,7 +72,7 @@ pub trait MessageQueue {
     async fn consume(
         &self,
         streaming_queue: Self::Queue,
-        vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
+        //vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
         mongo_client: Arc<RwLock<Database>>,
         sender: Sender<(DataSources, Option<String>, String)>,
     );

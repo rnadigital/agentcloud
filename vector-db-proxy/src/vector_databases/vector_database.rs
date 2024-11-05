@@ -1,4 +1,6 @@
+use crate::adaptors::mongo::models::VectorDatabaseType;
 use crate::adaptors::{pinecone, qdrant};
+use crate::init::env_variables::GLOBAL_DATA;
 use crate::vector_databases::error::VectorDatabaseError;
 use crate::vector_databases::models::*;
 use async_trait::async_trait;
@@ -75,34 +77,59 @@ pub trait VectorDatabase: Send + Sync {
     async fn display_config(&self);
 }
 // Factory method to build Vector database client based on
-pub async fn build_vector_db_client(
-    vector_db: String,
-    url: Option<String>,
-    api_key: Option<String>,
-) -> Arc<RwLock<dyn VectorDatabase>> {
-    println!("Building NEW {} vector client", vector_db);
-    let vector_database_client: Arc<RwLock<dyn VectorDatabase>> = match vector_db.as_str() {
-        "qdrant" => {
-            println!("Using Qdrant Vector Database");
-            Arc::new(RwLock::new(
-                qdrant::client::build_qdrant_client(url, api_key)
-                    .await
-                    .unwrap(),
-            ))
-        }
-        "pinecone" => {
-            println!("Using Pinecone Vector Database");
-            Arc::new(RwLock::new(
-                pinecone::client::build_pinecone_client(url, api_key)
-                    .await
-                    .unwrap(),
-            ))
-        }
-        _ => panic!(
-            "No valid vector database was chosen. Expected one of `qdrant` or `pinecone`.\
-         Got `{}`",
-            vector_db
-        ),
+#[derive(Debug)]
+pub struct VectorDbClient {
+    pub vector_db_type: VectorDatabaseType,
+    pub url: Option<String>,
+    pub api_key: Option<String>,
+}
+pub async fn default_vector_db_client() -> Arc<RwLock<dyn VectorDatabase>> {
+    let global_data = GLOBAL_DATA.read().await;
+    let vector_db = global_data.vector_database.clone();
+    let vector_db_type = VectorDatabaseType::from(vector_db);
+    let vector_db_url = global_data.vector_database_url.clone();
+    let vector_db_api_key = global_data.vector_database_api_key.clone();
+
+    let vector_db_config = VectorDbClient {
+        vector_db_type,
+        url: Some(vector_db_url),
+        api_key: Some(vector_db_api_key),
     };
-    vector_database_client
+
+    vector_db_config.build_vector_db_client().await
+}
+
+impl VectorDbClient {
+    pub async fn build_vector_db_client(&self) -> Arc<RwLock<dyn VectorDatabase>> {
+        println!("The incoming credentials are: {:?}", self);
+        println!("Building NEW {} vector client", self.vector_db_type);
+        let vector_database_client: Arc<RwLock<dyn VectorDatabase>> = match self
+            .vector_db_type
+            .to_string()
+            .as_str()
+        {
+            "qdrant" => {
+                println!("Using Qdrant Vector Database");
+                Arc::new(RwLock::new(
+                    qdrant::client::build_qdrant_client(self.url.clone(), self.api_key.clone())
+                        .await
+                        .unwrap(),
+                ))
+            }
+            "pinecone" => {
+                println!("Using Pinecone Vector Database");
+                Arc::new(RwLock::new(
+                    pinecone::client::build_pinecone_client(self.url.clone(), self.api_key.clone())
+                        .await
+                        .unwrap(),
+                ))
+            }
+            _ => panic!(
+                "No valid vector database was chosen. Expected one of `qdrant` or `pinecone`.\
+             Got `{}`",
+                self.vector_db_type
+            ),
+        };
+        vector_database_client
+    }
 }
