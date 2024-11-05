@@ -181,6 +181,42 @@ export default function router(server, app) {
 
 			res.redirect(`/${res.locals.account.currentTeam}/datasource/add?token=${encodeURIComponent(res.locals.datasourceOAuth.refreshToken)}&provider=${encodeURIComponent(res.locals.datasourceOAuth.provider)}&datasourceName=${encodeURIComponent(datasourceName)}&datasourceDescription=${encodeURIComponent(datasourceDescription)}`)
 		}
+	);
+
+	oauthRouter.get(
+		'/airtable',
+		fetchDatasource,
+		(req, res) => {
+			const staticCodeVerifier = 'test_verifier';
+			const staticCodeChallenge = 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk'; // SHA-256 of "test_verifier"
+			const authorizationUrl = 'https://airtable.com/oauth2/v1/authorize'; //because airtable isn't a supported passport strategy we need to manually construct and execute the redirect
+			const params = new URLSearchParams({
+				client_id: process.env.OAUTH_AIRTABLE_CLIENT_ID,
+				redirect_uri: `${process.env.URL_APP}/auth/airtable/callback`,
+				response_type: 'code',
+				scope: 'data.records:read',
+				state: 'static_state_string', //state is a required parameter for the request to airtable
+				code_challenge: staticCodeChallenge, // Use static challenge
+				code_challenge_method: 'S256' // Method for PKCE
+			});
+		
+			res.redirect(`${authorizationUrl}?${params.toString()}`);
+		}
+	);
+	oauthRouter.get(
+		'/airtable/callback',
+		useSession,
+		useJWT,
+		fetchSession,
+		passportInstance.authenticate('airtable'),
+		(req, res) => {
+			const log = debug('webapp:router:airtable:callback');
+			const datasourceName = res.locals.oauthData.datasourceName || 'NOTFOUND';
+			const datasourceDescription = res.locals.oauthData.datasourceDescription || 'NOTFOUND';
+			log(`Recieved query params \ndatasourceName: ${datasourceName}\ndatasourceDescription: ${datasourceDescription}`);
+
+			res.redirect(`/${res.locals.account.currentTeam}/datasource/add?token=${encodeURIComponent(res.locals.datasourceOAuth.refreshToken)}&provider=${encodeURIComponent(res.locals.datasourceOAuth.provider)}&datasourceName=${encodeURIComponent(datasourceName)}&datasourceDescription=${encodeURIComponent(datasourceDescription)}`)
+		}
 	)
 
 	server.use('/auth', useSession, passportInstance.session(), oauthRouter);

@@ -6,19 +6,21 @@ import debug from 'debug';
 import createAccount from 'lib/account/create';
 import { ObjectId } from 'mongodb';
 import SecretKeys from 'secret/secretkeys';
-import { OAUTH_PROVIDER, OAuthStrategy } from 'struct/oauth';
+import { CustomOAuthStrategy, OAUTH_PROVIDER, OAuthStrategy } from 'struct/oauth';
 
 import { addOrg } from '../db/org';
 import { addTeam } from '../db/team';
 const log = debug('webapp:oauth');
 
 //To reduce some boilerplace in the router, allows us to just loop and create handlers for each service
+import { Strategy as CustomStrategy } from 'passport-custom';
 import { Strategy as SalesforceStrategy } from 'passport-forcedotcom';
 import { Strategy as GitHubStrategy } from 'passport-github';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { Strategy as HubspotStrategy } from 'passport-hubspot-oauth2';
 import { Strategy as SlackStrategy } from 'passport-slack';
 import { Strategy as XeroStrategy } from 'passport-xero';
+
 // import { Strategy as StripeStrategy } from 'passport-stripe';
 
 export const OAUTH_STRATEGIES: OAuthStrategy[] = [
@@ -94,6 +96,73 @@ export const OAUTH_STRATEGIES: OAuthStrategy[] = [
 	//need to add custom strategy for airtable
 	//google ads??
 ];
+
+export const CUSTOM_OAUTH_STRATEGIES: CustomOAuthStrategy[] = [
+	{
+		strategy: CustomStrategy,
+		name: 'airtable',
+		verify: airtableVerifyFunction,
+		callback: airtableDatasourceCallback,
+		secretKeys: {
+			clientId: SecretKeys.OAUTH_AIRTABLE_CLIENT_ID,
+			secret: SecretKeys.OAUTH_AIRTABLE_CLIENT_SECRET
+		},
+		path: '/auth/airtable/callback'
+	}
+];
+
+export async function airtableVerifyFunction(req, done) {
+	try {
+		const code = typeof req.query.code === 'string' ? req.query.code : null;
+		if (!code) {
+			return done({ message: 'Authorization code not provided or invalid' }, null);
+		}
+		//Exchange auth code for access token
+		const tokenResponse = await fetch('https://airtable.com/oauth2/v1/token', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded'
+			},
+			body: new URLSearchParams({
+				client_id: process.env.OAUTH_AIRTABLE_CLIENT_ID,
+				client_secret: process.env.OAUTH_AIRTABLE_CLIENT_SECRET,
+				code,
+				grant_type: 'authorization_code',
+				redirect_uri: 'http://localhost:3000/airtable/callback'
+			})
+		});
+
+		if (!tokenResponse.ok) {
+			throw new Error('Failed to retrieve tokens');
+		}
+
+		const { access_token, refresh_token, expires_in } = await tokenResponse.json();
+
+		//retrieve user information from Airtable api using the creds we just got
+		const userResponse = await fetch('https://airtable.com/v0/meta/whoami', {
+			headers: {
+				authorization: `Bearer ${access_token}`
+			}
+		});
+
+		if (!userResponse.ok) {
+			throw new Error('Failed to get user information');
+		}
+
+		const user = await userResponse.json();
+
+		//attach auth tokens to user object and return
+		user.accessToken = access_token;
+		user.refreshToken = refresh_token;
+		user.tokenExpiresIn = expires_in;
+
+		return done(null, user);
+	} catch (error) {
+		return done(error);
+	}
+}
+
+export async function airtableDatasourceCallback(accessToken, refreshToken, profile, done) {}
 
 export async function slackDatasourceCallback(accessToken, refreshToken, profile, done) {
 	const slackCallbackLog = debug('webapp:oauth:datasourceOauth:slack:callback');
