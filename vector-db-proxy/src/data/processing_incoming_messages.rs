@@ -21,7 +21,6 @@ use tokio::sync::RwLock;
 
 pub async fn embed_text_construct_point(
     mongo_conn: Arc<RwLock<Database>>,
-    //vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
     data: &HashMap<String, Value>,
     embedding_field_name: &String,
     datasource: Option<DataSources>,
@@ -58,7 +57,6 @@ pub async fn embed_text_construct_point(
                             embed_bulk_insert_unstructured_response(
                                 documents,
                                 ds,
-                                //vector_database_client.clone(),
                                 mongo_conn.clone(),
                                 embedding_model,
                                 Some(payload),
@@ -123,15 +121,15 @@ async fn handle_embedding(
     let mut search_request =
         SearchRequest::new(search_type.clone(), datasource.id.to_string().clone());
     //TODO: add vars to search request
-    search_request.byo_vector_db = Some(true);
+    search_request.byo_vector_db = datasource.byo_vector_db;
     search_request.collection = datasource
         .clone()
         .collection_name
         .map_or(datasource.id.to_string(), |d| d);
     search_request.namespace = datasource.namespace.clone();
+    println!("Search request going to vector API: {:?}", search_request);
     match embed_text_construct_point(
         mongo_connection.clone(),
-        //vector_database_client.clone(),
         &metadata,
         &embedding_field_name,
         Some(datasource.clone()),

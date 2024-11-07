@@ -41,6 +41,8 @@ impl VectorDatabase for QdrantClient {
         &self,
         search_request: SearchRequest,
     ) -> Result<CollectionsResult, VectorDatabaseError> {
+        log::debug!("Qdrant URI: {:?}", &self.cfg.uri);
+        log::debug!("Qdrant API KEY: {:?}", &self.cfg.api_key);
         let collection_id = search_request.collection;
         match self.collection_exists(collection_id.clone()).await {
             Ok(collection_exists) => match collection_exists {
