@@ -73,13 +73,19 @@ impl VectorDatabase for PineconeClient {
         collection_create: CollectionCreate,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
         let region = collection_create.region.unwrap_or_default();
-        let namespace = collection_create
+        // Namespace is set the datasource ID if it's a manged Vector DB
+        //
+        let _namespace = collection_create
             .clone()
             .namespace
             .map_or(collection_create.clone().collection_name, |n| n);
+        // The index is set to the region if it's a manged vector database
+        // If it's BYO the index is the collection_name in the datasource document from mongo
         let index_name = collection_create
             .namespace
-            .map_or(Region::to_str(region), |_k| namespace.as_str())
+            .map_or(Region::to_str(region), |_k| {
+                collection_create.collection_name.as_str()
+            })
             .to_string();
         match get_index_model(&self, index_name.to_string()).await {
             Ok(_) => Ok(VectorDatabaseStatus::Ok),
@@ -111,13 +117,11 @@ impl VectorDatabase for PineconeClient {
         search_request: SearchRequest,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
         let region = search_request.clone().region.unwrap_or(Region::US);
-        let namespace = search_request
-            .clone()
-            .namespace
-            .map_or(search_request.clone().collection, |n| n);
         let index_name = search_request
             .byo_vector_db
-            .map_or(Region::to_str(region), |_k| namespace.as_str())
+            .map_or(Region::to_str(region), |_k| {
+                search_request.collection.as_str()
+            })
             .to_string();
         if let Ok(index_model) = get_index_model(&self, index_name).await {
             // Need to figure out the the default index name here
@@ -145,7 +149,9 @@ impl VectorDatabase for PineconeClient {
         let index_name = search_request
             .byo_vector_db
             .filter(|k| *k == true)
-            .map_or(Region::to_str(region), |_| namespace.as_str())
+            .map_or(Region::to_str(region), |_| {
+                search_request.collection.as_str()
+            })
             .to_string();
         match get_index_model(&self, index_name).await {
             Ok(index_model) => {
@@ -188,11 +194,24 @@ impl VectorDatabase for PineconeClient {
         search_request: SearchRequest,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
         let region = search_request.region.unwrap_or(Region::US);
-        let pinecone_filters = search_request.filters.map_or(None, |filter_conditions| {
-            Some(Metadata::from(filter_conditions))
-        });
-        let namespace = search_request.collection;
-        match get_index_model(&self, Region::to_str(region).to_string()).await {
+        let pinecone_filters = search_request
+            .clone()
+            .filters
+            .map_or(None, |filter_conditions| {
+                Some(Metadata::from(filter_conditions))
+            });
+        let namespace = search_request
+            .clone()
+            .namespace
+            .map_or(search_request.clone().collection, |n| n);
+        let index_name = search_request
+            .byo_vector_db
+            .filter(|k| *k == true)
+            .map_or(Region::to_str(region), |_| {
+                search_request.collection.as_str()
+            })
+            .to_string();
+        match get_index_model(&self, index_name).await {
             Ok(index_model) => match self.index(index_model.host.as_str()).await {
                 Ok(mut index) => {
                     match index
@@ -216,9 +235,19 @@ impl VectorDatabase for PineconeClient {
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
         let region = search_request.clone().region.unwrap_or(Region::US);
         let vectors: Vec<Vector> = points.iter().map(|p| Vector::from(p.to_owned())).collect();
-        let namespace = search_request.collection;
+        let namespace = search_request
+            .clone()
+            .namespace
+            .map_or(search_request.clone().collection, |n| n);
+        let index_name = search_request
+            .byo_vector_db
+            .filter(|k| *k == true)
+            .map_or(Region::to_str(region), |_| {
+                search_request.collection.as_str()
+            })
+            .to_string();
 
-        if let Ok(index_model) = get_index_model(&self, Region::to_str(region).to_string()).await {
+        if let Ok(index_model) = get_index_model(&self, index_name).await {
             // Need to figure out the the default index name here
             let mut index = self.index(index_model.host.as_str()).await.unwrap();
             match search_request.search_type {

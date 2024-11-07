@@ -131,8 +131,10 @@ pub async fn list_collections(Path(collection_name): Path<String>) -> Result<imp
 #[get("/check-collection-exists/{collection_name}")]
 pub async fn check_collection_exists(
     //app_data: Data<Arc<RwLock<dyn VectorDatabase>>>,
-    Path(collection_name): Path<String>,
+    Path(collection_name): Path<String>, // Datasource ID
 ) -> Result<HttpResponse> {
+    //collection_id = datasource ID
+    //collection_name = datasource ID
     let collection_id = collection_name.clone();
     let mongodb_connection = start_mongo_connection().await?;
     let mut search_request = SearchRequest::new(SearchType::Collection, collection_id.clone());
@@ -144,10 +146,8 @@ pub async fn check_collection_exists(
                         .await
                         .unwrap_or(default_vector_db_client().await);
                 let vector_database_client = vector_database_client.read().await;
-                search_request.byo_vector_db = Some(true);
-                search_request.collection = datasource
-                    .collection_name
-                    .map_or(datasource.id.to_string(), |d| d);
+                search_request.byo_vector_db = datasource.byo_vector_db;
+                search_request.collection = datasource.collection_name.map_or(collection_id, |d| d);
                 search_request.namespace = datasource.namespace;
                 match vector_database_client
         .check_collection_exists(search_request)
@@ -254,9 +254,8 @@ pub async fn create_collection(
                         .await
                         .unwrap_or(default_vector_db_client().await);
                 let vector_database_client = vector_database_client.read().await;
-                collection_create.collection_name = datasource
-                    .collection_name
-                    .map_or(datasource.id.to_string(), |d| d);
+                collection_create.collection_name =
+                    datasource.collection_name.map_or(collection_id, |d| d);
                 collection_create.namespace = datasource.namespace;
                 match vector_database_client.create_collection(data.clone()).await {
                     Ok(collection_result) => match collection_result {
