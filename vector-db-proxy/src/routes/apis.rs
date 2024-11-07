@@ -254,8 +254,9 @@ pub async fn create_collection(
                         .await
                         .unwrap_or(default_vector_db_client().await);
                 let vector_database_client = vector_database_client.read().await;
-                collection_create.collection_name =
-                    datasource.collection_name.map_or(collection_id, |d| d);
+                collection_create.collection_name = datasource
+                    .collection_name
+                    .map_or(collection_id.clone(), |d| d);
                 collection_create.namespace = datasource.namespace;
                 match vector_database_client.create_collection(data.clone()).await {
                     Ok(collection_result) => match collection_result {
@@ -281,7 +282,8 @@ pub async fn create_collection(
                                 status: Status::Failure,
                                 data: None,
                                 error_message: Some(json!({
-                                    "errorMessage": format!("Collection: '{}' does not exists", collection_id)
+                                    "errorMessage": format!("Collection: '{}' does not exists", 
+                                        collection_id.clone())
                                 }))
                             }))),
                         _ => Ok(HttpResponse::InternalServerError()
