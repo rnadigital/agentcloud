@@ -1,6 +1,8 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
+import { Pinecone } from '@pinecone-database/pinecone';
+import { QdrantClient } from '@qdrant/js-client-rest';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import getConnectors, { getConnectorSpecification } from 'airbyte/getconnectors';
 import getAirbyteInternalApi from 'airbyte/internal';
@@ -19,6 +21,7 @@ import {
 import { getModelById, getModelsByTeam } from 'db/model';
 import { addTool, deleteToolsForDatasource, editToolsForDatasource } from 'db/tool';
 import { getVectorDbsByTeam } from 'db/vectordb';
+import { getVectorDbById, getVectorDbsByTeam } from 'db/vectordb';
 import debug from 'debug';
 import dotenv from 'dotenv';
 import { convertCronToQuartz, convertUnitToCron } from 'lib/airbyte/cronconverter';
@@ -377,6 +380,37 @@ export async function addDatasourceApi(req, res, next) {
 	);
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
+	const vectorDb = vectorDbId && (await getVectorDbById(vectorDbId));
+
+	if (byoVectorDb) {
+		switch (vectorDb?.type) {
+			case 'qdrant':
+				const client = new QdrantClient({
+					url: vectorDb?.url,
+					apiKey: vectorDb?.apiKey
+				});
+
+				try {
+					await client.getCollections();
+				} catch (error) {
+					return dynamicResponse(req, res, 400, {
+						error: 'Failed to connect to vector database, please try again later.'
+					});
+				}
+				break;
+			case 'pinecone':
+				const pc = new Pinecone({ apiKey: vectorDb?.apiKey });
+				try {
+					await pc.listIndexes();
+				} catch (error) {
+					return dynamicResponse(req, res, 400, {
+						error: 'Failed to connect to vector database, please try again later.'
+					});
+				}
+				break;
+		}
 	}
 
 	const limitReached = await isVectorLimitReached(
