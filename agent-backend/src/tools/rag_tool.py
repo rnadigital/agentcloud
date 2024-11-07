@@ -75,7 +75,8 @@ class RagTool(GlobalBaseTool):
         namespace = datasource.namespace if datasource.byoVectorDb else None
         collection = datasource.collectionName if datasource.byoVectorDb else str(datasource.id)
 
-        vector_store = vectorstore_factory(embedding_model, collection, tool,  api_key, url, type, namespace, datasource.byoVectorDb)
+        vector_store = vectorstore_factory(embedding_model=embedding_model, collection_name=collection, tool=tool,  api_key=api_key, url=url, type=type, namespace=namespace, byoVectorDb=datasource.byoVectorDb)
+        print(vector_store)
 
         return RagTool(name=tool.name,
                        description=tool.description,
