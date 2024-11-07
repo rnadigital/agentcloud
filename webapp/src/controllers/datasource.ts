@@ -20,7 +20,6 @@ import {
 } from 'db/datasource';
 import { getModelById, getModelsByTeam } from 'db/model';
 import { addTool, deleteToolsForDatasource, editToolsForDatasource } from 'db/tool';
-import { getVectorDbsByTeam } from 'db/vectordb';
 import { getVectorDbById, getVectorDbsByTeam } from 'db/vectordb';
 import debug from 'debug';
 import dotenv from 'dotenv';
@@ -345,8 +344,7 @@ export async function addDatasourceApi(req, res, next) {
 		enableConnectorChunking,
 		vectorDbId,
 		byoVectorDb,
-		collectionName,
-		namespace
+		collectionName
 	} = req.body;
 
 	const currentPlan = res.locals?.subscription?.stripePlan;
@@ -507,10 +505,9 @@ export async function addDatasourceApi(req, res, next) {
 		vectorDbId: toObjectId(vectorDbId),
 		byoVectorDb,
 		collectionName,
-		namespace
+		namespace: datasourceId
 	});
 
-	// Create the collection in qdrant
 	try {
 		await VectorDBProxyClient.createCollection(datasourceId);
 	} catch (e) {
