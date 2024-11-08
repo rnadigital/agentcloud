@@ -9,6 +9,7 @@ def vectorstore_factory(embedding_model: Embeddings, collection_name: str, tool,
 
     match type:
         case VectorDatabase.Qdrant:
+            print("Creating Qdrant CLIENT")
             from init.env_variables import QDRANT_HOST
             from langchain_community.vectorstores.qdrant import Qdrant
             from qdrant_client import QdrantClient
@@ -142,13 +143,14 @@ def vectorstore_factory(embedding_model: Embeddings, collection_name: str, tool,
                     for result in results
                 ]
             Qdrant.similarity_search_with_score_by_vector = similarity_search_with_score_by_vector_with_filter
+            print("Using arguments for Qdrant:", url, api_key, collection_name)
             
             return Qdrant.from_existing_collection(
                 embedding=embedding_model,
                 path=None,
                 collection_name=collection_name,
                 # vector_name=embedding_model.model,
-                url=url if url is not None else QDRANT_HOST,
+                url=url[:-5] if url and url.endswith(':6334') else url if url is not None else QDRANT_HOST,
                 api_key=api_key
             )
         case VectorDatabase.Pinecone:
