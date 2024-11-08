@@ -98,7 +98,7 @@ export default function CreateDatasourceForm({
 	const [vectorDbId, setVectorDbId] = useState('');
 	const [vectorDbType, setVectorDbType] = useState<'qdrant' | 'pinecone'>();
 	const [byoVectorDb, setByoVectorDb] = useState(true);
-	const [collectionName, setCollectionName] = useState('');
+	const [collectionName, setCollectionName] = useState(null);
 
 	const [topK, setTopK] = useState(initialStep);
 	const foundVectorDb = vectorDbs && vectorDbs.find(m => m._id === vectorDbId);
@@ -708,14 +708,13 @@ export default function CreateDatasourceForm({
 											formatOptionLabel={formatModelOptionLabel}
 										/>
 
-										{foundVectorDb && (
+										{foundVectorDb && foundVectorDb.type === 'pinecone' && (
 											<div className='mt-2'>
 												<label
 													htmlFor='collectionName'
 													className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
 												>
-													{foundVectorDb?.type === 'pinecone' && 'Index'}
-													{foundVectorDb?.type === 'qdrant' && 'Collection'}
+													Index
 												</label>
 												<div>
 													<input

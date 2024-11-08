@@ -380,37 +380,6 @@ export async function addDatasourceApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
-	const vectorDb = vectorDbId && (await getVectorDbById(vectorDbId));
-
-	if (byoVectorDb) {
-		switch (vectorDb?.type) {
-			case 'qdrant':
-				const client = new QdrantClient({
-					url: vectorDb?.url,
-					apiKey: vectorDb?.apiKey
-				});
-
-				try {
-					await client.getCollections();
-				} catch (error) {
-					return dynamicResponse(req, res, 400, {
-						error: 'Failed to connect to vector database, please try again later.'
-					});
-				}
-				break;
-			case 'pinecone':
-				const pc = new Pinecone({ apiKey: vectorDb?.apiKey });
-				try {
-					await pc.listIndexes();
-				} catch (error) {
-					return dynamicResponse(req, res, 400, {
-						error: 'Failed to connect to vector database, please try again later.'
-					});
-				}
-				break;
-		}
-	}
-
 	const limitReached = await isVectorLimitReached(
 		req.params.resourceSlug,
 		res.locals?.subscription?.stripePlan
@@ -504,7 +473,7 @@ export async function addDatasourceApi(req, res, next) {
 			: null, //TODO: validation
 		vectorDbId: toObjectId(vectorDbId),
 		byoVectorDb,
-		collectionName,
+		collectionName: collectionName ?? datasourceId,
 		namespace: datasourceId
 	});
 
