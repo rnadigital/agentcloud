@@ -127,10 +127,7 @@ export default function VectorDbTable({
 										: 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-500 dark:text-gray-50'
 								)}
 							>
-								<td
-									className='px-6 py-4 whitespace-nowrap'
-									onClick={() => router.push(`/${resourceSlug}/variable/${vectorDb._id}/edit`)}
-								>
+								<td className='px-6 py-4 whitespace-nowrap'>
 									<div className='text-sm text-gray-900 dark:text-white'>{vectorDb.name}</div>
 								</td>
 								<td className='px-6 py-4 whitespace-nowrap'>
