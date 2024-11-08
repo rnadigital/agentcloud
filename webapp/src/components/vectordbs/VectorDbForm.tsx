@@ -23,7 +23,8 @@ export default function VectorDbForm({
 		register,
 		handleSubmit,
 		formState: { errors },
-		setFocus
+		setFocus,
+		watch
 	} = useForm<Partial<VectorDb>>({
 		defaultValues: vectorDb || { name: '', type: '', apiKey: '', url: '' }
 	});
@@ -31,6 +32,8 @@ export default function VectorDbForm({
 	const { csrf } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
+
+	const type = watch('type');
 
 	const onSubmit = async (data: Partial<VectorDb>) => {
 		console.log('Data');
@@ -151,21 +154,30 @@ export default function VectorDbForm({
 						{errors.apiKey && <span className='text-red-500'>This field is required</span>}
 					</div>
 
-					<div>
-						<label
-							htmlFor='defaultValue'
-							className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-						>
-							URL
-						</label>
-						<input
-							id='defaultValue'
-							type='text'
-							{...register('url')}
-							className={`block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white ${errors.apiKey ? 'border-red-500' : ''}`}
-						/>
-						{errors.apiKey && <span className='text-red-500'>This field is required</span>}
-					</div>
+					{type === 'qdrant' && (
+						<div>
+							<label
+								htmlFor='defaultValue'
+								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+							>
+								URL
+							</label>
+							<input
+								id='defaultValue'
+								type='text'
+								{...register('url', {
+									pattern: {
+										value: /:6334$/,
+										message: 'Ensure that the url has :6334 at the end'
+									},
+									required: 'This field is required'
+								})}
+								placeholder='https://076fdfeb-c8f5-437e-aa59-7cd6ee41b844.us-east4-0.gcp.cloud.qdrant.io:6334'
+								className={`block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white ${errors.url ? 'border-red-500' : ''}`}
+							/>
+							{errors.url && <span className='text-red-500'>{errors.url.message}</span>}
+						</div>
+					)}
 
 					<div className='mt-6 flex items-center justify-between gap-x-6'>
 						<button
