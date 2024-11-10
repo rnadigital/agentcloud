@@ -24,7 +24,8 @@ export default function VectorDbForm({
 		handleSubmit,
 		formState: { errors },
 		setFocus,
-		watch
+		watch,
+		setValue
 	} = useForm<Partial<VectorDb>>({
 		defaultValues: vectorDb || { name: '', type: '', apiKey: '', url: '' }
 	});
@@ -35,9 +36,17 @@ export default function VectorDbForm({
 
 	const type = watch('type');
 
+	const connectWithAPIKey = async () => {
+		const { ConnectPopup } = await import('@pinecone-database/connect');
+		ConnectPopup({
+			onConnect: key => {
+				setValue('apiKey', key.key);
+			},
+			integrationId: process.env.NODE_ENV === 'development' ? 'agentcloud-dev' : 'agentcloud'
+		}).open();
+	};
+
 	const onSubmit = async (data: Partial<VectorDb>) => {
-		console.log('Data');
-		console.log(data);
 		if (editing) {
 			await API.updateVectorDb(
 				{
@@ -138,6 +147,19 @@ export default function VectorDbForm({
 						</div>
 					</div>
 
+					{type === 'pinecone' && (
+						<button
+							className='bg-white w-full flex p-4 items-center'
+							onClick={() => connectWithAPIKey()}
+							type='button'
+						>
+							<span className='text-sm font-medium'>Connect Securely with Pinecone</span>
+							<div className='px-5 py-2 bg-primary-600 text-white rounded-md ml-auto font-semibold text-sm'>
+								Connect{' '}
+							</div>
+						</button>
+					)}
+
 					<div>
 						<label
 							htmlFor='defaultValue'
@@ -192,3 +214,51 @@ export default function VectorDbForm({
 		</>
 	);
 }
+
+// const PineConeFields = ({}: {}) => {
+// 	const connectWithAPIKey = async () => {
+// 		const { ConnectPopup } = await import('@pinecone-database/connect'); // Dynamic import
+// 		/* Call ConnectPopup function with an object containing options */
+// 		ConnectPopup({
+// 			onConnect: key => {
+// 				setValue('apiKey', key.key);
+// 			},
+// 			integrationId: 'ian'
+// 		}).open();
+// 	};
+
+// 	return (
+// 		<div className='w-full bg-primary-50 flex flex-col text-gray-500'>
+// 			<div className='ml-auto'>
+// 				<XCircleIcon
+// 					className='h-6 w-6 text-gray-500 mr-2 mt-2 cursor-pointer'
+// 					onClick={() => setSelectedDB(null)}
+// 				/>
+// 			</div>
+// 			<div className='px-8 mt-4 pb-12'>
+// 				<button
+// 					className='bg-white w-full flex p-4 items-center'
+// 					onClick={() => connectWithAPIKey()}
+// 				>
+// 					<span className='text-sm font-medium'>Connect Securely with Pinecone</span>
+// 					<div className='px-5 py-2 bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white rounded-md ml-auto'>
+// 						Connect{' '}
+// 					</div>
+// 				</button>
+// 				<div className='my-4 flex justify-center text-sm'>or</div>
+// 				<div>
+// 					<div className='mb-2 text-sm'>Connect with API key</div>
+// 					<InputField<FormValues>
+// 						name='apiKey'
+// 						control={control}
+// 						rules={{
+// 							required: 'API key is required'
+// 						}}
+// 						type='text'
+// 						placeholder='Enter your API key'
+// 					/>
+// 				</div>
+// 			</div>
+// 		</div>
+// 	);
+// };
