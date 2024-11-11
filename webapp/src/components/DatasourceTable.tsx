@@ -13,6 +13,7 @@ import DatasourceStatusIndicator from 'components/DatasourceStatusIndicator'; //
 import DevBadge from 'components/DevBadge';
 import { useAccountContext } from 'context/account';
 import { useNotificationContext } from 'context/notifications';
+import cn from 'lib/cn';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Fragment, useReducer, useState } from 'react';
@@ -22,10 +23,12 @@ import submittingReducer from 'utils/submittingreducer';
 
 export default function DatasourceTable({
 	datasources,
-	fetchDatasources
+	fetchDatasources,
+	isAirbyteEnabled
 }: {
 	datasources: any[];
 	fetchDatasources?: any;
+	isAirbyteEnabled?: boolean;
 }) {
 	const [notificationContext, refreshNotificationContext]: any = useNotificationContext();
 	const [accountContext]: any = useAccountContext();
@@ -36,6 +39,12 @@ export default function DatasourceTable({
 	const [deleting, setDeleting] = useReducer(submittingReducer, {});
 	const [deletingMap, setDeletingMap] = useState({});
 	const [confirmClose, setConfirmClose] = useState(false);
+
+	const goToDatasourcePage = (id: string) => {
+		if (isAirbyteEnabled) {
+			router.push(`/${resourceSlug}/datasource/${id}`);
+		}
+	};
 
 	async function deleteDatasource(datasourceId) {
 		setDeleting({ [datasourceId]: true });
@@ -152,13 +161,14 @@ export default function DatasourceTable({
 							return (
 								<tr
 									key={datasource._id}
-									className={`cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700 dark:text-white dark:!border-slate-700 transition-all opacity-1 duration-700 ${deletingMap[datasource._id] ? 'bg-red-400' : 'cursor-pointer hover:bg-gray-50'}`}
+									className={cn(
+										`hover:bg-gray-50 dark:hover:bg-slate-700 dark:text-white dark:!border-slate-700 transition-all opacity-1 duration-700 ${deletingMap[datasource._id] ? 'bg-red-400' : ' hover:bg-gray-50'}`,
+										{ 'cursor-pointer': isAirbyteEnabled }
+									)}
 									style={{ borderColor: deletingMap[datasource._id] ? 'red' : '' }}
+									onClick={() => goToDatasourcePage(datasource._id)}
 								>
-									<td
-										className='px-6 py-3 whitespace-nowrap flex items-center'
-										onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}
-									>
+									<td className='px-6 py-3 whitespace-nowrap flex items-center'>
 										<img
 											src={`https://connectors.airbyte.com/files/metadata/airbyte/source-${datasource.sourceType}/latest/icon.svg`}
 											className='w-6 me-1.5'
@@ -168,34 +178,22 @@ export default function DatasourceTable({
 										</span>
 										<DevBadge value={datasource?._id} />
 									</td>
-									<td
-										className='px-6 py-3 whitespace-nowrap'
-										onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}
-									>
+									<td className='px-6 py-3 whitespace-nowrap'>
 										<div className='flex items-center'>
 											<div className='text-sm font-medium text-gray-900 dark:text-white'>
 												{datasource.name}
 											</div>
 										</div>
 									</td>
-									<td
-										className='px-6 py-3 whitespace-nowrap'
-										onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}
-									>
+									<td className='px-6 py-3 whitespace-nowrap'>
 										<DatasourceStatusIndicator datasource={datasource} />
 									</td>
-									<td
-										className='px-6 py-3 whitespace-nowrap'
-										onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}
-									>
+									<td className='px-6 py-3 whitespace-nowrap'>
 										<span className='px-2 inline-flex text-sm leading-5 rounded-full capitalize'>
 											{datasource?.connectionSettings?.scheduleType || '-'}
 										</span>
 									</td>
-									<td
-										className='px-6 py-3 whitespace-nowrap'
-										onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}
-									>
+									<td className='px-6 py-3 whitespace-nowrap'>
 										<div className='text-sm text-gray-900 dark:text-white' suppressHydrationWarning>
 											{datasource.sourceType === 'file'
 												? 'N/A'
@@ -204,10 +202,7 @@ export default function DatasourceTable({
 													: 'Never'}
 										</div>
 									</td>
-									<td
-										className='px-6 py-3 whitespace-nowrap'
-										onClick={() => router.push(`/${resourceSlug}/datasource/${datasource._id}`)}
-									>
+									<td className='px-6 py-3 whitespace-nowrap'>
 										<span
 											suppressHydrationWarning
 											className='text-sm text-gray-900 dark:text-white'
@@ -217,7 +212,8 @@ export default function DatasourceTable({
 									</td>
 									<td className='px-6 py-5 whitespace-nowrap text-right text-sm font-medium flex justify-end space-x-5 items-center'>
 										<button
-											onClick={() => {
+											onClick={e => {
+												e.stopPropagation();
 												// if (datasource.status !== DatasourceStatus.READY) {
 												// 	setConfirmClose(datasource._id);
 												// } else {
@@ -227,7 +223,8 @@ export default function DatasourceTable({
 											disabled={
 												syncing[datasource._id] ||
 												deleting[datasource._id] ||
-												datasource.status !== DatasourceStatus.READY
+												datasource.status !== DatasourceStatus.READY ||
+												!isAirbyteEnabled
 											}
 											className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-2 -my-1 py-1 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:text-white'
 										>
