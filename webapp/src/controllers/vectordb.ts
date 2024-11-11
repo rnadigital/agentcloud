@@ -123,5 +123,5 @@ export async function deleteVectorDbApi(req, res, next) {
 	}
 
 	await deleteVectorDbById(vectorDbId);
-	return dynamicResponse(req, res, 204, {});
+	return dynamicResponse(req, res, 200, {});
 }

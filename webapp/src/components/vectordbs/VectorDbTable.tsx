@@ -8,6 +8,7 @@ import { useAccountContext } from 'context/account';
 import cn from 'lib/cn';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import { VectorDbDocument } from 'struct/vectordb';
 
 export default function VectorDbTable({
@@ -40,12 +41,11 @@ export default function VectorDbTable({
 				},
 				() => {},
 				err => {
-					// toast.error(err);
+					toast.error(err);
 				},
 				router
 			);
 		} catch (e) {
-			console.error(e);
 			setError(e);
 		} finally {
 			setDeletingMap(oldMap => {
