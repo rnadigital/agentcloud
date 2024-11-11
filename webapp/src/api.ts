@@ -704,6 +704,17 @@ export function getDatasourceSchema(body, dispatch, errorCallback, router) {
 	);
 }//@TEST
 
+export function checkAirbyteConnection(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/${body.resourceSlug}/airbyte/connection`,
+		'GET',
+		null,
+		dispatch,
+		errorCallback,
+		router
+	);
+}
+
 //Temp datasource stuff
 export function uploadDatasourceFileTemp(body, dispatch, errorCallback, router) {
 	return ApiCall(
