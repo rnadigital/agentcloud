@@ -102,7 +102,6 @@ export default function CreateDatasourceForm({
 
 	const [topK, setTopK] = useState(initialStep);
 	const foundVectorDb = vectorDbs && vectorDbs.find(m => m._id === vectorDbId);
-	console.log(foundVectorDb);
 	const foundModel = models && models.find(m => m._id === modelId);
 	const [scheduleType, setScheduleType] = useState(DatasourceScheduleType.MANUAL);
 	const [enableConnectorChunking, setEnableConnectorChunking] = useState(false);
@@ -163,7 +162,6 @@ export default function CreateDatasourceForm({
 				posthog.capture('getSpecification', {
 					sourceDefinitionId
 				});
-				console.log('spec', spec);
 				setSpec(spec);
 			},
 			specError => {
@@ -712,9 +710,18 @@ export default function CreateDatasourceForm({
 											<div className='mt-2'>
 												<label
 													htmlFor='collectionName'
-													className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+													className='text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 inline-flex items-center'
 												>
 													Index
+													<span className='ml-1'>
+														<ToolTip
+															content='Your vector data will be stored in this index, organized under a unique namespace associated with the datasource ID.'
+															placement='top'
+															arrow={true}
+														>
+															<InformationCircleIcon className='h-4 w-4' />
+														</ToolTip>
+													</span>
 												</label>
 												<div>
 													<input
