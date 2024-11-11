@@ -36,10 +36,10 @@ pub async fn get_model(db: &Database, datasource_id: &str) -> Result<Option<Mode
         .await
     {
         Ok(Some(datasource)) => {
-            println!("Datasource retrieved from Mongo: {}", datasource._id);
+            println!("Datasource retrieved from Mongo: {}", datasource.id);
             // If datasource is found, attempt to find the related model.
             match models_collection
-                .find_one(doc! {"_id": datasource.modelId}, None)
+                .find_one(doc! {"_id": datasource.model_id}, None)
                 .await
             {
                 Ok(model) => Ok(model), // Return the model if found (could be Some or None)
@@ -82,11 +82,11 @@ pub async fn get_model_and_embedding_key(
         }
     };
 
-    log::debug!("Found datasource: {}", datasource._id);
+    log::debug!("Found datasource: {}", datasource.id);
 
     // Fetch the model
     let model = match models_collection
-        .find_one(doc! {"_id": datasource.modelId}, None)
+        .find_one(doc! {"_id": datasource.model_id}, None)
         .await
     {
         Ok(m) => m,
@@ -97,11 +97,11 @@ pub async fn get_model_and_embedding_key(
     };
 
     embedding_config.model = model;
-    embedding_config.embedding_key = datasource.embeddingField;
-    embedding_config.chunking_strategy = datasource.chunkingConfig;
+    embedding_config.embedding_key = datasource.embedding_field;
+    embedding_config.chunking_strategy = datasource.chunking_config;
 
     // Populate primary key if stream config exists
-    if let Some(stream_config) = datasource.streamConfig {
+    if let Some(stream_config) = datasource.stream_config {
         if let Some(config_key) = stream_config_key {
             if let Some(datasource_stream_config) = stream_config.get(config_key.as_str()) {
                 embedding_config.primary_key = Some(datasource_stream_config.primaryKey.clone());

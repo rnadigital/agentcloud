@@ -436,6 +436,8 @@ export async function deleteSessionApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
+	//TODO: CLOSE MONGO CONNECTION IN AGENT_BACKEND IF IT ISN'T ALREADY CLOSED
+
 	const deletedSession = await deleteSessionById(req.params.resourceSlug, sessionId);
 	if (!deletedSession || deletedSession.deletedCount < 1) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
