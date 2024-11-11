@@ -1,8 +1,8 @@
 use crate::adaptors::gcp::pubsub::subscribe_to_topic;
+use crate::adaptors::mongo::models::DataSources;
 use crate::init::env_variables::GLOBAL_DATA;
 use crate::messages::models::{MessageQueueConnection, QueueConnectionTypes};
 use crate::messages::tasks::process_message;
-use crate::vector_databases::vector_database::VectorDatabase;
 use crossbeam::channel::Sender;
 use futures::StreamExt;
 use google_cloud_pubsub::subscription::MessageStream;
@@ -41,9 +41,9 @@ impl MessageQueueConnection for PubSubConnect {
 
 pub async fn pubsub_consume(
     stream: &Arc<Mutex<MessageStream>>,
-    vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
+    //vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
     mongo_client: Arc<RwLock<Database>>,
-    sender: Sender<(String, Option<String>, String)>,
+    sender: Sender<(DataSources, Option<String>, String)>,
 ) {
     if let Ok(mut stream) = stream.try_lock() {
         while let Some(message) = stream.next().await {
@@ -70,7 +70,7 @@ pub async fn pubsub_consume(
                                     (datasource_id, Some(stream_config_key.to_string()), None)
                                 }
                             };
-                        let qdrant_client = Arc::clone(&vector_database_client);
+                        //let qdrant_client = Arc::clone(&vector_database_client);
                         let mongo_client = Arc::clone(&mongo_client);
                         let sender = sender.clone();
                         println!("Datasource ID: {}", datasource_id);
@@ -79,7 +79,7 @@ pub async fn pubsub_consume(
                             stream_type,
                             datasource_id,
                             stream_config_key,
-                            qdrant_client,
+                            //qdrant_client,
                             mongo_client,
                             sender,
                         )

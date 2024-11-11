@@ -32,8 +32,13 @@ export const destinationDefinitionId =
 
 // Function to fetch workspaces
 async function fetchWorkspaces() {
-	const workspacesApi = await getAirbyteApi(AirbyteApiType.WORKSPACES);
-	return workspacesApi.listWorkspaces().then(res => res.data);
+	try {
+		log('Fetching airbyte workspaces...');
+		const workspacesApi = await getAirbyteApi(AirbyteApiType.WORKSPACES);
+		return workspacesApi.listWorkspaces().then(res => res.data);
+	} catch (e) {
+		log('An error occurred while attempting to fetch Airbyte workspaces. %', e);
+	}
 }
 
 // Function to fetch the destination list
@@ -54,7 +59,6 @@ async function fetchDestinationList(workspaceId: string) {
 // Function to create a destination
 async function createDestination(workspaceId: string, provider: string) {
 	const destinationConfiguration = await getDestinationConfiguration(provider);
-	log('getDestinationConfiguration %s', destinationConfiguration);
 	const response = await fetch(`${process.env.AIRBYTE_API_URL}/api/public/v1/destinations`, {
 		method: 'POST',
 		headers: {
@@ -71,7 +75,7 @@ async function createDestination(workspaceId: string, provider: string) {
 	return response.json();
 }
 
-// Function to deletea destination
+// Function to delete a destination
 async function deleteDestination(destinationId: string) {
 	const response = await fetch(
 		`${process.env.AIRBYTE_API_URL}/api/public/v1/destinations/${destinationId}`,
@@ -215,12 +219,12 @@ async function updateWebhookUrls(workspaceId: string) {
 // Main logic to handle Airbyte setup and configuration
 export async function init() {
 	try {
+		log('Initializing airbyte setup...');
 		// Get workspaces
 		const workspacesList = await fetchWorkspaces();
 		log('workspacesList: %s', workspacesList);
 		log('workspacesList: %s', workspacesList?.data?.map(x => x.name)?.join());
 		const airbyteAdminWorkspaceId = workspacesList.data[0].workspaceId;
-
 		log('AIRBYTE_ADMIN_WORKSPACE_ID', airbyteAdminWorkspaceId);
 		if (!airbyteAdminWorkspaceId) {
 			log('Failed to fetch airbyte admin workspace ID, exiting');
@@ -238,17 +242,15 @@ export async function init() {
 		log('AIRBYTE_ADMIN_DESTINATION_ID', airbyteAdminDestination?.destinationId);
 
 		if (airbyteAdminDestination) {
-			const DestinationConfigCurrent = airbyteAdminDestination.connectionConfiguration;
-			const DestinationConfigNew = await getDestinationConfiguration(provider);
-			console.log('DestinationConfig', DestinationConfigNew);
-			const configMismatch = Object.keys(DestinationConfigNew).some(key => {
-				if (DestinationConfigCurrent && DestinationConfigCurrent[key] === '**********') {
+			const currentConfig = airbyteAdminDestination.connectionConfiguration;
+			const newConfig = await getDestinationConfiguration(provider);
+			console.log('newConfig', newConfig);
+			const configMismatch = Object.keys(newConfig).some(key => {
+				if (currentConfig && currentConfig[key] === '**********') {
 					//hidden fields
 					return false; // Skip password/credentials json comparison
 				}
-				return (
-					DestinationConfigCurrent && DestinationConfigCurrent[key] !== DestinationConfigNew[key]
-				);
+				return currentConfig && currentConfig[key] !== newConfig[key];
 			});
 			console.log('configMismatch', configMismatch);
 			if (configMismatch) {

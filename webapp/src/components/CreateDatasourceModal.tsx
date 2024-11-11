@@ -12,12 +12,15 @@ export default function CreateDatasourceModal({ open, setOpen, callback, initial
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState({});
+	const [vectorDbState, setVectorDbState] = useState(null);
 	const { models } = state as any;
+	const vectorDbs = vectorDbState?.vectorDbs || [];
 	const [forceClose, setForceClose] = useState(false);
 	const [spec, setSpec] = useState(null);
 
 	async function fetchDatasourceFormData() {
 		await API.getModels({ resourceSlug }, dispatch, toast.error, router);
+		await API.getVectorDbs({ resourceSlug }, setVectorDbState, toast.error, router);
 	}
 
 	useEffect(() => {
@@ -139,6 +142,7 @@ export default function CreateDatasourceModal({ open, setOpen, callback, initial
 											setSpec={setSpec}
 											fetchDatasourceFormData={fetchDatasourceFormData}
 											initialStep={initialStep}
+											vectorDbs={vectorDbs}
 										/>
 									</div>
 								</DialogPanel>

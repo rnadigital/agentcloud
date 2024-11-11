@@ -4,6 +4,7 @@ use mongodb::bson::{doc, oid::ObjectId};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
+use std::fmt::Display;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DatasourceConnectionSettings {
@@ -117,9 +118,13 @@ pub struct DataSources {
     pub time_weight_field: Option<String>,
     pub created_date: Option<DateTime>,
     pub status: String,
+    pub byo_vector_db: Option<bool>,
+    pub collection_name: Option<String>,
+    pub namespace: Option<String>,
     #[serde(default)]
     pub stream_config: Option<HashMap<String, StreamConfig>>,
     pub discovered_schema: Option<bson::Document>,
+    pub vector_db_id: Option<ObjectId>,
     #[serde(flatten)]
     pub extra_fields: bson::Document,
 }
@@ -216,4 +221,45 @@ pub struct EmbeddingConfig {
     pub embedding_key: Option<String>,
     pub primary_key: Option<Vec<String>>,
     pub chunking_strategy: Option<UnstructuredChunkingConfig>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+//#[serde(deny_unknown_fields)]
+pub struct VectorDbs {
+    pub _id: ObjectId,
+    pub orgId: ObjectId,
+    pub teamId: ObjectId,
+    pub apiKey: Option<String>,
+    pub url: Option<String>,
+    pub r#type: VectorDatabaseType,
+    pub name: String,
+    pub createdAt: DateTime,
+    pub updatedAt: DateTime,
+}
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub enum VectorDatabaseType {
+    pinecone,
+    #[default]
+    qdrant,
+    unknown,
+}
+impl From<String> for VectorDatabaseType {
+    fn from(value: String) -> Self {
+        match value.as_str() {
+            "qdrant" => VectorDatabaseType::qdrant,
+            "pinecone" => VectorDatabaseType::pinecone,
+            _ => VectorDatabaseType::unknown,
+        }
+    }
+}
+
+impl Display for VectorDatabaseType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let str = match self {
+            VectorDatabaseType::pinecone => "pinecone".to_string(),
+            VectorDatabaseType::qdrant => "qdrant".to_string(),
+            _ => "Unknown".to_string(),
+        };
+        write!(f, "{}", str)
+    }
 }

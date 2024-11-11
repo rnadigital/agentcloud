@@ -37,7 +37,11 @@ def construct_tools_datasources(tools: List[Tuple[Set[str], Tool]]):
     for tool_id_set, tool in tools:
         datasource = mongo_client.get_tool_datasource(tool)
         if datasource:
+            if datasource.byoVectorDb is True:
+                vector_db = mongo_client.get_vector_db(datasource.vectorDbId)
+                datasource.vector_db = vector_db
             datasources[keyset(tool_id_set, datasource.id)] = datasource
+
     return datasources
 
 

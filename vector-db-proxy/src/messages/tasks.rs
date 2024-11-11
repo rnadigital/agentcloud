@@ -1,9 +1,8 @@
 use crate::adaptors::gcp::models::PubSubConnect;
-use crate::adaptors::mongo::models::UnstructuredChunkingConfig;
+use crate::adaptors::mongo::models::{DataSources, UnstructuredChunkingConfig};
 use crate::adaptors::mongo::queries::{get_datasource, get_model};
 use crate::adaptors::rabbitmq::models::RabbitConnect;
 use crate::data::unstructuredio::apis::chunk_text;
-use crate::embeddings::models::EmbeddingModels;
 use crate::embeddings::utils::embed_bulk_insert_unstructured_response;
 use crate::init::env_variables::GLOBAL_DATA;
 use crate::messages::models::{MessageQueueConnection, MessageQueueProvider, QueueConnectionTypes};
@@ -12,7 +11,6 @@ use crate::utils::file_operations;
 use crate::utils::file_operations::determine_file_type;
 use crate::utils::webhook::send_webapp_embed_ready;
 use crate::vector_databases::models::SearchType;
-use crate::vector_databases::vector_database::VectorDatabase;
 use crossbeam::channel::Sender;
 use mongodb::Database;
 use serde_json::Value;
@@ -54,9 +52,9 @@ pub async fn process_message(
     stream_type: Option<String>,
     datasource_id: &str,
     stream_config_key: Option<String>,
-    vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
+    //vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
     mongo_client: Arc<RwLock<Database>>,
-    sender: Sender<(String, Option<String>, String)>,
+    sender: Sender<(DataSources, Option<String>, String)>,
 ) {
     let mongodb_connection = mongo_client.read().await;
     let global_data = GLOBAL_DATA.read().await.clone();
@@ -98,15 +96,14 @@ pub async fn process_message(
                                     });
                                     // dynamically get user's chunking strategy of choice from the database
                                     let model_obj_clone = model_parameters.clone();
-                                    let model_name = EmbeddingModels::from(model_obj_clone.model);
                                     match handle.await.unwrap() {
                                         Ok(documents) => {
                                             embed_bulk_insert_unstructured_response(
                                                 documents,
-                                                datasource_id.to_string(),
-                                                vector_database_client.clone(),
+                                                ds,
+                                                //vector_database_client.clone(),
                                                 mongo_client.clone(),
-                                                model_name,
+                                                model_obj_clone,
                                                 None,
                                                 SearchType::default(),
                                             )
@@ -131,11 +128,8 @@ pub async fn process_message(
                         }
                     } else {
                         // This is where data is coming from airbyte rather than a direct file upload
-                        let _ = send_task(
-                            sender,
-                            (datasource_id.to_string(), stream_config_key, message_string),
-                        )
-                        .await;
+                        let _ = send_task(sender, (ds.clone(), stream_config_key, message_string))
+                            .await;
                     }
                 }
             } else {
