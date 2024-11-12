@@ -4,6 +4,7 @@ use mongodb::bson::{doc, oid::ObjectId};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
+use std::fmt::Display;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DatasourceConnectionSettings {
@@ -92,29 +93,40 @@ pub struct UnstructuredChunkingConfig {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct DataSources {
-    pub _id: ObjectId,
-    pub orgId: ObjectId,
-    pub teamId: ObjectId,
-    pub modelId: Option<ObjectId>,
+    #[serde(rename = "_id")]
+    pub id: ObjectId,
+    pub org_id: ObjectId,
+    pub team_id: ObjectId,
+    pub model_id: Option<ObjectId>,
     pub name: String,
     pub description: Option<String>,
     pub filename: Option<String>,
-    pub originalName: String,
-    pub sourceType: String,
-    pub sourceId: Option<String>,
-    pub syncedCount: Option<i32>,
-    pub embeddedCount: Option<i32>,
-    pub destinationId: Option<String>,
-    pub workspaceId: Option<String>,
-    pub connectionId: Option<String>,
-    pub chunkingConfig: Option<UnstructuredChunkingConfig>,
-    pub lastSyncedDate: Option<DateTime>,
-    pub embeddingField: Option<String>,
-    pub timeWeightField: Option<String>,
-    pub createdDate: Option<DateTime>,
+    pub original_name: String,
+    pub source_type: String,
+    pub source_id: Option<String>,
+    pub synced_count: Option<i32>,
+    pub embedded_count: Option<i32>,
+    pub destination_id: Option<String>,
+    pub workspace_id: Option<String>,
+    pub connection_id: Option<String>,
+    #[serde(default)]
+    pub chunking_config: Option<UnstructuredChunkingConfig>,
+    pub last_synced_date: Option<DateTime>,
+    pub embedding_field: Option<String>,
+    pub time_weight_field: Option<String>,
+    pub created_date: Option<DateTime>,
     pub status: String,
-    pub streamConfig: Option<HashMap<String, StreamConfig>>,
+    pub byo_vector_db: Option<bool>,
+    pub collection_name: Option<String>,
+    pub namespace: Option<String>,
+    #[serde(default)]
+    pub stream_config: Option<HashMap<String, StreamConfig>>,
+    pub discovered_schema: Option<bson::Document>,
+    pub vector_db_id: Option<ObjectId>,
+    #[serde(flatten)]
+    pub extra_fields: bson::Document,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -186,10 +198,12 @@ pub struct FieldDescription {
     pub description: String,
     #[serde(rename = "type")]
     pub field_type: String, // escaping `type` because it's a reserved keyword in Rust
+    #[serde(flatten)]
+    pub extra_fields: HashMap<String, Value>,
 }
 
 /// Type alias for a map of field descriptions
-pub type FieldDescriptionMap = HashMap<String, FieldDescription>;
+//pub type FieldDescriptionMap = bson::Document;
 
 /// Struct representing the configuration of a stream
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -198,7 +212,7 @@ pub struct StreamConfig {
     pub primaryKey: Vec<String>,
     pub syncMode: SyncMode,
     pub cursorField: Vec<String>,
-    pub descriptionsMap: FieldDescriptionMap,
+    pub descriptionsMap: bson::Document,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -207,4 +221,45 @@ pub struct EmbeddingConfig {
     pub embedding_key: Option<String>,
     pub primary_key: Option<Vec<String>>,
     pub chunking_strategy: Option<UnstructuredChunkingConfig>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+//#[serde(deny_unknown_fields)]
+pub struct VectorDbs {
+    pub _id: ObjectId,
+    pub orgId: ObjectId,
+    pub teamId: ObjectId,
+    pub apiKey: Option<String>,
+    pub url: Option<String>,
+    pub r#type: VectorDatabaseType,
+    pub name: String,
+    pub createdAt: DateTime,
+    pub updatedAt: DateTime,
+}
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub enum VectorDatabaseType {
+    pinecone,
+    #[default]
+    qdrant,
+    unknown,
+}
+impl From<String> for VectorDatabaseType {
+    fn from(value: String) -> Self {
+        match value.as_str() {
+            "qdrant" => VectorDatabaseType::qdrant,
+            "pinecone" => VectorDatabaseType::pinecone,
+            _ => VectorDatabaseType::unknown,
+        }
+    }
+}
+
+impl Display for VectorDatabaseType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let str = match self {
+            VectorDatabaseType::pinecone => "pinecone".to_string(),
+            VectorDatabaseType::qdrant => "qdrant".to_string(),
+            _ => "Unknown".to_string(),
+        };
+        write!(f, "{}", str)
+    }
 }

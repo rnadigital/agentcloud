@@ -30,6 +30,7 @@ import { getTaskById } from 'db/task';
 import { getVariableById } from 'db/variable';
 import debug from 'debug';
 import toObjectId from 'misc/toobjectid';
+import { ObjectId } from 'mongodb';
 import { sessionTaskQueue } from 'queue/bull';
 import { client } from 'redis/redis';
 const log = debug('webapp:controllers:session');
@@ -86,7 +87,12 @@ export async function sessionData(req, res, _next) {
 					getVariableById(req.params.resourceSlug, v)
 				);
 				const variables = await Promise.all(variablePromise);
-				crewAppVariables.push(...variables);
+
+				variables.forEach(variable => {
+					if (variable && !crewAppVariables.some(v => (v._id as ObjectId).equals(variable._id))) {
+						crewAppVariables.push(variable);
+					}
+				});
 			}
 
 			const agentPromises = foundCrew.agents.map(a =>
@@ -105,7 +111,11 @@ export async function sessionData(req, res, _next) {
 				}
 			}
 			if (crewAppVariables.length > 0) {
-				app.variables = crewAppVariables.map(v => ({ name: v.name, defaultValue: v.defaultValue }));
+				app.variables = crewAppVariables.map(v => ({
+					name: v.name,
+					defaultValue: v.defaultValue,
+					id: toObjectId(v._id)
+				}));
 			}
 
 			avatarMap = await getAgentNameMap(req.params.resourceSlug, foundCrew?.agents);
@@ -119,7 +129,11 @@ export async function sessionData(req, res, _next) {
 					getVariableById(req.params.resourceSlug, v)
 				);
 				const chatAppVariables = await Promise.all(variablePromise);
-				app.variables = chatAppVariables.map(v => ({ name: v.name, defaultValue: v.defaultValue }));
+				app.variables = chatAppVariables.map(v => ({
+					name: v.name,
+					defaultValue: v.defaultValue,
+					id: toObjectId(v._id)
+				}));
 			}
 			break;
 	}
@@ -189,7 +203,7 @@ export async function publicSessionPage(app, req, res, next) {
 	return app.render(req, res, `/${req.params.resourceSlug}/session/${data.session._id}`);
 }
 
-export type SessionJsonReturnType = Awaited<ReturnType<typeof sessionJson>>;
+export type SessionJsonReturnType = Awaited<ReturnType<typeof sessionData>>;
 /**
  * GET /[resourceSlug]/session/[sessionId].json
  * get session json
@@ -330,36 +344,38 @@ export async function addSessionApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	//TODO: Rewrite this to check all dependencies of reusable properties of apps/crews
 	let crewId;
 	let hasVariables = false;
+
 	if (app?.type === AppType.CREW) {
 		const crew = await getCrewById(req.params.resourceSlug, app?.crewId);
-		if (crew) {
-			const agents = await getAgentsById(req.params.resourceSlug, crew.agents);
-			if (!agents) {
-				return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
-			}
-			crewId = crew._id;
-
-			hasVariables = agents.some(agent => agent?.variableIds?.length > 0);
-
-			if (!hasVariables) {
-				const taskPromises = crew.tasks.map(t =>
-					getTaskById(req.params.resourceSlug, t.toString())
-				);
-				const tasks = await Promise.all(taskPromises);
-				hasVariables = tasks.some(task => task?.variableIds?.length > 0);
-			}
-		} else {
+		if (!crew) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+		}
+		crewId = crew._id;
+
+		const kickOffVariablesIds = app.kickOffVariablesIds?.map(v => v.toString()) || [];
+		const agents = await getAgentsById(req.params.resourceSlug, crew.agents);
+		if (!agents) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+		}
+
+		const agentVariableIds = agents.flatMap(a => a.variableIds.map(v => v.toString()));
+		hasVariables = agentVariableIds.some(v => kickOffVariablesIds.includes(v));
+
+		if (!hasVariables) {
+			const tasks = await Promise.all(
+				crew.tasks.map(t => getTaskById(req.params.resourceSlug, t.toString()))
+			);
+			const taskVariableIds = tasks.flatMap(t => t.variableIds.map(v => v.toString()));
+			hasVariables = taskVariableIds.some(v => kickOffVariablesIds.includes(v));
 		}
 	} else {
 		const agent = await getAgentById(req.params.resourceSlug, app?.chatAppConfig?.agentId);
-		hasVariables = agent?.variableIds?.length > 0;
 		if (!agent) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
+		hasVariables = agent.variableIds?.length > 0;
 	}
 
 	const addedSession = await addSession({
@@ -419,6 +435,8 @@ export async function deleteSessionApi(req, res, next) {
 	if (!sessionId || typeof sessionId !== 'string' || sessionId.length !== 24) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
+
+	//TODO: CLOSE MONGO CONNECTION IN AGENT_BACKEND IF IT ISN'T ALREADY CLOSED
 
 	const deletedSession = await deleteSessionById(req.params.resourceSlug, sessionId);
 	if (!deletedSession || deletedSession.deletedCount < 1) {

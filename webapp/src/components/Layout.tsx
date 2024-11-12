@@ -13,6 +13,7 @@ import {
 	KeyIcon,
 	PencilSquareIcon,
 	PuzzlePieceIcon,
+	ServerStackIcon,
 	UserGroupIcon,
 	WrenchScrewdriverIcon,
 	XMarkIcon
@@ -115,6 +116,12 @@ const agentNavigation: any[] = [
 		href: '/variables',
 		base: '/variable',
 		icon: <CubeIcon className='h-6 w-6 shrink-0' aria-hidden='true' />
+	},
+	{
+		name: 'Vector DBs',
+		href: '/vectordbs',
+		base: '/vectordb',
+		icon: <ServerStackIcon className='h-6 w-6 shrink-0' aria-hidden='true' />
 	}
 	// { name: 'Vector Collections', href: '/collections', icon: <Square3Stack3DIcon className='h-6 w-6 shrink-0' aria-hidden='true' /> },
 ];
@@ -877,11 +884,11 @@ export default withRouter(function Layout(props) {
 						{ 'lg:pl-80 py-0 max-w-full': showNavs }
 					)}
 				>
-					<div className='py-3'>
+					{/* <div className='py-3'>
 						© {new Date().getFullYear()} RNA Digital - v{packageJson.version}
 						{process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH &&
 							`-git-${process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH}`}
-					</div>
+					</div> */}
 					<div className='flex gap-x-2 ml-auto'>
 						<a
 							href='https://discord.com/invite/ZNSSttKqqq'

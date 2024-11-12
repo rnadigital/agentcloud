@@ -63,6 +63,10 @@ const Permissions = Object.seal(
 			EDIT_VARIABLE: 210,
 			DELETE_VARIABLE: 215,
 
+			CREATE_VECTOR_DB: 205,
+			EDIT_VECTOR_DB: 210,
+			DELETE_VECTOR_DB: 215,
+
 			DUMMY_BIT: 255 // Just padding
 		})
 	)

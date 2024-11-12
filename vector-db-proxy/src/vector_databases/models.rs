@@ -1,12 +1,14 @@
+use crate::embeddings::helpers::clean_text;
 use crate::utils::conversions::{condition_to_hash_map, convert_hashmap_to_qdrant_filters};
 use crate::vector_databases::error::VectorDatabaseError;
-use crate::vector_databases::models::Cloud::GCP;
+use crate::vector_databases::helpers;
 use pinecone_sdk::models::Cloud as PineconeCloud;
 use pinecone_sdk::models::{Metric, Vector};
 use prost_types::value::Kind;
-use prost_types::{ListValue, Struct as Metadata, Struct};
+use prost_types::Struct as Metadata;
 use qdrant_client::qdrant::Filter;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};
 use uuid::Uuid;
 
@@ -23,16 +25,16 @@ pub enum CreateDisposition {
 }
 #[derive(Clone, Deserialize, Debug)]
 pub struct Point {
-    pub index: Option<String>,
+    pub index: Option<Value>,
     pub vector: Vec<f32>,
-    pub payload: Option<HashMap<String, String>>,
+    pub payload: Option<HashMap<String, Value>>,
 }
 
 impl Point {
     pub fn new(
-        index: Option<String>,
+        index: Option<Value>,
         vector: Vec<f32>,
-        payload: Option<HashMap<String, String>>,
+        payload: Option<HashMap<String, Value>>,
     ) -> Self {
         Point {
             index,
@@ -46,7 +48,7 @@ impl Point {
 pub struct SearchResult {
     pub id: String,
     pub score: Option<f32>,
-    pub payload: Option<HashMap<String, String>>,
+    pub payload: Option<HashMap<String, Value>>,
     pub vector: Option<Vec<f32>>,
 }
 
@@ -179,11 +181,13 @@ impl Default for SearchType {
 pub struct SearchRequest {
     pub search_type: SearchType,
     pub collection: String,
+    pub namespace: Option<String>,
     pub id: Option<String>,
     pub vector: Option<Vec<f32>>,
     pub filters: Option<FilterConditions>,
     pub search_response_params: Option<SearchResponseParams>,
     pub region: Option<Region>,
+    pub byo_vector_db: Option<bool>,
     pub cloud: Option<Cloud>,
     pub top_k: Option<u32>,
 }
@@ -193,13 +197,15 @@ impl SearchRequest {
         Self {
             search_type,
             collection,
+            namespace: None,
             id: None,
             vector: None,
             filters: None,
             top_k: None,
+            byo_vector_db: None,
             search_response_params: None,
             region: Some(Region::US),
-            cloud: Some(GCP),
+            cloud: Some(Cloud::GCP),
         }
     }
 }
@@ -394,7 +400,7 @@ impl From<FilterConditions> for Metadata {
                 btree_map.insert(
                     k,
                     prost_types::Value {
-                        kind: Some(Kind::StringValue(format!("{}", v.replace("\"", "")))),
+                        kind: Some(Kind::StringValue(format!("{}", clean_text(v)))),
                     },
                 );
             }
@@ -403,7 +409,7 @@ impl From<FilterConditions> for Metadata {
         Self { fields: btree_map }
     }
 }
-impl From<Point> for BTreeMap<String, String> {
+impl From<Point> for BTreeMap<String, Value> {
     fn from(value: Point) -> Self {
         BTreeMap::from_iter(value.payload.unwrap_or(HashMap::new()))
     }
@@ -416,7 +422,10 @@ impl From<Point> for Metadata {
             btree_map.insert(
                 k,
                 prost_types::Value {
-                    kind: Some(Kind::StringValue(format!("{}", v.replace("\"", "")))),
+                    kind: Some(Kind::StringValue(format!(
+                        "{}",
+                        v.to_string().replace("\"", "")
+                    ))),
                 },
             );
         }
@@ -424,46 +433,12 @@ impl From<Point> for Metadata {
         Self { fields: btree_map }
     }
 }
-fn list_value_to_string(list_value: &ListValue) -> Option<String> {
-    let values: Vec<String> = list_value
-        .values
-        .iter()
-        .filter_map(|v| value_to_string(&v.kind)) // Recursively handle each value in the list
-        .collect();
-
-    Some(format!("[{}]", values.join(", ")))
-}
-fn struct_value_to_string(struct_value: &Struct) -> Option<String> {
-    let mut map = HashMap::new();
-
-    for (key, value) in &struct_value.fields {
-        if let Some(value_str) = value_to_string(&value.kind) {
-            // Recursively handle each value in the struct
-            map.insert(key.clone(), value_str);
-        }
-    }
-    // Return the map as a JSON string
-    Some(serde_json::to_string(&map).unwrap_or_else(|_| "{}".to_string()))
-}
-fn value_to_string(value: &Option<Kind>) -> Option<String> {
-    match value {
-        Some(kind) => match kind {
-            Kind::StringValue(s) => Some(s.to_owned().as_str().to_string()),
-            Kind::NumberValue(n) => Some(n.to_string()),
-            Kind::BoolValue(b) => Some(b.to_string()),
-            Kind::NullValue(i) => Some(i.to_string()),
-            Kind::ListValue(l) => list_value_to_string(l),
-            Kind::StructValue(s) => struct_value_to_string(s),
-        },
-        None => None,
-    }
-}
 impl From<Metadata> for Point {
     fn from(value: Metadata) -> Self {
         let mut hash_map = HashMap::new();
 
         for (k, v) in value.fields {
-            hash_map.insert(k, value_to_string(&v.kind).unwrap());
+            hash_map.insert(k, helpers::prost_to_serde(&v));
         }
         Point {
             index: None,
@@ -477,7 +452,10 @@ impl From<Point> for Vector {
     fn from(value: Point) -> Self {
         let metadata = Some(Metadata::from(value.clone()));
         Self {
-            id: value.index.unwrap_or(Uuid::new_v4().to_string()),
+            id: value
+                .index
+                .unwrap_or(Value::String(Uuid::new_v4().to_string()))
+                .to_string(),
             values: value.vector,
             sparse_values: None,
             metadata,
