@@ -10,7 +10,7 @@ export default OnboardingFormContext;
 
 import { useFormContext } from 'react-hook-form';
 
-export const useOnboardinFormContext = <TFieldValues extends FieldValues>() => {
+export const useOnboardingFormContext = <TFieldValues extends FieldValues>() => {
 	// Updated to extend Record
 	const context = useFormContext<TFieldValues>();
 	if (!context) {

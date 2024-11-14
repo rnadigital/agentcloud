@@ -32,7 +32,7 @@ export default function DatasourceScheduleForm({
 	const cronProps = pricingMatrix[stripePlan]?.cronProps;
 	return (
 		<>
-			<div className='my-4'>
+			<div className=''>
 				<label
 					htmlFor='scheduleType'
 					className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-2'
@@ -58,7 +58,7 @@ export default function DatasourceScheduleForm({
 			</div>
 
 			{scheduleType === DatasourceScheduleType.CRON && (
-				<div className='my-4'>
+				<div className=''>
 					<label
 						htmlFor='timeUnit'
 						className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-2'

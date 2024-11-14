@@ -9,6 +9,7 @@ import DataSourceDetails from 'components/onboarding/DataSourceDetails';
 import DataSourceGrid from 'components/onboarding/DataSourceGrid';
 import DataSourceOnboardingSteps from 'components/onboarding/DataSourceOnboardingSteps';
 import DataSourceSearch from 'components/onboarding/DataSourceSearch';
+import DatasourceStreamConfiguration from 'components/onboarding/DatasourceStreamConfiguration';
 import EmbeddingModelSelect from 'components/onboarding/EmbeddingModelSelect';
 import LeftFrame from 'components/onboarding/LeftFrame';
 import OnboardingSelect from 'components/onboarding/OnboardingSelect';
@@ -18,15 +19,17 @@ import { useAccountContext } from 'context/account';
 import OnboardingFormContext from 'context/onboardingform';
 import { useThemeContext } from 'context/themecontext';
 import cn from 'lib/cn';
+import { defaultChunkingOptions } from 'misc/defaultchunkingoptions';
 import passwordPattern from 'misc/passwordpattern';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { RegisterFormValues } from 'pages/register';
 import { usePostHog } from 'posthog-js/react';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Connector } from 'struct/connector';
+import submittingReducer from 'utils/submittingreducer';
 
 export default function Onboarding() {
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
@@ -36,7 +39,17 @@ export default function Onboarding() {
 
 	const [connectors, setConnectors] = useState([]);
 	const [searchInput, setSearchInput] = useState<string>();
-	const [currentStep, setCurrentStep] = useState(4);
+	const [currentStep, setCurrentStep] = useState(0);
+	const [currentDatasourceStep, setCurrentDatasourceStep] = useState(0);
+	const [spec, setSpec] = useState(null);
+
+	const [streamState, setStreamReducer] = useReducer(submittingReducer, {});
+
+	const [chunkingConfig, setChunkingConfig] = useReducer(submittingReducer, {
+		...defaultChunkingOptions
+	});
+
+	const posthog = usePostHog();
 
 	const filteredConnectors: Connector[] = useMemo(() => {
 		return Array.from(new Set(connectors.map(connector => connector.name.toLowerCase())))
@@ -84,42 +97,57 @@ export default function Onboarding() {
 			<div className='flex flex-1 bg-white'>
 				<LeftFrame>
 					<div className='flex h-full flex-col'>
-						<DataSourceOnboardingSteps currentStep={0} />
+						<DataSourceOnboardingSteps currentStep={currentStep} />
 					</div>
 				</LeftFrame>
 
 				<main className='py-14 px-28 w-full'>
 					<div className=''>
-						{currentStep < 3 && (
+						{currentDatasourceStep <= 2 && (
 							<>
 								<div className='text-2xl mb-4'>Select Data Source</div>
-								<DataSourceConfigSteps currentStep={0} />
+								<DataSourceConfigSteps currentStep={currentDatasourceStep} />
 							</>
 						)}
-						{currentStep === 3 && <div className='text-2xl mb-4'>Select Your Embedding Model</div>}
-						{currentStep === 4 && <div className='text-2xl mb-4'>Connect to your Vector DB</div>}
 					</div>
 
 					<section className='mt-6'>
 						<OnboardingFormContext>
-							{currentStep === 0 && (
+							{currentDatasourceStep === 0 && (
 								<>
 									<DataSourceSearch searchInput={searchInput} setSearchInput={setSearchInput} />
-									<DataSourceGrid connectors={filteredConnectors} />
+									<DataSourceGrid
+										connectors={filteredConnectors}
+										setCurrentDatasourceStep={setCurrentDatasourceStep}
+									/>
 								</>
 							)}
 
-							{currentStep === 1 && (
-								<>
-									<DataSourceDetails />
-								</>
+							{currentDatasourceStep === 1 && (
+								<DatasourceStreamConfiguration
+									setStreamReducer={setStreamReducer}
+									submitting={false}
+									setStep={setCurrentDatasourceStep}
+								/>
 							)}
 
-							{currentStep === 3 && <EmbeddingModelSelect />}
-							{currentStep === 4 && <VectorDBSelection />}
+							{currentDatasourceStep === 2 && (
+								<DataSourceDetails
+									streamState={streamState}
+									setCurrentDatasourceStep={setCurrentDatasourceStep}
+									setStep={setCurrentStep}
+									chunkingConfig={chunkingConfig}
+									setChunkingConfig={setChunkingConfig}
+								/>
+							)}
+
+							{currentStep === 1 && <EmbeddingModelSelect setStep={setCurrentStep} />}
+							{currentStep === 2 && (
+								<VectorDBSelection streamState={streamState} chunkingConfig={chunkingConfig} />
+							)}
 						</OnboardingFormContext>
 					</section>
-					<div className='flex mt-6'>
+					{/* <div className='flex mt-6'>
 						<button
 							className={cn(
 								'flex items-center gap-1',
@@ -133,7 +161,7 @@ export default function Onboarding() {
 							<ArrowRightIcon className='h-4 w-4' />
 							<span>Next</span>
 						</button>
-					</div>
+					</div> */}
 				</main>
 			</div>
 		</>

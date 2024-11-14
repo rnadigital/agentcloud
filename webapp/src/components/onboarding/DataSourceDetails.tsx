@@ -1,69 +1,122 @@
-import { UserPlusIcon } from '@heroicons/react/24/outline';
+import { InformationCircleIcon, UserPlusIcon } from '@heroicons/react/24/outline';
+import DatasourceChunkingForm from 'components/DatasourceChunkingForm';
+import DatasourceScheduleForm from 'components/DatasourceScheduleForm';
 import InputField from 'components/form/InputField';
 import SelectField from 'components/form/SelectField';
-import { useOnboardinFormContext } from 'context/onboardingform';
+import ToolTip from 'components/shared/ToolTip';
+import { useOnboardingFormContext } from 'context/onboardingform';
 import { AU, BR, CA, EU, FlagComponent, JP, SG, US } from 'country-flag-icons/react/3x2';
-import React from 'react';
-import { Option } from 'react-tailwindcss-select/dist/components/type';
+import { defaultChunkingOptions } from 'misc/defaultchunkingoptions';
+import React, { useEffect, useReducer, useState } from 'react';
+import { DatasourceScheduleType, StreamConfig } from 'struct/datasource';
+import { Retriever } from 'struct/tool';
+import submittingReducer from 'utils/submittingreducer';
 
 interface DataSourceDetailsFormValues {
-	connectionName: string;
-	region: string;
 	chunkStrategy: string;
 	retrievalStrategy: string;
 	k: number;
+	embeddingField: string;
+	scheduleType: string;
+	timeUnit: string;
+	units: string;
+	cronExpression: string;
+	enableConnectorChunking: boolean;
+	toolDecayRate: number;
 }
 
-const regionOptions: { label: string; value: string; region: FlagComponent }[] = [
-	{ label: 'US East (Virginia)', value: 'us-east-1', region: US },
-	{ label: 'US West (Oregon)', value: 'us-west-2', region: US },
-	{ label: 'US West (N. California)', value: 'us-west-1', region: US },
-	{ label: 'EU (Ireland)', value: 'eu-west-1', region: EU },
-	{ label: 'EU (Frankfurt)', value: 'eu-central-1', region: EU },
-	{ label: 'Asia Pacific (Tokyo)', value: 'ap-northeast-1', region: JP },
-	{ label: 'Asia Pacific (Sydney)', value: 'ap-southeast-2', region: AU },
-	{ label: 'Asia Pacific (Singapore)', value: 'ap-southeast-1', region: SG },
-	{ label: 'South America (São Paulo)', value: 'sa-east-1', region: BR },
-	{ label: 'Canada (Central)', value: 'ca-central-1', region: CA }
-];
-
-const DataSourceDetails = () => {
-	const { control, watch } = useOnboardinFormContext<DataSourceDetailsFormValues>();
+const DataSourceDetails = ({
+	streamState,
+	setCurrentDatasourceStep,
+	setStep,
+	chunkingConfig,
+	setChunkingConfig
+}: {
+	streamState: any;
+	setCurrentDatasourceStep: Function;
+	setStep: Function;
+	chunkingConfig: any;
+	setChunkingConfig: Function;
+}) => {
+	const { control, watch, setValue } = useOnboardingFormContext<DataSourceDetailsFormValues>();
 
 	const k = watch('k');
+	const embeddingField = watch('embeddingField');
+	const scheduleType = watch('scheduleType');
+	const units = watch('units');
+	const cronExpression = watch('cronExpression');
+	const enableConnectorChunking = watch('enableConnectorChunking');
+	const timeUnit = watch('timeUnit');
+	const toolDecayRate = watch('toolDecayRate');
+
+	const moveToNextStep = () => {
+		setCurrentDatasourceStep(null);
+		setStep(1);
+	};
+
+	const setScheduleType = (value: string) => {
+		setValue('scheduleType', value);
+	};
+	const setTimeUnit = (value: string) => {
+		setValue('timeUnit', value);
+	};
+	const setUnits = (value: string) => {
+		setValue('units', value);
+	};
+	const setCronExpression = (value: string) => {
+		setValue('cronExpression', value);
+	};
+	const setEnableConnectorChunking = (value: boolean) => {
+		setValue('enableConnectorChunking', value);
+	};
+	const setToolDecayRate = (value: number) => {
+		setValue('toolDecayRate', value);
+	};
+
+	// const [chunkingConfig, setChunkingConfig] = useReducer(submittingReducer, {
+	// 	...defaultChunkingOptions
+	// });
+
+	useEffect(() => {
+		setValue('scheduleType', DatasourceScheduleType.MANUAL);
+		setValue('cronExpression', '0 12 * * *');
+		setValue('retrievalStrategy', Retriever.SELF_QUERY);
+		setValue('toolDecayRate', 0.5);
+	}, []);
 
 	return (
 		<div className='text-gray-900 text-sm'>
-			<InputField<DataSourceDetailsFormValues>
-				name='connectionName'
-				control={control}
-				rules={{
-					required: 'Name is required'
-				}}
-				label='Connection name*'
-				type='text'
-				placeholder='e.g. Customer Records'
-			/>
-
-			<div className='border border-gray-300 p-4 flex flex-col gap-y-10 mt-6'>
-				<div className='flex w-full items-center'>
-					<div className='w-1/2'>
-						<div>Data Storage Region</div>
-						<div className='text-gray-500'>
-							Default region is set by the team creator, you select a different one
-						</div>
-					</div>
-					<div className='w-1/2'>
-						<SelectField<DataSourceDetailsFormValues>
-							name='region'
-							control={control}
-							rules={{
-								required: 'Region is required'
-							}}
-							options={regionOptions.map(option => ({ label: option.label, value: option.value }))}
-							placeholder='Select a region...'
-							optionLabel={RegionOptionLabel}
-						/>
+			<div className='border border-gray-300 p-4 flex flex-col gap-y-3 mt-6'>
+				<div>
+					<label
+						htmlFor='embeddingField'
+						className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+					>
+						Field To Embed<span className='text-red-700'> *</span>
+					</label>
+					<div>
+						<select
+							required
+							name='embeddingField'
+							id='embeddingField'
+							onChange={e => setValue('embeddingField', e.target.value)}
+							value={embeddingField}
+							className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+						>
+							{Object.entries(streamState)
+								.filter((e: [string, StreamConfig]) => e[1].checkedChildren.length > 0)
+								.map((stream: [string, StreamConfig], ei: number) => {
+									return (
+										<optgroup label={stream[0]} key={`embeddingField_optgroup_${ei}`}>
+											{stream[1].checkedChildren.map((sk, ski) => (
+												<option key={`embeddingField_option_${ski}`} value={sk}>
+													{sk}
+												</option>
+											))}
+										</optgroup>
+									);
+								})}
+						</select>
 					</div>
 				</div>
 
@@ -107,10 +160,10 @@ const DataSourceDetails = () => {
 								required: 'Retrieval strategy is required'
 							}}
 							options={[
-								{ label: 'Vector Search', value: 'vector_search' },
-								{ label: 'Nearest Neighbor', value: 'nearest_neighbor' },
-								{ label: 'Hybrid Search', value: 'hybrid_search' },
-								{ label: 'Content-based Retrieval', value: 'content_based' }
+								{ label: 'Self Query', value: Retriever.SELF_QUERY },
+								{ label: 'Raw Similarity Search', value: Retriever.RAW },
+								{ label: 'Time Weighted', value: Retriever.TIME_WEIGHTED },
+								{ label: 'Multi Query', value: Retriever.MULTI_QUERY }
 							]}
 							placeholder='Select a retrieval strategy...'
 						/>
@@ -144,6 +197,60 @@ const DataSourceDetails = () => {
 					</div>
 				</div>
 
+				<DatasourceScheduleForm
+					scheduleType={scheduleType}
+					setScheduleType={setScheduleType}
+					timeUnit={timeUnit}
+					setTimeUnit={setTimeUnit}
+					units={units}
+					setUnits={setUnits}
+					cronExpression={cronExpression}
+					setCronExpression={setCronExpression}
+				/>
+
+				<div className=''>
+					<label
+						htmlFor='overlap_all'
+						className='inline-flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+					>
+						Enable row chunking
+						<span className='ml-2'>
+							<ToolTip
+								content='If enabled, applies the configured chunking strategy to the "Field to embed". Useful if your field to embed contains text or markdown that needs to be broken into smaller chunks.'
+								placement='top'
+								arrow={true}
+							>
+								<InformationCircleIcon className='h-4 w-4' />
+							</ToolTip>
+						</span>
+					</label>
+					<input
+						type='checkbox'
+						name='enableConnectorChunking'
+						checked={enableConnectorChunking}
+						onChange={e => setEnableConnectorChunking(e.target.checked)}
+						className='ml-2 rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:bg-slate-800 dark:ring-slate-600'
+					/>
+				</div>
+
+				{enableConnectorChunking && (
+					<DatasourceChunkingForm
+						chunkingConfig={chunkingConfig}
+						setChunkingConfig={setChunkingConfig}
+						isConnector={true}
+					/>
+				)}
+
+				<div className='flex justify-end'>
+					<button
+						type='button'
+						className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+						onClick={moveToNextStep}
+					>
+						Continue
+					</button>
+				</div>
+
 				<div className='flex bg-primary-50 items-center p-2 rounded-lg gap-2'>
 					<UserPlusIcon className='h-4 w-4 text-primary-500' />
 					<span className='text-xs text-primary-900'>Not sure how to configure this page?</span>
@@ -155,15 +262,3 @@ const DataSourceDetails = () => {
 };
 
 export default DataSourceDetails;
-
-const RegionOptionLabel = (data: Option) => {
-	const option = regionOptions.find(option => option.value === data.value);
-
-	return (
-		<div className='flex items-center gap-x-2 cursor-pointer h-8'>
-			<option.region className='h-4 w-4' />
-			<div className='text-sm font-medium text-gray-900'>{data.label}</div>
-			<div className='text-xs text-gray-500'>{data.value}</div>
-		</div>
-	);
-};

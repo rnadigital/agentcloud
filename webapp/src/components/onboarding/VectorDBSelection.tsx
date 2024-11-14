@@ -1,3 +1,4 @@
+import * as API from '@api';
 import {
 	CheckCircleIcon,
 	CubeIcon,
@@ -7,9 +8,16 @@ import {
 } from '@heroicons/react/24/outline';
 import InputField from 'components/form/InputField';
 import SelectField from 'components/form/SelectField';
+import { useAccountContext } from 'context/account';
+import { useOnboardingFormContext } from 'context/onboardingform';
 import cn from 'lib/cn';
+import { useRouter } from 'next/router';
+import { usePostHog } from 'posthog-js/react';
 import React, { useEffect, useState } from 'react';
 import { Control, useForm, UseFormSetValue } from 'react-hook-form';
+import { toast } from 'react-toastify';
+import { StreamConfig } from 'struct/datasource';
+import { VectorDb } from 'struct/vectordb';
 
 const options = [
 	{
@@ -42,12 +50,142 @@ interface FormValues {
 	name: string;
 	type: string;
 	preferredVectorDB?: string;
+	index?: string;
 }
 
-const VectorDBSelection = () => {
-	const { control, register, setValue } = useForm<FormValues>();
+const VectorDBSelection = ({
+	streamState,
+	chunkingConfig
+}: {
+	streamState: any;
+	chunkingConfig: any;
+}) => {
+	const { control, register, setValue, watch } = useOnboardingFormContext<any>();
+
+	const stagedDatasource = watch('stagedDatasource');
+	const datasourceId = stagedDatasource?.id;
+
+	const modelId = watch('modelId');
+	const scheduleType = watch('scheduleType');
+	const timeUnit = watch('timeUnit');
+	const units = watch('units');
+	const cronExpression = watch('cronExpression');
+	const datasourceName = watch('datasourceName');
+	const datasourceDescription = watch('datasourceDescription');
+	const embeddingField = watch('embeddingField');
+	const toolRetriever = watch('toolRetriever');
+	const toolDecayRate = watch('toolDecayRate');
+	const toolTimeWeightField = watch('toolTimeWeightField');
+	const topK = watch('topK');
+	const enableConnectorChunking = watch('enableConnectorChunking');
+	const vectorDbId = watch('vectorDbId');
+	const byoVectorDb = watch('byoVectorDb');
+	const collectionName = watch('index');
+	const connector = watch('connector');
+	console.log({
+		stagedDatasource: stagedDatasource,
+		datasourceId: datasourceId,
+		modelId: modelId,
+		scheduleType: scheduleType,
+		timeUnit: timeUnit,
+		units: units,
+		cronExpression: cronExpression,
+		datasourceName: datasourceName,
+		datasourceDescription: datasourceDescription,
+		embeddingField: embeddingField,
+		toolRetriever: toolRetriever,
+		toolDecayRate: toolDecayRate,
+		toolTimeWeightField: toolTimeWeightField,
+		topK: topK,
+		chunkingConfig: chunkingConfig,
+		enableConnectorChunking: enableConnectorChunking,
+		vectorDbId: vectorDbId,
+		byoVectorDb: byoVectorDb,
+		collectionName: collectionName,
+		connector: connector
+	});
 
 	const [selectedDB, setSelectedDB] = useState<string>();
+
+	const [accountContext]: any = useAccountContext();
+	const { csrf } = accountContext as any;
+
+	const router = useRouter();
+	const { resourceSlug } = router.query;
+
+	const posthog = usePostHog();
+
+	const addDatasource = async () => {
+		const filteredStreamState = Object.fromEntries(
+			Object.entries(streamState).filter(
+				(e: [string, StreamConfig]) => e[1].checkedChildren.length > 0
+			)
+		);
+		const body = {
+			_csrf: csrf,
+			datasourceId: datasourceId,
+			resourceSlug,
+			scheduleType,
+			timeUnit,
+			units,
+			modelId,
+			cronExpression,
+			streamConfig: filteredStreamState,
+			datasourceName,
+			datasourceDescription,
+			embeddingField,
+			retriever: toolRetriever,
+			retriever_config: {
+				timeWeightField: toolTimeWeightField,
+				decay_rate: toolDecayRate,
+				k: topK
+			},
+			chunkingConfig,
+			enableConnectorChunking,
+			vectorDbId,
+			byoVectorDb,
+			collectionName
+		};
+		const addedDatasource: any = await API.addDatasource(
+			body,
+			() => {
+				posthog.capture('createDatasource', {
+					datasourceName,
+					connectorId: connector?.value,
+					connectorName: connector?.label,
+					numStreams: Object.keys(streamState)?.length,
+					syncSchedule: scheduleType
+				});
+				toast.success('Added datasource');
+			},
+			res => {
+				posthog.capture('createDatasource', {
+					datasourceName,
+					connectorId: connector?.value,
+					connectorName: connector?.label,
+					syncSchedule: scheduleType,
+					numStreams: Object.keys(streamState)?.length,
+					error: res
+				});
+				toast.error(res);
+			},
+			router
+		);
+	};
+
+	const onSubmit = async (data: Partial<VectorDb>) => {
+		await API.addVectorDb(
+			{ _csrf: csrf, resourceSlug, ...data },
+			res => {
+				toast.success('VectorDb Added');
+				// create datasource
+			},
+			res => {
+				toast.error(res);
+			},
+			null
+		);
+	};
 
 	useEffect(() => {
 		if (selectedDB) {
@@ -57,7 +195,7 @@ const VectorDBSelection = () => {
 	}, [selectedDB]);
 
 	return (
-		<div className='flex flex-wrap'>
+		<form className='flex flex-wrap'>
 			{options.map((connector, index) => (
 				<button
 					key={connector.name}
@@ -108,7 +246,7 @@ const VectorDBSelection = () => {
 					/>
 				</div>
 			)}
-		</div>
+		</form>
 	);
 };
 
@@ -163,6 +301,19 @@ const PineConeFields = ({
 						}}
 						type='text'
 						placeholder='Enter your API key'
+					/>
+				</div>
+
+				<div>
+					<div className='my-2 text-sm'>Index</div>
+					<InputField<FormValues>
+						name='index'
+						control={control}
+						rules={{
+							required: 'Index is required'
+						}}
+						type='text'
+						placeholder='Enter the index to use'
 					/>
 				</div>
 			</div>

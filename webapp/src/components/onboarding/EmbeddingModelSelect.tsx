@@ -1,8 +1,13 @@
+import * as API from '@api';
 import { InformationCircleIcon } from '@heroicons/react/24/outline';
 import InputField from 'components/form/InputField';
 import ToolTip from 'components/shared/ToolTip';
-import { useOnboardinFormContext } from 'context/onboardingform';
+import { useAccountContext } from 'context/account';
+import { useOnboardingFormContext } from 'context/onboardingform';
+import { useRouter } from 'next/router';
+import { usePostHog } from 'posthog-js/react';
 import React, { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import { ModelEmbeddingLength, ModelList, modelOptions, ModelTypeRequirements } from 'struct/model';
 
 import OnboardingSelect from './OnboardingSelect';
@@ -15,18 +20,25 @@ interface LLMOption {
 }
 
 interface LLMConfigurationFormValues {
-	LLMType: LLMOption;
-	LLMModel: LLMOption;
 	embeddingType: LLMOption;
 	embeddingModel: LLMOption;
-	llmModelConfig: Record<string, string>;
 	embeddedModelConfig: Record<string, string>;
 	apiKey?: string;
+	modelId?: string;
 }
 
-const EmbeddingModelSelect = () => {
-	const { control, watch, setValue, resetField } =
-		useOnboardinFormContext<LLMConfigurationFormValues>();
+const EmbeddingModelSelect = ({ setStep }: { setStep: Function }) => {
+	const { control, watch, setValue, resetField, handleSubmit } =
+		useOnboardingFormContext<LLMConfigurationFormValues>();
+
+	const [accountContext]: any = useAccountContext();
+	const { account, csrf } = accountContext;
+
+	const router = useRouter();
+	const posthog = usePostHog();
+
+	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
+
 	const embeddingType = watch('embeddingType');
 	const embeddingModelList = [
 		{ label: null, value: null },
@@ -61,6 +73,25 @@ const EmbeddingModelSelect = () => {
 		setUserSelectedEmbeddingType(true);
 	};
 
+	const addNewModel = async (data: LLMConfigurationFormValues) => {
+		const embeddingBody = {
+			_csrf: csrf,
+			resourceSlug,
+			name: data.embeddingType.label,
+			model: data.embeddingModel.value,
+			type: data.embeddingType.value,
+			config: {
+				...data.embeddedModelConfig,
+				model: data.embeddingModel.value
+			}
+		};
+
+		await API.addModel(embeddingBody, null, res => toast.error(res), null).then(addedModel => {
+			setValue('modelId', addedModel._id);
+		});
+		setStep(2);
+	};
+
 	useEffect(() => {
 		setValue('embeddingModel', {
 			label: 'text-embedding-3-small',
@@ -79,7 +110,10 @@ const EmbeddingModelSelect = () => {
 	}, [embeddingType]);
 
 	return (
-		<div className='flex-1'>
+		<form
+			className='flex-1 border border-gray-300 p-4 flex flex-col gap-y-3 mt-6'
+			onSubmit={handleSubmit(addNewModel)}
+		>
 			<div className='text-sm flex gap-1 dark:text-white'>
 				<span>Select Embedding</span>
 				<ToolTip content='Embedding models convert text or other data into numerical vectors for analysis and machine learning tasks. Use them for similarity searches, clustering, recommendation systems, and more. Embedding models are used to embed data and store it in a vector database for later RAG retrieval.'>
@@ -113,7 +147,6 @@ const EmbeddingModelSelect = () => {
 					/>
 				</div>
 			</div>
-
 			<div className='mt-2'>
 				{EmbeddingModelRequiredFields &&
 					EmbeddingModelRequiredFields.length > 0 &&
@@ -132,7 +165,16 @@ const EmbeddingModelSelect = () => {
 						</div>
 					))}
 			</div>
-		</div>
+
+			<div className='flex justify-end mt-4'>
+				<button
+					type='submit'
+					className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+				>
+					Continue
+				</button>
+			</div>
+		</form>
 	);
 };
 
