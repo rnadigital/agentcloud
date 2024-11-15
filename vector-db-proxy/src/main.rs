@@ -7,12 +7,10 @@ use std::sync::Arc;
 use std::thread;
 
 use actix_cors::Cors;
-use actix_web::{middleware::Logger, web, web::Data, App, HttpServer};
+use actix_web::{middleware::Logger, web, App, HttpServer};
 use anyhow::Context;
 use crossbeam::channel;
 use env_logger::Env;
-use pinecone_sdk::pinecone::{PineconeClient, PineconeClientConfig};
-use qdrant_client::client::QdrantClient;
 use tokio::signal;
 use tokio::sync::RwLock;
 
@@ -21,13 +19,13 @@ use routes::apis::{
     get_collection_info, health_check, list_collections, upsert_data_point_to_collection,
 };
 
+use crate::adaptors::mongo::models::DataSources;
 use crate::data::processing_incoming_messages::process_incoming_messages;
 use crate::init::env_variables::set_all_env_vars;
 use crate::init::env_variables::GLOBAL_DATA;
 use crate::messages::models::{MessageQueue, MessageQueueProvider};
 use crate::messages::tasks::get_message_queue;
 use crate::routes::apis::{create_collection, get_storage_size, scroll_data};
-use crate::vector_databases::vector_database::VectorDatabase;
 use adaptors::mongo::client::start_mongo_connection;
 
 mod adaptors;
@@ -72,43 +70,22 @@ async fn main() -> std::io::Result<()> {
     let port = global_data.port.clone();
 
     // This is to allow the use of multiple vector databases
-    let vector_database_client: Arc<RwLock<dyn VectorDatabase>> =
-        match global_data.vector_database.as_str() {
-            "qdrant" => {
-                println!("Using Qdrant Vector Database");
-                let qdrant_uri = format!("{}:{}", global_data.qdrant_host, global_data.qdrant_port);
-                let client = QdrantClient::from_url(qdrant_uri.as_str());
-                Arc::new(RwLock::new(client.build().unwrap()))
-            }
-            "pinecone" => {
-                println!("Using Pinecone Vector Database");
-                let config = PineconeClientConfig {
-                    api_key: Some(global_data.clone().pinecone_api_key),
-                    ..Default::default()
-                };
-                let pinecone: PineconeClient = config.client().expect("Failed to create Pinecone");
-                Arc::new(RwLock::new(pinecone))
-            }
-            _ => panic!(
-                "No valid vector database was chosen. Expected one of `qdrant` or `pinecone`.\
-         Got `{}`",
-                global_data.vector_database
-            ),
-        };
+    //let vector_database_client: Arc<RwLock<dyn VectorDatabase>> =
+    //    build_vector_db_client(vector_db, Some(vector_db_url), Some(vector_db_api_key)).await;
 
     let mongo_connection = start_mongo_connection().await.unwrap();
     // Create Arcs to allow sending across threads
     let app_mongo_client = Arc::new(RwLock::new(mongo_connection));
 
     // Clones for senders
-    let vector_database_for_streaming: Arc<RwLock<dyn VectorDatabase>> =
-        vector_database_client.clone();
+    //let vector_database_for_streaming: Arc<RwLock<dyn VectorDatabase>> =
+    //    vector_database_client.clone();
     // Assuming
     // qdrant_client implements VectorDatabase
     let mongo_client_for_streaming = Arc::clone(&app_mongo_client);
 
     // Clones of the receiver and sender so that they can be sent to the right threads
-    let (s, r) = channel::unbounded::<(String, Option<String>, String)>();
+    let (s, r) = channel::unbounded::<(DataSources, Option<String>, String)>();
     let sender_clone = s.clone();
 
     // This is to allow the use of multiple message queues
@@ -121,7 +98,7 @@ async fn main() -> std::io::Result<()> {
         let _ = connection
             .consume(
                 connection.clone(),
-                vector_database_for_streaming,
+                //vector_database_for_streaming,
                 mongo_client_for_streaming,
                 sender_clone,
             )
@@ -136,13 +113,13 @@ async fn main() -> std::io::Result<()> {
     let mut handles = vec![];
     for _ in 0..(number_of_workers * 10) {
         // let receiver_clone = receiver.clone();
-        let qdrant_client_clone = Arc::clone(&vector_database_client);
+        //let vector_database_client_clone = Arc::clone(&vector_database_client);
         let mongo_client_clone = Arc::clone(&app_mongo_client);
         let receiver = r.clone();
         let handle = thread::spawn(move || {
             let rt = tokio::runtime::Runtime::new().unwrap();
             rt.block_on(async {
-                process_incoming_messages(receiver, qdrant_client_clone, mongo_client_clone).await;
+                process_incoming_messages(receiver, mongo_client_clone).await;
             });
         });
         handles.push(handle);
@@ -155,7 +132,7 @@ async fn main() -> std::io::Result<()> {
         let server = HttpServer::new(move || {
             App::new()
                 .wrap(Logger::default())
-                .app_data(Data::new(Arc::clone(&vector_database_client)))
+                //.app_data(Data::new(Arc::clone(&vector_database_client)))
                 .configure(init)
         })
         .bind(format!("{}:{}", host, port))?

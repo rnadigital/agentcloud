@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Union, Callable, Annotated, Literal
+from typing import Any, Dict, List, Optional, Union, Callable, Annotated, Literal
 from random import randint
 from pydantic import BaseModel, BeforeValidator, Field, ConfigDict, AliasChoices
 from enum import Enum
@@ -272,6 +272,17 @@ class Session(BaseModel):
     appId: PyObjectId = None
     variables: Optional[Dict[str, str]] = None
 
+class VectorDb(BaseModel):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    orgId: Optional[PyObjectId] = Field(default=None)
+    teamId: Optional[PyObjectId] = Field(default=None)
+    apiKey: Optional[str] = None
+    url: Optional[str] = None
+    name: str
+    type: str
+
+
+
 
 class Datasource(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
@@ -286,7 +297,12 @@ class Datasource(BaseModel):
     workspaceId: PyObjectId
     connectionId: PyObjectId
     destinationId: PyObjectId
-
+    collectionName: Optional[str] = None
+    namespace: Optional[str] = None
+    byoVectorDb: Optional[bool] = None
+    vectorDbId: Optional[PyObjectId] = None
+    vector_db: Optional[VectorDb] = None
+    
 
 class AppType(str, Enum):
     CHAT = "chat"

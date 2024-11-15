@@ -23,7 +23,7 @@ export default function Datasources(props) {
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState(null);
-	const { datasources, models } = state;
+	const { datasources, models, vectorDbs } = state;
 	const filteredDatasources = datasources?.filter(x => !x.hidden);
 	const [open, setOpen] = useState(false);
 	const [spec, setSpec] = useState(null);
@@ -88,6 +88,7 @@ export default function Datasources(props) {
 					setSpec={setSpec}
 					initialStep={1}
 					fetchDatasources={fetchDatasources}
+					vectorDbs={vectorDbs}
 				/>
 			</span>
 

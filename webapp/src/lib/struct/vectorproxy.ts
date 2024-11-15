@@ -33,8 +33,8 @@ export enum Region {
 
 export interface CollectionCreateBody {
 	collection_name: string;
-	dimensions: number;
-	distance: Distance; // cosine always for now
+	dimensions?: number;
+	distance?: Distance; // cosine always for now
 	vector_name?: string; // vector_name is just a Model.config.model e.g. "text-embedding-3-small"
 	region?: Region; // Made region optional here
 }
