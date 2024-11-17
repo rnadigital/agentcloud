@@ -23,7 +23,7 @@ const DataSourceCredentialsForm = ({
 	const { resourceSlug } = router.query;
 	const posthog = usePostHog();
 
-	const { watch, setValue } = useOnboardingFormContext();
+	const { watch, setValue, register } = useOnboardingFormContext();
 
 	const setStagedDatasource = datasource => {
 		setValue('stagedDatasource', datasource);
@@ -32,9 +32,10 @@ const DataSourceCredentialsForm = ({
 	const [spec, setSpec] = useState(null);
 	const [error, setError] = useState(null);
 	const [loading, setLoading] = useState(false);
-	const [datasourceName, setDatasourceName] = useState<string>();
-	const [datasourceDescription, setDatasourceDescription] = useState<string>();
 	const [submitting, setSubmitting] = useState(false);
+
+	const datasourceName = watch('datasourceName');
+	const datasourceDescription = watch('datasourceDescription');
 
 	const getSpecification = async (sourceDefinitionId: string) => {
 		API.getSpecification(
@@ -136,7 +137,9 @@ const DataSourceCredentialsForm = ({
 						id='name'
 						className='block w-full rounded-md border-0 py-1.5 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600'
 						value={datasourceName}
-						onChange={e => setDatasourceName(e.target.value)}
+						{...register('datasourceName', {
+							required: 'Name is required'
+						})}
 					/>
 				</div>
 			</div>
@@ -152,7 +155,9 @@ const DataSourceCredentialsForm = ({
 						id='description'
 						className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 						value={datasourceDescription}
-						onChange={e => setDatasourceDescription(e.target.value)}
+						{...register('datasourceDescription', {
+							required: 'Description is required'
+						})}
 					/>
 				</div>
 			</div>
