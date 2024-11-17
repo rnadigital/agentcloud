@@ -1,4 +1,9 @@
-import { CircleStackIcon, CubeIcon, CubeTransparentIcon } from '@heroicons/react/24/outline';
+import {
+	ArrowPathIcon,
+	CircleStackIcon,
+	CubeIcon,
+	CubeTransparentIcon
+} from '@heroicons/react/24/outline';
 import cn from 'lib/cn';
 import React, { useState } from 'react';
 
@@ -19,6 +24,12 @@ const steps = [
 		description:
 			'Choose and configure your vector database to ensure real-time syncing for up-to-date insights.',
 		icon: <CubeIcon className='h-6 w-6' />
+	},
+	{
+		title: 'Syncing Data',
+		description:
+			'Data is now being embedded and synced to your vector database. This may take several minutes.',
+		icon: <ArrowPathIcon className='h-6 w-6' />
 	}
 ];
 
