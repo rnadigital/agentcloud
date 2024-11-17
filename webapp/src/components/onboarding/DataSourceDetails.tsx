@@ -3,6 +3,7 @@ import DatasourceChunkingForm from 'components/DatasourceChunkingForm';
 import DatasourceScheduleForm from 'components/DatasourceScheduleForm';
 import InputField from 'components/form/InputField';
 import SelectField from 'components/form/SelectField';
+import InfoAlert from 'components/InfoAlert';
 import ToolTip from 'components/shared/ToolTip';
 import { useOnboardingFormContext } from 'context/onboardingform';
 import { AU, BR, CA, EU, FlagComponent, JP, SG, US } from 'country-flag-icons/react/3x2';
@@ -48,6 +49,7 @@ const DataSourceDetails = ({
 	const enableConnectorChunking = watch('enableConnectorChunking');
 	const timeUnit = watch('timeUnit');
 	const toolDecayRate = watch('toolDecayRate');
+	const retrievalStrategy = watch('retrievalStrategy');
 
 	const moveToNextStep = () => {
 		setCurrentDatasourceStep(null);
@@ -76,12 +78,16 @@ const DataSourceDetails = ({
 	// const [chunkingConfig, setChunkingConfig] = useReducer(submittingReducer, {
 	// 	...defaultChunkingOptions
 	// });
+	//
 
 	useEffect(() => {
 		setValue('scheduleType', DatasourceScheduleType.MANUAL);
 		setValue('cronExpression', '0 12 * * *');
 		setValue('retrievalStrategy', Retriever.SELF_QUERY);
 		setValue('toolDecayRate', 0.5);
+		setValue('timeUnit', 'day');
+		setValue('enableConnectorChunking', false);
+		setValue('units', '');
 	}, []);
 
 	return (
@@ -103,6 +109,9 @@ const DataSourceDetails = ({
 							value={embeddingField}
 							className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 						>
+							<optgroup label='Select field to embed' key='embeddingField_optgroup_0' disabled>
+								Select field to embed
+							</optgroup>
 							{Object.entries(streamState)
 								.filter((e: [string, StreamConfig]) => e[1].checkedChildren.length > 0)
 								.map((stream: [string, StreamConfig], ei: number) => {
@@ -169,6 +178,41 @@ const DataSourceDetails = ({
 						/>
 					</div>
 				</div>
+
+				{retrievalStrategy === Retriever.TIME_WEIGHTED && (
+					<div className='mt-2'>
+						<label
+							htmlFor='toolDecayRate'
+							className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+						>
+							Decay Rate
+						</label>
+						<div>
+							<input
+								type='range'
+								id='toolDecayRate'
+								name='toolDecayRate'
+								required
+								min='0'
+								max='1'
+								step='0.01'
+								value={toolDecayRate}
+								onChange={e => setToolDecayRate(parseFloat(e.target.value))}
+								className='w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700'
+							/>
+							<div className='flex justify-between text-xs text-gray-600'>
+								<span>0</span>
+								<span>
+									<div className='w-full text-center mb-2'>{toolDecayRate}</div>
+									{(toolDecayRate === 1 || toolDecayRate === 0) && (
+										<InfoAlert message='A decay rate of exactly 0 or 1 is equivalent to default similarity search' />
+									)}
+								</span>
+								<span>1</span>
+							</div>
+						</div>
+					</div>
+				)}
 
 				<div className='flex w-full items-center'>
 					<div className='w-1/2 self-start'>
