@@ -344,7 +344,8 @@ export async function addDatasourceApi(req, res, next) {
 		enableConnectorChunking,
 		vectorDbId,
 		byoVectorDb,
-		collectionName
+		collectionName,
+		noRedirect
 	} = req.body;
 
 	const currentPlan = res.locals?.subscription?.stripePlan;
@@ -534,6 +535,11 @@ export async function addDatasourceApi(req, res, next) {
 				}
 			: null
 	});
+	if (noRedirect) {
+		return dynamicResponse(req, res, 200, {
+			toolId: addedTool.insertedId
+		});
+	}
 
 	return dynamicResponse(req, res, 302, {
 		redirect: `/${req.params.resourceSlug}/datasources`,
