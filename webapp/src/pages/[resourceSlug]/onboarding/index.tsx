@@ -1,6 +1,7 @@
 import * as API from '@api';
 import { ChevronRightIcon } from '@heroicons/react/20/solid';
 import { ArrowLeftIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
+import dataSyncAnimation from 'animations/dataSyncLoaderAnimation.json';
 import ButtonSpinner from 'components/ButtonSpinner';
 import ErrorAlert from 'components/ErrorAlert';
 import InputField from 'components/form/InputField';
@@ -10,6 +11,7 @@ import DataSourceGrid from 'components/onboarding/DataSourceGrid';
 import DataSourceOnboardingSteps from 'components/onboarding/DataSourceOnboardingSteps';
 import DataSourceSearch from 'components/onboarding/DataSourceSearch';
 import DatasourceStreamConfiguration from 'components/onboarding/DatasourceStreamConfiguration';
+import DatasourceSyncing from 'components/onboarding/DatasourceSyncing';
 import EmbeddingModelSelect from 'components/onboarding/EmbeddingModelSelect';
 import LeftFrame from 'components/onboarding/LeftFrame';
 import OnboardingSelect from 'components/onboarding/OnboardingSelect';
@@ -19,6 +21,7 @@ import { useAccountContext } from 'context/account';
 import OnboardingFormContext from 'context/onboardingform';
 import { useThemeContext } from 'context/themecontext';
 import cn from 'lib/cn';
+import Lottie from 'lottie-react';
 import { defaultChunkingOptions } from 'misc/defaultchunkingoptions';
 import passwordPattern from 'misc/passwordpattern';
 import Head from 'next/head';
@@ -26,7 +29,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { RegisterFormValues } from 'pages/register';
 import { usePostHog } from 'posthog-js/react';
-import React, { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Connector } from 'struct/connector';
 import submittingReducer from 'utils/submittingreducer';
@@ -36,6 +39,8 @@ export default function Onboarding() {
 	const { csrf } = accountContext;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
+
+	const lottieRef = useRef<any>(null);
 
 	const [connectors, setConnectors] = useState([]);
 	const [searchInput, setSearchInput] = useState<string>();
@@ -93,6 +98,7 @@ export default function Onboarding() {
 			<Head>
 				<title>Register</title>
 			</Head>
+			{console.log('current step', currentStep)}
 
 			<div className='flex flex-1 bg-white'>
 				<LeftFrame>
@@ -103,7 +109,7 @@ export default function Onboarding() {
 
 				<main className='py-14 px-28 w-full'>
 					<div className=''>
-						{currentDatasourceStep <= 2 && (
+						{currentDatasourceStep <= 2 && currentStep < 2 && (
 							<>
 								<div className='text-2xl mb-4'>Select Data Source</div>
 								<DataSourceConfigSteps currentStep={currentDatasourceStep} />
@@ -111,7 +117,7 @@ export default function Onboarding() {
 						)}
 					</div>
 
-					<section className='mt-6'>
+					<section className='mt-6 flex flex-col h-full'>
 						<OnboardingFormContext>
 							{currentDatasourceStep === 0 && (
 								<>
@@ -143,8 +149,13 @@ export default function Onboarding() {
 
 							{currentStep === 1 && <EmbeddingModelSelect setStep={setCurrentStep} />}
 							{currentStep === 2 && (
-								<VectorDBSelection streamState={streamState} chunkingConfig={chunkingConfig} />
+								<VectorDBSelection
+									streamState={streamState}
+									chunkingConfig={chunkingConfig}
+									setStep={setCurrentStep}
+								/>
 							)}
+							{currentStep === 3 && <DatasourceSyncing />}
 						</OnboardingFormContext>
 					</section>
 					{/* <div className='flex mt-6'>
