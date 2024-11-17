@@ -6,6 +6,7 @@ import {
 	XCircleIcon,
 	XMarkIcon
 } from '@heroicons/react/24/outline';
+import ButtonSpinner from 'components/ButtonSpinner';
 import InputField from 'components/form/InputField';
 import SelectField from 'components/form/SelectField';
 import { useAccountContext } from 'context/account';
@@ -55,15 +56,18 @@ interface FormValues {
 
 const VectorDBSelection = ({
 	streamState,
-	chunkingConfig
+	chunkingConfig,
+	setStep
 }: {
 	streamState: any;
 	chunkingConfig: any;
+	setStep: Function;
 }) => {
-	const { control, register, setValue, watch } = useOnboardingFormContext<any>();
+	const { control, setValue, watch, handleSubmit } = useOnboardingFormContext<any>();
+	const [loading, setLoading] = useState(false);
 
 	const stagedDatasource = watch('stagedDatasource');
-	const datasourceId = stagedDatasource?.id;
+	const datasourceId = stagedDatasource?.datasourceId;
 
 	const modelId = watch('modelId');
 	const scheduleType = watch('scheduleType');
@@ -73,37 +77,14 @@ const VectorDBSelection = ({
 	const datasourceName = watch('datasourceName');
 	const datasourceDescription = watch('datasourceDescription');
 	const embeddingField = watch('embeddingField');
-	const toolRetriever = watch('toolRetriever');
+	const retriever = watch('retrievalStrategy');
 	const toolDecayRate = watch('toolDecayRate');
 	const toolTimeWeightField = watch('toolTimeWeightField');
 	const topK = watch('topK');
 	const enableConnectorChunking = watch('enableConnectorChunking');
-	const vectorDbId = watch('vectorDbId');
 	const byoVectorDb = watch('byoVectorDb');
 	const collectionName = watch('index');
 	const connector = watch('connector');
-	console.log({
-		stagedDatasource: stagedDatasource,
-		datasourceId: datasourceId,
-		modelId: modelId,
-		scheduleType: scheduleType,
-		timeUnit: timeUnit,
-		units: units,
-		cronExpression: cronExpression,
-		datasourceName: datasourceName,
-		datasourceDescription: datasourceDescription,
-		embeddingField: embeddingField,
-		toolRetriever: toolRetriever,
-		toolDecayRate: toolDecayRate,
-		toolTimeWeightField: toolTimeWeightField,
-		topK: topK,
-		chunkingConfig: chunkingConfig,
-		enableConnectorChunking: enableConnectorChunking,
-		vectorDbId: vectorDbId,
-		byoVectorDb: byoVectorDb,
-		collectionName: collectionName,
-		connector: connector
-	});
 
 	const [selectedDB, setSelectedDB] = useState<string>();
 
@@ -115,7 +96,7 @@ const VectorDBSelection = ({
 
 	const posthog = usePostHog();
 
-	const addDatasource = async () => {
+	const addDatasource = async (vectorDbId: string) => {
 		const filteredStreamState = Object.fromEntries(
 			Object.entries(streamState).filter(
 				(e: [string, StreamConfig]) => e[1].checkedChildren.length > 0
@@ -134,7 +115,7 @@ const VectorDBSelection = ({
 			datasourceName,
 			datasourceDescription,
 			embeddingField,
-			retriever: toolRetriever,
+			retriever,
 			retriever_config: {
 				timeWeightField: toolTimeWeightField,
 				decay_rate: toolDecayRate,
@@ -144,9 +125,10 @@ const VectorDBSelection = ({
 			enableConnectorChunking,
 			vectorDbId,
 			byoVectorDb,
-			collectionName
+			collectionName,
+			noRedirect: true
 		};
-		const addedDatasource: any = await API.addDatasource(
+		await API.addDatasource(
 			body,
 			() => {
 				posthog.capture('createDatasource', {
@@ -174,10 +156,16 @@ const VectorDBSelection = ({
 	};
 
 	const onSubmit = async (data: Partial<VectorDb>) => {
+		setLoading(true);
 		await API.addVectorDb(
-			{ _csrf: csrf, resourceSlug, ...data },
-			res => {
+			{ _csrf: csrf, resourceSlug, ...data, type: selectedDB },
+			async res => {
+				// callback?.({ label: data.name, value: res._id });
 				toast.success('VectorDb Added');
+				await addDatasource(res._id);
+				setLoading(false);
+				setStep(3);
+
 				// create datasource
 			},
 			res => {
@@ -195,15 +183,23 @@ const VectorDBSelection = ({
 	}, [selectedDB]);
 
 	return (
-		<form className='flex flex-wrap'>
+		<form className='flex flex-wrap' onSubmit={handleSubmit(onSubmit)}>
 			{options.map((connector, index) => (
 				<button
+					type='button'
 					key={connector.name}
 					className={cn(
 						'border-gray-200 border flex flex-col justify-center items-center h-44 w-1/3 relative',
 						{ 'bg-primary-50 border-0': selectedDB === connector.value }
 					)}
-					onClick={() => setSelectedDB(connector.value)}
+					onClick={() => {
+						setSelectedDB(connector.value);
+						if (connector.value !== 'agent-cloud') {
+							setValue('byoVectorDb', true);
+						} else {
+							setValue('byoVectorDb', false);
+						}
+					}}
 				>
 					{connector.value === selectedDB && (
 						<CheckCircleIcon className='h-8 w-8 text-primary-500 absolute top-4 right-4' />
@@ -246,6 +242,16 @@ const VectorDBSelection = ({
 					/>
 				</div>
 			)}
+
+			<div className='flex justify-end mt-4 ml-auto'>
+				<button
+					type='submit'
+					className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 flex items-center justify-center'
+				>
+					{loading && <ButtonSpinner />}
+					{loading ? 'Saving Datasource ...' : 'Continue'}
+				</button>
+			</div>
 		</form>
 	);
 };
@@ -282,6 +288,7 @@ const PineConeFields = ({
 			</div>
 			<div className='px-8 mt-4 pb-12'>
 				<button
+					type='button'
 					className='bg-white w-full flex p-4 items-center'
 					onClick={() => connectWithAPIKey()}
 				>
@@ -314,6 +321,19 @@ const PineConeFields = ({
 						}}
 						type='text'
 						placeholder='Enter the index to use'
+					/>
+				</div>
+
+				<div>
+					<div className='my-2 text-sm'>Name</div>
+					<InputField<FormValues>
+						name='name'
+						control={control}
+						rules={{
+							required: 'Name is required'
+						}}
+						type='text'
+						placeholder='Enter your vector DB name'
 					/>
 				</div>
 			</div>
@@ -369,6 +389,16 @@ const QdrantFields = ({
 					}}
 					type='text'
 					placeholder='Enter your API key'
+				/>
+				<div className='my-2 text-sm'>Name</div>
+				<InputField<FormValues>
+					name='name'
+					control={control}
+					rules={{
+						required: 'Name is required'
+					}}
+					type='text'
+					placeholder='Enter your vector DB name'
 				/>
 			</div>
 		</div>
