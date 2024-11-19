@@ -116,7 +116,7 @@ impl VectorDatabase for PineconeClient {
         &self,
         search_request: SearchRequest,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
-        let region = search_request.clone().region.unwrap_or(Region::US);
+        let region = search_request.clone().region.unwrap_or(Region::US_EAST_1);
         let index_name = search_request
             .byo_vector_db
             .map_or(Region::to_str(region), |_k| {
@@ -140,7 +140,7 @@ impl VectorDatabase for PineconeClient {
         search_request: SearchRequest,
         point: Point,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
-        let region = search_request.clone().region.unwrap_or(Region::US);
+        let region = search_request.clone().region.unwrap_or(Region::US_EAST_1);
         let vector = Vector::from(point);
         let namespace = search_request
             .clone()
@@ -193,7 +193,7 @@ impl VectorDatabase for PineconeClient {
         &self,
         search_request: SearchRequest,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
-        let region = search_request.region.unwrap_or(Region::US);
+        let region = search_request.region.unwrap_or(Region::US_EAST_1);
         let pinecone_filters = search_request
             .clone()
             .filters
@@ -233,7 +233,7 @@ impl VectorDatabase for PineconeClient {
         search_request: SearchRequest,
         points: Vec<Point>,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
-        let region = search_request.clone().region.unwrap_or(Region::US);
+        let region = search_request.clone().region.unwrap_or(Region::US_EAST_1);
         let vectors: Vec<Vector> = points.iter().map(|p| Vector::from(p.to_owned())).collect();
         let namespace = search_request
             .clone()
@@ -318,7 +318,7 @@ impl VectorDatabase for PineconeClient {
         &self,
         search_request: SearchRequest,
     ) -> Result<Option<CollectionMetadata>, VectorDatabaseError> {
-        let region = search_request.clone().region.unwrap_or(Region::US);
+        let region = search_request.clone().region.unwrap_or(Region::US_EAST_1);
         if let Ok(index_model) = get_index_model(&self, Region::to_str(region).to_string()).await {
             let mut index = self.index(index_model.host.as_str()).await.unwrap();
             let index_stats = index.describe_index_stats(None).await.unwrap();
@@ -365,7 +365,7 @@ impl VectorDatabase for PineconeClient {
         &self,
         search_request: SearchRequest,
     ) -> Result<Vec<SearchResult>, VectorDatabaseError> {
-        let region = search_request.clone().region.unwrap_or(Region::US);
+        let region = search_request.clone().region.unwrap_or(Region::US_EAST_1);
         if let Ok(index_model) = get_index_model(&self, Region::to_str(region).to_string()).await {
             let mut index = self.index(index_model.host.as_str()).await.unwrap();
             let namespace = Namespace::from(search_request.collection.as_str());
