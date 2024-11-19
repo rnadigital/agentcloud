@@ -7,8 +7,8 @@ use crate::vector_databases::models::{
 use crate::vector_databases::utils::calculate_vector_storage_size;
 use crate::vector_databases::vector_database::VectorDatabase;
 use async_trait::async_trait;
-use pinecone_sdk::models::{Cloud as PineconeCloud, Metadata};
-use pinecone_sdk::models::{DeletionProtection, Metric, Namespace, Vector, WaitPolicy};
+use pinecone_sdk::models::{Cloud, DeletionProtection, Metadata, Metric, WaitPolicy};
+use pinecone_sdk::models::{Namespace, Vector};
 use pinecone_sdk::pinecone::PineconeClient;
 use prost_types::value::Kind;
 use prost_types::Value;
@@ -44,15 +44,7 @@ impl VectorDatabase for PineconeClient {
             collection_name: search_request.collection.clone(),
             collection_metadata: None,
         };
-        let region = search_request.region.unwrap_or_default();
-        let namespace = search_request
-            .clone()
-            .namespace
-            .map_or(search_request.clone().collection, |n| n);
-        let index_name = search_request
-            .byo_vector_db
-            .map_or(Region::to_str(region), |_k| namespace.as_str())
-            .to_string();
+        let index_name = search_request.clone().collection;
         match get_index_model(&self, index_name.to_string()).await {
             Ok(index_model) => {
                 collection_results.status = VectorDatabaseStatus::Ok;
@@ -72,32 +64,32 @@ impl VectorDatabase for PineconeClient {
         &self,
         collection_create: CollectionCreate,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
-        let region = collection_create.region.unwrap_or_default();
-        // Namespace is set the datasource ID if it's a manged Vector DB
-        //
-        let _namespace = collection_create
-            .clone()
-            .namespace
-            .map_or(collection_create.clone().collection_name, |n| n);
-        // The index is set to the region if it's a manged vector database
-        // If it's BYO the index is the collection_name in the datasource document from mongo
         let index_name = collection_create
-            .namespace
-            .map_or(Region::to_str(region), |_k| {
-                collection_create.collection_name.as_str()
-            })
-            .to_string();
-        match get_index_model(&self, index_name.to_string()).await {
+            .index_name
+            .clone()
+            .unwrap_or("".to_string());
+
+        match get_index_model(&self, index_name.clone()).await {
             Ok(_) => Ok(VectorDatabaseStatus::Ok),
             Err(e) => match e {
                 VectorDatabaseError::NotFound(_) => {
+                    println!("creating db");
                     match self
                         .create_serverless_index(
-                            Region::to_str(collection_create.region.unwrap_or_default()),
+                            index_name.as_str(),
                             collection_create.dimensions as i32,
                             Metric::from(collection_create.distance),
-                            PineconeCloud::from(collection_create.cloud.unwrap_or_default()),
-                            Region::to_str(collection_create.region.unwrap_or_default()),
+                            collection_create
+                                .cloud
+                                .as_ref()
+                                .map(|cloud| match cloud.as_str() {
+                                    "gcp" => Cloud::Gcp,
+                                    "aws" => Cloud::Aws,
+                                    "azure" => Cloud::Azure,
+                                    _ => Cloud::default(),
+                                })
+                                .unwrap_or(Cloud::default()),
+                            collection_create.region.as_deref().unwrap_or_default(),
                             DeletionProtection::Disabled,
                             WaitPolicy::NoWait,
                         )
