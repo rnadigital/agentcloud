@@ -249,7 +249,6 @@ pub async fn create_collection(
 ) -> Result<HttpResponse> {
     let collection_id = data.clone().collection_name;
     let mongodb_connection = start_mongo_connection().await?;
-    let mut collection_create = data.clone();
     match get_datasource(&mongodb_connection, collection_id.as_str()).await {
         Ok(option) => match option {
             Some(datasource) => {
@@ -258,10 +257,6 @@ pub async fn create_collection(
                         .await
                         .unwrap_or(default_vector_db_client().await);
                 let vector_database_client = vector_database_client.read().await;
-                collection_create.collection_name = datasource
-                    .collection_name
-                    .map_or(collection_id.clone(), |d| d);
-                collection_create.namespace = datasource.namespace;
                 match vector_database_client.create_collection(data.clone()).await {
                     Ok(collection_result) => match collection_result {
                         VectorDatabaseStatus::Ok => Ok(HttpResponse::Ok()
