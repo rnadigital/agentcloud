@@ -26,10 +26,19 @@ export enum Distance { // Note: always cosine (for now)
 }
 
 export enum Region {
-	US = 'US',
-	EU = 'EU',
-	AU = 'AU'
+	US_EAST_1 = 'us-east-1', // Virginia
+	US_WEST_2 = 'us-west-2', // Oregon
+	EU_WEST_1 = 'eu-west-1', // Ireland
+	US_CENTRAL_1 = 'us-central1', // Iowa
+	EU_WEST_4 = 'europe-west4', // Netherlands
+	EASTUS2 = 'eastus2' // Virginia
 }
+
+export const CloudRegionMap: Record<Cloud, Region[]> = {
+	[Cloud.AWS]: [Region.US_EAST_1, Region.US_WEST_2, Region.EU_WEST_1],
+	[Cloud.GCP]: [Region.US_CENTRAL_1, Region.EU_WEST_4],
+	[Cloud.AZURE]: [Region.EASTUS2]
+};
 
 export interface CollectionCreateBody {
 	collection_name: string;
