@@ -16,7 +16,7 @@ use crate::routes::models::CollectionStorageSizeResponse;
 use crate::vector_databases::error::VectorDatabaseError;
 use crate::vector_databases::helpers::check_byo_vector_database;
 use crate::vector_databases::models::{
-    CollectionCreate, Point, SearchRequest, SearchType, VectorDatabaseStatus,
+    CollectionCreate, Point, Region, SearchRequest, SearchType, VectorDatabaseStatus,
 };
 use crate::vector_databases::vector_database::{default_vector_db_client, VectorDatabase};
 use routes::models::{ResponseBody, Status};
@@ -133,8 +133,6 @@ pub async fn check_collection_exists(
     //app_data: Data<Arc<RwLock<dyn VectorDatabase>>>,
     Path(collection_name): Path<String>, // Datasource ID
 ) -> Result<HttpResponse> {
-    //collection_id = datasource ID
-    //collection_name = datasource ID
     let collection_id = collection_name.clone();
     let mongodb_connection = start_mongo_connection().await?;
     let mut search_request = SearchRequest::new(SearchType::Collection, collection_id.clone());
@@ -149,6 +147,12 @@ pub async fn check_collection_exists(
                 search_request.byo_vector_db = datasource.byo_vector_db;
                 search_request.collection = datasource.collection_name.map_or(collection_id, |d| d);
                 search_request.namespace = datasource.namespace;
+                search_request.region = datasource
+                    .region
+                    .as_ref()
+                    .map(|r| Some(Region::from_str(r.as_str())))
+                    .unwrap_or(Some(Region::default()));
+
                 match vector_database_client
         .check_collection_exists(search_request)
         .await
