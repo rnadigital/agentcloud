@@ -127,6 +127,8 @@ pub struct DataSources {
     pub vector_db_id: Option<ObjectId>,
     #[serde(flatten)]
     pub extra_fields: bson::Document,
+    pub region: Option<String>,
+    pub cloud: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
