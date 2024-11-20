@@ -1,12 +1,10 @@
+import * as dns from 'node:dns';
+import * as util from 'node:util';
+
 import debug from 'debug';
 import dotenv from 'dotenv';
 import fs from 'fs';
-import getGoogleCredentials from 'misc/getgooglecredentials';
 import fetch from 'node-fetch'; // Ensure node-fetch is installed or use a compatible fetch API
-import path from 'path';
-const { GoogleAuth } = require('google-auth-library');
-import * as dns from 'node:dns';
-import * as util from 'node:util';
 const lookup = util.promisify(dns.lookup);
 
 import * as process from 'node:process';
@@ -14,7 +12,6 @@ import * as process from 'node:process';
 import getAirbyteApi, { AirbyteApiType, getAirbyteAuthToken } from 'airbyte/api';
 import OauthSecretProviderFactory from 'lib/oauthsecret';
 import SecretProviderFactory from 'lib/secret';
-import { AIRBYTE_OAUTH_PROVIDERS } from 'struct/oauth';
 
 import getAirbyteInternalApi from './internal';
 
@@ -36,8 +33,13 @@ export const destinationDefinitionId =
 
 // Function to fetch workspaces
 async function fetchWorkspaces() {
-	const workspacesApi = await getAirbyteApi(AirbyteApiType.WORKSPACES);
-	return workspacesApi.listWorkspaces().then(res => res.data);
+	try {
+		log('Fetching airbyte workspaces...');
+		const workspacesApi = await getAirbyteApi(AirbyteApiType.WORKSPACES);
+		return workspacesApi.listWorkspaces().then(res => res.data);
+	} catch (e) {
+		log('An error occurred while attempting to fetch Airbyte workspaces. %', e);
+	}
 }
 
 // Function to fetch the destination list
@@ -74,7 +76,7 @@ async function createDestination(workspaceId: string, provider: string) {
 	return response.json();
 }
 
-// Function to deletea destination
+// Function to delete a destination
 async function deleteDestination(destinationId: string) {
 	const response = await fetch(
 		`${process.env.AIRBYTE_API_URL}/api/public/v1/destinations/${destinationId}`,
@@ -85,6 +87,30 @@ async function deleteDestination(destinationId: string) {
 			}
 		}
 	);
+}
+
+export async function checkAirbyteStatus() {
+	try {
+		const response = await fetch(`${process.env.AIRBYTE_API_URL}/api/v1/health`, {
+			method: 'GET'
+		});
+		if (response?.status !== 200) {
+			return false;
+		}
+		const workspaces = await fetch(`${process.env.AIRBYTE_API_URL}/api/v1/workspaces`, {
+			method: 'GET',
+			headers: {
+				accept: 'application/json',
+				authorization: `Bearer ${await getAirbyteAuthToken()}`
+			}
+		});
+		if (response?.status !== 200) {
+			return false;
+		}
+		return true;
+	} catch (error) {
+		console.log('error', error);
+	}
 }
 
 async function getDestinationConfiguration(provider: string) {
@@ -211,12 +237,12 @@ async function overrideOauthCreds(workspaceId, name, clientId, clientSecret) {
 // Main logic to handle Airbyte setup and configuration
 export async function init() {
 	try {
+		log('Initializing airbyte setup...');
 		// Get workspaces
 		const workspacesList = await fetchWorkspaces();
 		log('workspacesList: %s', workspacesList);
 		log('workspacesList: %s', workspacesList?.data?.map(x => x.name)?.join());
 		const airbyteAdminWorkspaceId = workspacesList.data[0].workspaceId;
-
 		log('AIRBYTE_ADMIN_WORKSPACE_ID', airbyteAdminWorkspaceId);
 		if (!airbyteAdminWorkspaceId) {
 			log('Failed to fetch airbyte admin workspace ID, exiting');
@@ -291,7 +317,10 @@ export async function init() {
 		// 	);
 		// 	overrideOauthCreds(airbyteAdminWorkspaceId, provider.toLowerCase(), clientId, clientSecret);
 		// }
+		process.env.NEXT_PUBLIC_IS_AIRBYTE_ENABLED = 'true';
+		return true;
 	} catch (error) {
+		process.env.NEXT_PUBLIC_IS_AIRBYTE_ENABLED = 'false';
 		logerror('Error during Airbyte configuration:', error);
 	}
 }

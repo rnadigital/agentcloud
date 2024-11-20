@@ -65,13 +65,17 @@ class RagTool(GlobalBaseTool):
         assert len(models) == 1, assertion_message
         assert isinstance(models[0][0], Embeddings), assertion_message
         assert isinstance(models[0][1], Model), assertion_message
-
+        
         embedding_model = models[0][0]
-        model_data = models[0][1]
 
-        collection = str(datasource.id)
+        vector_db = datasource.vector_db if datasource.byoVectorDb else None
+        type = vector_db.type if vector_db else None
+        api_key = vector_db.apiKey if vector_db else None
+        url = vector_db.url if vector_db else None
+        namespace = datasource.namespace if datasource.byoVectorDb else None
+        collection = datasource.collectionName if datasource.byoVectorDb else str(datasource.id)
 
-        vector_store = vectorstore_factory(embedding_model, collection, tool)
+        vector_store = vectorstore_factory(embedding_model=embedding_model, collection_name=collection, tool=tool,  api_key=api_key, url=url, type=type, namespace=namespace, byoVectorDb=datasource.byoVectorDb)
 
         return RagTool(name=tool.name,
                        description=tool.description,

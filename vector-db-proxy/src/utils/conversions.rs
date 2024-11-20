@@ -9,7 +9,7 @@ pub fn convert_serde_value_to_hashmap_string(
 ) -> HashMap<String, String> {
     let hashmap_serde: HashMap<String, String> = serde_value
         .iter()
-        .map(|(k, v)| (k.clone(), v.to_owned().to_string()))
+        .map(|(k, v)| (k.clone(), serde_json::to_string(&v.to_owned()).unwrap()))
         .collect();
     hashmap_serde
 }

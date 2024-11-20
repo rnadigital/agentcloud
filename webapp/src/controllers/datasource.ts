@@ -1,6 +1,8 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
+import { Pinecone } from '@pinecone-database/pinecone';
+import { QdrantClient } from '@qdrant/js-client-rest';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import getConnectors, { getConnectorSpecification } from 'airbyte/getconnectors';
 import getAirbyteInternalApi from 'airbyte/internal';
@@ -18,6 +20,7 @@ import {
 } from 'db/datasource';
 import { getModelById, getModelsByTeam } from 'db/model';
 import { addTool, deleteToolsForDatasource, editToolsForDatasource } from 'db/tool';
+import { getVectorDbById, getVectorDbsByTeam } from 'db/vectordb';
 import debug from 'debug';
 import dotenv from 'dotenv';
 import { convertCronToQuartz, convertUnitToCron } from 'lib/airbyte/cronconverter';
@@ -51,14 +54,16 @@ addFormats(ajv);
 dotenv.config({ path: '.env' });
 
 export async function datasourcesData(req, res, _next) {
-	const [datasources, models] = await Promise.all([
+	const [datasources, models, vectorDbs] = await Promise.all([
 		getDatasourcesByTeam(req.params.resourceSlug),
-		getModelsByTeam(req.params.resourceSlug)
+		getModelsByTeam(req.params.resourceSlug),
+		getVectorDbsByTeam(req.params.resourceSlug)
 	]);
 	return {
 		csrf: req.csrfToken(),
 		datasources,
-		models
+		models,
+		vectorDbs
 	};
 }
 
@@ -81,15 +86,19 @@ export async function datasourcesJson(req, res, next) {
 	return res.json({ ...data, account: res.locals.account });
 }
 
+export type DatasourceDataReturnType = Awaited<ReturnType<typeof datasourceData>>;
+
 export async function datasourceData(req, res, _next) {
-	const [datasource, models] = await Promise.all([
+	const [datasource, models, vectorDbs] = await Promise.all([
 		getDatasourceById(req.params.resourceSlug, req.params.datasourceId),
-		getModelsByTeam(req.params.resourceSlug)
+		getModelsByTeam(req.params.resourceSlug),
+		getVectorDbsByTeam(req.params.resourceSlug)
 	]);
 	return {
 		csrf: req.csrfToken(),
 		datasource,
-		models
+		models,
+		vectorDbs
 	};
 }
 
@@ -337,7 +346,10 @@ export async function addDatasourceApi(req, res, next) {
 		retriever_config,
 		timeUnit,
 		chunkingConfig,
-		enableConnectorChunking
+		enableConnectorChunking,
+		vectorDbId,
+		byoVectorDb,
+		collectionName
 	} = req.body;
 
 	const currentPlan = res.locals?.subscription?.stripePlan;
@@ -463,10 +475,13 @@ export async function addDatasourceApi(req, res, next) {
 					overlap_all: overlap_all === 'true',
 					file_type
 				}
-			: null //TODO: validation
+			: null, //TODO: validation
+		vectorDbId: toObjectId(vectorDbId),
+		byoVectorDb,
+		collectionName: collectionName ?? datasourceId,
+		namespace: datasourceId
 	});
 
-	// Create the collection in qdrant
 	try {
 		await VectorDBProxyClient.createCollection(datasourceId);
 	} catch (e) {

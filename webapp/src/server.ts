@@ -4,17 +4,17 @@ process.on('uncaughtException', console.error).on('unhandledRejection', console.
 
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env' });
-import { getShortCommitHash } from './lib/commit';
-if (!process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH) {
-	try {
-		process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH = getShortCommitHash();
-	} catch (e) {
-		console.warn(
-			'NEXT_PUBLIC_SHORT_COMMIT_HASH not set, and failed to call getShortCommitHash:',
-			e
-		);
-	}
-}
+// import { getShortCommitHash } from './lib/commit';
+// if (!process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH) {
+// 	try {
+// 		process.env.NEXT_PUBLIC_SHORT_COMMIT_HASH = getShortCommitHash();
+// 	} catch (e) {
+// 		console.warn(
+// 			'NEXT_PUBLIC_SHORT_COMMIT_HASH not set, and failed to call getShortCommitHash:',
+// 			e
+// 		);
+// 	}
+// }
 
 import express from 'express';
 import * as http from 'http';
@@ -50,6 +50,7 @@ app
 	.then(async () => {
 		await airbyteSetup.init();
 		await db.connect();
+		await db.connectMongooseDB();
 		await migrate();
 		const secretProvider = SecretProviderFactory.getSecretProvider();
 		await secretProvider.init(); //Note: secret provider is first because it needs to be inited for e.g. stripe client to use
