@@ -31,8 +31,8 @@ import DatasourceChunkingForm from 'components/DatasourceChunkingForm';
 import { StreamsList } from 'components/DatasourceStream';
 import ToolTip from 'components/shared/ToolTip';
 import FormContext from 'context/connectorform';
-import OauthSecretProviderFactory from 'lib/oauthsecret';
 import cn from 'lib/cn';
+import OauthSecretProviderFactory from 'lib/oauthsecret';
 import { defaultChunkingOptions } from 'misc/defaultchunkingoptions';
 import { usePostHog } from 'posthog-js/react';
 import { VectorDbDocument, VectorDbType } from 'struct/vectordb';
@@ -535,7 +535,7 @@ export default function CreateDatasourceForm({
 	//once provider and token have been set this should run once
 	useEffect(() => {
 		if (provider !== null && token !== null) {
-			setStep(2);
+			setStep(1);
 			switch (provider) {
 				case 'hubspot':
 					console.log('Posting with OAuth credentials');

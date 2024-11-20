@@ -54,9 +54,9 @@ import * as taskController from 'controllers/task';
 import * as teamController from 'controllers/team';
 import * as toolController from 'controllers/tool';
 import * as variableController from 'controllers/variables';
+import * as vectorDbController from 'controllers/vectordb';
 import debug from 'debug';
 import OauthSecretProviderFactory from 'lib/oauthsecret';
-import * as vectorDbController from 'controllers/vectordb';
 
 export default function router(server, app) {
 	server.use('/static', express.static('static'));
