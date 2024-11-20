@@ -33,17 +33,15 @@ describe('team tests', () => {
 	});
 
 	//when debugging or creating tests, mark this test as ".only" to ensure a second team is created, this team is used in future.
-	test('add new team with correct stripe permissions', async () => {
+	test.only('add new team with correct stripe permissions', async () => {
 		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account1_email
 		);
 
 		const stripeCustomerId = 'sk_12345'; //testing flags set stripe customer ID to null, need to set it to set the plan
 		const plan = SubscriptionPlan.TEAMS;
-		setStripeCustomerId(initialData?.accountData?.account?._id, stripeCustomerId);
-		setStripePlan(stripeCustomerId, plan);
-
-		const newAccount = await getAccountByEmail(accountDetails.account1_email);
+		await setStripeCustomerId(initialData?.accountData?.account?._id, stripeCustomerId);
+		await setStripePlan(stripeCustomerId, plan);
 
 		const url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/team/add`;
 		const body = {
@@ -62,7 +60,7 @@ describe('team tests', () => {
 	});
 
 
-	test('Inviting existing account to team', async () => {
+	test.only('Inviting existing account to team', async () => {
 		const { initialData, sessionCookie, resourceSlug, csrfToken } = await getInitialData(
 			accountDetails.account1_email
 		);
@@ -116,7 +114,7 @@ describe('team tests', () => {
 		expect(responseJson?.team?.members.length).toBe(3);
 	});
 
-	test('testing TEAM_MEMBER permissions', async () => {
+	test.only('testing TEAM_MEMBER permissions', async () => {
 		const account1Object = await getInitialData(
 			//account1 is the ORG_ADMIN
 			accountDetails.account1_email
@@ -191,9 +189,26 @@ describe('team tests', () => {
 		const addAgentResponse = await response.json();
 		expect(addAgentResponse?.redirect).toBeDefined();
 		expect(addAgentResponse?._id).toBeDefined();
+		
+
+		//clean up the db by deleting all the added elements
+		
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/agent/${addAgentResponse._id}`;
+		body={
+			agentId: addAgentResponse._id
+		}
+		response = await makeFetch(url, fetchTypes.DELETE, accountDetails.account1_email, body);
+		expect(response.status).toBe(200);
+		url = `${process.env.WEBAPP_TEST_BASE_URL}/${account1Object.resourceSlug}/forms/model/${addModelResponseJson._id}`;
+		body={
+			modelId: addModelResponseJson._id
+		}
+		response= await makeFetch(url, fetchTypes.DELETE, accountDetails.account1_email, body);
+		expect(response.status).toBe(200);
+		
 	});
 
-	test('testing TEAM_ADMIN permissions', async () => {
+	test.only('testing TEAM_ADMIN permissions', async () => {
 		const account1Object = await getInitialData(accountDetails.account1_email);
 		const account2Object = await getInitialData(accountDetails.account2_email);
 		const account3Object = await getInitialData(accountDetails.account3_email);
@@ -248,7 +263,7 @@ describe('team tests', () => {
 		// const responseJson = await response.json();
 	});
 
-	test('removing TEAM_ADMIN from team, reinviting them again as a TEAM_MEMBER and testing permissions', async () => {
+	test.only('removing TEAM_ADMIN from team, reinviting them again as a TEAM_MEMBER and testing permissions', async () => {
 		const account1Object = await getInitialData(accountDetails.account1_email);
 		const account2Object = await getInitialData(accountDetails.account2_email);
 		const account3Object = await getInitialData(accountDetails.account3_email);
@@ -310,7 +325,7 @@ describe('team tests', () => {
 		expect(responseJson?.error).toBe("Missing permission \"Add Team Member\"");//make sure it's a permissions error and not a stripe error etc...
 	});
 
-	test('cant add more than 10 members to TEAMS subscriptions plan', async () => {
+	test.only('cant add more than 10 members to TEAMS subscriptions plan', async () => {
 		const { resourceSlug } = await getInitialData(accountDetails.account1_email);
 		const url = `${process.env.WEBAPP_TEST_BASE_URL}/${resourceSlug}/forms/team/invite`;
 		const accounts = [
@@ -340,6 +355,5 @@ describe('team tests', () => {
 			}
 		}
 	
-		const teamMembers = await getTeamWithMembers(resourceSlug);
 	});
 });
