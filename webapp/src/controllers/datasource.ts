@@ -345,7 +345,9 @@ export async function addDatasourceApi(req, res, next) {
 		vectorDbId,
 		byoVectorDb,
 		collectionName,
-		noRedirect
+		noRedirect,
+		region,
+		cloud
 	} = req.body;
 
 	const currentPlan = res.locals?.subscription?.stripePlan;
@@ -475,11 +477,18 @@ export async function addDatasourceApi(req, res, next) {
 		vectorDbId: toObjectId(vectorDbId),
 		byoVectorDb,
 		collectionName: collectionName ?? datasourceId,
-		namespace: datasourceId
+		namespace: datasourceId,
+		region,
+		cloud
 	});
 
 	try {
-		await VectorDBProxyClient.createCollection(datasourceId);
+		await VectorDBProxyClient.createCollection(datasourceId, {
+			cloud,
+			region,
+			collection_name: collectionName,
+			index_name: collectionName
+		});
 	} catch (e) {
 		console.error(e);
 		return dynamicResponse(req, res, 400, {
