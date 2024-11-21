@@ -24,6 +24,7 @@ interface DataSourceDetailsFormValues {
 	cronExpression: string;
 	enableConnectorChunking: boolean;
 	toolDecayRate: number;
+	stagedDatasource: any;
 }
 
 const DataSourceDetails = ({
@@ -50,6 +51,29 @@ const DataSourceDetails = ({
 	const timeUnit = watch('timeUnit');
 	const toolDecayRate = watch('toolDecayRate');
 	const retrievalStrategy = watch('retrievalStrategy');
+
+	const stagedDatasource = watch('stagedDatasource');
+
+	const getInitialEmbeddingField = () => {
+		const fieldsArray = stagedDatasource?.discoveredSchema?.catalog?.streams.reduce(
+			(acc, stream) => {
+				const properties = stream.stream.jsonSchema.properties;
+				const fields = Object.entries(properties).map(
+					([fieldName, fieldSchema]: [string, any]) => ({
+						name: fieldName,
+						type: fieldSchema.type || fieldSchema.airbyte_type
+					})
+				);
+				return acc.concat(fields);
+			},
+			[]
+		);
+		const firstStringField = fieldsArray?.find(
+			//Get the first field that is a string, ane usea heuristic to not pick ones named "date".
+			field => field.type === 'string' && !/date/i.test(field?.name || '')
+		);
+		return firstStringField?.name || fieldsArray?.[0]?.name || null;
+	};
 
 	const moveToNextStep = () => {
 		setCurrentDatasourceStep(null);
@@ -90,6 +114,14 @@ const DataSourceDetails = ({
 		setValue('units', '');
 	}, []);
 
+	useEffect(() => {
+		if (!embeddingField) {
+			const initialEmbeddingField = getInitialEmbeddingField();
+			console.log('setting initial embedding field', initialEmbeddingField);
+			setValue('embeddingField', initialEmbeddingField);
+		}
+	}, [stagedDatasource]);
+
 	return (
 		<div className='text-gray-900 text-sm'>
 			<div className='border border-gray-300 p-4 flex flex-col gap-y-3 mt-6'>
@@ -105,7 +137,9 @@ const DataSourceDetails = ({
 							required
 							name='embeddingField'
 							id='embeddingField'
-							onChange={e => setValue('embeddingField', e.target.value)}
+							onChange={e => {
+								setValue('embeddingField', e.target.value);
+							}}
 							value={embeddingField}
 							className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 						>
