@@ -2,25 +2,21 @@ export default class OauthSecretProviderFactory {
 	static getSecretProvider(provider: string = 'local') {
 		switch (provider) {
 			case 'hubspot':
-				let clientId = process.env.OAUTH_HUBSPOT_CLIENT_ID || 'NOTFOUND';
-				let clientSecret = process.env.OAUTH_HUBSPOT_CLIENT_SECRET || 'NOTFOUND';
+				let clientId = process.env.OAUTH_HUBSPOT_CLIENT_ID || "NOTFOUND";
+				let clientSecret = process.env.OAUTH_HUBSPOT_CLIENT_SECRET || "NOTFOUND";
 				return { clientId, clientSecret };
 			case 'salesforce':
-				clientId = process.env.OAUTH_SALESFORCE_CLIENT_ID || 'NOTFOUND';
-				clientSecret = process.env.OAUTH_SALESFORCE_CLIENT_SECRET || 'NOTFOUND';
+				clientId = process.env.OAUTH_SALESFORCE_CLIENT_ID || "NOTFOUND";
+				clientSecret = process.env.OAUTH_SALESFORCE_CLIENT_SECRET || "NOTFOUND";
 				return { clientId, clientSecret };
 			case 'xero':
-				clientId = process.env.OAUTH_XERO_CLIENT_ID || 'NOTFOUND';
-				clientSecret = process.env.OAUTH_XERO_CLIENT_SECRET || 'NOTFOUND';
+				clientId = process.env.OAUTH_XERO_CLIENT_ID || "NOTFOUND";
+				clientSecret = process.env.OAUTH_XERO_CLIENT_SECRET || "NOTFOUND";
 				return { clientId, clientSecret };
 			case 'slack':
-				clientId = process.env.OAUTH_SLACK_CLIENT_ID || 'NOTFOUND';
-				clientSecret = process.env.OAUTH_SLACK_CLIENT_SECRET || 'NOTFOUND';
-				return { clientId, clientSecret };
-			case 'airtable':
-				clientId = process.env.OAUTH_AIRTABLE_CLIENT_ID || 'NOTFOUND';
-				clientSecret = process.env.OAUTH_AIRTABLE_CLIENT_SECRET || 'NOTFOUND';
-				return { clientId, clientSecret };
+				clientId = process.env.OAUTH_SLACK_CLIENT_ID || "NOTFOUND";
+				clientSecret = process.env.OAUTH_SLACK_CLIENT_SECRET || "NOTFOUND";
+				return {clientId, clientSecret};
 		}
 	}
 
@@ -148,18 +144,8 @@ export default class OauthSecretProviderFactory {
 			case 'slack':
 				clientId = OauthSecretProviderFactory.getSecretProvider('slack').clientId;
 				clientSecret = OauthSecretProviderFactory.getSecretProvider('slack').clientSecret;
-				data = {};
-			case 'airtable':
-				clientId = OauthSecretProviderFactory.getSecretProvider('airtable').clientId;
-				clientSecret = OauthSecretProviderFactory.getSecretProvider('airtable').clientSecret;
 				data = {
-					sourceType: 'airtable',
-					credentials: {
-						auth_method: 'oauth2.0',
-						client_id: clientId,
-						client_secret: clientSecret,
-						refresh_token: token
-					}
+					
 				}
 		}
 	}

@@ -18,9 +18,8 @@ import { Strategy as SalesforceStrategy } from 'passport-forcedotcom';
 import { Strategy as GitHubStrategy } from 'passport-github';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { Strategy as HubspotStrategy } from 'passport-hubspot-oauth2';
-import { Strategy as SlackStrategy } from 'passport-slack';
 import { Strategy as XeroStrategy } from 'passport-xero';
-
+import { Strategy as SlackStrategy } from 'passport-slack';
 // import { Strategy as StripeStrategy } from 'passport-stripe';
 
 export const OAUTH_STRATEGIES: OAuthStrategy[] = [
@@ -67,7 +66,10 @@ export const OAUTH_STRATEGIES: OAuthStrategy[] = [
 		path: '/auth/salesforce/callback',
 		extra: {
 			// for salesforce specifically scopes need to go here
-			scope: ['full', 'refresh_token']
+			scope: [
+				'full',
+				'refresh_token'
+			]
 		}
 	},
 	{
@@ -91,87 +93,16 @@ export const OAUTH_STRATEGIES: OAuthStrategy[] = [
 		},
 		callback: slackDatasourceCallback,
 		path: '/auth/slack/callback',
-		extra: {}
+		extra: {
+
+		}
 	}
 	//need to add custom strategy for airtable
 	//google ads??
 ];
 
-export const CUSTOM_OAUTH_STRATEGIES: CustomOAuthStrategy[] = [
-	{
-		strategy: CustomStrategy,
-		name: 'airtable',
-		verify: airtableVerifyFunction,
-		callback: airtableDatasourceCallback,
-		secretKeys: {
-			clientId: SecretKeys.OAUTH_AIRTABLE_CLIENT_ID,
-			secret: SecretKeys.OAUTH_AIRTABLE_CLIENT_SECRET
-		},
-		path: '/auth/airtable/callback'
-	}
-];
-
-export async function airtableVerifyFunction(req, done) {
-	try {
-		const code = typeof req.query.code === 'string' ? req.query.code : null;
-		if (!code) {
-			return done({ message: 'Authorization code not provided or invalid' }, null);
-		}
-		//Exchange auth code for access token
-		const tokenResponse = await fetch('https://airtable.com/oauth2/v1/token', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded'
-			},
-			body: new URLSearchParams({
-				client_id: process.env.OAUTH_AIRTABLE_CLIENT_ID,
-				client_secret: process.env.OAUTH_AIRTABLE_CLIENT_SECRET,
-				code,
-				grant_type: 'authorization_code',
-				redirect_uri: 'http://localhost:3000/airtable/callback'
-			})
-		});
-
-		if (!tokenResponse.ok) {
-			throw new Error('Failed to retrieve tokens');
-		}
-
-		const { access_token, refresh_token, expires_in } = await tokenResponse.json();
-
-		//retrieve user information from Airtable api using the creds we just got
-		const userResponse = await fetch('https://airtable.com/v0/meta/whoami', {
-			headers: {
-				authorization: `Bearer ${access_token}`
-			}
-		});
-
-		if (!userResponse.ok) {
-			throw new Error('Failed to get user information');
-		}
-
-		const user = await userResponse.json();
-
-		//attach auth tokens to user object and return
-		user.accessToken = access_token;
-		user.refreshToken = refresh_token;
-		user.tokenExpiresIn = expires_in;
-
-		return done(null, user);
-	} catch (error) {
-		return done(error);
-	}
-}
-
-export async function airtableDatasourceCallback(accessToken, refreshToken, profile, done) {
-	const airtableCallbackLog = debug('webapp:oauth:datasourceOauth:slack:callback');
-	airtableCallbackLog(`got refreshToken ${refreshToken} from callback`);
-	airtableCallbackLog(`got profile ${profile} from callback`);
-
-	done(null, profile);
-}
-
-export async function slackDatasourceCallback(accessToken, refreshToken, profile, done) {
-	const slackCallbackLog = debug('webapp:oauth:datasourceOauth:slack:callback');
+export async function slackDatasourceCallback(accessToken, refreshToken, profile, done){
+	const slackCallbackLog = debug("webapp:oauth:datasourceOauth:slack:callback");
 	slackCallbackLog(`Got refreshToken ${refreshToken} from callback`);
 
 	profile.refreshToken = refreshToken;
@@ -182,9 +113,7 @@ export async function slackDatasourceCallback(accessToken, refreshToken, profile
 export async function xeroDatasourceCallback(token, tokenSecret, profile, done) {
 	//token is what's used by airbyte
 	const xeroCallbackLog = debug('webapp:oauth:datasourceOauth:xero:callback');
-	xeroCallbackLog(
-		`Got access token: ${token} from callback\nAlso got tokenSecret: ${tokenSecret} (Maybe refreshToken?) from callback`
-	);
+	xeroCallbackLog(`Got access token: ${token} from callback\nAlso got tokenSecret: ${tokenSecret} (Maybe refreshToken?) from callback`);
 
 	profile.refreshToken = token; //even though this isn't necessarily a refreshToken it's the token we need to pass back to airbyte so keep it like this
 
