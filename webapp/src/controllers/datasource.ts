@@ -24,6 +24,7 @@ import { getVectorDbById, getVectorDbsByTeam } from 'db/vectordb';
 import debug from 'debug';
 import dotenv from 'dotenv';
 import { convertCronToQuartz, convertUnitToCron } from 'lib/airbyte/cronconverter';
+import OauthSecretProviderFactory from 'lib/oauthsecret';
 import { chainValidations } from 'lib/utils/validationutils';
 import VectorDBProxyClient from 'lib/vectorproxy/client';
 import { isVectorLimitReached } from 'lib/vectorproxy/limit';
@@ -135,7 +136,11 @@ export async function testDatasourceApi(req, res, next) {
 
 	const currentPlan = res.locals?.subscription?.stripePlan;
 	const allowedPeriods = pricingMatrix[currentPlan]?.cronProps?.allowedPeriods || [];
+	const { clientId, clientSecret } = OauthSecretProviderFactory.getSecretProvider('hubspot');
+	sourceConfig.credentials.client_id = clientId;
+	sourceConfig.credentials.client_secret = clientSecret;
 
+	log('Source config for test API: ', sourceConfig);
 	let validationError = chainValidations(
 		req.body,
 		[

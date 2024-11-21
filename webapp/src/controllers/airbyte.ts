@@ -2,7 +2,7 @@
 
 import { dynamicResponse } from '@dr';
 import { io } from '@socketio';
-import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
+import getAirbyteApi, { AirbyteApiType, getAirbyteAuthToken } from 'airbyte/api';
 import getAirbyteInternalApi from 'airbyte/internal';
 import {
 	getDatasourceByConnectionId,
@@ -340,6 +340,29 @@ export async function handleSuccessfulEmbeddingWebhook(req, res, next) {
 
 	return dynamicResponse(req, res, 200, {});
 }
+
+//this is an old implementation of airbyte oauth. If we end up going to airbyte cloud then this will be useful but until then so long as we override the oauth credentials then we'll need to use a normal passport.js auth
+// export async function getOAuthRedirectLink(req, res, next) {
+// 	//generate a link to redirect the user to, use this api spec: https://reference.airbyte.com/reference/initiateoauth
+// 	const { sourceType } = req.body;
+// 	const redirectUrl = `https://app.agentcloud.dev/welcome`; //TODO: Set up this endpoint and redirect to it (maybe store the secret in persistent storage? But this could pose a security risk)
+// 	console.log("sourceType: ", sourceType);
+// 	const workspaceId = process.env.AIRBYTE_ADMIN_WORKSPACE_ID
+
+// 	const sourcesApi = await getAirbyteApi(AirbyteApiType.SOURCES);
+// 	const body = {
+// 		sourceType: sourceType,
+// 		redirectUrl: redirectUrl,
+// 		workspaceId: workspaceId
+// 	}; //body for the fetch request
+
+// 	const oauthRedirect = await sourcesApi.initiateOAuth(body).then(({data}) => log(data));
+// 	return oauthRedirect;
+// }
+
+// export async function handleOAuthWebhook(req, res, next) {
+// 	//airbyte hits the oauth callback with a secretId in the body
+// }
 
 export async function checkAirbyteConnection(req, res, next) {
 	const status = await airbyteSetup.checkAirbyteStatus();

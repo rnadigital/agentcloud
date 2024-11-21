@@ -32,6 +32,7 @@ import { StreamsList } from 'components/DatasourceStream';
 import ToolTip from 'components/shared/ToolTip';
 import FormContext from 'context/connectorform';
 import cn from 'lib/cn';
+import OauthSecretProviderFactory from 'lib/oauthsecret';
 import { defaultChunkingOptions } from 'misc/defaultchunkingoptions';
 import { usePostHog } from 'posthog-js/react';
 import { VectorDbDocument, VectorDbType } from 'struct/vectordb';
@@ -63,6 +64,10 @@ export default function CreateDatasourceForm({
 	fetchDatasources,
 	spec,
 	setSpec,
+	provider,
+	token,
+	name = '',
+	description = '',
 	vectorDbs = []
 }: {
 	models?: any[];
@@ -74,6 +79,10 @@ export default function CreateDatasourceForm({
 	fetchDatasources?: Function;
 	spec?: any;
 	setSpec?: Function;
+	provider?: string;
+	token?: string;
+	name?: string;
+	description?: string;
 	vectorDbs?: VectorDbDocument[];
 }) {
 	//TODO: fix any types
@@ -86,8 +95,8 @@ export default function CreateDatasourceForm({
 	const { resourceSlug } = router.query;
 	const [error, setError] = useState<string>(null);
 	const [files, setFiles] = useState(null);
-	const [datasourceName, setDatasourceName] = useState('');
-	const [datasourceDescription, setDatasourceDescription] = useState('');
+	const [datasourceName, setDatasourceName] = useState(name);
+	const [datasourceDescription, setDatasourceDescription] = useState(description);
 	const [modelModalOpen, setModelModalOpen] = useState(false);
 	const [vectorDbModalOpen, setVectorDbModalOpen] = useState(false);
 	const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
@@ -109,6 +118,7 @@ export default function CreateDatasourceForm({
 	const [chunkingConfig, setChunkingConfig] = useReducer(submittingReducer, {
 		...defaultChunkingOptions
 	});
+	const [oauthRedirectUrl, setOauthRedirectUrl] = useState(false);
 
 	//TODO: move into RetrievalStrategyComponent, keep the setters passed as props
 	const [toolRetriever, setToolRetriever] = useState(Retriever.SELF_QUERY);
@@ -149,6 +159,8 @@ export default function CreateDatasourceForm({
 	const [streamProperties, setStreamProperties] = useState(null);
 	const [loading, setLoading] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
+	const [oauthSubmitting, setOauthSubmitting] = useState(false);
+	const [oauthLoading, setOauthLoading] = useState(false);
 	const [streamState, setStreamReducer] = useReducer(submittingReducer, {});
 	const [formData, setFormData] = useState(null);
 
@@ -363,6 +375,207 @@ export default function CreateDatasourceForm({
 		}
 	}
 
+	async function hubspotDatasourcePost(token: string) {
+		setOauthSubmitting(true);
+		const data = OauthSecretProviderFactory.getProviderPostData(token, oauthProvider.toLowerCase());
+		console.log(
+			'Datasource name and description from the state: ',
+			datasourceName,
+			' ',
+			datasourceDescription
+		);
+
+		setError(null);
+		const posthogEvent = step === 2 ? 'testDatasource' : 'createDatasource';
+		try {
+			if (step === 2) {
+				const body = {
+					sourceConfig: data,
+					_csrf: csrf,
+					connectorId: connector.value,
+					connectorName: connector.label,
+					resourceSlug,
+					scheduleType,
+					timeUnit,
+					units,
+					cronExpression,
+					datasourceName,
+					datasourceDescription,
+					embeddingField
+				};
+
+				console.log('post body: ', body);
+				//step 2, getting schema and testing connection
+				await API.testDatasource(
+					body,
+					stagedDatasource => {
+						posthog.capture(posthogEvent, {
+							datasourceName,
+							connectorId: connector?.value,
+							connectorName: connector?.label,
+							syncSchedule: scheduleType
+						});
+						if (stagedDatasource) {
+							setDatasourceId(stagedDatasource.datasourceId);
+							setDiscoveredSchema(stagedDatasource.discoveredSchema);
+							setStreamProperties(stagedDatasource.streamProperties);
+							setStep(3);
+						} else {
+							setError('Datasource connection test failed.'); //TODO: any better way to get error?
+						}
+						// nothing to toast here
+					},
+					res => {
+						posthog.capture(posthogEvent, {
+							datasourceName,
+							connectorId: connector?.value,
+							connectorName: connector?.label,
+							syncSchedule: scheduleType,
+							error: res
+						});
+						setError(res);
+					},
+					compact ? null : router
+				);
+				// callback && stagedDatasource && callback(stagedDatasource._id);
+			} else {
+				//step 4, saving datasource
+				const filteredStreamState = Object.fromEntries(
+					Object.entries(streamState).filter(
+						(e: [string, StreamConfig]) => e[1].checkedChildren.length > 0
+					)
+				);
+				const body = {
+					_csrf: csrf,
+					datasourceId: datasourceId,
+					resourceSlug,
+					scheduleType,
+					timeUnit,
+					units,
+					modelId,
+					cronExpression,
+					streamConfig: filteredStreamState,
+					datasourceName,
+					datasourceDescription,
+					embeddingField,
+					retriever: toolRetriever,
+					retriever_config: {
+						timeWeightField: toolTimeWeightField,
+						decay_rate: toolDecayRate,
+						k: topK
+					},
+					chunkingConfig,
+					enableConnectorChunking
+				};
+				const addedDatasource: any = await API.addDatasource(
+					body,
+					() => {
+						posthog.capture(posthogEvent, {
+							datasourceName,
+							connectorId: connector?.value,
+							connectorName: connector?.label,
+							numStreams: Object.keys(streamState)?.length,
+							syncSchedule: scheduleType
+						});
+						toast.success('Added datasource');
+					},
+					res => {
+						posthog.capture(posthogEvent, {
+							datasourceName,
+							connectorId: connector?.value,
+							connectorName: connector?.label,
+							syncSchedule: scheduleType,
+							numStreams: Object.keys(streamState)?.length,
+							error: res
+						});
+						toast.error(res);
+					},
+					compact ? null : router
+				);
+				callback && addedDatasource && callback(addedDatasource._id);
+			}
+		} catch (e) {
+			posthog.capture(posthogEvent, {
+				datasourceName,
+				connectorId: connector?.value,
+				connectorName: connector?.label,
+				syncSchedule: scheduleType,
+				numStreams: Object.keys(streamState)?.length,
+				error: e?.message || e
+			});
+			console.error(e);
+		} finally {
+			setOauthSubmitting(false);
+			await new Promise(res => setTimeout(res, 750));
+		}
+	}
+
+	const [oauthProvider, setOauthProvider] = useState(provider);
+	const [oauthToken, setOauthToken] = useState(token);
+	const [initialized, setInitialized] = useState(false);
+
+	//OAUTH LOGIC
+	useEffect(() => {
+		setOauthProvider(provider);
+		setOauthToken(token);
+		setDatasourceName(name);
+		setDatasourceDescription(description);
+		console.log('Form token and provider', oauthProvider, oauthToken);
+		if (
+			provider &&
+			token &&
+			datasourceName !== '' &&
+			datasourceDescription !== '' &&
+			!initialized
+		) {
+			setInitialized(true); // Mark as initialized after first successful set
+		}
+	}, [provider, token, name, description]);
+
+	//once provider and token have been set this should run once to correctly set the connector based on OAuth
+	useEffect(() => {
+		if (provider !== null && token !== null) {
+			setStep(2);
+			switch (provider) {
+				case 'hubspot':
+					console.log('Posting with OAuth credentials');
+					setConnector({
+						airbyte_platform: 'oss',
+						connector_definition_id: '36c891d9-4bd9-43ac-bad2-10e12756272c',
+						connector_name: 'HubSpot',
+						connector_type: 'source',
+						connector_version: '4.2.22',
+						disabled: false,
+						docker_repository: 'airbyte/source-hubspot',
+						icon: 'https://connectors.airbyte.com/files/metadata/airbyte/source-hubspot/latest/icon.svg',
+						label: 'HubSpot',
+						planAvailable: true,
+						sync_success_rate: 'high',
+						usage: 'high',
+						value: '36c891d9-4bd9-43ac-bad2-10e12756272c'
+					});
+					hubspotDatasourcePost(token);
+				case 'airtable':
+					console.log('Posting with OAuth airtable creds');
+					setConnector({
+						airbyte_platform: 'oss',
+						connector_definition_id: '14c6e7ea-97ed-4f5e-a7b5-25e9a80b8212',
+						connector_name: 'Airtable',
+						connector_type: 'source',
+						connector_version: '4.4.0',
+						disabled: false,
+						docker_repository: 'airbyte/source-airtable',
+						icon: 'https://connectors.airbyte.com/files/metadata/airbyte/source-airtable/latest/icon.svg',
+						label: 'Airtable',
+						planAvailable: true,
+						sync_success_rate: 'high',
+						usage: 'high',
+						value: '14c6e7ea-97ed-4f5e-a7b5-25e9a80b8212'
+					});
+			}
+		}
+	}, [provider, token, initialized]);
+
 	function getStepSection(_step) {
 		//TODO: make steps enum
 		switch (_step) {
@@ -516,6 +729,7 @@ export default function CreateDatasourceForm({
 										return setSubscriptionModalOpen(v.label);
 									}
 									setLoading(v != null);
+									console.log('v', v);
 									setConnector(v);
 									if (v) {
 										getSpecification(v.value);
@@ -629,6 +843,11 @@ export default function CreateDatasourceForm({
 														schema={spec.schema.connectionSpecification}
 														datasourcePost={datasourcePost}
 														error={error}
+														name={connector.label}
+														icon={connector.icon}
+														redirectUrl={oauthRedirectUrl}
+														datasourceDescription={datasourceDescription}
+														datasourceName={datasourceName}
 													/>
 												</FormContext>
 											</>
@@ -636,35 +855,51 @@ export default function CreateDatasourceForm({
 									</>
 								)
 							)}
+							{oauthSubmitting && (
+								<div className='flex flex-col mt-5 items-center h-screen gap-10'>
+									<div className='flex flex-col items-center justify-center'>
+										<CheckCircleIcon className='w-20 h-20 text-green-500' />
+										<p className='mt-4 text-2xl font-semibold text-gray-700'>
+											Authentication Successful!
+										</p>
+									</div>
+									<ButtonSpinner size={50} />
+									<p className='mt-6 text-xl font-semibold text-gray-700'>
+										Testing Datasource Connection (this might take a while)
+									</p>
+								</div>
+							)}
 						</div>
 					</span>
 				);
 			case 3:
-				return (
-					discoveredSchema && (
-						<form
-							onSubmit={(e: any) => {
-								e.preventDefault();
-								setStep(4);
-							}}
-						>
-							<StreamsList
-								streams={discoveredSchema.catalog?.streams}
-								streamProperties={streamProperties}
-								setStreamReducer={setStreamReducer}
-							/>
-							<div className='flex justify-end'>
-								<button
-									disabled={submitting}
-									type='submit'
-									className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-								>
-									{submitting && <ButtonSpinner />}
-									Continue
-								</button>
-							</div>
-						</form>
-					)
+				return discoveredSchema ? (
+					<form
+						onSubmit={(e: any) => {
+							e.preventDefault();
+							setStep(4);
+						}}
+					>
+						<StreamsList
+							streams={discoveredSchema.catalog?.streams}
+							streamProperties={streamProperties}
+							setStreamReducer={setStreamReducer}
+						/>
+						<div className='flex justify-end'>
+							<button
+								disabled={submitting}
+								type='submit'
+								className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+							>
+								{submitting && <ButtonSpinner />}
+								Continue
+							</button>
+						</div>
+					</form>
+				) : (
+					<>
+						<p className='text-3xl text-red-700'>Testing datasource...</p>
+					</>
 				);
 			case 4:
 				return (

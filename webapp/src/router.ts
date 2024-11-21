@@ -7,6 +7,7 @@ import {
 	setParamOrgAndTeam
 } from '@mw/auth/checkresourceslug';
 import checkSession from '@mw/auth/checksession';
+import checkSessionWelcome from '@mw/auth/checksessionwelcome';
 import {
 	checkSubscriptionBoolean,
 	checkSubscriptionLimit,
@@ -21,6 +22,7 @@ import useJWT from '@mw/auth/usejwt';
 import useSession from '@mw/auth/usesession';
 import onboardedMiddleware from '@mw/checkonboarded';
 import homeRedirect from '@mw/homeredirect';
+import fetchDatasource from '@mw/oauth/fetchDatasource';
 import PassportManager from '@mw/passportmanager';
 import * as hasPerms from '@mw/permissions/hasperms';
 import renderStaticPage from '@mw/render/staticpage';
@@ -33,7 +35,7 @@ import { PlanLimitsKeys, pricingMatrix, SubscriptionPlan } from 'struct/billing'
 const unauthedMiddlewareChain = [useSession, useJWT, fetchSession, onboardedMiddleware];
 const authedMiddlewareChain = [...unauthedMiddlewareChain, checkSession, csrfMiddleware];
 
-import checkSessionWelcome from '@mw/auth/checksessionwelcome';
+import { restrictToFirstScrollableAncestor } from '@dnd-kit/modifiers';
 import * as accountController from 'controllers/account';
 import * as agentController from 'controllers/agent';
 import * as airbyteProxyController from 'controllers/airbyte';
@@ -43,6 +45,7 @@ import * as assetController from 'controllers/asset';
 import * as datasourceController from 'controllers/datasource';
 import * as modelController from 'controllers/model';
 import * as notificationController from 'controllers/notification';
+import * as oauthController from 'controllers/oauth';
 import * as orgController from 'controllers/org';
 import * as sessionController from 'controllers/session';
 import * as sharelinkController from 'controllers/sharelink';
@@ -52,6 +55,8 @@ import * as teamController from 'controllers/team';
 import * as toolController from 'controllers/tool';
 import * as variableController from 'controllers/variables';
 import * as vectorDbController from 'controllers/vectordb';
+import debug from 'debug';
+import OauthSecretProviderFactory from 'lib/oauthsecret';
 
 export default function router(server, app) {
 	server.use('/static', express.static('static'));
@@ -104,6 +109,117 @@ export default function router(server, app) {
 			res.redirect(`/auth/redirect?to=${encodeURIComponent('/')}`);
 		}
 	);
+	oauthRouter.get(
+		'/hubspot',
+		fetchDatasource,
+		passportInstance.authenticate('hubspot', {scope: OauthSecretProviderFactory.getProviderScopes('hubspot-free')}),
+		fetchSession,
+	);
+	
+	oauthRouter.get(
+		'/hubspot/professional',
+		passportInstance.authenticate('hubspot', {scope: OauthSecretProviderFactory.getProviderScopes('hubspot-professional'), redirect_uri: `${process.env.URL_APP}/auth/hubspot/callback`}),
+		fetchSession
+	);
+	oauthRouter.get(
+		'/hubspot/enterprise',
+		passportInstance.authenticate('hubspot', {scope: OauthSecretProviderFactory.getProviderScopes('hubspot-enterprise'), redirect_uri: `${process.env.URL_APP}/auth/hubspot/callback`}),
+		fetchSession
+	);
+	oauthRouter.get(
+		'/hubspot/callback',
+		useSession,
+		useJWT,
+		fetchSession,
+		// passportInstance.authenticate('hubspot'),
+		(req, res) => {
+			const log = debug('webapp:oauth:hubspot:callback');
+			const datasourceName = res.locals.oauthData.datasourceName || 'NOTFOUND';
+			const datasourceDescription = res.locals.oauthData.datasourceDescription || 'NOTFOUND';
+			log("Received query params \ndatasourceName: ", datasourceName, "\ndatasourceDescription: ", datasourceDescription);
+	
+			res.redirect(`/${res.locals.account.currentTeam}/datasource/add?token=${encodeURIComponent(res.locals.datasourceOAuth.refreshToken)}&provider=${encodeURIComponent(res.locals.datasourceOAuth.provider)}&datasourceName=${encodeURIComponent(datasourceName)}&datasourceDescription=${encodeURIComponent(datasourceDescription)}`);
+		}
+	);
+	oauthRouter.get(
+		'/salesforce',
+		fetchDatasource,
+		passportInstance.authenticate('forcedotcom'),
+		fetchSession
+	);
+	oauthRouter.get(
+		'/salesforce/callback',
+		useSession,
+		useJWT,
+		fetchSession,
+		// passportInstance.authenticate('forcedotcom'), don't need to call verify function
+		(req, res) => {
+			const log = debug('webapp:router:salesforce:callback');
+			const datasourceName = res.locals.oauthData.datasourceName || 'NOTFOUND';
+			const datasourceDescription = res.locals.oauthData.datasourceDescription || 'NOTFOUND';
+			log(`Recieved query params \ndatasourceName: ${datasourceName}\ndatasourceDescription: ${datasourceDescription}`);
+
+			res.redirect(`/${res.locals.account.currentTeam}/datasource/add?token=${encodeURIComponent(res.locals.datasourceOAuth.refreshToken)}&provider=${encodeURIComponent(res.locals.datasourceOAuth.provider)}&datasourceName=${encodeURIComponent(datasourceName)}&datasourceDescription=${encodeURIComponent(datasourceDescription)}`)
+		}
+	);
+	oauthRouter.get(
+		'/xero',
+		fetchDatasource,
+		passportInstance.authenticate('xero'),
+		fetchSession
+	);
+	oauthRouter.get(
+		'/xero/callback',
+		useSession,
+		useJWT,
+		fetchSession,
+		// passportInstance.authenticate('xero'),
+		(req, res) => {
+			const log = debug('webapp:router:salesforce:callback');
+			const datasourceName = res.locals.oauthData.datasourceName || 'NOTFOUND';
+			const datasourceDescription = res.locals.oauthData.datasourceDescription || 'NOTFOUND';
+			log(`Recieved query params \ndatasourceName: ${datasourceName}\ndatasourceDescription: ${datasourceDescription}`);
+
+			res.redirect(`/${res.locals.account.currentTeam}/datasource/add?token=${encodeURIComponent(res.locals.datasourceOAuth.refreshToken)}&provider=${encodeURIComponent(res.locals.datasourceOAuth.provider)}&datasourceName=${encodeURIComponent(datasourceName)}&datasourceDescription=${encodeURIComponent(datasourceDescription)}`)
+		}
+	);
+
+	oauthRouter.get(
+		'/airtable',
+		fetchDatasource,
+		(req, res) => {
+			const staticCodeVerifier = 'pfkS9G3OpWoY_.laomB4YA_c3yEjZ26_ccha-7pw0x6RZgzesBoFsEFoUrNhLvh6kUqVj8Qp29Yh7l4X398ahPhM0AKkS6b.';
+			const staticCodeChallenge = 'MkUeCGFfmUWZfJ-MC4p3FQ5fZr-yhqQUIesX3LVpu24'; // SHA-256 of "test_verifier"
+			const authorizationUrl = 'https://airtable.com/oauth2/v1/authorize'; //because airtable isn't a supported passport strategy we need to manually construct and execute the redirect
+			const params = new URLSearchParams({
+				client_id: process.env.OAUTH_AIRTABLE_CLIENT_ID,
+				redirect_uri: `${process.env.URL_APP}/auth/airtable/callback`,
+				response_type: 'code',
+				scope: 'data.records:read',
+				state: 'static_state_string', //state is a required parameter for the request to airtable
+				code_challenge: staticCodeChallenge, // Use static challenge
+				code_challenge_method: 'S256' // Method for PKCE
+			});
+		
+			res.redirect(`${authorizationUrl}?${params.toString()}`);
+		}
+	);
+	oauthRouter.get(
+		'/airtable/callback',
+		useSession,
+		useJWT,
+		fetchSession,
+		passportInstance.authenticate('airtable'),
+		(req, res) => {
+			const log = debug('webapp:router:airtable:callback');
+			const datasourceName = res.locals.oauthData.datasourceName || 'NOTFOUND';
+			const datasourceDescription = res.locals.oauthData.datasourceDescription || 'NOTFOUND';
+			log(`Recieved query params \ndatasourceName: ${datasourceName}\ndatasourceDescription: ${datasourceDescription}`);
+
+			res.redirect(`/${res.locals.account.currentTeam}/datasource/add?token=${encodeURIComponent(res.locals.datasourceOAuth.refreshToken)}&provider=${encodeURIComponent(res.locals.datasourceOAuth.provider)}&datasourceName=${encodeURIComponent(datasourceName)}&datasourceDescription=${encodeURIComponent(datasourceDescription)}`)
+		}
+	)
+
 	server.use('/auth', useSession, passportInstance.session(), oauthRouter);
 
 	// Body and query parsing middleware
@@ -175,6 +291,7 @@ export default function router(server, app) {
 		csrfMiddleware,
 		accountController.welcomeJson
 	);
+
 
 	//TODO: move and rename all these
 	server.post(
