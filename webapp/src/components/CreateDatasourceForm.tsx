@@ -566,12 +566,12 @@ export default function CreateDatasourceForm({
 						disabled: false,
 						docker_repository: 'airbyte/source-airtable',
 						icon: 'https://connectors.airbyte.com/files/metadata/airbyte/source-airtable/latest/icon.svg',
-						label: "Airtable",
+						label: 'Airtable',
 						planAvailable: true,
 						sync_success_rate: 'high',
 						usage: 'high',
 						value: '14c6e7ea-97ed-4f5e-a7b5-25e9a80b8212'
-					})
+					});
 			}
 		}
 	}, [provider, token, initialized]);

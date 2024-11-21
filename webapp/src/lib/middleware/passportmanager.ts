@@ -72,17 +72,17 @@ class PassportManager {
 
 					// Step 2: Base64 encode the credentials
 					const base64 = Buffer.from(credentials).toString('base64');
-				
+
 					// Step 3: Convert to URL-safe Base64
 					// const base64Url = base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-				
-					log(`Found code: ${code}`)
+
+					log(`Found code: ${code}`);
 					//Exchange auth code for access token
 					const tokenResponse = await fetch('https://airtable.com/oauth2/v1/token', {
 						method: 'POST',
 						headers: {
 							'Content-Type': 'application/x-www-form-urlencoded',
-							'Authorization': `Basic ${base64}`
+							Authorization: `Basic ${base64}`
 						},
 						body: new URLSearchParams({
 							client_id: process.env.OAUTH_AIRTABLE_CLIENT_ID,
@@ -90,11 +90,11 @@ class PassportManager {
 							code: code,
 							grant_type: 'authorization_code',
 							redirect_uri: `${process.env.URL_APP}/auth/airtable/callback`,
-							code_verifier: 'pfkS9G3OpWoY_.laomB4YA_c3yEjZ26_ccha-7pw0x6RZgzesBoFsEFoUrNhLvh6kUqVj8Qp29Yh7l4X398ahPhM0AKkS6b.'
+							code_verifier:
+								'pfkS9G3OpWoY_.laomB4YA_c3yEjZ26_ccha-7pw0x6RZgzesBoFsEFoUrNhLvh6kUqVj8Qp29Yh7l4X398ahPhM0AKkS6b.'
 						})
 					});
 					if (tokenResponse.status !== 200) {
-						
 						throw new Error('Failed to retrieve tokens');
 					}
 
@@ -117,13 +117,13 @@ class PassportManager {
 					user.accessToken = access_token;
 					user.refreshToken = refresh_token;
 					user.tokenExpiresIn = expires_in;
-					user.provider = "airtable"
+					user.provider = 'airtable';
 
 					return done(null, user);
 				} catch (error) {
 					return done(error);
 				}
-			},)
+			})
 		);
 
 		log('Passport manager initialized successfully');

@@ -32,5 +32,5 @@ export type CustomOAuthStrategy = {
 
 export enum AIRBYTE_OAUTH_PROVIDERS { //OAuth to initiate airbyte datasource connection is handled seperately from OAuth to register/log in to agent cloud
 	HUBSPOT = 'hubspot',
-	SALESFORCE = 'salesforce',
+	SALESFORCE = 'salesforce'
 }
