@@ -17,6 +17,10 @@ export default class OauthSecretProviderFactory {
 				clientId = process.env.OAUTH_SLACK_CLIENT_ID || 'NOTFOUND';
 				clientSecret = process.env.OAUTH_SLACK_CLIENT_SECRET || 'NOTFOUND';
 				return { clientId, clientSecret };
+			case 'airtable':
+				clientId = process.env.OAUTH_AIRTABLE_CLIENT_ID || 'NOTFOUND';
+				clientSecret = process.env.OAUTH_AIRTABLE_CLIENT_SECRET || 'NOTFOUND';
+				return { clientId, clientSecret };
 		}
 	}
 
@@ -145,6 +149,18 @@ export default class OauthSecretProviderFactory {
 				clientId = OauthSecretProviderFactory.getSecretProvider('slack').clientId;
 				clientSecret = OauthSecretProviderFactory.getSecretProvider('slack').clientSecret;
 				data = {};
+			case 'airtable':
+				clientId = OauthSecretProviderFactory.getSecretProvider('airtable').clientId;
+				clientSecret = OauthSecretProviderFactory.getSecretProvider('airtable').clientSecret;
+				data = {
+					sourceType: 'airtable',
+					credentials: {
+						auth_method: 'oauth2.0',
+						client_id: clientId,
+						client_secret: clientSecret,
+						refresh_token: token
+					}
+				}
 		}
 	}
 }

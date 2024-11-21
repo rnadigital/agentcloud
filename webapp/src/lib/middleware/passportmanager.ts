@@ -67,50 +67,63 @@ class PassportManager {
 					if (!code) {
 						return done({ message: 'Authorization code not provided or invalid' }, null);
 					}
+					//generate valid base64 url encoded string for clientid and clientsecret
+					const credentials = `${process.env.OAUTH_AIRTABLE_CLIENT_ID}:${process.env.OAUTH_AIRTABLE_CLIENT_SECRET}`;
+
+					// Step 2: Base64 encode the credentials
+					const base64 = Buffer.from(credentials).toString('base64');
+				
+					// Step 3: Convert to URL-safe Base64
+					// const base64Url = base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+				
+					log(`Found code: ${code}`)
 					//Exchange auth code for access token
 					const tokenResponse = await fetch('https://airtable.com/oauth2/v1/token', {
 						method: 'POST',
 						headers: {
-							'Content-Type': 'application/x-www-form-urlencoded'
+							'Content-Type': 'application/x-www-form-urlencoded',
+							'Authorization': `Basic ${base64}`
 						},
 						body: new URLSearchParams({
 							client_id: process.env.OAUTH_AIRTABLE_CLIENT_ID,
 							client_secret: process.env.OAUTH_AIRTABLE_CLIENT_SECRET,
-							code,
+							code: code,
 							grant_type: 'authorization_code',
-							redirect_uri: 'http://localhost:3000/airtable/callback'
+							redirect_uri: `${process.env.URL_APP}/auth/airtable/callback`,
+							code_verifier: 'pfkS9G3OpWoY_.laomB4YA_c3yEjZ26_ccha-7pw0x6RZgzesBoFsEFoUrNhLvh6kUqVj8Qp29Yh7l4X398ahPhM0AKkS6b.'
 						})
 					});
-
-					if (!tokenResponse.ok) {
+					if (tokenResponse.status !== 200) {
+						
 						throw new Error('Failed to retrieve tokens');
 					}
 
 					const { access_token, refresh_token, expires_in } = await tokenResponse.json();
 
 					//retrieve user information from Airtable api using the creds we just got
-					const userResponse = await fetch('https://airtable.com/v0/meta/whoami', {
+					const userResponse = await fetch('https://api.airtable.com/v0/meta/whoami', {
 						headers: {
 							authorization: `Bearer ${access_token}`
 						}
 					});
 
-					if (!userResponse.ok) {
+					if (userResponse.status !== 200) {
 						throw new Error('Failed to get user information');
 					}
 
-					const user = await userResponse.json();
+					let user = await userResponse.json();
 
 					//attach auth tokens to user object and return
 					user.accessToken = access_token;
 					user.refreshToken = refresh_token;
 					user.tokenExpiresIn = expires_in;
+					user.provider = "airtable"
 
 					return done(null, user);
 				} catch (error) {
 					return done(error);
 				}
-			})
+			},)
 		);
 
 		log('Passport manager initialized successfully');

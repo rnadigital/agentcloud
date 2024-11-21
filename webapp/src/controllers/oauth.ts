@@ -162,7 +162,13 @@ export async function airtableVerifyFunction(req, done) {
 	}
 }
 
-export async function airtableDatasourceCallback(accessToken, refreshToken, profile, done) {}
+export async function airtableDatasourceCallback(accessToken, refreshToken, profile, done) {
+	const airtableCallbackLog = debug('webapp:oauth:datasourceOauth:slack:callback');
+	airtableCallbackLog(`got refreshToken ${refreshToken} from callback`);
+	airtableCallbackLog(`got profile ${profile} from callback`);
+
+	done(null, profile);
+}
 
 export async function slackDatasourceCallback(accessToken, refreshToken, profile, done) {
 	const slackCallbackLog = debug('webapp:oauth:datasourceOauth:slack:callback');
@@ -263,13 +269,29 @@ export async function googleCallback(accessToken, refreshToken, profile, done) {
 
 export async function serializeHandler(user, done) {
 	log('serializeHandler user', user);
-	done(null, { oauthId: user.id, provider: user.provider, refreshToken: user?.refreshToken });
+	log('serializeHandler user', user?.id);
+	log('serializeHandler user', user?.refreshToken);
+	log('serializeHandler user', user?.provider);
+	const newUser = { 
+		oauthId: user?.id, 
+		provider: user?.provider, 
+		refreshToken: user?.refreshToken 
+	};
+	log(newUser);
+	done(null, newUser);
 }
 
 export async function deserializeHandler(obj, done) {
 	log('deserializeHandler obj', obj);
 	const { oauthId, provider } = obj;
-	// Use provider information to retrieve the user e.g.
+
+	// Special case for "airtable" provider
+	if (provider === 'airtable') {
+		log('Provider is "airtable", returning input object directly as user');
+		return done(null, obj); // Return the input `obj` as the user object
+	}
+
+	// For other providers, use provider information to retrieve the user
 	const account: Account = await getAccountByOAuthOrEmail(oauthId, provider, null);
 	if (account) {
 		const accountObj = {
@@ -285,8 +307,12 @@ export async function deserializeHandler(obj, done) {
 		};
 		return done(null, accountObj);
 	}
+
+	// If no account is found, return null
+	log('No account found for oauthId:', oauthId, 'and provider:', provider);
 	done(null, null);
 }
+
 
 async function createUpdateAccountOauth(account, email, name, provider, profileId) {
 	if (!account) {

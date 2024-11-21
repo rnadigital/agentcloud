@@ -5,7 +5,7 @@ import debug from 'debug';
 const log = debug('webapp:session');
 
 export default async function fetchSession(req, res, next) {
-	// log('req.session.passport?.user:', req.session.passport?.user);
+	log('req.session.passport:', req.session.passport);
 	// Proceed with the rest of fetchSession logic
 	if (req.session && (req.session.accountId || req.session.passport?.user)) {
 		let account: Account;

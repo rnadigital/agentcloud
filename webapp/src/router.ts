@@ -188,8 +188,8 @@ export default function router(server, app) {
 		'/airtable',
 		fetchDatasource,
 		(req, res) => {
-			const staticCodeVerifier = 'test_verifier';
-			const staticCodeChallenge = 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk'; // SHA-256 of "test_verifier"
+			const staticCodeVerifier = 'pfkS9G3OpWoY_.laomB4YA_c3yEjZ26_ccha-7pw0x6RZgzesBoFsEFoUrNhLvh6kUqVj8Qp29Yh7l4X398ahPhM0AKkS6b.';
+			const staticCodeChallenge = 'MkUeCGFfmUWZfJ-MC4p3FQ5fZr-yhqQUIesX3LVpu24'; // SHA-256 of "test_verifier"
 			const authorizationUrl = 'https://airtable.com/oauth2/v1/authorize'; //because airtable isn't a supported passport strategy we need to manually construct and execute the redirect
 			const params = new URLSearchParams({
 				client_id: process.env.OAUTH_AIRTABLE_CLIENT_ID,

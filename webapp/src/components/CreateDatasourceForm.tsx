@@ -532,10 +532,10 @@ export default function CreateDatasourceForm({
 		}
 	}, [provider, token, name, description]);
 
-	//once provider and token have been set this should run once
+	//once provider and token have been set this should run once to correctly set the connector based on OAuth
 	useEffect(() => {
 		if (provider !== null && token !== null) {
-			setStep(1);
+			setStep(2);
 			switch (provider) {
 				case 'hubspot':
 					console.log('Posting with OAuth credentials');
@@ -555,6 +555,23 @@ export default function CreateDatasourceForm({
 						value: '36c891d9-4bd9-43ac-bad2-10e12756272c'
 					});
 					hubspotDatasourcePost(token);
+				case 'airtable':
+					console.log('Posting with OAuth airtable creds');
+					setConnector({
+						airbyte_platform: 'oss',
+						connector_definition_id: '14c6e7ea-97ed-4f5e-a7b5-25e9a80b8212',
+						connector_name: 'Airtable',
+						connector_type: 'source',
+						connector_version: '4.4.0',
+						disabled: false,
+						docker_repository: 'airbyte/source-airtable',
+						icon: 'https://connectors.airbyte.com/files/metadata/airbyte/source-airtable/latest/icon.svg',
+						label: "Airtable",
+						planAvailable: true,
+						sync_success_rate: 'high',
+						usage: 'high',
+						value: '14c6e7ea-97ed-4f5e-a7b5-25e9a80b8212'
+					})
 			}
 		}
 	}, [provider, token, initialized]);
