@@ -9,6 +9,7 @@ import {
 import ButtonSpinner from 'components/ButtonSpinner';
 import InputField from 'components/form/InputField';
 import SelectField from 'components/form/SelectField';
+import formatModelOptionLabel from 'components/FormatModelOptionLabel';
 import { useAccountContext } from 'context/account';
 import { useOnboardingFormContext } from 'context/onboardingform';
 import cn from 'lib/cn';
@@ -16,9 +17,12 @@ import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
 import React, { useEffect, useState } from 'react';
 import { Control, useForm, UseFormSetValue } from 'react-hook-form';
+import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { StreamConfig } from 'struct/datasource';
 import { VectorDb } from 'struct/vectordb';
+import { Cloud, CloudRegionMap, Region } from 'struct/vectorproxy';
+import SelectClassNames from 'styles/SelectClassNames';
 
 const options = [
 	{
@@ -52,6 +56,8 @@ interface FormValues {
 	type: string;
 	preferredVectorDB?: string;
 	index?: string;
+	region?: Region;
+	cloud?: Cloud;
 }
 
 const VectorDBSelection = ({
@@ -85,6 +91,8 @@ const VectorDBSelection = ({
 	const byoVectorDb = watch('byoVectorDb');
 	const collectionName = watch('index');
 	const connector = watch('connector');
+	const cloud = watch('cloud');
+	const region = watch('region');
 
 	const [selectedDB, setSelectedDB] = useState<string>();
 
@@ -126,7 +134,9 @@ const VectorDBSelection = ({
 			vectorDbId,
 			byoVectorDb,
 			collectionName,
-			noRedirect: true
+			noRedirect: true,
+			cloud,
+			region
 		};
 		await API.addDatasource(
 			body,
@@ -179,6 +189,7 @@ const VectorDBSelection = ({
 		if (selectedDB) {
 			setValue('url', '');
 			setValue('apiKey', '');
+			setValue('cloud', Cloud.AWS);
 		}
 	}, [selectedDB]);
 
@@ -216,7 +227,12 @@ const VectorDBSelection = ({
 			))}
 
 			{selectedDB === 'pinecone' && (
-				<PineConeFields setSelectedDB={setSelectedDB} control={control} setValue={setValue} />
+				<PineConeFields
+					setSelectedDB={setSelectedDB}
+					control={control}
+					setValue={setValue}
+					cloud={cloud}
+				/>
 			)}
 			{selectedDB === 'qdrant' && (
 				<QdrantFields setSelectedDB={setSelectedDB} control={control} setValue={setValue} />
@@ -261,11 +277,13 @@ export default VectorDBSelection;
 const PineConeFields = ({
 	setSelectedDB,
 	control,
-	setValue
+	setValue,
+	cloud
 }: {
 	setSelectedDB: Function;
 	control: Control<FormValues>;
 	setValue: UseFormSetValue<FormValues>;
+	cloud?: string;
 }) => {
 	const connectWithAPIKey = async () => {
 		const { ConnectPopup } = await import('@pinecone-database/connect'); // Dynamic import
@@ -323,6 +341,35 @@ const PineConeFields = ({
 						placeholder='Enter the index to use'
 					/>
 				</div>
+
+				<div className='my-2 text-sm'>Cloud Provider</div>
+				<SelectField<FormValues>
+					name='cloud'
+					control={control}
+					rules={{
+						required: 'Cloud provider is required'
+					}}
+					options={Object.values(Cloud).map(option => ({
+						label: option,
+						value: option
+					}))}
+					placeholder='Select a cloud provider...'
+					optionLabel={formatModelOptionLabel}
+				/>
+
+				<div className='my-2 text-sm'>Region</div>
+				<SelectField<FormValues>
+					name='region'
+					control={control}
+					rules={{
+						required: 'Region is required'
+					}}
+					options={
+						cloud ? CloudRegionMap[cloud]?.map(option => ({ label: option, value: option })) : []
+					}
+					placeholder='Select a region...'
+					optionLabel={formatModelOptionLabel}
+				/>
 
 				<div>
 					<div className='my-2 text-sm'>Name</div>
