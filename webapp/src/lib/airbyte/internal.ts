@@ -15,6 +15,7 @@ const log = debug('webapp:lib:airbyte:internal');
 
 let client;
 async function getAirbyteInternalApi() {
+	log('getting airbyte internal api');
 	if (client) {
 		return client;
 	}

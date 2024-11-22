@@ -31,10 +31,16 @@ const log = debug('webapp:controllers:airbyte');
 log.log = console.log.bind(console); //set namespace to log
 
 export async function connectorsJson(req, res, next) {
-	log('Getting connectors');
-	const internalApi = await getAirbyteInternalApi();
+	log('Getting Airbyute connectors');
+	console.log('Trying consolelog');
 	const worksspaceId = process.env.AIRBYTE_ADMIN_WORKSPACE_ID;
 	log('WorkspaceId: %s', worksspaceId);
+	console.log('workspace id', worksspaceId);
+
+	const airbyteApiUrl = process.env.AIRBYTE_API_URL;
+	console.log('airbyte apiurl', airbyteApiUrl);
+	log('airbyteApiUrl: %s', airbyteApiUrl);
+	const internalApi = await getAirbyteInternalApi();
 	const listSourceDefinitionsForWorkspaceBody = {
 		workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID
 	};
