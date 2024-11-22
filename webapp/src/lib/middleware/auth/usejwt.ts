@@ -44,7 +44,7 @@ export default async function useJWT(req, res, next): Promise<void> {
 	} else if (req.headers && req.headers['authorization']?.startsWith('Bearer ')) {
 		token = req.headers['authorization'].substring(7);
 	}
-	log('useJWT token: %s', token);
+	// log('useJWT token: %s', token);
 	if (token && token.length > 0) {
 		try {
 			const verifiedToken: JWTData = await verifyJwt(token);

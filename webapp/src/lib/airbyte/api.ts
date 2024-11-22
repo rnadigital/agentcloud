@@ -70,6 +70,15 @@ export async function getAirbyteAuthToken() {
 }
 
 async function getAirbyteApi(type: AirbyteApiType) {
+	console.log('getting airbyte api');
+	try {
+		const token = await getAirbyteAuthToken();
+		console.log('token fetched');
+		console.log(token);
+	} catch (error) {
+		console.log('token fetch failed');
+		console.log(error);
+	}
 	if (apiCache[type]) {
 		apiCache[type].defaults.headers = {
 			authorization: `Bearer ${await getAirbyteAuthToken()}`
