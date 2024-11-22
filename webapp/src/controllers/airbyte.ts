@@ -1,4 +1,5 @@
-'use strict';
+import { AIRBYTE_OAUTH_PROVIDERS } from './../lib/struct/oauth';
+('use strict');
 
 import { dynamicResponse } from '@dr';
 import { io } from '@socketio';
@@ -30,7 +31,10 @@ const log = debug('webapp:controllers:airbyte');
 log.log = console.log.bind(console); //set namespace to log
 
 export async function connectorsJson(req, res, next) {
+	log('Getting connectors');
 	const internalApi = await getAirbyteInternalApi();
+	const worksspaceId = process.env.AIRBYTE_ADMIN_WORKSPACE_ID;
+	log('WorkspaceId: %s', worksspaceId);
 	const listSourceDefinitionsForWorkspaceBody = {
 		workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID
 	};

@@ -28,6 +28,14 @@ const definitions: Record<AirbyteApiType, string> = {
 const apiCache: Partial<Record<AirbyteApiType, any>> = {};
 
 export async function getAirbyteAuthToken() {
+	log('Getting airbyte auth token');
+
+	const airbyteWebUrl = process.env.AIRBYTE_WEB_URL;
+	const client_id = process.env.AIRBYTE_CLIENT_ID;
+	const client_secret = process.env.AIRBYTE_CLIENT_SECRET;
+	log('client_id: %s', client_id);
+	log('client_secret: %s', client_secret);
+	log('AIRBYTE_WEB_URL: %s', airbyteWebUrl);
 	// Check if the token is already cached
 	let token = await get(CACHE_KEY);
 	if (token) {
