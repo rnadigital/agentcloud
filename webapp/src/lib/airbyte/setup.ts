@@ -221,7 +221,13 @@ export async function init() {
 	try {
 		log('Initializing airbyte setup...');
 		const a = `${process.env.AIRBYTE_WEB_URL}${process.env.AIRBYTE_WEB_URL === 'https://api.airbyte.com' ? '' : '/api'}/v1/applications/token`;
+		const abody = JSON.stringify({
+			client_id: process.env.AIRBYTE_CLIENT_ID,
+			client_secret: process.env.AIRBYTE_CLIENT_SECRET,
+			grant: 'client_credentials'
+		});
 		console.log('airbyte url', a);
+		console.log(abody);
 		// Get workspaces
 		const workspacesList = await fetchWorkspaces();
 		log('workspacesList: %s', workspacesList);
