@@ -220,6 +220,8 @@ async function updateWebhookUrls(workspaceId: string) {
 export async function init() {
 	try {
 		log('Initializing airbyte setup...');
+		const a = `${process.env.AIRBYTE_WEB_URL}${process.env.AIRBYTE_WEB_URL === 'https://api.airbyte.com' ? '' : '/api'}/v1/applications/token`;
+		console.log('airbyte url', a);
 		// Get workspaces
 		const workspacesList = await fetchWorkspaces();
 		log('workspacesList: %s', workspacesList);
