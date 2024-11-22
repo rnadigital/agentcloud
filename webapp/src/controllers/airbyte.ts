@@ -40,6 +40,14 @@ export async function connectorsJson(req, res, next) {
 	const airbyteApiUrl = process.env.AIRBYTE_API_URL;
 	console.log('airbyte apiurl', airbyteApiUrl);
 	log('airbyteApiUrl: %s', airbyteApiUrl);
+
+	const airbyteWebUrl = process.env.AIRBYTE_WEB_URL;
+	const client_id = process.env.AIRBYTE_CLIENT_ID;
+	const client_secret = process.env.AIRBYTE_CLIENT_SECRET;
+	log('client_id: %s', client_id);
+	log('client_secret: %s', client_secret);
+	log('AIRBYTE_WEB_URL: %s', airbyteWebUrl);
+
 	const internalApi = await getAirbyteInternalApi();
 	const listSourceDefinitionsForWorkspaceBody = {
 		workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID
