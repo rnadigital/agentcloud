@@ -19,23 +19,27 @@ async function getAirbyteInternalApi() {
 	if (client) {
 		return client;
 	}
-	const api = new OpenAPIClientAxios({
-		definition,
-		axiosConfigDefaults: {
-			headers: {
-				authorization: `Bearer ${await getAirbyteAuthToken()}`
+	try {
+		const api = new OpenAPIClientAxios({
+			definition,
+			axiosConfigDefaults: {
+				headers: {
+					authorization: `Bearer ${await getAirbyteAuthToken()}`
+				}
 			}
-		}
-	});
-	client = await api.init();
-	const airbyteApiUrl = process.env.AIRBYTE_API_URL;
+		});
+		client = await api.init();
+		const airbyteApiUrl = process.env.AIRBYTE_API_URL;
 
-	log('airbyteApiUrl: %s', airbyteApiUrl);
-	log('client.defaults.baseUrl: %s', client.defaults.baseURL);
-	if (process.env.AIRBYTE_API_URL !== 'https://cloud.airbyte.com') {
-		client.defaults.baseURL = `${process.env.AIRBYTE_API_URL}/api`;
+		log('airbyteApiUrl: %s', airbyteApiUrl);
+		log('client.defaults.baseUrl: %s', client.defaults.baseURL);
+		if (process.env.AIRBYTE_API_URL !== 'https://cloud.airbyte.com') {
+			client.defaults.baseURL = `${process.env.AIRBYTE_API_URL}/api`;
+		}
+		return client;
+	} catch (error) {
+		console.log(error);
 	}
-	return client;
 }
 
 export default getAirbyteInternalApi;
