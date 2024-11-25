@@ -112,6 +112,7 @@ const DataSourceDetails = ({
 		setValue('timeUnit', 'day');
 		setValue('enableConnectorChunking', false);
 		setValue('units', '');
+		setValue('chunkStrategy', 'semantic');
 	}, []);
 
 	useEffect(() => {
