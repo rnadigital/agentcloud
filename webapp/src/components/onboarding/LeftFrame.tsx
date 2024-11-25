@@ -1,8 +1,12 @@
 import { CubeIcon } from '@heroicons/react/24/outline';
 import animationData from 'animations/SignInAnimationTransparent.json';
-import Lottie from 'lottie-react';
+import dynamic from 'next/dynamic';
 import { useEffect, useRef } from 'react';
 import { ReactNode } from 'react-markdown';
+
+const Lottie = dynamic(() => import('lottie-react'), {
+	ssr: false
+});
 
 const LeftFrame = ({
 	children,

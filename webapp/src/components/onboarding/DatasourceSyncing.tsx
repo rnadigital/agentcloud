@@ -1,10 +1,14 @@
 import * as API from '@api';
 import dataSyncAnimation from 'animations/dataSyncLoaderAnimation.json';
 import { useOnboardingFormContext } from 'context/onboardingform';
-import Lottie from 'lottie-react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router'; // Ensure this import is present
 import { useEffect } from 'react'; // Ensure these imports are present
 import { DatasourceStatus } from 'struct/datasource';
+
+const Lottie = dynamic(() => import('lottie-react'), {
+	ssr: false
+});
 
 const DatasourceSyncing = () => {
 	const router = useRouter();
