@@ -422,10 +422,15 @@ const QdrantFields = ({
 					name='url'
 					control={control}
 					rules={{
-						required: 'URL is required'
+						required: 'URL is required',
+
+						pattern: {
+							value: /:6334$/,
+							message: 'Ensure that the url has :6334 at the end'
+						}
 					}}
 					type='text'
-					placeholder='Enter Qdrant URL'
+					placeholder='https://07a585e7-5a33-48bd-92a0-3bd14bf8b8ee.eu-west-2-0.aws.cloud.qdrant.io:6334'
 				/>
 				<div className='mb-2 text-sm mt-4'>Connect with API key</div>
 				<InputField<FormValues>
