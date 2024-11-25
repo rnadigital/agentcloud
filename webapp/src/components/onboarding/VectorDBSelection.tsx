@@ -173,6 +173,7 @@ const VectorDBSelection = ({
 				// callback?.({ label: data.name, value: res._id });
 				toast.success('VectorDb Added');
 				await addDatasource(res._id);
+				await API.markOnboarded({ _csrf: csrf }, null, null, router);
 				setLoading(false);
 				setStep(3);
 

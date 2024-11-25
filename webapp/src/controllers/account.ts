@@ -9,6 +9,7 @@ import {
 	getAccountByEmail,
 	getAccountById,
 	getAccountsById,
+	markOnboarded,
 	setCurrentTeam,
 	updateRoleAndMarkOnboarded,
 	verifyAccount
@@ -441,4 +442,10 @@ export async function updateRole(req, res) {
 	return dynamicResponse(req, res, 302, {
 		redirect: `/${res.locals.account.currentTeam.toString()}/apps`
 	});
+}
+
+export async function onboardUser(req, res) {
+	const userId = res.locals.account._id;
+	await markOnboarded(userId);
+	return res.json({});
 }
