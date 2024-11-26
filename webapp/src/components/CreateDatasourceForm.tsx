@@ -411,6 +411,11 @@ export default function CreateDatasourceForm({
 							fetchDatasources();
 						}}
 						modalOpen={modelModalOpen}
+						vectorDbId={vectorDbId}
+						byoVectorDb={byoVectorDb}
+						collectionName={collectionName}
+						region={region}
+						cloud={cloud}
 					>
 						<div>
 							<label
@@ -489,6 +494,145 @@ export default function CreateDatasourceForm({
 								topK={topK}
 								setTopK={setTopK}
 							/>
+						</div>
+
+						<div className='space-y-4'>
+							<div>
+								<label
+									htmlFor='modelId'
+									className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-3'
+								>
+									Vector Database<span className='text-red-700'> *</span>
+								</label>
+								<div>
+									<Select
+										isClearable
+										primaryColor={'indigo'}
+										classNames={SelectClassNames}
+										isDisabled={!byoVectorDb}
+										value={
+											foundVectorDb ? { label: foundVectorDb.name, value: foundVectorDb._id } : null
+										}
+										onChange={(v: any) => {
+											if (v?.value === null) {
+												return setVectorDbModalOpen(true);
+											}
+											setVectorDbId(v?.value);
+										}}
+										options={[{ label: '+ Connect a new vectorDB', value: null }].concat(
+											vectorDbs?.map(c => ({ label: c.name, value: c._id, ...c }))
+										)}
+										formatOptionLabel={formatModelOptionLabel}
+									/>
+
+									{foundVectorDb && foundVectorDb.type === 'pinecone' && (
+										<div className='mt-2'>
+											<label
+												htmlFor='collectionName'
+												className='text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 inline-flex items-center'
+											>
+												Index
+												<span className='ml-1'>
+													<ToolTip
+														content='Your vector data will be stored in this index, organized under a unique namespace associated with the datasource ID.'
+														placement='top'
+														arrow={true}
+													>
+														<InformationCircleIcon className='h-4 w-4' />
+													</ToolTip>
+												</span>
+											</label>
+											<div>
+												<input
+													disabled={!byoVectorDb}
+													required
+													type='text'
+													name='collectionName'
+													id='collectionName'
+													onChange={e => setCollectionName(e.target.value)}
+													value={collectionName}
+													className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white disabled:bg-gray-300'
+												/>
+											</div>
+										</div>
+									)}
+
+									{foundVectorDb && foundVectorDb.type === 'pinecone' && (
+										<>
+											<label
+												htmlFor='modelId'
+												className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-3'
+											>
+												Cloud Provider<span className='text-red-700'> *</span>
+											</label>
+
+											<Select
+												isClearable
+												primaryColor={'indigo'}
+												classNames={SelectClassNames}
+												isDisabled={!byoVectorDb}
+												value={{ label: cloud, value: cloud }}
+												onChange={(v: any) => {
+													setCloud(v?.value);
+												}}
+												options={Object.values(Cloud).map(option => ({
+													label: option,
+													value: option
+												}))}
+												formatOptionLabel={formatModelOptionLabel}
+											/>
+										</>
+									)}
+
+									{foundVectorDb && foundVectorDb.type === 'pinecone' && (
+										<>
+											<label
+												htmlFor='modelId'
+												className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-3'
+											>
+												Region<span className='text-red-700'> *</span>
+											</label>
+
+											<Select
+												isClearable
+												primaryColor={'indigo'}
+												classNames={SelectClassNames}
+												isDisabled={!byoVectorDb}
+												value={{ label: region, value: region }}
+												onChange={(v: any) => {
+													setRegion(v?.value);
+												}}
+												options={CloudRegionMap[cloud]?.map(option => ({
+													label: option,
+													value: option
+												}))}
+												formatOptionLabel={formatModelOptionLabel}
+											/>
+										</>
+									)}
+
+									<div className='my-2'>
+										<div className='sm:col-span-12'>
+											<label
+												htmlFor='displayOnlyFinalOutput'
+												className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+											>
+												<input
+													type='checkbox'
+													checked={!byoVectorDb}
+													onChange={e => {
+														setByoVectorDb(!byoVectorDb);
+														setVectorDbId(null);
+														setCollectionName('');
+													}}
+													className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:bg-gray-500'
+												/>
+												Use Agent Cloud&apos;s Hosted Vector Database
+											</label>
+										</div>
+									</div>
+								</div>
+							</div>
 						</div>
 					</DropZone>
 				);

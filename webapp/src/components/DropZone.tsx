@@ -28,7 +28,12 @@ export default function DropZone({
 	callback,
 	description,
 	retriever,
-	compact
+	compact,
+	vectorDbId,
+	byoVectorDb,
+	collectionName,
+	region,
+	cloud
 }: {
 	modalOpen: boolean;
 	children: any;
@@ -40,6 +45,11 @@ export default function DropZone({
 	retriever?: Retriever;
 	callback?: Function;
 	compact?: boolean;
+	vectorDbId?: string;
+	byoVectorDb?: boolean;
+	collectionName?: string;
+	region?: string;
+	cloud?: string;
 }) {
 	const [accountContext]: any = useAccountContext();
 	const { csrf, account } = accountContext as any;
@@ -65,6 +75,11 @@ export default function DropZone({
 			formData.set('name', name as string);
 			formData.set('retriever', retriever as string);
 			formData.set('_csrf', csrf as string);
+			formData.set('vectorDbId', vectorDbId as string);
+			formData.set('byoVectorDb', byoVectorDb ? 'true' : 'false');
+			formData.set('collectionName', collectionName as string);
+			formData.set('region', region as string);
+			formData.set('cloud', cloud as string);
 			Object.entries(chunkingConfig).forEach(([key, value]) => {
 				if (value != null) {
 					formData.set(key, value as string);

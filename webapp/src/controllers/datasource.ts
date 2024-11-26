@@ -1,4 +1,5 @@
-'use strict';
+import { Cloud, Region } from 'struct/vectorproxy';
+('use strict');
 
 import { dynamicResponse } from '@dr';
 import { Pinecone } from '@pinecone-database/pinecone';
@@ -921,6 +922,7 @@ export async function deleteDatasourceApi(req, res, next) {
 }
 
 export async function uploadFileApi(req, res, next) {
+	console.log('uploading file');
 	if (!req.files || Object.keys(req.files).length === 0) {
 		return dynamicResponse(req, res, 400, { error: 'Missing file' });
 	}
@@ -937,7 +939,13 @@ export async function uploadFileApi(req, res, next) {
 		new_after_n_chars,
 		overlap,
 		similarity_threshold,
-		overlap_all
+		overlap_all,
+		vectorDbId,
+		byoVectorDb,
+		collectionName,
+		region,
+		cloud,
+		noRedirect
 	} = req.body;
 
 	let validationError = chainValidations(
@@ -1070,7 +1078,15 @@ export async function uploadFileApi(req, res, next) {
 			overlap: parseInt(overlap),
 			similarity_threshold: parseFloat(similarity_threshold),
 			overlap_all: overlap_all === 'true'
-		}
+		},
+		vectorDbId: toObjectId(vectorDbId),
+		byoVectorDb: byoVectorDb === 'true',
+		region
+	});
+
+	await editDatasource(req.params.resourceSlug, newDatasourceId, {
+		collectionName: collectionName ?? newDatasourceId.toString(),
+		namespace: newDatasourceId.toString()
 	});
 
 	// Send the gcs file path to rabbitmq
@@ -1078,8 +1094,14 @@ export async function uploadFileApi(req, res, next) {
 	await storageProvider.uploadLocalFile(filename, uploadedFile, uploadedFile.mimetype);
 
 	// Create the collection in qdrant
+	console.log(cloud, region);
 	try {
-		await VectorDBProxyClient.createCollection(newDatasourceId);
+		await VectorDBProxyClient.createCollection(newDatasourceId, {
+			cloud: cloud ?? Cloud.AWS,
+			region: Region.US_EAST_1,
+			collection_name: collectionName,
+			index_name: collectionName
+		});
 	} catch (e) {
 		console.error(e);
 		return dynamicResponse(req, res, 400, {
