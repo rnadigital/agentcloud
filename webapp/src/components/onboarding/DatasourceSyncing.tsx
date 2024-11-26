@@ -32,7 +32,7 @@ const DatasourceSyncing = () => {
 				res => {
 					const datasource = res?.datasource;
 					if (datasource?.status === DatasourceStatus.READY) {
-						router.push(`/${resourceSlug}/`);
+						router.push(`/${resourceSlug}/apps`);
 					}
 				},
 				() => {},
