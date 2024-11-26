@@ -245,7 +245,7 @@ impl Region {
             "us-central1" => Region::US_CENTRAL_1,
             "europe-west4" => Region::EU_WEST_4,
             "eastus2" => Region::EAST_US_2,
-            _ => panic!("Unknown Pinecone serverless region: {}", region),
+            _ => Region::US_EAST_1,
         }
     }
 }
