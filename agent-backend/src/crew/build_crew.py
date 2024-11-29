@@ -168,6 +168,11 @@ class CrewAIBuilder:
             agent_obj = match_key(self.crew_agents, keyset(task.agentId), exact=True)
 
             task_tools_objs = get_task_tools(task, self.crew_tools)
+            
+            if task_tools_objs:
+                for tool_id, tool in task_tools_objs.items():
+                    if hasattr(tool, 'type') and tool.type == "rag":
+                        task_tools_objs[tool_id] = self.wrap_rag_tool_with_agent_llm(tool, agent_obj)
 
             context_task_objs = get_context_tasks(task, self.crew_tasks)
 
@@ -193,7 +198,7 @@ class CrewAIBuilder:
                     "storeTaskOutput", "taskOutputFileName", "isStructuredOutput", "taskOutputVariableName" 
                 }),
                 agent=agent_obj,
-                tools=task_tools_objs.values() if task_tools_objs else None,
+                tools=list(task_tools_objs.values()) if task_tools_objs else [],
                 context=context_task_objs,
                 human_input=task.requiresHumanInput,
                 stream_only_final_output=task.displayOnlyFinalOutput,
@@ -204,6 +209,30 @@ class CrewAIBuilder:
         for task_key, task in self.crew_tasks.items():
             print(f"Task Callback for {task_key}: {task.callback}")
     
+
+    def wrap_rag_tool_with_agent_llm(self, tool, agent):
+        """
+        Wraps a RAG tool to use the agent's LLM for query formatting.
+        
+        Args:
+            tool: The RAG tool to wrap
+            agent: The agent whose LLM will be used for query formatting
+        """
+        original_run = tool.run
+        
+        def wrapped_run(*args, **kwargs):
+            if 'input' in kwargs:
+                query_prompt = f"""Format the following task or question into a clear, concise search query.
+                Task/Question: {kwargs.get('input', '')}
+                Format the query to be most effective for retrieving relevant information."""
+                
+                formatted_query = agent.llm.invoke(query_prompt)
+                kwargs['query'] = formatted_query
+                
+            return original_run(*args, **kwargs)
+        
+        tool.run = wrapped_run
+        return tool
 
     def make_user_question(self):
         if self.chat_history and len(self.chat_history) > 0:

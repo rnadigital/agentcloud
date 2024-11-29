@@ -13,12 +13,11 @@ from chat.agents.factory import chat_agent_factory
 from init.env_variables import SOCKET_URL, AGENT_BACKEND_SOCKET_TOKEN, MONGO_DB_NAME
 from init.mongo_session import start_mongo_session
 from lang_models import model_factory as language_model_factory
-from models.mongo import App, Tool, Datasource, Model, ToolType, Agent
+from models.mongo import App, Tool, Datasource, Model, ToolType, Agent, VectorDb
 from tools import RagTool, GoogleCloudFunctionTool
 from tools.builtin_tools import BuiltinTools
 from messaging.send_message_to_socket import send
 from models.sockets import SocketMessage, SocketEvents, Message
-
 
 logger = logging.getLogger(__name__)
 
@@ -115,6 +114,14 @@ class ChatAssistant:
                                                                   agentcloud_tool.datasourceId)
             embedding_model = self.mongo_conn.get_single_model_by_id("models", Model, datasource.modelId)
             embedding = language_model_factory(embedding_model)
+
+            if datasource.byoVectorDb:
+                if not datasource.vectorDbId:
+                    raise ValueError(f"Vector database ID not found for datasource {datasource.id}")
+                vector_db = self.mongo_conn.get_single_model_by_id("vectordbs", VectorDb, datasource.vectorDbId)
+                if not vector_db:
+                    raise ValueError(f"Vector database not found for ID {datasource.vectorDbId}")
+                datasource.vector_db = vector_db
 
             return RagTool.factory(tool=agentcloud_tool,
                                    models=[(embedding, embedding_model)],

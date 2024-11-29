@@ -6,6 +6,8 @@ from langchain_core.embeddings import Embeddings
 def vectorstore_factory(embedding_model: Embeddings, collection_name: str, tool, type: str, api_key: str = None, url: str = None, namespace: str = None, byoVectorDb: bool = False):
     if byoVectorDb is False:
         type = VectorDatabase.Qdrant
+    elif type is None:
+        raise ValueError("Vector database type must be specified when byoVectorDb is True")
 
     match type:
         case VectorDatabase.Qdrant:
