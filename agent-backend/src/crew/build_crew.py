@@ -169,10 +169,10 @@ class CrewAIBuilder:
 
             task_tools_objs = get_task_tools(task, self.crew_tools)
             
-            if task_tools_objs:
-                for tool_id, tool in task_tools_objs.items():
-                    if hasattr(tool, 'type') and tool.type == "rag":
-                        task_tools_objs[tool_id] = self.wrap_rag_tool_with_agent_llm(tool, agent_obj)
+            # if task_tools_objs:
+            #     for tool_id, tool in task_tools_objs.items():
+            #         if hasattr(tool, 'type') and tool.type == "rag":
+            #             task_tools_objs[tool_id] = self.wrap_rag_tool_with_agent_llm(tool, agent_obj)
 
             context_task_objs = get_context_tasks(task, self.crew_tasks)
 
@@ -210,29 +210,29 @@ class CrewAIBuilder:
             print(f"Task Callback for {task_key}: {task.callback}")
     
 
-    def wrap_rag_tool_with_agent_llm(self, tool, agent):
-        """
-        Wraps a RAG tool to use the agent's LLM for query formatting.
+    # def wrap_rag_tool_with_agent_llm(self, tool, agent):
+    #     """
+    #     Wraps a RAG tool to use the agent's LLM for query formatting.
         
-        Args:
-            tool: The RAG tool to wrap
-            agent: The agent whose LLM will be used for query formatting
-        """
-        original_run = tool.run
+    #     Args:
+    #         tool: The RAG tool to wrap
+    #         agent: The agent whose LLM will be used for query formatting
+    #     """
+    #     original_run = tool.run
         
-        def wrapped_run(*args, **kwargs):
-            if 'input' in kwargs:
-                query_prompt = f"""Format the following task or question into a clear, concise search query.
-                Task/Question: {kwargs.get('input', '')}
-                Format the query to be most effective for retrieving relevant information."""
+    #     def wrapped_run(*args, **kwargs):
+    #         if 'input' in kwargs:
+    #             query_prompt = f"""Format the following task or question into a clear, concise search query.
+    #             Task/Question: {kwargs.get('input', '')}
+    #             Format the query to be most effective for retrieving relevant information."""
                 
-                formatted_query = agent.llm.invoke(query_prompt)
-                kwargs['query'] = formatted_query
+    #             formatted_query = agent.llm.invoke(query_prompt)
+    #             kwargs['query'] = formatted_query
                 
-            return original_run(*args, **kwargs)
+    #         return original_run(*args, **kwargs)
         
-        tool.run = wrapped_run
-        return tool
+    #     tool.run = wrapped_run
+    #     return tool
 
     def make_user_question(self):
         if self.chat_history and len(self.chat_history) > 0:
