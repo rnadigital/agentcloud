@@ -210,99 +210,112 @@ pub async fn embed_text_chunks_async(
 pub async fn embed_bulk_insert_unstructured_response(
     documents: Vec<UnstructuredIOResponse>,
     datasource: DataSources,
-    //mut vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
     mongo_client: Arc<RwLock<Database>>,
     embedding_model: Model,
     metadata: Option<HashMap<String, Value>>,
     search_type: SearchType,
 ) {
     let mongo_connection = mongo_client.read().await;
-    // Construct a collection of the texts from the
-    // Unstructured IO response to embed
     let list_of_text: Vec<String> = documents.iter().map(|doc| doc.text.clone()).collect();
     let datasource_id = datasource.id.to_string();
     match embed_text_chunks_async(list_of_text.clone(), &embedding_model).await {
         Ok(embeddings) => {
             let mut search_request =
-                SearchRequest::new(search_type.clone(), datasource_id.to_string());
+                SearchRequest::new(search_type.clone(), datasource.collection_name.clone().unwrap_or(datasource_id.clone()));
             search_request.byo_vector_db = Some(true);
             search_request.namespace = datasource.namespace.clone();
             let mut points_to_upload: Vec<Point> = vec![];
-            // Construct point to upload
-            for (i, file_metadata) in list_of_text.iter().enumerate() {
+
+            // Construct points to upload
+            for (i, document) in documents.iter().enumerate() {
                 let mut point_metadata: HashMap<String, Value> = HashMap::new();
-                // Ensure the Value is an Object and extract the Map
-                // Converting the unstructured response to a Map<String, serde_json::Value>
-                if let Ok(Value::Object(map)) = serde_json::to_value(file_metadata) {
-                    point_metadata = map.into_iter().collect();
-                } else {
-                    if let Ok(content) = serde_json::to_string(file_metadata) {
-                        point_metadata
-                            .insert("content".to_string(), Value::String(clean_text(content)));
-                    } else {
-                        log::warn!("File is neither an object nor a string value. Ignoring...");
-                        continue;
+
+                // Always store the text content in page_content
+                point_metadata.insert(
+                    "page_content".to_string(),
+                    Value::String(clean_text(document.text.clone())),
+                );
+
+                // Add metadata from the original document
+                if let Ok(Value::Object(map)) = serde_json::to_value(document.metadata.clone()) {
+                    for (key, value) in map {
+                        point_metadata.insert(key, value);
                     }
                 }
+
+                // Add any additional metadata passed in
                 if let Some(existing_metadata) = metadata.clone() {
-                    point_metadata.extend(existing_metadata)
+                    point_metadata.extend(existing_metadata);
                 }
 
-                // Embed text and return vector
                 let embedding_vector = embeddings.get(i);
                 if let Some(vector) = embedding_vector {
                     let point = Point::new(
                         point_metadata
                             .get("index")
-                            .map_or(Some(Value::String(Uuid::new_v4().to_string())), |id| {
-                                Some(Value::String(id.to_string()))
-                            }),
+                            .map_or_else(
+                                || Some(Value::String(Uuid::new_v4().to_string())),
+                                |id| match id {
+                                    Value::String(s) => Some(Value::String(s.clone())),
+                                    _ => Some(Value::String(id.to_string().trim_matches('"').to_string()))
+                                }
+                            ),
                         vector.to_vec(),
                         Some(point_metadata),
                     );
                     points_to_upload.push(point)
                 }
-                //TODO: Need to check if this will take up a lot of memory or not?
-                // How can we re-use these clients rather than creating a new one each time?
-                let vector_database_client =
-                    check_byo_vector_database(datasource.clone(), &mongo_connection)
-                        .await
-                        .unwrap_or(default_vector_db_client().await);
+            }
 
-                // Initialise vector database client
-                let vector_database = Arc::clone(&vector_database_client);
-                let vector_database_client = vector_database.read().await;
-                if let Ok(bulk_insert_status) = vector_database_client
-                    .bulk_insert_points(search_request.clone(), points_to_upload.clone())
+            // Only create one vector database client for all points
+            let vector_database_client =
+                check_byo_vector_database(datasource.clone(), &mongo_connection)
                     .await
-                {
-                    match bulk_insert_status {
-                        VectorDatabaseStatus::Ok => {
-                            log::debug!("points uploaded successfully!");
-                        }
-                        VectorDatabaseStatus::Failure | VectorDatabaseStatus::NotFound => {
-                            increment_by_one(
-                                &mongo_connection,
-                                datasource_id.as_str(),
-                                "recordCount.failure",
-                            )
-                            .await
-                            .unwrap();
-                            log::warn!("Could not find collection :{}", datasource_id);
-                        }
-                        VectorDatabaseStatus::Error(e) => {
-                            increment_by_one(
-                                &mongo_connection,
-                                datasource_id.as_str(),
-                                "recordCount.failure",
-                            )
-                            .await
-                            .unwrap();
-                            log::error!(
-                                "An error occurred while attempting point insert operation. Error: {:?}",
-                                e
-                            )
-                        }
+                    .unwrap_or(default_vector_db_client().await);
+
+            // Initialize vector database client
+            let vector_database = Arc::clone(&vector_database_client);
+            let vector_database_client = vector_database.read().await;
+
+            // Bulk insert all points at once
+            if let Ok(bulk_insert_status) = vector_database_client
+                .bulk_insert_points(search_request.clone(), points_to_upload)
+                .await
+            {
+                match bulk_insert_status {
+                    VectorDatabaseStatus::Ok => {
+                        log::debug!("points uploaded successfully!");
+                        // Increment success count
+                        increment_by_one(
+                            &mongo_connection,
+                            &datasource_id,
+                            "recordCount.success",
+                        )
+                        .await
+                        .unwrap();
+                    }
+                    VectorDatabaseStatus::Failure | VectorDatabaseStatus::NotFound => {
+                        increment_by_one(
+                            &mongo_connection,
+                            &datasource_id,
+                            "recordCount.failure",
+                        )
+                        .await
+                        .unwrap();
+                        log::warn!("Could not find collection :{}", datasource_id);
+                    }
+                    VectorDatabaseStatus::Error(e) => {
+                        increment_by_one(
+                            &mongo_connection,
+                            &datasource_id,
+                            "recordCount.failure",
+                        )
+                        .await
+                        .unwrap();
+                        log::error!(
+                            "An error occurred while attempting point insert operation. Error: {:?}",
+                            e
+                        )
                     }
                 }
             }

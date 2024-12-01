@@ -163,7 +163,7 @@ pub struct SearchResponseParams {
 }
 
 // This will dictate the type of search that is conducted
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum SearchType {
     Collection,
     Point,
