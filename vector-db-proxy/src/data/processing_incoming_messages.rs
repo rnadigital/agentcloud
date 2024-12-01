@@ -33,7 +33,6 @@ pub async fn embed_text_construct_point(
             // Convert embedding_field_name to lowercase
             let mut payload: HashMap<String, Value> = data.clone();
             if let Some(value) = payload.remove(embedding_field_name) {
-                // Always store the text content in page_content
                 payload.insert(
                     "page_content".to_string(),
                     Value::String(clean_text(value.to_string())),

@@ -220,23 +220,25 @@ pub async fn embed_bulk_insert_unstructured_response(
     let datasource_id = datasource.id.to_string();
     match embed_text_chunks_async(list_of_text.clone(), &embedding_model).await {
         Ok(embeddings) => {
-            let mut search_request =
-                SearchRequest::new(search_type.clone(), datasource.collection_name.clone().unwrap_or(datasource_id.clone()));
+            let mut search_request = SearchRequest::new(
+                search_type.clone(),
+                datasource
+                    .collection_name
+                    .clone()
+                    .unwrap_or(datasource_id.clone()),
+            );
             search_request.byo_vector_db = Some(true);
             search_request.namespace = datasource.namespace.clone();
             let mut points_to_upload: Vec<Point> = vec![];
 
-            // Construct points to upload
             for (i, document) in documents.iter().enumerate() {
                 let mut point_metadata: HashMap<String, Value> = HashMap::new();
 
-                // Always store the text content in page_content
                 point_metadata.insert(
                     "page_content".to_string(),
                     Value::String(clean_text(document.text.clone())),
                 );
 
-                // Add metadata from the original document
                 if let Ok(Value::Object(map)) = serde_json::to_value(document.metadata.clone()) {
                     for (key, value) in map {
                         point_metadata.insert(key, value);
@@ -251,15 +253,15 @@ pub async fn embed_bulk_insert_unstructured_response(
                 let embedding_vector = embeddings.get(i);
                 if let Some(vector) = embedding_vector {
                     let point = Point::new(
-                        point_metadata
-                            .get("index")
-                            .map_or_else(
-                                || Some(Value::String(Uuid::new_v4().to_string())),
-                                |id| match id {
-                                    Value::String(s) => Some(Value::String(s.clone())),
-                                    _ => Some(Value::String(id.to_string().trim_matches('"').to_string()))
-                                }
-                            ),
+                        point_metadata.get("index").map_or_else(
+                            || Some(Value::String(Uuid::new_v4().to_string())),
+                            |id| match id {
+                                Value::String(s) => Some(Value::String(s.clone())),
+                                _ => Some(Value::String(
+                                    id.to_string().trim_matches('"').to_string(),
+                                )),
+                            },
+                        ),
                         vector.to_vec(),
                         Some(point_metadata),
                     );
@@ -267,17 +269,14 @@ pub async fn embed_bulk_insert_unstructured_response(
                 }
             }
 
-            // Only create one vector database client for all points
             let vector_database_client =
                 check_byo_vector_database(datasource.clone(), &mongo_connection)
                     .await
                     .unwrap_or(default_vector_db_client().await);
 
-            // Initialize vector database client
             let vector_database = Arc::clone(&vector_database_client);
             let vector_database_client = vector_database.read().await;
 
-            // Bulk insert all points at once
             if let Ok(bulk_insert_status) = vector_database_client
                 .bulk_insert_points(search_request.clone(), points_to_upload)
                 .await
@@ -285,33 +284,21 @@ pub async fn embed_bulk_insert_unstructured_response(
                 match bulk_insert_status {
                     VectorDatabaseStatus::Ok => {
                         log::debug!("points uploaded successfully!");
-                        // Increment success count
-                        increment_by_one(
-                            &mongo_connection,
-                            &datasource_id,
-                            "recordCount.success",
-                        )
-                        .await
-                        .unwrap();
+
+                        increment_by_one(&mongo_connection, &datasource_id, "recordCount.success")
+                            .await
+                            .unwrap();
                     }
                     VectorDatabaseStatus::Failure | VectorDatabaseStatus::NotFound => {
-                        increment_by_one(
-                            &mongo_connection,
-                            &datasource_id,
-                            "recordCount.failure",
-                        )
-                        .await
-                        .unwrap();
+                        increment_by_one(&mongo_connection, &datasource_id, "recordCount.failure")
+                            .await
+                            .unwrap();
                         log::warn!("Could not find collection :{}", datasource_id);
                     }
                     VectorDatabaseStatus::Error(e) => {
-                        increment_by_one(
-                            &mongo_connection,
-                            &datasource_id,
-                            "recordCount.failure",
-                        )
-                        .await
-                        .unwrap();
+                        increment_by_one(&mongo_connection, &datasource_id, "recordCount.failure")
+                            .await
+                            .unwrap();
                         log::error!(
                             "An error occurred while attempting point insert operation. Error: {:?}",
                             e
