@@ -12,7 +12,7 @@ def vectorstore_factory(embedding_model: Embeddings, collection_name: str, tool,
     match type:
         case VectorDatabase.Qdrant:
             print("Creating Qdrant CLIENT")
-            from init.env_variables import QDRANT_HOST
+            from init.env_variables import QDRANT_HOST, QDRANT_API_KEY
             from langchain_community.vectorstores.qdrant import Qdrant
             from qdrant_client import QdrantClient
 
