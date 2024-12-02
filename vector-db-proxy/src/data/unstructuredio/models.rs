@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 // Unstructured IO Response struct
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UnstructuredIOResponse {
     #[serde(rename = "type")]
     pub field_type: String,
@@ -11,7 +11,7 @@ pub struct UnstructuredIOResponse {
     pub text: String,
     pub metadata: Metadata,
 }
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Metadata {
     pub filetype: String,
     pub languages: Vec<String>,

@@ -33,6 +33,11 @@ pub async fn embed_text_construct_point(
             // Convert embedding_field_name to lowercase
             let mut payload: HashMap<String, Value> = data.clone();
             if let Some(value) = payload.remove(embedding_field_name) {
+                payload.insert(
+                    "page_content".to_string(),
+                    Value::String(clean_text(value.to_string())),
+                );
+
                 if let Some(chunking_config) = chunking_strategy.clone() {
                     let global_data = GLOBAL_DATA.read().await.clone();
                     let unstructuredio_url = global_data.unstructuredio_url;
@@ -72,12 +77,7 @@ pub async fn embed_text_construct_point(
                             );
                         }
                     }
-                } else {
-                    payload.insert(
-                        "page_content".to_string(),
-                        Value::String(clean_text(value.to_string())),
-                    );
-                };
+                }
                 // Embedding data
                 let embedding_vec =
                     embed_text(vec![&clean_text(value.to_string())], &embedding_model).await?;
@@ -117,7 +117,7 @@ async fn handle_embedding(
         .unwrap_or(default_vector_db_client().await);
     let search_type = chunking_strategy
         .clone()
-        .map_or(SearchType::default(), |_| SearchType::ChunkedRow);
+        .map_or(SearchType::default(), |_| SearchType::Collection);
     let mut search_request =
         SearchRequest::new(search_type.clone(), datasource.id.to_string().clone());
     //TODO: add vars to search request
