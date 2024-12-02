@@ -79,9 +79,17 @@ pub async fn construct_point_struct(
     index: Option<Value>,
 ) -> Option<PointStruct> {
     if !payload.is_empty() {
-        let vector_id = index.map_or(PointId::from(Uuid::new_v4().to_string()), |id| {
-            PointId::from(to_string(&id).unwrap().replace("\"", ""))
-        });
+        let vector_id = index.map_or_else(
+            || PointId::from(Uuid::new_v4().to_string()),
+            |id| {
+                let id_str = to_string(&id).unwrap().replace(['\"', '\\'], "");
+                if Uuid::parse_str(&id_str).is_ok() {
+                    PointId::from(id_str)
+                } else {
+                    PointId::from(Uuid::new_v4().to_string())
+                }
+            },
+        );
         match vector_name {
             Some(embedding_model) => {
                 if let Some(model) = embedding_model.to_str() {

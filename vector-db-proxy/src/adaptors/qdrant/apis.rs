@@ -65,6 +65,8 @@ impl VectorDatabase for QdrantClient {
         &self,
         collection_create: CollectionCreate,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
+        log::info!("Creating collection: {}", collection_create.collection_name);
+
         let mut config: Option<VectorsConfig> = Some(VectorsConfig::default());
         match collection_create.vector_name {
             Some(name) => {

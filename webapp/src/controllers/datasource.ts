@@ -350,6 +350,8 @@ export async function addDatasourceApi(req, res, next) {
 		cloud
 	} = req.body;
 
+	const collection = collectionName || datasourceId;
+
 	const currentPlan = res.locals?.subscription?.stripePlan;
 	const allowedPeriods = pricingMatrix[currentPlan]?.cronProps?.allowedPeriods || [];
 
@@ -476,10 +478,10 @@ export async function addDatasourceApi(req, res, next) {
 			: null, //TODO: validation
 		vectorDbId: toObjectId(vectorDbId),
 		byoVectorDb,
-		collectionName: collectionName ?? datasourceId,
-		namespace: datasourceId,
 		region,
-		cloud
+		cloud,
+		collectionName: collection,
+		namespace: datasourceId
 	});
 
 	try {
@@ -532,7 +534,7 @@ export async function addDatasourceApi(req, res, next) {
 		datasourceId: toObjectId(datasourceId),
 		schema: null,
 		retriever_type: retriever || null,
-		retriever_config: { ...retriever_config, metadata_field_info } || {}, //TODO: validation
+		retriever_config: { ...retriever_config, metadata_field_info }, //TODO: validation
 		data: {
 			builtin: false,
 			name: toSnakeCase(datasourceName)

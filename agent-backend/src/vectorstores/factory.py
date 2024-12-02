@@ -6,11 +6,13 @@ from langchain_core.embeddings import Embeddings
 def vectorstore_factory(embedding_model: Embeddings, collection_name: str, tool, type: str, api_key: str = None, url: str = None, namespace: str = None, byoVectorDb: bool = False):
     if byoVectorDb is False:
         type = VectorDatabase.Qdrant
+    elif type is None:
+        raise ValueError("Vector database type must be specified when byoVectorDb is True")
 
     match type:
         case VectorDatabase.Qdrant:
             print("Creating Qdrant CLIENT")
-            from init.env_variables import QDRANT_HOST
+            from init.env_variables import QDRANT_HOST, QDRANT_API_KEY
             from langchain_community.vectorstores.qdrant import Qdrant
             from qdrant_client import QdrantClient
 
