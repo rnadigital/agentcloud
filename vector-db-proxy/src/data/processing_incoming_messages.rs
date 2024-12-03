@@ -8,7 +8,7 @@ use crate::embeddings::helpers::clean_text;
 use crate::embeddings::utils::{embed_bulk_insert_unstructured_response, embed_text};
 use crate::init::env_variables::GLOBAL_DATA;
 use crate::vector_databases::helpers::check_byo_vector_database;
-use crate::vector_databases::models::{Point, SearchRequest, SearchType, VectorDatabaseStatus};
+use crate::vector_databases::models::{Point, SearchRequest, SearchType, VectorDatabaseStatus, Region};
 use crate::vector_databases::vector_database::default_vector_db_client;
 use anyhow::anyhow;
 use crossbeam::channel::Receiver;
@@ -127,6 +127,7 @@ async fn handle_embedding(
         .collection_name
         .map_or(datasource.id.to_string(), |d| d);
     search_request.namespace = datasource.namespace.clone();
+    search_request.region = datasource.region.clone().map(|r| Region::from_str(&r));
     println!("Search request going to vector API: {:?}", search_request);
     match embed_text_construct_point(
         mongo_connection.clone(),

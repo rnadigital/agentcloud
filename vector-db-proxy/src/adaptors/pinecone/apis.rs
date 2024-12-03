@@ -64,10 +64,20 @@ impl VectorDatabase for PineconeClient {
         &self,
         collection_create: CollectionCreate,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
+        println!("Creating collection: {:?}", collection_create);
+
         let index_name = collection_create
             .index_name
             .clone()
-            .unwrap_or("".to_string());
+            .filter(|s| !s.is_empty())
+            .unwrap_or_else(|| {
+                collection_create
+                    .region
+                    .clone()
+                    .unwrap_or_default()
+                    .to_string()
+            });
+        println!("Index name: {}", index_name);
 
         match get_index_model(&self, index_name.clone()).await {
             Ok(_) => Ok(VectorDatabaseStatus::Ok),
