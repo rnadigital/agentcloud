@@ -1,5 +1,4 @@
 import debug from 'debug';
-import { CollectionName } from 'lib/struct/db';
 import { ObjectId } from 'mongodb';
 import { ToolType } from 'struct/tool';
 const log = debug('webapp:migration:1.12.0');
