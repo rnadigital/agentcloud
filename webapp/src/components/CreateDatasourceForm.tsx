@@ -94,7 +94,7 @@ export default function CreateDatasourceForm({
 	const [cronExpression, setCronExpression] = useState('0 12 * * *');
 	const [modelId, setModelId] = useState('');
 	const [vectorDbId, setVectorDbId] = useState('');
-	const [region, setRegion] = useState(Region.US_EAST_1);
+	const [region, setRegion] = useState();
 	const [cloud, setCloud] = useState(Cloud.AWS);
 	const [vectorDbType, setVectorDbType] = useState<'qdrant' | 'pinecone'>();
 	const [byoVectorDb, setByoVectorDb] = useState(true);
@@ -740,58 +740,62 @@ export default function CreateDatasourceForm({
 											</div>
 										)}
 
-										{foundVectorDb && foundVectorDb.type === 'pinecone' && (
-											<>
-												<label
-													htmlFor='modelId'
-													className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-3'
-												>
-													Cloud Provider<span className='text-red-700'> *</span>
-												</label>
+										{(!byoVectorDb || (foundVectorDb && foundVectorDb.type === 'pinecone')) && (
+											<div className='mt-4 space-y-4'>
+												<div>
+													<label
+														htmlFor='cloudProvider'
+														className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+													>
+														Cloud Provider
+														<span className='text-red-700'> *</span>
+													</label>
+													<select
+														id='cloudProvider'
+														name='cloudProvider'
+														value={cloud}
+														onChange={e => setCloud(e.target.value as Cloud)}
+														className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+														disabled={
+															byoVectorDb && (!foundVectorDb || foundVectorDb.type !== 'pinecone')
+														}
+													>
+														<option value=''>Select Cloud</option>
+														{Object.values(Cloud).map(c => (
+															<option key={c} value={c}>
+																{c}
+															</option>
+														))}
+													</select>
+												</div>
 
-												<Select
-													isClearable
-													primaryColor={'indigo'}
-													classNames={SelectClassNames}
-													isDisabled={!byoVectorDb}
-													value={{ label: cloud, value: cloud }}
-													onChange={(v: any) => {
-														setCloud(v?.value);
-													}}
-													options={Object.values(Cloud).map(option => ({
-														label: option,
-														value: option
-													}))}
-													formatOptionLabel={formatModelOptionLabel}
-												/>
-											</>
-										)}
-
-										{foundVectorDb && foundVectorDb.type === 'pinecone' && (
-											<>
-												<label
-													htmlFor='modelId'
-													className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-3'
-												>
-													Region<span className='text-red-700'> *</span>
-												</label>
-
-												<Select
-													isClearable
-													primaryColor={'indigo'}
-													classNames={SelectClassNames}
-													isDisabled={!byoVectorDb}
-													value={{ label: region, value: region }}
-													onChange={(v: any) => {
-														setRegion(v?.value);
-													}}
-													options={CloudRegionMap[cloud]?.map(option => ({
-														label: option,
-														value: option
-													}))}
-													formatOptionLabel={formatModelOptionLabel}
-												/>
-											</>
+												<div>
+													<label
+														htmlFor='region'
+														className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+													>
+														Region
+														<span className='text-red-700'> *</span>
+													</label>
+													<select
+														id='region'
+														name='region'
+														value={region}
+														onChange={e => setRegion(e.target.value as any)}
+														className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+														disabled={
+															byoVectorDb && (!foundVectorDb || foundVectorDb.type !== 'pinecone')
+														}
+													>
+														<option value=''>Select Region</option>
+														{CloudRegionMap[cloud].map(r => (
+															<option key={r} value={r}>
+																{r}
+															</option>
+														))}
+													</select>
+												</div>
+											</div>
 										)}
 
 										<div className='my-2'>
@@ -960,7 +964,7 @@ export default function CreateDatasourceForm({
 									/>
 								)}
 								<button
-									disabled={submitting}
+									// disabled={submitting}
 									type='submit'
 									className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 								>

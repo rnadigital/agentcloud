@@ -45,6 +45,7 @@ import {
 	UnstructuredPartitioningStrategySet
 } from 'struct/datasource';
 import { Retriever, ToolType } from 'struct/tool';
+import { CloudRegionMap } from 'struct/vectorproxy';
 import formatSize from 'utils/formatsize';
 
 const log = debug('webapp:controllers:datasource');
@@ -383,6 +384,10 @@ export async function addDatasourceApi(req, res, next) {
 	);
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
+	if (!byoVectorDb && (!region || region === '')) {
+		return dynamicResponse(req, res, 400, { error: 'Region is required' });
 	}
 
 	const limitReached = await isVectorLimitReached(
