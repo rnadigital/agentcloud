@@ -72,8 +72,8 @@ class RagTool(GlobalBaseTool):
         type = vector_db.type if vector_db else None
         api_key = vector_db.apiKey if vector_db else None
         url = vector_db.url if vector_db else None
-        namespace = datasource.namespace if datasource.byoVectorDb else None
-        collection = datasource.collectionName if datasource.byoVectorDb else str(datasource.id)
+        namespace = datasource.namespace
+        collection = datasource.collectionName if datasource.byoVectorDb else datasource.region
 
         vector_store = vectorstore_factory(embedding_model=embedding_model, collection_name=collection, tool=tool,  api_key=api_key, url=url, type=type, namespace=namespace, byoVectorDb=datasource.byoVectorDb)
 
