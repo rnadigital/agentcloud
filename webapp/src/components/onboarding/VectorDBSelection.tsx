@@ -104,7 +104,7 @@ const VectorDBSelection = ({
 
 	const posthog = usePostHog();
 
-	const addDatasource = async (vectorDbId: string) => {
+	const addDatasource = async (vectorDbId?: string) => {
 		const filteredStreamState = Object.fromEntries(
 			Object.entries(streamState).filter(
 				(e: [string, StreamConfig]) => e[1].checkedChildren.length > 0
@@ -165,25 +165,33 @@ const VectorDBSelection = ({
 		);
 	};
 
-	const onSubmit = async (data: Partial<VectorDb>) => {
+	const onSubmit = async (data: any) => {
 		setLoading(true);
-		await API.addVectorDb(
-			{ _csrf: csrf, resourceSlug, ...data, type: selectedDB },
-			async res => {
-				// callback?.({ label: data.name, value: res._id });
-				toast.success('VectorDb Added');
-				await addDatasource(res._id);
-				await API.markOnboarded({ _csrf: csrf }, null, null, router);
-				setLoading(false);
-				setStep(3);
+		console.log(data);
+		if (data.byoVectorDb) {
+			await API.addVectorDb(
+				{ _csrf: csrf, resourceSlug, ...data, type: selectedDB },
+				async res => {
+					// callback?.({ label: data.name, value: res._id });
+					toast.success('VectorDb Added');
+					await addDatasource(res._id);
+					await API.markOnboarded({ _csrf: csrf }, null, null, router);
+					setLoading(false);
+					setStep(3);
 
-				// create datasource
-			},
-			res => {
-				toast.error(res);
-			},
-			null
-		);
+					// create datasource
+				},
+				res => {
+					toast.error(res);
+				},
+				null
+			);
+		} else {
+			await addDatasource();
+			await API.markOnboarded({ _csrf: csrf }, null, null, router);
+			setLoading(false);
+			setStep(3);
+		}
 	};
 
 	useEffect(() => {
@@ -238,6 +246,7 @@ const VectorDBSelection = ({
 			{selectedDB === 'qdrant' && (
 				<QdrantFields setSelectedDB={setSelectedDB} control={control} setValue={setValue} />
 			)}
+			{selectedDB === 'agent-cloud' && <AgentCloudFields control={control} cloud={cloud} />}
 
 			{!selectedDB && (
 				<div className='border-gray-200 border flex justify-center items-center h-44 w-full px-4'>
@@ -274,6 +283,43 @@ const VectorDBSelection = ({
 };
 
 export default VectorDBSelection;
+
+const AgentCloudFields = ({ control, cloud }: { control: Control<FormValues>; cloud?: string }) => {
+	return (
+		<div className='w-full bg-primary-50 flex flex-col text-gray-500'>
+			<div className='px-8 mt-4 pb-12'>
+				<div className='my-2 text-sm'>Cloud Provider</div>
+				<SelectField<FormValues>
+					name='cloud'
+					control={control}
+					rules={{
+						required: 'Cloud provider is required'
+					}}
+					options={Object.values(Cloud).map(option => ({
+						label: option,
+						value: option
+					}))}
+					placeholder='Select a cloud provider...'
+					optionLabel={formatModelOptionLabel}
+				/>
+
+				<div className='my-2 text-sm'>Region</div>
+				<SelectField<FormValues>
+					name='region'
+					control={control}
+					rules={{
+						required: 'Region is required'
+					}}
+					options={
+						cloud ? CloudRegionMap[cloud]?.map(option => ({ label: option, value: option })) : []
+					}
+					placeholder='Select a region...'
+					optionLabel={formatModelOptionLabel}
+				/>
+			</div>
+		</div>
+	);
+};
 
 const PineConeFields = ({
 	setSelectedDB,
