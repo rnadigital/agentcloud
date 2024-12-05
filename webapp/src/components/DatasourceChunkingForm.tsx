@@ -13,7 +13,7 @@ export default function DatasourceChunkingForm({
 	};
 
 	return (
-		<div className='mb-4 mt-3'>
+		<div className=''>
 			{isConnector && (
 				<>
 					<label

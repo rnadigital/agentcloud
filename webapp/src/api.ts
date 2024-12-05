@@ -68,6 +68,17 @@ export function updateRole(body, dispatch, errorCallback, router) {
 	);
 }
 
+export function markOnboarded(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/forms/account/onboard`,
+		'POST',
+		body,
+		dispatch,
+		errorCallback,
+		router
+	);
+}
+
 
 //Welcome
 export function getWelcomeData(dispatch, errorCallback, router){

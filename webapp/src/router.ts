@@ -261,6 +261,14 @@ export default function router(server, app) {
 		setPermissions,
 		accountController.updateRole
 	);
+	
+	accountRouter.post(
+		'/onboard', 
+		authedMiddlewareChain,
+		checkResourceSlugQuery,
+		setPermissions,
+	 	accountController.onboardUser
+	);
 
 	// api key endpoints
 	accountRouter.post('/apikey/add', authedMiddlewareChain, apiKeyController.addKeyApi);

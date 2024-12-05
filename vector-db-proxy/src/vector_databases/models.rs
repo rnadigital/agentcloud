@@ -163,7 +163,7 @@ pub struct SearchResponseParams {
 }
 
 // This will dictate the type of search that is conducted
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum SearchType {
     Collection,
     Point,
@@ -204,35 +204,48 @@ impl SearchRequest {
             top_k: None,
             byo_vector_db: None,
             search_response_params: None,
-            region: Some(Region::US),
-            cloud: Some(Cloud::GCP),
+            region: Some(Region::US_EAST_1),
+            cloud: Some(Cloud::AWS),
         }
     }
 }
+
 #[derive(Serialize, Deserialize, Clone, Debug, Copy)]
 pub enum Region {
-    US,
-    EU,
+    US_EAST_1,
+    US_WEST_2,
+    EU_WEST_1,
+    US_CENTRAL_1,
+    EU_WEST_4,
+    EAST_US_2,
 }
+
 impl Default for Region {
     fn default() -> Self {
-        Self::US
+        Self::US_EAST_1
     }
 }
 
 impl Region {
     pub fn to_str<'a>(region: Self) -> &'a str {
         match region {
-            Self::US => "us-central1",
-            Self::EU => "europe-west4",
+            Self::US_EAST_1 => "us-east-1",
+            Self::US_WEST_2 => "us-west-2",
+            Self::EU_WEST_1 => "eu-west-1",
+            Self::US_CENTRAL_1 => "us-central1",
+            Self::EU_WEST_4 => "europe-west4",
+            Self::EAST_US_2 => "eastus2",
         }
     }
-
     pub fn from_str(region: &str) -> Self {
         match region {
-            "us-central1" => Region::US,
-            "europe-west4" => Region::EU,
-            _ => panic!("Unknown Pinecone serverless region"),
+            "us-east-1" => Region::US_EAST_1,
+            "us-west-2" => Region::US_WEST_2,
+            "eu-west-1" => Region::EU_WEST_1,
+            "us-central1" => Region::US_CENTRAL_1,
+            "europe-west4" => Region::EU_WEST_4,
+            "eastus2" => Region::EAST_US_2,
+            _ => panic!("Unknown Pinecone serverless region: {}", region),
         }
     }
 }
@@ -350,15 +363,18 @@ pub struct CollectionCreate {
     pub namespace: Option<String>,
     pub distance: Distance,
     pub vector_name: Option<String>,
-    pub region: Option<Region>,
-    pub cloud: Option<Cloud>,
+    pub region: Option<String>,
+    pub cloud: Option<String>,
+    pub index_name: Option<String>,
 }
 impl CollectionCreate {
     pub fn new(
         collection_name: String,
         dimensions: usize,
         distance: Distance,
-        region: Region,
+        region: String,
+        cloud: String,
+        index_name: String,
     ) -> Self {
         Self {
             collection_name: collection_name.clone(),
@@ -366,8 +382,9 @@ impl CollectionCreate {
             distance,
             namespace: None,
             vector_name: None,
-            cloud: Some(Cloud::AWS),
+            cloud: Some(cloud),
             region: Some(region),
+            index_name: Some(index_name),
         }
     }
 }

@@ -45,6 +45,7 @@ import {
 	UnstructuredPartitioningStrategySet
 } from 'struct/datasource';
 import { Retriever, ToolType } from 'struct/tool';
+import { CloudRegionMap } from 'struct/vectorproxy';
 import formatSize from 'utils/formatsize';
 
 const log = debug('webapp:controllers:datasource');
@@ -344,8 +345,13 @@ export async function addDatasourceApi(req, res, next) {
 		enableConnectorChunking,
 		vectorDbId,
 		byoVectorDb,
-		collectionName
+		collectionName,
+		noRedirect,
+		region,
+		cloud
 	} = req.body;
+
+	const collection = collectionName || datasourceId;
 
 	const currentPlan = res.locals?.subscription?.stripePlan;
 	const allowedPeriods = pricingMatrix[currentPlan]?.cronProps?.allowedPeriods || [];
@@ -378,6 +384,10 @@ export async function addDatasourceApi(req, res, next) {
 	);
 	if (validationError) {
 		return dynamicResponse(req, res, 400, { error: validationError });
+	}
+
+	if (!byoVectorDb && (!region || region === '')) {
+		return dynamicResponse(req, res, 400, { error: 'Region is required' });
 	}
 
 	const limitReached = await isVectorLimitReached(
@@ -473,12 +483,19 @@ export async function addDatasourceApi(req, res, next) {
 			: null, //TODO: validation
 		vectorDbId: toObjectId(vectorDbId),
 		byoVectorDb,
-		collectionName: collectionName ?? datasourceId,
+		region,
+		cloud,
+		collectionName: collection,
 		namespace: datasourceId
 	});
 
 	try {
-		await VectorDBProxyClient.createCollection(datasourceId);
+		await VectorDBProxyClient.createCollection(datasourceId, {
+			cloud,
+			region,
+			collection_name: collectionName,
+			index_name: collectionName
+		});
 	} catch (e) {
 		console.error(e);
 		return dynamicResponse(req, res, 400, {
@@ -522,7 +539,7 @@ export async function addDatasourceApi(req, res, next) {
 		datasourceId: toObjectId(datasourceId),
 		schema: null,
 		retriever_type: retriever || null,
-		retriever_config: { ...retriever_config, metadata_field_info } || {}, //TODO: validation
+		retriever_config: { ...retriever_config, metadata_field_info }, //TODO: validation
 		data: {
 			builtin: false,
 			name: toSnakeCase(datasourceName)
@@ -534,6 +551,11 @@ export async function addDatasourceApi(req, res, next) {
 				}
 			: null
 	});
+	if (noRedirect) {
+		return dynamicResponse(req, res, 200, {
+			toolId: addedTool.insertedId
+		});
+	}
 
 	return dynamicResponse(req, res, 302, {
 		redirect: `/${req.params.resourceSlug}/datasources`,

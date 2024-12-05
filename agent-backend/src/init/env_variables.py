@@ -19,6 +19,7 @@ MAX_RETRIES = os.getenv("MAX_RETRIES", 10)
 QDRANT_HOSTNAME = os.getenv("QDRANT_HOST", "localhost")
 QDRANT_PORT = os.getenv("QDRANT_PORT", "6333")
 QDRANT_HOST = f"{QDRANT_HOSTNAME}:{QDRANT_PORT}"
+QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
 REDIS_HOST = os.getenv("REDIS_HOST")
 REDIS_PORT = 6379
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
@@ -29,6 +30,7 @@ GCS_BUCKET_NAME_PRIVATE = os.getenv("GCS_BUCKET_NAME_PRIVATE")
 UPLOADS_BASE_PATH = os.getenv("UPLOADS_BASE_PATH")
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 VECTOR_DATABASE = os.getenv("VECTOR_DATABASE", VectorDatabase.Qdrant)
+HOSTED_PINECONE_API_KEY = os.getenv("HOSTED_PINECONE_API_KEY")
 
 def _set_max_threads() -> int:
     try:
