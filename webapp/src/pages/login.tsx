@@ -1,9 +1,11 @@
 import * as API from '@api';
 import { CubeIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import animationData from 'animations/SignInAnimationTransparent.json';
 import ButtonSpinner from 'components/ButtonSpinner';
 import ErrorAlert from 'components/ErrorAlert';
 import InputField from 'components/form/InputField';
 import InfoAlert from 'components/InfoAlert';
+import LeftFrame from 'components/onboarding/LeftFrame';
 import SuccessAlert from 'components/SuccessAlert';
 import { useSocketContext } from 'context/socket';
 import { useThemeContext } from 'context/themecontext';
@@ -15,8 +17,6 @@ import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import animationData from 'animations/SignInAnimationTransparent.json';
-import LeftFrame from 'components/onboarding/LeftFrame';
 
 export interface LoginFormValues {
 	name: string;
