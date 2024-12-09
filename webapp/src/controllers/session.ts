@@ -11,6 +11,7 @@ import {
 } from 'db/agent';
 import { getAppById, unsafeGetAppById } from 'db/app';
 import {
+	ChatChunk,
 	getChatMessageAfterId,
 	getChatMessagesBySession,
 	unsafeGetChatMessagesBySession,
@@ -588,6 +589,42 @@ export async function sendMessage(req, res, next) {
 			},
 			event: 'message'
 		};
+
+		const message = messagePayload.message;
+
+		const messageTimestamp = Date.now();
+
+		const authorName = res.locals?.account?.name || 'External API';
+
+		const finalMessage = {
+			...messagePayload,
+			message: {
+				...message,
+				chunkId: uuidv4()
+			},
+			incoming: true,
+			authorName,
+			ts: messageTimestamp
+		};
+
+		const chunk: ChatChunk = {
+			ts: finalMessage.ts,
+			chunk: finalMessage.message.text,
+			tokens: 0
+		};
+
+		const updatedMessage = {
+			orgId: session.orgId,
+			teamId: session.teamId,
+			sessionId: session._id,
+			authorId: null,
+			authorName: finalMessage.authorName,
+			ts: finalMessage.ts || messageTimestamp,
+			isFeedback: false,
+			chunkId: finalMessage.message.chunkId || null,
+			message: finalMessage
+		};
+		await upsertOrUpdateChatMessage(session._id, updatedMessage, chunk);
 
 		console.log('Message payload:', JSON.stringify(messagePayload, null, 2));
 
