@@ -302,6 +302,7 @@ class Datasource(BaseModel):
     byoVectorDb: Optional[bool] = None
     vectorDbId: Optional[PyObjectId] = None
     vector_db: Optional[VectorDb] = None
+    region: Optional[str] = None
     
 
 class AppType(str, Enum):

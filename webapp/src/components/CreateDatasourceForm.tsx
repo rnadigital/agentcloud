@@ -31,15 +31,13 @@ import DatasourceChunkingForm from 'components/DatasourceChunkingForm';
 import { StreamsList } from 'components/DatasourceStream';
 import ToolTip from 'components/shared/ToolTip';
 import FormContext from 'context/connectorform';
-import cn from 'lib/cn';
 import { defaultChunkingOptions } from 'misc/defaultchunkingoptions';
 import { usePostHog } from 'posthog-js/react';
-import { VectorDbDocument, VectorDbType } from 'struct/vectordb';
+import { VectorDbDocument } from 'struct/vectordb';
+import { Cloud, CloudRegionMap, Region } from 'struct/vectorproxy';
 import submittingReducer from 'utils/submittingreducer';
 
-import { RagFilterSchema } from '../lib/struct/editorschemas';
 import CreateVectorDbModal from './vectordbs/CreateVectorDbModal';
-// import InfoAlert from 'components/InfoAlert';
 
 const stepList = [
 	// { id: 'Step 1', name: 'Select datasource type', href: '#', steps: [0] },
@@ -96,6 +94,8 @@ export default function CreateDatasourceForm({
 	const [cronExpression, setCronExpression] = useState('0 12 * * *');
 	const [modelId, setModelId] = useState('');
 	const [vectorDbId, setVectorDbId] = useState('');
+	const [region, setRegion] = useState();
+	const [cloud, setCloud] = useState(Cloud.AWS);
 	const [vectorDbType, setVectorDbType] = useState<'qdrant' | 'pinecone'>();
 	const [byoVectorDb, setByoVectorDb] = useState(true);
 	const [collectionName, setCollectionName] = useState(null);
@@ -318,7 +318,9 @@ export default function CreateDatasourceForm({
 					enableConnectorChunking,
 					vectorDbId,
 					byoVectorDb,
-					collectionName
+					collectionName,
+					region,
+					cloud
 				};
 				const addedDatasource: any = await API.addDatasource(
 					body,
@@ -738,6 +740,64 @@ export default function CreateDatasourceForm({
 											</div>
 										)}
 
+										{(!byoVectorDb || (foundVectorDb && foundVectorDb.type === 'pinecone')) && (
+											<div className='mt-4 space-y-4'>
+												<div>
+													<label
+														htmlFor='cloudProvider'
+														className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+													>
+														Cloud Provider
+														<span className='text-red-700'> *</span>
+													</label>
+													<select
+														id='cloudProvider'
+														name='cloudProvider'
+														value={cloud}
+														onChange={e => setCloud(e.target.value as Cloud)}
+														className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+														disabled={
+															byoVectorDb && (!foundVectorDb || foundVectorDb.type !== 'pinecone')
+														}
+													>
+														<option value=''>Select Cloud</option>
+														{Object.values(Cloud).map(c => (
+															<option key={c} value={c}>
+																{c}
+															</option>
+														))}
+													</select>
+												</div>
+
+												<div>
+													<label
+														htmlFor='region'
+														className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+													>
+														Region
+														<span className='text-red-700'> *</span>
+													</label>
+													<select
+														id='region'
+														name='region'
+														value={region}
+														onChange={e => setRegion(e.target.value as any)}
+														className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+														disabled={
+															byoVectorDb && (!foundVectorDb || foundVectorDb.type !== 'pinecone')
+														}
+													>
+														<option value=''>Select Region</option>
+														{CloudRegionMap[cloud].map(r => (
+															<option key={r} value={r}>
+																{r}
+															</option>
+														))}
+													</select>
+												</div>
+											</div>
+										)}
+
 										<div className='my-2'>
 											<div className='sm:col-span-12'>
 												<label
@@ -904,7 +964,7 @@ export default function CreateDatasourceForm({
 									/>
 								)}
 								<button
-									disabled={submitting}
+									// disabled={submitting}
 									type='submit'
 									className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
 								>
@@ -925,6 +985,12 @@ export default function CreateDatasourceForm({
 			setError(null);
 		}
 	}, [spec]);
+
+	useEffect(() => {
+		if (cloud) {
+			setRegion(null);
+		}
+	}, [cloud]);
 
 	return (
 		<div>

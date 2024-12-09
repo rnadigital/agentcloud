@@ -417,3 +417,16 @@ export function updateRoleAndMarkOnboarded(userId: db.IdOrStr, role: string): Pr
 		}
 	);
 }
+
+export function markOnboarded(userId: db.IdOrStr): Promise<any> {
+	return AccountCollection().updateOne(
+		{
+			_id: toObjectId(userId)
+		},
+		{
+			$set: {
+				onboarded: true
+			}
+		}
+	);
+}

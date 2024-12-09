@@ -5,7 +5,7 @@ from langchain_core.embeddings import Embeddings
 
 def vectorstore_factory(embedding_model: Embeddings, collection_name: str, tool, type: str, api_key: str = None, url: str = None, namespace: str = None, byoVectorDb: bool = False):
     if byoVectorDb is False:
-        type = VectorDatabase.Qdrant
+        type = VectorDatabase.Pinecone
     elif type is None:
         raise ValueError("Vector database type must be specified when byoVectorDb is True")
 
@@ -197,7 +197,11 @@ def vectorstore_factory(embedding_model: Embeddings, collection_name: str, tool,
 
             Pinecone.similarity_search_by_vector_with_score = similarity_search_by_vector_with_score_with_filter
 
-            os.environ['PINECONE_API_KEY'] = api_key
+            if api_key is None:
+                from init.env_variables import HOSTED_PINECONE_API_KEY
+                os.environ['PINECONE_API_KEY'] = HOSTED_PINECONE_API_KEY
+            else:
+                os.environ['PINECONE_API_KEY'] = api_key
 
             return Pinecone.from_existing_index(
                 index_name=collection_name, #TODO: make customisable

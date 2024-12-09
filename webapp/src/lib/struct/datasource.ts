@@ -1,7 +1,8 @@
 'use strict';
 
-import { ObjectId } from 'mongodb';
-import { InferSchemaType, Model, model, models, mongo, Mongoose, Schema, Types } from 'mongoose';
+import { InferSchemaType, model, models, Schema, Types } from 'mongoose';
+
+import { Cloud, Region } from './vectorproxy';
 const MongooseObjectId = Types.ObjectId;
 
 export type DatasourceStream = {
@@ -156,6 +157,8 @@ export interface Datasource {
 	collectionName?: string;
 	namespace?: string;
 	byoVectorDb?: boolean;
+	region?: Region;
+	cloud?: Cloud;
 }
 
 const datasourceSchema = new Schema<Datasource>(
@@ -186,7 +189,9 @@ const datasourceSchema = new Schema<Datasource>(
 		timeUnit: String,
 		collectionName: String,
 		namespace: String,
-		byoVectorDb: Boolean
+		byoVectorDb: Boolean,
+		region: String,
+		cloud: String
 	},
 	{ timestamps: true }
 );
