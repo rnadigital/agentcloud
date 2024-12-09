@@ -581,8 +581,11 @@ export async function sendMessage(req, res, next) {
 
 		const messagePayload = {
 			room: activeRoomSessionId,
-			message: messageText,
 			authorName: res.locals?.account?.name || 'External API',
+			message: {
+				type: 'text',
+				text: messageText
+			},
 			event: 'message'
 		};
 
