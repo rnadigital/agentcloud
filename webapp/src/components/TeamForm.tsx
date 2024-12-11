@@ -10,11 +10,7 @@ import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { pricingMatrix } from 'struct/billing';
 
-export default function TeamForm({
-	callback
-}: {
-	callback?: Function;
-}) {
+export default function TeamForm({ callback }: { callback?: Function }) {
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
 	const currentOrg = account?.orgs?.find(o => o.id === account?.currentOrg);
@@ -65,7 +61,7 @@ export default function TeamForm({
 			/>
 			<form onSubmit={teamPost}>
 				<div className={`space-y-12`}>
-					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6'>
+					<div className='grid grid-cols-1 gap-x-6 gap-y-8 max-w-2xl sm:grid-cols-6'>
 						<div className='sm:col-span-6'>
 							<label
 								htmlFor='name'
@@ -87,13 +83,13 @@ export default function TeamForm({
 					</div>
 				</div>
 
-				<div className='mt-6 flex items-center justify-between gap-x-6'>
+				<div className='flex gap-x-6 justify-between items-center mt-6'>
 					<Link href={`/${resourceSlug}/teams`}>
 						<a className='text-sm font-semibold leading-6 text-gray-900'>Back</a>
 					</Link>
 					<button
 						type='submit'
-						className={`rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500`}
+						className={`px-3 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-500`}
 					>
 						Create Team
 					</button>

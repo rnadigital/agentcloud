@@ -2,6 +2,7 @@
 
 import { Account, getAccountById } from 'db/account';
 import { getKeyById } from 'db/apikey';
+import { getOrgById, Org } from 'db/org';
 import debug from 'debug';
 import jwt from 'jsonwebtoken';
 const log = debug('webapp:middleware:auth:usejwt');
@@ -51,6 +52,7 @@ export default async function useJWT(req, res, next): Promise<void> {
 			// log('useJWT verifiedToken: %s', verifiedToken);
 			if (verifiedToken != null) {
 				const account: Account = await getAccountById(verifiedToken.accountId);
+				const org: Org = await getOrgById(account.currentOrg);
 				if (account) {
 					res.locals.account = {
 						_id: account._id.toString(),
@@ -60,7 +62,7 @@ export default async function useJWT(req, res, next): Promise<void> {
 						currentOrg: account.currentOrg,
 						currentTeam: account.currentTeam,
 						token: account.token,
-						stripe: account.stripe,
+						stripe: org.stripe,
 						oauth: account.oauth,
 						permissions: account.permissions,
 						onboarded: account.onboarded
