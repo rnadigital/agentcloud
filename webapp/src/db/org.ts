@@ -4,6 +4,7 @@ import Permission from '@permission';
 import * as db from 'db/index';
 import { Binary, ObjectId } from 'mongodb';
 import { REGISTERED_USER } from 'permissions/roles';
+import { AccountStripeData, SubscriptionPlan } from 'struct/billing';
 import { InsertResult } from 'struct/db';
 
 import toObjectId from '../lib/misc/toobjectid';
@@ -16,6 +17,7 @@ export type Org = {
 	name: string;
 	dateCreated: Date;
 	permissions: Record<string, Binary>;
+	stripe?: AccountStripeData;
 };
 
 export function OrgCollection(): any {
@@ -147,4 +149,54 @@ export function setMemberPermissions(
 			}
 		}
 	);
+}
+
+export function setOrgStripePlan(orgId: db.IdOrStr, plan: SubscriptionPlan): Promise<any> {
+	return OrgCollection().updateOne(
+		{
+			_id: toObjectId(orgId)
+		},
+		{
+			$set: {
+				'stripe.stripePlan': plan
+			}
+		}
+	);
+}
+
+export function setOrgStripeCustomerId(orgId: db.IdOrStr, stripeCustomerId: string): Promise<any> {
+	return OrgCollection().updateOne(
+		{
+			_id: toObjectId(orgId)
+		},
+		{
+			$set: {
+				'stripe.stripeCustomerId': stripeCustomerId
+			}
+		}
+	);
+}
+
+export function updateOrgStripeCustomer(
+	orgId: db.IdOrStr,
+	update: Partial<Org['stripe']>
+): Promise<any> {
+	const updateObj = {};
+	for (const [key, value] of Object.entries(update)) {
+		updateObj[`stripe.${key}`] = value;
+	}
+	return OrgCollection().updateOne(
+		{
+			_id: toObjectId(orgId)
+		},
+		{
+			$set: updateObj
+		}
+	);
+}
+
+export function getOrgByStripeCustomerId(stripeCustomerId: string): Promise<Org> {
+	return OrgCollection().findOne({
+		'stripe.stripeCustomerId': stripeCustomerId
+	});
 }
