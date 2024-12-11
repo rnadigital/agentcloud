@@ -42,7 +42,8 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
 export default function Billing(props) {
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
-	const { stripeCustomerId, stripePlan, stripeAddons } = account?.stripe || {};
+	const currentOrg = account?.orgs?.find(o => o.id === account?.currentOrg);
+	const { stripeCustomerId, stripePlan, stripeAddons } = currentOrg?.stripe || {};
 	const [selectedPlan, setSelectedPlan] = useState(stripePlan);
 	const router = useRouter();
 	const [_, dispatch] = useState(props);

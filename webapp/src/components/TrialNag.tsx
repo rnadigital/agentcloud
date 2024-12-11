@@ -9,7 +9,8 @@ import { SubscriptionPlan } from 'struct/billing';
 export default function TrialNag() {
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
-	const { stripePlan, stripeEndsAt, stripeCancelled, stripeTrial } = account?.stripe || {};
+	const currentOrg = account?.orgs?.find(o => o.id === account?.currentOrg);
+	const { stripePlan, stripeEndsAt, stripeCancelled, stripeTrial } = currentOrg?.stripe || {};
 
 	const now = Date.now();
 	const daysRemaining = Math.floor((stripeEndsAt - now) / 86400000);
@@ -29,13 +30,13 @@ export default function TrialNag() {
 		<div
 			suppressHydrationWarning
 			className={
-				'mt-3 p-3 -ms-1 flex flex-col space-y-2 w-full rounded shadow text-white bg-slate-800'
+				'flex flex-col p-3 mt-3 space-y-2 w-full text-white rounded shadow -ms-1 bg-slate-800'
 			}
 		>
 			{stripeCancelled ||
 				(stripeTrial && (
 					<div className='flex flex-row'>
-						<SparklesIcon className='h-5 w-5 me-2' />
+						<SparklesIcon className='w-5 h-5 me-2' />
 						{stripeCancelled ? (
 							<h3 className='me-2'>Cancels in {daysRemaining} days.</h3>
 						) : (

@@ -11,20 +11,15 @@ import { toast } from 'react-toastify';
 import { pricingMatrix } from 'struct/billing';
 
 export default function TeamForm({
-	teamName = '',
-	editing,
-	compact = false,
 	callback
 }: {
-	teamName?: string;
-	editing?: boolean;
-	compact?: boolean;
 	callback?: Function;
 }) {
 	const [accountContext]: any = useAccountContext();
-	const { csrf, account } = accountContext as any;
-	const { stripePlan } = account?.stripe || {};
-	const [teamState, setTeamState] = useState(teamName);
+	const { account, csrf } = accountContext as any;
+	const currentOrg = account?.orgs?.find(o => o.id === account?.currentOrg);
+	const { stripePlan } = currentOrg?.stripe || {};
+	const [teamState, setTeamState] = useState('');
 	const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
 	const router = useRouter();
 	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
@@ -54,7 +49,7 @@ export default function TeamForm({
 			res => {
 				toast.error(res);
 			},
-			compact ? null : router
+			router
 		);
 		callback && addedTeam && callback(addedTeam._id, addedTeam.orgId);
 	}
@@ -69,7 +64,7 @@ export default function TeamForm({
 				buttonText='Upgrade'
 			/>
 			<form onSubmit={teamPost}>
-				<div className={`space-y-${compact ? '6' : '12'}`}>
+				<div className={`space-y-12`}>
 					<div className='grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6'>
 						<div className='sm:col-span-6'>
 							<label
@@ -93,14 +88,12 @@ export default function TeamForm({
 				</div>
 
 				<div className='mt-6 flex items-center justify-between gap-x-6'>
-					{!compact && (
-						<Link href={`/${resourceSlug}/teams`}>
-							<a className='text-sm font-semibold leading-6 text-gray-900'>Back</a>
-						</Link>
-					)}
+					<Link href={`/${resourceSlug}/teams`}>
+						<a className='text-sm font-semibold leading-6 text-gray-900'>Back</a>
+					</Link>
 					<button
 						type='submit'
-						className={`rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500 ${compact ? 'w-full' : ''}`}
+						className={`rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500`}
 					>
 						Create Team
 					</button>

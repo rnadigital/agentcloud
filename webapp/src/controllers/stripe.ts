@@ -491,3 +491,40 @@ export async function checkReady(req, res, next) {
 
 	return dynamicResponse(req, res, 200, { missingEnvs });
 }
+
+export async function updateSubscription(req, res) {
+	try {
+		const { account } = res.locals;
+		const currentOrg = account?.orgs?.find(o => o.id === account?.currentOrg);
+		
+		const subscription = await StripeClient.get().subscriptions.retrieve(
+			req.body.subscriptionId
+		);
+
+		const planItem = subscription.items.data.find(
+			item => item.price.recurring.usage_type === 'licensed'
+		);
+
+		const update = {
+			...(planItem
+				? { stripePlan: productToPlanMap[planItem.price.product] }
+				: { stripePlan: SubscriptionPlan.FREE }),
+			...(req.body.cancel
+				? {
+						stripeCancelled: true,
+						stripeEndsAt: subscription.current_period_end
+				  }
+				: {})
+		};
+
+		await Account.updateOne(
+			{ _id: account._id, 'orgs.id': currentOrg.id },
+			{ $set: { 'orgs.$.stripe': update } }
+		);
+
+		res.json({ ok: true });
+	} catch (err) {
+		console.error(err);
+		res.status(500).json({ error: err.message });
+	}
+}
