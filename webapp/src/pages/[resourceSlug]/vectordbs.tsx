@@ -15,7 +15,6 @@ export default function VectorDbs(props) {
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState(props);
-	console.log(state);
 	const [error, setError] = useState();
 	const { vectorDbs } = state;
 
@@ -42,6 +41,7 @@ export default function VectorDbs(props) {
 				title='Vector Databases'
 				buttonText='New Vector DB'
 				href='/vectordb/add'
+				showButton={vectorDbs.length !== 0}
 			/>
 
 			<VectorDbTable vectorDbs={vectorDbs} fetchVectorDbs={fetchVectorDbs} />
@@ -52,7 +52,7 @@ export default function VectorDbs(props) {
 					emptyMessage={'No vector databases'}
 					message={'Get started by vector databases.'}
 					buttonIcon={<PlusIcon className='-ml-0.5 mr-1.5 h-5 w-5' aria-hidden='true' />}
-					buttonMessage={'Add Variable'}
+					buttonMessage={'Add Vector DB'}
 				/>
 			)}
 		</>

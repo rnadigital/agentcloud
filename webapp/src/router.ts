@@ -379,6 +379,12 @@ export default function router(server, app) {
 	teamRouter.post('/forms/session/:sessionId([a-f0-9]{24})/edit', sessionController.editSessionApi);
 	teamRouter.post('/forms/session/:sessionId([a-f0-9]{24})/start', sessionController.startSession);
 
+	//messages
+	teamRouter.post(
+		'/session/:sessionId([a-f0-9]{24})/send-message',
+		sessionController.sendMessage
+	);
+
 	//agents
 	teamRouter.get('/agents', agentController.agentsPage.bind(null, app));
 	teamRouter.get('/agents.json', agentController.agentsJson);

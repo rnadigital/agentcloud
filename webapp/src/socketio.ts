@@ -149,6 +149,8 @@ export function initSocket(rawHttpServer) {
 			const socketRequest = socket.request as any;
 			data.event = data.event || 'message';
 
+			log('socket.id "%s" event "message" args: %O', socket.id, data);
+
 			if (typeof data.message !== 'object') {
 				data.message = {
 					type: 'text',
