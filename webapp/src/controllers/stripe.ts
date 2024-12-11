@@ -198,21 +198,7 @@ export async function webhookHandler(req, res, next) {
 }
 
 export async function hasPaymentMethod(req, res, next) {
-	const orgId = res.locals.currentOrg;
-	if (!orgId) {
-		return dynamicResponse(req, res, 400, {
-			error: 'Missing orgId'
-		});
-	}
-
-	const org = await getOrgById(orgId);
-	if (!org) {
-		return dynamicResponse(req, res, 404, {
-			error: 'Organization not found'
-		});
-	}
-
-	const stripeCustomerId = org.stripe?.stripeCustomerId;
+	const stripeCustomerId = res.locals.account.stripe?.stripeCustomerId;
 	if (!stripeCustomerId) {
 		return dynamicResponse(req, res, 400, {
 			error: 'Organization not configured with Stripe - please contact support'
@@ -252,11 +238,11 @@ export async function requestChangePlan(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Missing STRIPE_ACCOUNT_SECRET' });
 	}
 
-	let stripeCustomerId = res.locals.account?.stripe?.stripeCustomerId;
+	const stripeCustomerId = res.locals.account.stripe?.stripeCustomerId;
 
 	if (!stripeCustomerId) {
 		return dynamicResponse(req, res, 400, {
-			error: 'Missing Stripe Customer ID - please contact support'
+			error: 'Organization not configured with Stripe - please contact support'
 		});
 	}
 
@@ -310,6 +296,7 @@ export async function requestChangePlan(req, res, next) {
 		currency: 'USD',
 		mode: 'subscription'
 	});
+
 	const checkoutSession = await StripeClient.get().checkout.sessions.retrieve(
 		createdCheckoutSession.id,
 		{
