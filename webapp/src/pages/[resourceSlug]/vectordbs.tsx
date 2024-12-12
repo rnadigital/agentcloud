@@ -48,7 +48,7 @@ export default function VectorDbs(props) {
 
 			{vectorDbs.length === 0 && (
 				<NewButtonSection
-					link={`/${resourceSlug}/variable/add`}
+					link={`/${resourceSlug}/vectordb/add`}
 					emptyMessage={'No vector databases'}
 					message={'Get started by vector databases.'}
 					buttonIcon={<PlusIcon className='-ml-0.5 mr-1.5 h-5 w-5' aria-hidden='true' />}
