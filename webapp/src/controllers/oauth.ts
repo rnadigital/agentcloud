@@ -8,7 +8,7 @@ import { ObjectId } from 'mongodb';
 import SecretKeys from 'secret/secretkeys';
 import { OAUTH_PROVIDER, OAuthStrategy } from 'struct/oauth';
 
-import { addOrg } from '../db/org';
+import { addOrg, getOrgById, Org } from '../db/org';
 import { addTeam } from '../db/team';
 const log = debug('webapp:oauth');
 
@@ -113,6 +113,7 @@ export async function deserializeHandler(obj, done) {
 	const { oauthId, provider } = obj;
 	// Use provider information to retrieve the user e.g.
 	const account: Account = await getAccountByOAuthOrEmail(oauthId, provider, null);
+	const org: Org = await getOrgById(account.currentOrg);
 	if (account) {
 		const accountObj = {
 			_id: account._id.toString(),
@@ -122,7 +123,7 @@ export async function deserializeHandler(obj, done) {
 			currentOrg: account.currentOrg,
 			currentTeam: account.currentTeam,
 			token: account.token,
-			stripe: account.stripe,
+			stripe: org.stripe,
 			oauth: account.oauth
 		};
 		return done(null, accountObj);

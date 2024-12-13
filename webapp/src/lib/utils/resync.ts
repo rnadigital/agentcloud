@@ -50,7 +50,7 @@ export async function resyncAllDatasources() {
 
 		const mockRes = {
 			locals: {
-				subscription: account.stripe,
+				subscription: org.stripe,
 				matchingOrg: org,
 				account: account
 			}

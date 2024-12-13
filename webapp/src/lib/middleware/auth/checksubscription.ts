@@ -59,10 +59,10 @@ export async function setSubscriptionLocals(req, res, next) {
 	if (!parentOrgOwner) {
 		return dynamicResponse(req, res, 400, { error: 'Account error' });
 	}
-	res.locals.subscription = parentOrgOwner.stripe;
+	res.locals.subscription = parentOrg.stripe;
 	if (res.locals?.account?.stripe) {
 		res.locals.account._stripe = res.locals.account.stripe;
-		res.locals.account.stripe = parentOrgOwner.stripe; //TODO: think about this some more
+		res.locals.account.stripe = parentOrg.stripe; //TODO: think about this some more
 	}
 	next();
 }
