@@ -29,7 +29,6 @@ import { useAccountContext } from 'context/account';
 import { useChatContext } from 'context/chat';
 import { useDeveloperContext } from 'context/developer';
 import { ThemeContext } from 'context/themecontext';
-import cn from 'lib/cn';
 import Head from 'next/head';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -39,6 +38,7 @@ import Permissions from 'permissions/permissions';
 import { usePostHog } from 'posthog-js/react';
 import { Fragment, useContext, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
+import cn from 'utils/cn';
 
 import packageJson from '../../package.json';
 
@@ -177,7 +177,7 @@ export default withRouter(function Layout(props) {
 	const scrollRef = useRef(null);
 
 	//this is temporary, will be removed once other pages are updated
-	const isRegisteringPage = isFullPages.some(p => path.includes(p));
+	const isRegisteringPage = Array.isArray(path) ? isFullPages.some(p => path.includes(p)) : false;
 
 	if (!account) {
 		// return 'Loading...'; //TODO: loader?

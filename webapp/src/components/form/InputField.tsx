@@ -1,6 +1,6 @@
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
-import cn from 'lib/cn';
+import cn from 'utils/cn';
 import { useState } from 'react';
 import {
 	Control,

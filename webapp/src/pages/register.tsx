@@ -6,7 +6,7 @@ import ErrorAlert from 'components/ErrorAlert';
 import InputField from 'components/form/InputField';
 import LeftFrame from 'components/onboarding/LeftFrame';
 import { useThemeContext } from 'context/themecontext';
-import cn from 'lib/cn';
+import cn from 'utils/cn';
 import passwordPattern from 'lib/misc/passwordpattern';
 import Lottie from 'lottie-react';
 import Head from 'next/head';

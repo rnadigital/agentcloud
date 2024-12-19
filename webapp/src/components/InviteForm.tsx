@@ -4,7 +4,7 @@ import * as API from '@api';
 import ButtonSpinner from 'components/ButtonSpinner';
 import SubscriptionModal from 'components/SubscriptionModal';
 import { useAccountContext } from 'context/account';
-import cn from 'lib/cn';
+import cn from 'utils/cn';
 import { useRouter } from 'next/router';
 import { TeamRoleOptions } from 'permissions/roles';
 import { usePostHog } from 'posthog-js/react';

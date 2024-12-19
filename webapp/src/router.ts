@@ -553,6 +553,7 @@ export default function router(server, app) {
 
 	//datasources
 	teamRouter.get('/datasources', datasourceController.datasourcesPage.bind(null, app));
+	teamRouter.get('/connections', datasourceController.connectionsPage.bind(null, app));
 	teamRouter.get('/datasources.json', datasourceController.datasourcesJson);
 	teamRouter.get(
 		'/datasource/add',
@@ -561,6 +562,11 @@ export default function router(server, app) {
 	);
 	teamRouter.get(
 		'/datasource/:datasourceId([a-f0-9]{24}).json',
+		datasourceController.datasourceJson
+	);
+
+	teamRouter.get(
+		'/connections/:datasourceId([a-f0-9]{24}).json',
 		datasourceController.datasourceJson
 	);
 	teamRouter.get(

@@ -20,7 +20,7 @@ import { error } from 'console';
 import { useAccountContext } from 'context/account';
 import OnboardingFormContext from 'context/onboardingform';
 import { useThemeContext } from 'context/themecontext';
-import cn from 'lib/cn';
+import cn from 'utils/cn';
 import Lottie from 'lottie-react';
 import { defaultChunkingOptions } from 'misc/defaultchunkingoptions';
 import passwordPattern from 'misc/passwordpattern';

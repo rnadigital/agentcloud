@@ -4,7 +4,7 @@ import * as API from '@api';
 import ModelTypeRequirementsComponent from 'components/models/ModelTypeRequirements';
 import SubscriptionModal from 'components/SubscriptionModal';
 import { useAccountContext } from 'context/account';
-import cn from 'lib/cn';
+import cn from 'utils/cn';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useReducer } from 'react';

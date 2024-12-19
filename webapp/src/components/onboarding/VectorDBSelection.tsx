@@ -12,7 +12,7 @@ import SelectField from 'components/form/SelectField';
 import formatModelOptionLabel from 'components/FormatModelOptionLabel';
 import { useAccountContext } from 'context/account';
 import { useOnboardingFormContext } from 'context/onboardingform';
-import cn from 'lib/cn';
+import cn from 'utils/cn';
 import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
 import React, { useEffect, useState } from 'react';

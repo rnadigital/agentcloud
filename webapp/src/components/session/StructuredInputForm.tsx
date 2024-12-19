@@ -1,7 +1,7 @@
 import * as API from '@api';
 import { CheckCircleIcon, CheckIcon } from '@heroicons/react/24/outline';
 import { useAccountContext } from 'context/account';
-import cn from 'lib/cn';
+import cn from 'utils/cn';
 import { useRouter } from 'next/router';
 import React from 'react';
 import { Controller, useForm } from 'react-hook-form';

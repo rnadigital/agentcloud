@@ -7,6 +7,7 @@ import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
 import { AppsDataReturnType } from 'controllers/app';
+import { Button } from 'modules/components/ui/button';
 import { ObjectId } from 'mongodb';
 import Head from 'next/head';
 import { useRouter } from 'next/router';

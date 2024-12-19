@@ -1,5 +1,5 @@
 import { type ClassValue } from 'clsx';
-import cn from 'lib/cn';
+import cn from 'utils/cn';
 
 export const BrainIcon = ({ className }: { className?: ClassValue }) => {
 	return (

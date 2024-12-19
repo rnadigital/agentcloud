@@ -1,5 +1,5 @@
 import { TrashIcon } from '@heroicons/react/20/solid';
-import cn from 'lib/cn';
+import cn from 'utils/cn';
 import React from 'react';
 
 export default function ParameterForm({
