@@ -1,4 +1,5 @@
-import { jobHistoryData } from 'data/connections';
+import { formatDuration } from 'airbyte/format-duration';
+import dayjs from 'dayjs';
 import { Bolt, Box, ChevronDown, Clock, Loader, MoveRight, RefreshCcw } from 'lucide-react';
 import { Button } from 'modules/components/ui/button';
 import { Card, CardDescription, CardHeader, CardTitle } from 'modules/components/ui/card';
@@ -7,7 +8,13 @@ import {
 	CollapsibleContent,
 	CollapsibleTrigger
 } from 'modules/components/ui/collapsible';
+import { useRouter } from 'next/router';
 import { Fragment, useState } from 'react';
+import { useConnectionsStore } from 'store/connections';
+import { useShallow } from 'zustand/react/shallow';
+
+import Schedule from './Schedule';
+import { Streams } from './Streams';
 
 export const ConnectionsIdCards = () => {
 	const [collapsibleStates, setCollapsibleStates] = useState({
@@ -16,23 +23,46 @@ export const ConnectionsIdCards = () => {
 		settings: false
 	});
 
+	const { jobsList, datasource, syncDatasource, syncing } = useConnectionsStore(
+		useShallow(state => ({
+			jobsList: state.jobsList,
+			datasource: state.datasource,
+			syncDatasource: state.syncDatasource,
+			syncing: state.syncing
+		}))
+	);
+
+	const router = useRouter();
+
 	return (
 		<Fragment>
-			<section className='flex flex-col gap-4 mb-4'>
+			<div className='flex flex-col gap-4 mb-4'>
 				<div className='flex items-center justify-between'>
 					<h3 className='font-semibold leading-6'>User Feedback</h3>
-					<Button asChild className='flex rounded-lg gap-1 bg-[#5047dc] cursor-pointer px-2 py-1'>
-						<div className='flex items-center gap-2'>
-							<RefreshCcw width={15} />
-							<p className='text-xs'>Sync</p>
-						</div>
+					<Button
+						className='flex rounded-lg gap-1 bg-[#5047dc] cursor-pointer px-2 py-1'
+						onClick={async () => {
+							await syncDatasource(datasource?._id.toString(), router);
+						}}
+					>
+						{syncing[datasource?._id.toString()] ? (
+							<div className='flex items-center gap-2'>
+								<Loader className='animate-spin' width={15} />
+								<p className='text-xs'>Syncing</p>
+							</div>
+						) : (
+							<div className='flex items-center gap-2'>
+								<RefreshCcw width={15} />
+								<p className='text-xs'>Sync</p>
+							</div>
+						)}
 					</Button>
 				</div>
 				<div className='flex justify-between items-center'>
 					<article className='flex justify-between gap-2 items-center'>
 						<div className='flex justify-between gap-2 items-center'>
 							<Bolt width={15} />
-							<p className='text-sm'>MySql</p>
+							<p className='text-sm'>{datasource?.name}</p>
 						</div>
 						<MoveRight width={15} />
 						<div className='flex justify-between gap-2 items-center'>
@@ -49,12 +79,17 @@ export const ConnectionsIdCards = () => {
 					<div className='flex justify-between gap-2 items-center'>
 						<div className='flex items-center gap-2 text-gray-400 bg-gray-100 px-2 py-1 rounded-sm'>
 							<Clock width={15} />
-							<p>Oct 16, 6:30 AM</p>
+
+							<p>
+								{datasource?.lastSyncedDate
+									? dayjs(datasource.lastSyncedDate).format('MMM D, YYYY h:mm A')
+									: 'Never synced'}
+							</p>
 						</div>
 					</div>
 				</article>
-			</section>
-			<section className='flex flex-col gap-4'>
+			</div>
+			<div className='flex flex-col gap-4'>
 				<Collapsible
 					open={collapsibleStates.stream}
 					onOpenChange={open => {
@@ -77,7 +112,7 @@ export const ConnectionsIdCards = () => {
 						<ChevronDown />
 					</CollapsibleTrigger>
 					<CollapsibleContent className='p-4'>
-						Yes. Free to use for personal and commercial projects. No attribution required.
+						<Streams />
 					</CollapsibleContent>
 				</Collapsible>
 				<Collapsible
@@ -103,7 +138,7 @@ export const ConnectionsIdCards = () => {
 					</CollapsibleTrigger>
 					<CollapsibleContent className='p-4'>
 						<div className='flex flex-col gap-4'>
-							{jobHistoryData.map((job, index) => (
+							{jobsList?.map((job, index) => (
 								<Card key={index}>
 									<CardHeader>
 										<CardTitle className='flex items-center gap-2'>
@@ -121,11 +156,12 @@ export const ConnectionsIdCards = () => {
 																	: 'bg-red-300'
 												}`}
 											></div>
-											<p>{job.duration}</p>
+											<p>{formatDuration(job.duration)}</p>
 										</CardTitle>
 										<CardDescription className='flex items-center gap-2 text-sm text-gray-500 font-medium'>
 											<Clock width={15} />
-											<p>{job.last_updated}</p>
+
+											<p>{job.lastUpdatedAt}</p>
 										</CardDescription>
 									</CardHeader>
 								</Card>
@@ -155,10 +191,10 @@ export const ConnectionsIdCards = () => {
 						<ChevronDown />
 					</CollapsibleTrigger>
 					<CollapsibleContent className='p-4'>
-						Yes. Free to use for personal and commercial projects. No attribution required.
+						<Schedule />
 					</CollapsibleContent>
 				</Collapsible>
-			</section>
+			</div>
 		</Fragment>
 	);
 };

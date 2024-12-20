@@ -1,18 +1,39 @@
-import ButtonSpinner from 'components/ButtonSpinner';
-import { StreamsList } from 'components/DatasourceStream';
-import Spinner from 'components/Spinner';
-import { jobHistoryData } from 'data/connections';
-import { Bolt, Box, CircleCheck, Clock, Loader, MoveRight, RefreshCcw } from 'lucide-react';
+import { formatDuration } from 'airbyte/format-duration';
+import dayjs from 'dayjs';
+import {
+	Bolt,
+	Box,
+	Circle,
+	CircleAlert,
+	CircleCheck,
+	Clock,
+	Loader,
+	MoveRight,
+	RefreshCcw
+} from 'lucide-react';
 import { Button } from 'modules/components/ui/button';
 import { Table, TableBody, TableCell, TableHeader, TableRow } from 'modules/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from 'modules/components/ui/tabs';
+import { useRouter } from 'next/router';
 import { Fragment } from 'react';
+import { useConnectionsStore } from 'store/connections';
+import { DatasourceStatus } from 'struct/datasource';
+import { useShallow } from 'zustand/react/shallow';
 
-import { useConnections } from './ConnectionsContext';
+import Schedule from './Schedule';
 import { Streams } from './Streams';
 
 export const ConnectionsIdTabs = () => {
-	const { datasource, airbyteState } = useConnections();
+	const { jobsList, datasource, syncDatasource, syncing } = useConnectionsStore(
+		useShallow(state => ({
+			jobsList: state.jobsList,
+			datasource: state.datasource,
+			syncDatasource: state.syncDatasource,
+			syncing: state.syncing
+		}))
+	);
+
+	const router = useRouter();
 
 	const columns = [
 		{
@@ -50,25 +71,65 @@ export const ConnectionsIdTabs = () => {
 						</div>
 					</article>
 					<article className='text-xs flex justify-between gap-2 items-center'>
-						<div className='rounded bg-purple-100 text-purple-700 px-2 font-semibold flex items-center gap-1'>
-							<Loader className='animate-spin' width={10} />
-							<p>Embedding</p>
-						</div>
-						<div className='flex justify-between gap-2 items-center'>
-							<div className='flex items-center gap-2 text-gray-400 bg-gray-100 px-2 py-1 rounded-sm'>
-								<Clock width={15} />
-								<p>Oct 16, 6:30 AM</p>
-							</div>
-							<Button
-								asChild
-								className='flex rounded-lg gap-1 bg-[#5047dc] cursor-pointer px-2 py-1'
+						{datasource && (
+							<div
+								className={`flex items-center gap-2 w-fit px-2 py-1 text-sm rounded ${
+									datasource.status === DatasourceStatus.READY
+										? 'bg-green-100 text-green-700'
+										: datasource.status === DatasourceStatus.DRAFT
+											? 'bg-gray-100 text-gray-700'
+											: datasource.status === DatasourceStatus.PROCESSING
+												? 'bg-yellow-100 text-yellow-700'
+												: datasource.status === DatasourceStatus.EMBEDDING
+													? 'bg-purple-100 text-purple-700'
+													: 'bg-red-100 text-red-700'
+								}`}
 							>
-								<div className='flex items-center gap-2'>
-									<RefreshCcw width={15} />
-									<p className='text-xs'>Sync</p>
+								{datasource.status === DatasourceStatus.READY ? (
+									<CircleCheck width={15} />
+								) : datasource.status === DatasourceStatus.DRAFT ? (
+									<Circle width={15} />
+								) : datasource.status === DatasourceStatus.PROCESSING ? (
+									<Loader className='animate-spin' width={15} />
+								) : datasource.status === DatasourceStatus.EMBEDDING ? (
+									<Loader className='animate-spin' width={15} />
+								) : (
+									<CircleAlert width={15} />
+								)}
+								<p className='font-medium'>{datasource.status}</p>
+							</div>
+						)}
+						{datasource && (
+							<div className='flex justify-between gap-2 items-center'>
+								<div className='flex items-center gap-2 text-gray-400 bg-gray-100 px-2 py-1 rounded-sm'>
+									<Clock width={15} />
+									<p>
+										{datasource.lastSyncedDate
+											? dayjs(datasource.lastSyncedDate).format('MMM D, YYYY h:mm A')
+											: 'Never synced'}
+									</p>
 								</div>
-							</Button>
-						</div>
+								<Button
+									asChild
+									className='flex rounded-lg gap-1 bg-[#5047dc] cursor-pointer px-2 py-1'
+									onClick={async () => {
+										await syncDatasource(datasource._id.toString(), router);
+									}}
+								>
+									{syncing[datasource._id.toString()] ? (
+										<div className='flex items-center gap-2'>
+											<Loader className='animate-spin' width={15} />
+											<p className='text-xs'>Syncing</p>
+										</div>
+									) : (
+										<div className='flex items-center gap-2'>
+											<RefreshCcw width={15} />
+											<p className='text-xs'>Sync</p>
+										</div>
+									)}
+								</Button>
+							</div>
+						)}
 					</article>
 				</div>
 			</section>
@@ -103,8 +164,8 @@ export const ConnectionsIdTabs = () => {
 								</TableRow>
 							</TableHeader>
 							<TableBody>
-								{jobHistoryData &&
-									jobHistoryData.map((job, index) => (
+								{jobsList &&
+									jobsList.map((job, index) => (
 										<TableRow className='py-4 cursor-pointer' key={index}>
 											<TableCell className='p-5 text-sm text-gray-900'>
 												{job.jobId.toString().padStart(2, '0')}
@@ -118,13 +179,13 @@ export const ConnectionsIdTabs = () => {
 											<TableCell className='p-5 text-xs'>
 												<div className='bg-gray-100 w-fit px-2 py-1 rounded text-gray-500 flex items-center gap-1'>
 													<Clock width={15} />
-													<p>{job.duration}</p>
+													<p>{formatDuration(job.duration)}</p>
 												</div>
 											</TableCell>
 											<TableCell className='p-5 text-xs flex items-center justify-end'>
 												<div className='bg-gray-100 w-fit px-2 py-1 rounded text-gray-500 flex items-center gap-1'>
 													<Clock width={15} />
-													<p>{job.last_updated}</p>
+													<p>{job.lastUpdatedAt}</p>
 												</div>
 											</TableCell>
 										</TableRow>
@@ -133,7 +194,9 @@ export const ConnectionsIdTabs = () => {
 						</Table>
 					</div>
 				</TabsContent>
-				<TabsContent value='settings'></TabsContent>
+				<TabsContent value='settings'>
+					<Schedule />
+				</TabsContent>
 			</Tabs>
 		</Fragment>
 	);

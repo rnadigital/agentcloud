@@ -2,37 +2,52 @@ import * as API from '@api';
 import ButtonSpinner from 'components/ButtonSpinner';
 import { StreamsList } from 'components/DatasourceStream';
 import Spinner from 'components/Spinner';
+import { Loader } from 'lucide-react';
+import { useRouter } from 'next/router';
 import { useEffect, useReducer, useState } from 'react';
+import { useConnectionsStore } from 'store/connections';
 import submittingReducer from 'utils/submittingreducer';
-
-import { useConnections } from './ConnectionsContext';
+import { useShallow } from 'zustand/react/shallow';
 
 export function Streams() {
-	const { datasource, airbyteState, submitting, resourceSlug, datasourceId, csrf } =
-		useConnections();
-	const a = useConnections();
-	console.log('a');
-	console.log(a);
-	const [streamState, setStreamReducer] = useReducer(submittingReducer, {});
-	const [schemaDiscoverState, setSchemaDiscoverState] = useState(null);
-	const { streamProperties, discoveredSchema } = schemaDiscoverState || {};
+	const router = useRouter();
 
-	async function updateStreams(e, sync?: boolean) {
-		// ... move updateStreams logic from ConnectionsItem ...
-	}
+	const connectionsStore = useConnectionsStore(
+		useShallow(state => ({
+			datasource: state.datasource,
+			submitting: state.submitting,
+			airbyteState: state.airbyteState,
+			schemaDiscoveredState: state.schemaDiscoveredState,
+			updateStreams: state.updateStreams,
+			fetchSchema: state.fetchSchema,
+			streamState: state.streamState
+		}))
+	);
 
-	async function fetchSchema() {
-		// ... move fetchSchema logic from ConnectionsItem ...
-	}
+	const {
+		datasource,
+		submitting,
+		airbyteState,
+		schemaDiscoveredState,
+		fetchSchema,
+		updateStreams,
+		streamState
+	} = connectionsStore;
+
+	const { streamProperties, discoveredSchema } = schemaDiscoveredState || {};
 
 	useEffect(() => {
 		setTimeout(() => {
-			fetchSchema();
+			fetchSchema(router);
 		}, 1500);
 	}, []);
 
 	if (!discoveredSchema) {
-		return <Spinner />;
+		return (
+			<div className='flex justify-center items-center h-full'>
+				<Loader className='animate-spin' size={32} />
+			</div>
+		);
 	}
 
 	return (
@@ -40,8 +55,7 @@ export function Streams() {
 			<StreamsList
 				streams={discoveredSchema.catalog.streams}
 				streamProperties={streamProperties}
-				setStreamReducer={setStreamReducer}
-				streamState={datasource.streamConfig}
+				streamState={streamState}
 			/>
 			<button
 				onClick={e => updateStreams(e)}
