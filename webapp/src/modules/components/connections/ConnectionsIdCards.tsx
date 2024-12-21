@@ -38,7 +38,7 @@ export const ConnectionsIdCards = () => {
 		<Fragment>
 			<div className='flex flex-col gap-4 mb-4'>
 				<div className='flex items-center justify-between'>
-					<h3 className='font-semibold leading-6'>User Feedback</h3>
+					<h3 className='font-semibold leading-6'>{datasource?.name}</h3>
 					<Button
 						className='flex rounded-lg gap-1 bg-[#5047dc] cursor-pointer px-2 py-1'
 						onClick={async () => {

@@ -16,11 +16,12 @@ export default function ConnectionsItem({ datasource }) {
 			setStore: state.setStore,
 			fetchSchema: state.fetchSchema,
 			fetchDatasource: state.fetchDatasource,
-			fetchJobsList: state.fetchJobsList
+			fetchJobsList: state.fetchJobsList,
+			name: state.datasource?.name
 		}))
 	);
 
-	const { setStore, fetchSchema, fetchDatasource, fetchJobsList } = connectionsStore;
+	const { setStore, fetchSchema, fetchDatasource, fetchJobsList, name } = connectionsStore;
 	const router = useRouter();
 	const { resourceSlug, datasourceId } = router.query;
 	const [accountContext]: any = useAccountContext();
@@ -65,7 +66,7 @@ export default function ConnectionsItem({ datasource }) {
 			<section className='flex gap-2 mb-4'>
 				<h4 className='text-gray-500 font-semibold'>Connections</h4>
 				<span className='text-gray-500'>&gt;</span>
-				<h4 className='text-gray-500 font-semibold'>User Feedback</h4>
+				<h4 className='text-gray-500 font-semibold'>{name}</h4>
 			</section>
 			{isMobile ? <ConnectionsIdCards /> : <ConnectionsIdTabs />}
 			{/* <ConnectionsIdCards /> */}

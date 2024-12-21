@@ -57,17 +57,17 @@ export const ConnectionsIdTabs = () => {
 	return (
 		<Fragment>
 			<section>
-				<h3 className='font-semibold leading-6'>User Feedback</h3>
+				<h3 className='font-semibold leading-6'>{datasource?.name}</h3>
 				<div className='flex justify-between items-center'>
 					<article className='flex justify-between gap-2 items-center'>
 						<div className='flex justify-between gap-2 items-center'>
 							<Bolt width={15} />
-							<p className='text-sm'>MySql</p>
+							<p className='text-sm'>{datasource?.sourceType}</p>
 						</div>
 						<MoveRight width={15} />
 						<div className='flex justify-between gap-2 items-center'>
 							<Box width={15} />
-							<p className='text-sm'>AC Vector DB</p>
+							<p className='text-sm'>{datasource?.vectordbtype}</p>
 						</div>
 					</article>
 					<article className='text-xs flex justify-between gap-2 items-center'>
