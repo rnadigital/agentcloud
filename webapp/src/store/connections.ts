@@ -17,7 +17,7 @@ type Job = {
 	rowsSynced: number;
 };
 
-interface StreamState {
+export interface StreamState {
 	checkedChildren: string[];
 	primaryKey: string[];
 	syncMode: string;
