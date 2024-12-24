@@ -97,7 +97,7 @@ export const ConnectionsTable = ({
 											: 'N/A'}
 									</p>
 								</div>
-								<button className='flex items-center gap-2 px-2.5 py-0.5 text-white bg-[#4F46E5] rounded-md'>
+								<button className=' ml-auto flex items-center gap-2 px-2.5 py-0.5 text-white bg-[#4F46E5] rounded-md'>
 									<RefreshCcw width={15} />
 									<p>Sync</p>
 								</button>
