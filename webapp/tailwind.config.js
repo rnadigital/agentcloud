@@ -16,7 +16,8 @@ module.exports = {
 			},
 			backgroundImage: {
 				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-				'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))'
+				'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+        		'gradient-sidebar': 'linear-gradient(to right, hsl(var(--sidebar-background1)), hsl(var(--sidebar-background2)))',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -68,7 +69,7 @@ module.exports = {
 					5: 'hsl(var(--chart-5))'
 				},
 				sidebar: {
-					DEFAULT: 'var(--sidebar-background1)',
+					DEFAULT: 'hsl(var(--sidebar-background1))',
 					foreground: 'hsl(var(--sidebar-foreground))',
 					primary: 'hsl(var(--sidebar-primary))',
 					'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
