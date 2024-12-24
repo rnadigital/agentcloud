@@ -8,11 +8,13 @@ import ToolTip from 'components/shared/ToolTip';
 import { useOnboardingFormContext } from 'context/onboardingform';
 import { AU, BR, CA, EU, FlagComponent, JP, SG, US } from 'country-flag-icons/react/3x2';
 import { defaultChunkingOptions } from 'misc/defaultchunkingoptions';
+import { set } from 'mongoose';
 import React, { useEffect, useReducer, useState } from 'react';
 import { useDatasourceStore } from 'store/datasource';
 import { DatasourceScheduleType, StreamConfig } from 'struct/datasource';
 import { Retriever } from 'struct/tool';
 import submittingReducer from 'utils/submittingreducer';
+import { useShallow } from 'zustand/react/shallow';
 
 interface DataSourceDetailsFormValues {
 	chunkStrategy: string;
@@ -32,7 +34,6 @@ const DataSourceDetails = () => {
 	const { control, watch, setValue } = useOnboardingFormContext<DataSourceDetailsFormValues>();
 
 	const k = watch('k');
-	const embeddingField = watch('embeddingField');
 	const scheduleType = watch('scheduleType');
 	const units = watch('units');
 	const cronExpression = watch('cronExpression');
@@ -41,13 +42,27 @@ const DataSourceDetails = () => {
 	const toolDecayRate = watch('toolDecayRate');
 	const retrievalStrategy = watch('retrievalStrategy');
 
-	const stagedDatasource = watch('stagedDatasource');
-
-	const setCurrentDatasourceStep = useDatasourceStore(state => state.setCurrentDatasourceStep);
-	const streamState = useDatasourceStore(state => state.streamState);
-	const chunkingConfig = useDatasourceStore(state => state.chunkingConfig);
-	const setChunkingConfig = useDatasourceStore(state => state.setChunkingConfig);
-	const setStep = useDatasourceStore(state => state.setCurrentStep);
+	const {
+		setCurrentDatasourceStep,
+		streamState,
+		chunkingConfig,
+		setChunkingConfig,
+		setCurrentStep: setStep,
+		stagedDatasource,
+		embeddingField,
+		setStore
+	} = useDatasourceStore(
+		useShallow(state => ({
+			setCurrentDatasourceStep: state.setCurrentDatasourceStep,
+			streamState: state.streamState,
+			chunkingConfig: state.chunkingConfig,
+			setChunkingConfig: state.setChunkingConfig,
+			setCurrentStep: state.setCurrentStep,
+			stagedDatasource: state.stagedDatasource,
+			embeddingField: state.embeddingField,
+			setStore: state.setStore
+		}))
+	);
 
 	const getInitialEmbeddingField = () => {
 		const fieldsArray = stagedDatasource?.discoveredSchema?.catalog?.streams.reduce(
@@ -114,7 +129,7 @@ const DataSourceDetails = () => {
 		if (!embeddingField) {
 			const initialEmbeddingField = getInitialEmbeddingField();
 			console.log('setting initial embedding field', initialEmbeddingField);
-			setValue('embeddingField', initialEmbeddingField);
+			setStore({ embeddingField: initialEmbeddingField });
 		}
 	}, [stagedDatasource]);
 
@@ -134,7 +149,7 @@ const DataSourceDetails = () => {
 							name='embeddingField'
 							id='embeddingField'
 							onChange={e => {
-								setValue('embeddingField', e.target.value);
+								setStore({ embeddingField: e.target.value });
 							}}
 							value={embeddingField}
 							className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'

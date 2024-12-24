@@ -4,6 +4,7 @@ import { useOnboardingFormContext } from 'context/onboardingform';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router'; // Ensure this import is present
 import { useEffect } from 'react'; // Ensure these imports are present
+import { useDatasourceStore } from 'store/datasource';
 import { DatasourceStatus } from 'struct/datasource';
 
 const Lottie = dynamic(() => import('lottie-react'), {
@@ -14,8 +15,8 @@ const DatasourceSyncing = () => {
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 
-	const { watch } = useOnboardingFormContext();
-	const stagedDatasource = watch('stagedDatasource');
+	const stagedDatasource = useDatasourceStore(state => state.stagedDatasource);
+
 	const datasourceId = stagedDatasource?.datasourceId;
 
 	useEffect(() => {
@@ -32,7 +33,7 @@ const DatasourceSyncing = () => {
 				res => {
 					const datasource = res?.datasource;
 					if (datasource?.status === DatasourceStatus.READY) {
-						router.push(`/${resourceSlug}/apps`);
+						router.push(`/${resourceSlug}/connections`);
 					}
 				},
 				() => {},
@@ -41,7 +42,6 @@ const DatasourceSyncing = () => {
 		}
 	}
 
-	//Backup polling for refresing while datasources are embedding, to supplement socket or fallback in case of failed socket connection
 	useEffect(() => {
 		const interval = setInterval(() => {
 			fetchDatasource();

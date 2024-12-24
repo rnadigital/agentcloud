@@ -22,6 +22,7 @@ interface DatasourceStore {
 	loading: boolean;
 	stagedDatasource?: any;
 	streamState: StreamConfigMap;
+	embeddingField: string;
 
 	// Actions
 	setStore: (data: Partial<DatasourceStore>) => void;
@@ -56,7 +57,7 @@ export const useDatasourceStore = create<DatasourceStore>((set, get) => ({
 	csrf: '',
 	spec: null,
 	loading: false,
-
+	embeddingField: '',
 	// Actions
 	setStore: data => set(state => ({ ...state, ...data })),
 

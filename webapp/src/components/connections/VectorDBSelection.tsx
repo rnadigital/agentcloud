@@ -65,10 +65,11 @@ const VectorDBSelection = () => {
 	const { control, setValue, watch, handleSubmit } = useOnboardingFormContext<any>();
 	const [loading, setLoading] = useState(false);
 
-	const setStep = useDatasourceStore(state => state.setCurrentDatasourceStep);
+	const setStep = useDatasourceStore(state => state.setCurrentStep);
 	const streamState = useDatasourceStore(state => state.streamState);
 	const chunkingConfig = useDatasourceStore(state => state.chunkingConfig);
 	const stagedDatasource = useDatasourceStore(state => state.stagedDatasource);
+	const embeddingField = useDatasourceStore(state => state.embeddingField);
 
 	const datasourceId = stagedDatasource?.datasourceId;
 
@@ -79,7 +80,6 @@ const VectorDBSelection = () => {
 	const cronExpression = watch('cronExpression');
 	const datasourceName = watch('datasourceName');
 	const datasourceDescription = watch('datasourceDescription');
-	const embeddingField = watch('embeddingField');
 	const retriever = watch('retrievalStrategy');
 	const toolDecayRate = watch('toolDecayRate');
 	const toolTimeWeightField = watch('toolTimeWeightField');
