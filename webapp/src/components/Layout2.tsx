@@ -39,6 +39,9 @@ import Permissions from 'permissions/permissions';
 import { usePostHog } from 'posthog-js/react';
 import { useContext, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
+import cn from 'utils/cn';
+import OrgSelector from './OrgSelector';
+import OrgSelector2 from './OrgSelector2';
 
 const noNavPages = [
 	'/login',
@@ -270,21 +273,30 @@ export default withRouter(function Layout(props) {
 					<SidebarContent className='p-4'>
 						<div className='my-2'>
 							<p className='text-sm font-thin'>Teams</p>
-							<DropdownMenu>
+							{/* <DropdownMenu>
 								<DropdownMenuTrigger className='outline-none p-2 my-2 border border-gray-300 rounded'>
 									Alex Johnson Team
 								</DropdownMenuTrigger>
 								<DropdownMenuContent></DropdownMenuContent>
-							</DropdownMenu>
+							</DropdownMenu> */}
+							<OrgSelector2 orgs={orgs} />
 						</div>
 						<div className='sidebar-nav-wrapper'>
 							<ul className='list-none p-0 flex flex-col'>
 								{linkPaths.map(link => {
 									return (
 										<li key={link.name} className='p-2.5 flex gap-2 items-center'>
-											<Link className='flex items-center gap-2' href={link.path}>
+											<Link
+												className='flex items-center gap-2'
+												href={`/${resourceSlug}${link.path}`}
+											>
 												<img width={15} src={link.imgPath} />
-												<p className='text-gray-100 cursor-pointer hover:text-gray-300'>
+												<p
+													className={cn(
+														'cursor-pointer hover:text-gray-300',
+														path.endsWith(link.path) ? 'text-gray-100' : 'text-gray-300'
+													)}
+												>
 													{link.name}
 												</p>
 											</Link>
