@@ -15,6 +15,7 @@ export default function TrialNag() {
 	const now = Date.now();
 	const daysRemaining = Math.floor((stripeEndsAt - now) / 86400000);
 	const router = useRouter();
+	console.log(stripePlan, stripeEndsAt, stripeCancelled, stripeTrial);
 
 	//Dont show banner if
 	if (

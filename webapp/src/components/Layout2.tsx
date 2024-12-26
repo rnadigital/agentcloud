@@ -15,11 +15,6 @@ import { useChatContext } from 'context/chat';
 import { useDeveloperContext } from 'context/developer';
 import { ThemeContext } from 'context/themecontext';
 import { Box, Building, LogOut, UsersRound } from 'lucide-react';
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuTrigger
-} from 'modules/components/ui/dropdown-menu';
 import { Progress } from 'modules/components/ui/progress';
 import {
 	Sidebar,
@@ -40,8 +35,10 @@ import { usePostHog } from 'posthog-js/react';
 import { useContext, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import cn from 'utils/cn';
+
 import OrgSelector from './OrgSelector';
 import OrgSelector2 from './OrgSelector2';
+import TrialNag from './TrialNag';
 
 const noNavPages = [
 	'/login',
@@ -127,29 +124,29 @@ const agentNavigation: any[] = [
 	// { name: 'Vector Collections', href: '/collections', icon: <Square3Stack3DIcon className='h-6 w-6 shrink-0' aria-hidden='true' /> },
 ];
 
-const teamNavigation = [
-	{
-		name: 'Organisation',
-		href: '/org',
-		base: '/org',
-		icon: <BuildingOfficeIcon className='h-6 w-6 shrink-0' aria-hidden='true' />,
-		permissions: [Permissions.ORG_OWNER, Permissions.ORG_ADMIN, Permissions.EDIT_ORG]
-	},
-	{
-		name: 'Team',
-		href: '/team',
-		base: '/team',
-		icon: <UserGroupIcon className='h-6 w-6 shrink-0' aria-hidden='true' />,
-		permissions: [
-			Permissions.TEAM_OWNER,
-			Permissions.TEAM_ADMIN,
-			Permissions.EDIT_TEAM,
-			Permissions.EDIT_TEAM_MEMBER,
-			Permissions.ADD_TEAM_MEMBER,
-			Permissions.REMOVE_TEAM_MEMBER
-		]
-	}
-];
+// const teamNavigation = [
+// 	{
+// 		name: 'Organisation',
+// 		href: '/org',
+// 		base: '/org',
+// 		icon: <BuildingOfficeIcon className='h-6 w-6 shrink-0' aria-hidden='true' />,
+// 		permissions: [Permissions.ORG_OWNER, Permissions.ORG_ADMIN, Permissions.EDIT_ORG]
+// 	},
+// 	{
+// 		name: 'Team',
+// 		href: '/team',
+// 		base: '/team',
+// 		icon: <UserGroupIcon className='h-6 w-6 shrink-0' aria-hidden='true' />,
+// 		permissions: [
+// 			Permissions.TEAM_OWNER,
+// 			Permissions.TEAM_ADMIN,
+// 			Permissions.EDIT_TEAM,
+// 			Permissions.EDIT_TEAM_MEMBER,
+// 			Permissions.ADD_TEAM_MEMBER,
+// 			Permissions.REMOVE_TEAM_MEMBER
+// 		]
+// 	}
+// ];
 
 const userNavigation = [
 	//{ name: 'My Account', href: '/account' },
@@ -207,6 +204,21 @@ const linkPaths = [
 		name: 'Session History',
 		path: '/session-history',
 		imgPath: '/sidebar/session-history.png'
+	}
+];
+
+const teamNavigation = [
+	{
+		id: 1,
+		name: 'Organisation',
+		href: '/org',
+		icon: <Building width={15} />
+	},
+	{
+		id: 2,
+		name: 'Team',
+		href: '/team',
+		icon: <UsersRound width={15} />
 	}
 ];
 
@@ -306,28 +318,74 @@ export default withRouter(function Layout(props) {
 							</ul>
 							<div className='my-4 border-t border-gray-300 w-full'></div>
 							<ul className='list-none p-0 flex flex-col'>
-								<li className='p-2.5 flex gap-2 items-center'>
-									<UsersRound width={15} />
-									<p>Team</p>
-								</li>
-								<li className='p-2.5 flex gap-2 items-center'>
-									<Building width={15} />
-									<p>Organization</p>
-								</li>
-								<li className='p-2.5 flex gap-2 items-center'>
+								{teamNavigation.map(item => (
+									<Link
+										key={item.id}
+										href={`/${resourceSlug}${item.href}`}
+										className='p-2.5 flex gap-2 items-center'
+									>
+										{item.icon}
+										<p
+											className={cn(
+												'cursor-pointer hover:text-gray-300',
+												path.endsWith(item.href) ? 'text-gray-100' : 'text-gray-300'
+											)}
+										>
+											{item.name}
+										</p>
+									</Link>
+								))}
+								<button
+									className='p-2.5 flex gap-2 items-center text-gray-300 hover:text-gray-100'
+									onClick={() => {
+										posthog.capture('logout', {
+											email: account?.email
+										});
+										API.logout(
+											{
+												_csrf: csrf
+											},
+											null,
+											null,
+											router
+										);
+									}}
+								>
 									<LogOut width={15} />
 									<p>Logout</p>
-								</li>
+								</button>
+								{/* <Link className='p-2.5 flex gap-2 items-center'>
+									<UsersRound width={15} />
+									<p>Team</p>
+								</Link> */}
+
+								{/* {teamNavigation.map(item => (
+									<li key={item.name}>
+										<Link suppressHydrationWarning href={`/${resourceSlug}${item.href}`}>
+											{item.icon}
+											{item.name}
+										</Link>
+									</li>
+								))} */}
+								{/* <Link className='p-2.5 flex gap-2 items-center'>
+									<Building width={15} />
+									<p>Organization</p>
+								</Link>
+								<Link className='p-2.5 flex gap-2 items-center'>
+									<LogOut width={15} />
+									<p>Logout</p>
+								</Link> */}
 							</ul>
 						</div>
 					</SidebarContent>
 					<SidebarFooter>
-						<div className='w-full bg-background rounded-lg p-4 mt-2 flex text-foreground flex-col gap-2'>
+						{/* <div className='w-full bg-background rounded-lg p-4 mt-2 flex text-foreground flex-col gap-2'>
 							<p className='font-bold'>Free Plan</p>
 							<p className='text-xs text-gray-500'>Until 10/30/2024</p>
 							<Progress value={10} />
 							<p className='text-sm text-[#4f46e5] cursor-pointer font-bold'>Upgrade your plan</p>
-						</div>
+						</div> */}
+						<TrialNag />
 					</SidebarFooter>
 				</Sidebar>
 				<div className='grow w-full'>
