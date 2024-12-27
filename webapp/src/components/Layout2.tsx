@@ -1,6 +1,8 @@
 import * as API from '@api';
+import { Menu, Switch, Transition } from '@headlessui/react';
 import {
 	BuildingOfficeIcon,
+	ChevronDownIcon,
 	CircleStackIcon,
 	CpuChipIcon,
 	CubeIcon,
@@ -10,12 +12,12 @@ import {
 	UserGroupIcon,
 	WrenchScrewdriverIcon
 } from '@heroicons/react/24/outline';
+import NotificationBell from 'components/NotificationBell';
 import { useAccountContext } from 'context/account';
 import { useChatContext } from 'context/chat';
 import { useDeveloperContext } from 'context/developer';
 import { ThemeContext } from 'context/themecontext';
 import { Box, Building, LogOut, UsersRound } from 'lucide-react';
-import { Progress } from 'modules/components/ui/progress';
 import {
 	Sidebar,
 	SidebarContent,
@@ -32,10 +34,11 @@ import { withRouter } from 'next/router';
 import { useRouter } from 'next/router';
 import Permissions from 'permissions/permissions';
 import { usePostHog } from 'posthog-js/react';
-import { useContext, useRef, useState } from 'react';
+import { Fragment, useContext, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import cn from 'utils/cn';
 
+import AgentAvatar from './AgentAvatar';
 import OrgSelector from './OrgSelector';
 import OrgSelector2 from './OrgSelector2';
 import TrialNag from './TrialNag';
@@ -391,20 +394,163 @@ export default withRouter(function Layout(props) {
 				<div className='grow w-full'>
 					<section className='min-h-14 border-b sticky top-0 bg-background flex gap-4 items-center justify-between p-4'>
 						<SidebarTrigger />
-						<div className='flex items-center gap-4'>
-							<img width={30} src='https://cdn-icons-png.flaticon.com/512/6302/6302741.png' />
-							<div className='flex gap-1 items-center ml-8'>
-								<img
-									className='rounded-full'
-									width={30}
-									src='https://s3-alpha-sig.figma.com/img/6281/2846/2e221bc302b703d92ca639192249cddb?Expires=1733702400&Key-Pair-Id=APKAQ4GOSFWCVNEHN3O4&Signature=EPDahIuvYHzm2ddDQDx-uo0XbWP6lGrlzfGTISf36v23S~EIDzsBYbMWFiBcpkxoCvHK4wKEtEMrlEZHGv3hsIZ2DlQ8dboFll-O433iHlX~IRaeCfMEWqiZUGqqsNvNgQRbt0nijeZHG20XNrHGF4SlPMaqgwVCWpVUjg38hMd9kZHRVxD7Zu4~kuioSe4RAtV5nqQCUnHcClGzVl~DCb96Z46syQBkLRWXUze0M7HlbGZxiXe3fHaPFSmu9hnp-ageI5Dup~S2ZIo1ijgKFj2Oa9LTVZ1GKu1lNnIjfub1aRHi6j0Dyb0tsuj1mTtkMf4ayXD01myW91i0Z1v3Rg__'
-								/>
-								<p className='font-semibold header-user-name text-foreground'>Alex Johnson</p>
-								<img
-									width={30}
-									src='https://icons.veryicon.com/png/o/miscellaneous/online-medicine-city-system-icon/angle-down-17.png'
-								/>
-							</div>
+						<div className='flex items-center gap-x-4 lg:gap-x-6'>
+							{/* Notification Bell */}
+							<NotificationBell />
+
+							{/* Profile dropdown */}
+							{account && (
+								<Menu as='div' className='relative'>
+									<Menu.Button className='flex items-center'>
+										<span className='sr-only'>Open user menu</span>
+										<AgentAvatar
+											agent={{
+												name: account.email,
+												icon: {
+													/* TODO */
+												}
+											}}
+										/>
+										<span className='hidden lg:flex lg:items-center ps-2'>
+											<span
+												className='text-sm font-semibold leading-6 text-gray-900 dark:text-white'
+												aria-hidden='true'
+											>
+												{account.name}
+											</span>
+											<ChevronDownIcon
+												className='ml-2 h-5 w-5 text-gray-400 dark:text-white'
+												aria-hidden='true'
+											/>
+										</span>
+									</Menu.Button>
+									<Transition
+										as={Fragment}
+										enter='transition ease-out duration-100'
+										enterFrom='transform opacity-0 scale-95'
+										enterTo='transform opacity-100 scale-100'
+										leave='transition ease-in duration-75'
+										leaveFrom='transform opacity-100 scale-100'
+										leaveTo='transform opacity-0 scale-95'
+									>
+										<Menu.Items className='absolute right-0 z-10 mt-2.5 w-64 origin-top-right rounded-md bg-white dark:bg-slate-800 py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none'>
+											{account && (
+												<div className='px-3 py-3 dark:text-white' key='accountdetails'>
+													<p className='text-sm dark:text-gray-50'>Signed in as</p>
+													<p className='truncate text-sm font-semibold text-gray-900 dark:text-white'>
+														{account.email}
+													</p>
+												</div>
+											)}
+											{userNavigation.map(item => (
+												<Menu.Item key={item.name}>
+													{({ active }) => {
+														if (item.logout) {
+															return (
+																<button
+																	className={cn(
+																		active ? 'bg-gray-50 dark:bg-slate-700' : '',
+																		'w-full text-left block px-3 py-1 text-sm leading-6 text-gray-900 dark:text-white'
+																	)}
+																	onClick={() => {
+																		posthog.capture('logout', {
+																			email: account?.email
+																		});
+																		API.logout(
+																			{
+																				_csrf: csrf
+																			},
+																			null,
+																			null,
+																			router
+																		);
+																	}}
+																>
+																	Log out
+																</button>
+															);
+														}
+														if (item.developer) {
+															return (
+																<>
+																	<div className='flex items-center px-3 py-1.5'>
+																		<span className='text-sm text-left mr-3 dark:text-white'>
+																			{item.name}
+																		</span>
+																		<Switch
+																			checked={developerMode}
+																			onChange={() => toggleDeveloperMode()}
+																			className='group relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer items-center justify-center rounded-full focus:outline-none focus:ring-0 active:bg-transparent'
+																		>
+																			<span className='sr-only'>Use setting</span>
+																			<span
+																				aria-hidden='true'
+																				className='pointer-events-none absolute h-full w-full rounded-md bg-white dark:bg-slate-800'
+																			/>
+																			<span
+																				aria-hidden='true'
+																				className='pointer-events-none absolute mx-auto h-5 w-10 rounded-full bg-gray-200 dark:bg-slate-700 transition-colors duration-200 ease-in-out group-data-[checked]:bg-indigo-600 dark:group-data-[checked]:bg-slate-500'
+																			/>
+																			<span
+																				aria-hidden='true'
+																				className='pointer-events-none absolute left-0 inline-block h-5 w-5 transform rounded-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-400 shadow ring-0 transition-transform duration-200 ease-in-out group-data-[checked]:translate-x-5'
+																			/>
+																		</Switch>
+																	</div>
+																	<hr className='border-gray-200 dark:border-slate-700 mt-2' />
+																</>
+															);
+														}
+														//TODO: developer mode toggle
+														if (item.theme) {
+															return (
+																<div className='flex flex-col space-y-2 py-2'>
+																	<hr className='border-gray-200 dark:border-slate-700 mt-2 ' />
+
+																	<p className='text-xs font-semibold text-gray-900 dark:text-white mt-2 px-3'>
+																		Theme
+																	</p>
+																	<button
+																		className='w-full text-left px-3 py-1.5 text-sm hover:bg-gray-50 dark:hover:bg-slate-700 dark:text-white'
+																		onClick={() => toggleTheme('light')}
+																	>
+																		Light
+																	</button>
+																	<button
+																		className='w-full text-left px-3 py-1.5 text-sm hover:bg-gray-50 dark:hover:bg-slate-700 dark:text-white'
+																		onClick={() => toggleTheme('dark')}
+																	>
+																		Dark
+																	</button>
+																	<button
+																		className='w-full text-left px-3 py-1.5 text-sm hover:bg-gray-50 dark:hover:bg-slate-700 dark:text-white'
+																		onClick={() => toggleUseSystemTheme()}
+																	>
+																		System
+																	</button>
+
+																	<hr className='border-gray-200 dark:border-slate-700 mt-2 ' />
+																</div>
+															);
+														}
+														return (
+															<a
+																href={item.href}
+																className={cn(
+																	active ? 'bg-gray-50 dark:bg-slate-700' : '',
+																	'block px-3 py-1 text-sm leading-6 text-gray-900 dark:text-white'
+																)}
+															>
+																{item.name}
+															</a>
+														);
+													}}
+												</Menu.Item>
+											))}
+										</Menu.Items>
+									</Transition>
+								</Menu>
+							)}
 						</div>
 					</section>
 					<section className='px-8 py-4'>
