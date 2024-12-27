@@ -6,7 +6,6 @@ import debug from 'debug';
 const log = debug('webapp:session');
 
 export default async function fetchSession(req, res, next) {
-	log('req.session:', req.session);
 	if (req.session && (req.session.accountId || req.session.passport?.user)) {
 		let account: Account;
 		let org: Org;
@@ -18,7 +17,6 @@ export default async function fetchSession(req, res, next) {
 			account = await getAccountByOAuthOrEmail(oauthId, provider, null);
 			org = await getOrgById(account.currentOrg);
 		}
-		// log('account:', account);
 		if (account) {
 			res.locals.account = {
 				_id: account._id.toString(),

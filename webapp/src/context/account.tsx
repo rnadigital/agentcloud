@@ -31,7 +31,6 @@ export function AccountWrapper({ children, pageProps }) {
 	});
 
 	function refreshAccountContext() {
-		console.log('refreshing account context');
 		API.getAccount(
 			{
 				...(resourceSlug ? { resourceSlug } : { resourceSlug: sharedState?.account?.currentTeam }),

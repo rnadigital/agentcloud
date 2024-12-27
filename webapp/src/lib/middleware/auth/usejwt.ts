@@ -38,7 +38,6 @@ export function verifyJwt(token): Promise<JWTData> {
 }
 
 export default async function useJWT(req, res, next): Promise<void> {
-	console.log('useJWT');
 	let token;
 	if (req?.session?.token) {
 		res.locals.checkCsrf = true;
@@ -52,7 +51,6 @@ export default async function useJWT(req, res, next): Promise<void> {
 			if (verifiedToken != null) {
 				const account: Account = await getAccountById(verifiedToken.accountId);
 				const org: Org = await getOrgById(account.currentOrg);
-				console.log(org);
 				if (account) {
 					res.locals.account = {
 						_id: account._id.toString(),
