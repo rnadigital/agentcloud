@@ -113,6 +113,7 @@ export async function configureModelsPage(app, req, res, next) {
  * account page json data
  */
 export async function accountJson(req, res, next) {
+	console.log('accountJson');
 	const data = await accountData(req, res, next);
 	return res.json({ ...data, account: res.locals.account });
 }
