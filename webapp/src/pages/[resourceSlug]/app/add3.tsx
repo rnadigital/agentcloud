@@ -1,7 +1,6 @@
 import * as API from '@api';
 import { CheckBadgeIcon } from '@heroicons/react/24/outline';
 import ChatAppForm from 'components/ChatAppForm';
-import ChatAppForm2 from 'components/ChatAppForm2';
 import CrewAppForm from 'components/CrewAppForm';
 import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
@@ -192,7 +191,7 @@ export default function AddApp(props: AppsDataReturnType) {
 				);
 			case 1:
 				return (
-					<ChatAppForm2
+					<ChatAppForm
 						fetchFormData={fetchAppFormData}
 						agentChoices={agents}
 						modelChoices={models}

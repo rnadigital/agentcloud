@@ -239,15 +239,14 @@ export default withRouter(function Layout(props) {
 	const currentOrg = account?.orgs?.find(o => o.id === account?.currentOrg);
 	const isOrgOwner = currentOrg?.ownerId === account?._id;
 	const path = usePathname();
-	const showNavs = account && !noNavPages.some(p => path.includes(p));
+	const showNavs = account && !noNavPages.some(p => path?.includes(p));
 	const { toggleTheme, toggleUseSystemTheme } = useContext(ThemeContext);
 	const [sidebarOpen, setSidebarOpen] = useState(false);
 	const orgs = account?.orgs || [];
 	const scrollRef = useRef(null);
 
 	//this is temporary, will be removed once other pages are updated
-	const isRegisteringPage = Array.isArray(path) ? isFullPages.some(p => path.includes(p)) : false;
-
+	const isRegisteringPage = path && isFullPages.some(p => path.includes(p));
 	if (!account) {
 		// return 'Loading...'; //TODO: loader?
 	}
@@ -269,6 +268,21 @@ export default withRouter(function Layout(props) {
 			router
 		);
 	};
+
+	if (isRegisteringPage) {
+		return (
+			<>
+				<Head>
+					<meta charSet='utf-8' />
+					<meta name='viewport' content='width=device-width initial-scale=1' />
+					<link rel='shortcut icon' href='/images/favicon.ico' />
+				</Head>
+				<main className='flex flex-col flex-1'>
+					<div className='flex flex-col flex-1'>{children}</div>
+				</main>
+			</>
+		);
+	}
 
 	return (
 		<>
@@ -309,7 +323,7 @@ export default withRouter(function Layout(props) {
 												<p
 													className={cn(
 														'cursor-pointer hover:text-gray-300',
-														path.endsWith(link.path) ? 'text-gray-100' : 'text-gray-300'
+														path?.endsWith(link.path) ? 'text-gray-100' : 'text-gray-300'
 													)}
 												>
 													{link.name}
@@ -331,7 +345,7 @@ export default withRouter(function Layout(props) {
 										<p
 											className={cn(
 												'cursor-pointer hover:text-gray-300',
-												path.endsWith(item.href) ? 'text-gray-100' : 'text-gray-300'
+												path?.endsWith(item.href) ? 'text-gray-100' : 'text-gray-300'
 											)}
 										>
 											{item.name}

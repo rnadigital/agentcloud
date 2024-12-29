@@ -4,8 +4,8 @@ import {
 	CubeIcon,
 	CubeTransparentIcon
 } from '@heroicons/react/24/outline';
+import React from 'react';
 import cn from 'utils/cn';
-import React, { useState } from 'react';
 
 const steps = [
 	{

@@ -28,7 +28,6 @@ const LeftFrame = ({
 			handlePauseAnimation();
 		}
 	}, [showAnimation]);
-	console.log(lottieRef);
 
 	return (
 		<div className='w-full gradient-animation max-w-xl text-white pt-12 px-12 flex flex-col relative'>

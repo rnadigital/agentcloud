@@ -11,7 +11,7 @@ import { SubscriptionPlan } from 'struct/billing';
 export default function TrialNag() {
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
-	const { currentOrgDateCreated } = account as any;
+	const { currentOrgDateCreated } = account || {};
 	const { stripePlan, stripeTrial, stripeEndsAt, stripeCancelled } = account?.stripe || {};
 
 	const now = Date.now();

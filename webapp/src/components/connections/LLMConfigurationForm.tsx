@@ -8,7 +8,6 @@ import OnboardingSelect from 'components/onboarding/OnboardingSelect';
 import ToolTip from 'components/shared/ToolTip';
 import { useAccountContext } from 'context/account';
 import useResponsive from 'hooks/useResponsive';
-import cn from 'utils/cn';
 import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
 import { useEffect, useState } from 'react';
@@ -22,6 +21,7 @@ import {
 	ModelTypeRequirements
 } from 'struct/model';
 import { TeamModelResponse } from 'struct/teammodels';
+import cn from 'utils/cn';
 
 interface LLMOption {
 	label: string;
