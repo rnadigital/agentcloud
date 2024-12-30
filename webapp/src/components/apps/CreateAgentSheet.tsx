@@ -144,13 +144,6 @@ export const CreateAgentSheet = ({
 		return acc;
 	};
 
-	const {
-		register,
-		handleSubmit,
-		formState: { errors },
-		setValue
-	} = useForm({});
-
 	useEffect(() => {
 		setAgent(cloneState?.agent);
 		setIcon(cloneState?.agent?.icon);
@@ -251,7 +244,7 @@ export const CreateAgentSheet = ({
 				res => {
 					toast.error(res);
 				},
-				router
+				null
 			);
 			callback && addedAgent && callback(addedAgent._id, body);
 		}
