@@ -17,11 +17,13 @@ import { ToolType } from 'struct/tool';
 export const AgentSelectDisplay = ({
 	agentChoices,
 	toolChoices,
-	setSelectedAgent
+	setSelectedAgent,
+	setOpenEditSheet
 }: {
 	agentChoices: Agent[];
 	toolChoices: any[];
 	setSelectedAgent: React.Dispatch<React.SetStateAction<Agent>>;
+	setOpenEditSheet: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
 	return (
 		<div className='rounded-lg pn-6 border border-gray-200 bg-white'>
@@ -43,6 +45,7 @@ export const AgentSelectDisplay = ({
 					<Button
 						asChild
 						className='order-1 lg:order-2 bg-background border border-gray-300 hover:bg-background text-foreground'
+						onClick={() => setOpenEditSheet(true)}
 					>
 						<div className='w-full lg:w-fit text-xs font-medium flex items-center gap-2 cursor-pointer'>
 							<CirclePlus width={15} color='#6B7280' />

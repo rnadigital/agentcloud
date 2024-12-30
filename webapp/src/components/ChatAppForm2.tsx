@@ -12,6 +12,7 @@ import { AppsDataReturnType } from 'controllers/app';
 import { Model } from 'db/model';
 import useAutocompleteDropdown from 'hooks/useAutoCompleteDropdown';
 import { ChevronDown, Circle, Layout, Pencil, SendHorizonal, Trash2 } from 'lucide-react';
+import { MultiSelect } from 'modules/components/multi-select';
 import { Button } from 'modules/components/ui/button';
 import {
 	DropdownMenu,
@@ -36,8 +37,8 @@ import ConfirmModal from './ConfirmModal';
 import CreateDatasourceModal from './CreateDatasourceModal';
 import CreateModelModal from './CreateModelModal';
 import CreateToolModal from './modal/CreateToolModal';
-import CreateVariableModal from './variables/CreateVariableModal';
 import SharingModeSelect from './SharingModeSelect';
+import CreateVariableModal from './variables/CreateVariableModal';
 
 const chatAppTaglines = [
 	'Build single agent chat bots (like GPTS)',
@@ -76,6 +77,7 @@ export default function Apps({
 	editing?: boolean;
 	variableChoices?: AgentsDataReturnType['variables'];
 }) {
+	const [toolValue, setToolValue] = useState<string[]>([]);
 	const [hasLaunched, setHasLaunched] = useState<boolean>(false);
 	const [selectedAgent, setSelectedAgent] = useState<Agent>();
 	const [openEditSheet, setOpenEditSheet] = useState<boolean>(false);
@@ -568,7 +570,7 @@ export default function Apps({
 									/>
 								</div>
 							</div>
-							{selectedAgent ? (
+							{selectedAgent && (
 								<AgentCreatedDisplay
 									selectedAgent={selectedAgent}
 									setOpenEditSheet={setOpenEditSheet}
@@ -576,18 +578,23 @@ export default function Apps({
 									selectedAgentTools={selectedAgentTools}
 									setSelectedAgent={setSelectedAgent}
 								/>
-							) : agentChoices?.length > 0 ? (
+							)}
+							{!selectedAgent && agentChoices?.length > 0 && (
 								<AgentSelectDisplay
 									agentChoices={agentChoices}
 									toolChoices={toolChoices}
 									setSelectedAgent={setSelectedAgent}
+									setOpenEditSheet={setOpenEditSheet}
 								/>
-							) : (
+							)}
+
+							{(agentChoices?.length === 0 || openEditSheet) && (
 								<CreateAgentSheet
 									openEditSheet={openEditSheet}
 									setOpenEditSheet={setOpenEditSheet}
 								/>
 							)}
+
 							<div className='w-full flex flex-col justify-between bg-gray-100 p-6 rounded-lg gap-2'>
 								<p className='text-gray-500'>Conversation starters</p>
 								{conversationStarters.map(starter => (

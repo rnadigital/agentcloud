@@ -31,11 +31,12 @@ export const ToolsDialogContent = ({
 	isDialogOpen,
 	setIsDialogOpen,
 	toolValue,
-	setToolValue
+	setToolValue,
+	tools
 }: any) => {
-	const { tools } = useToolStore();
 	const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
 	const [screen, setScreen] = useState<string>('initial'); // screen, install, new, custom
+	console.log(tools);
 
 	function handleCloseDialog() {
 		setSelectedTool(null);
@@ -50,7 +51,7 @@ export const ToolsDialogContent = ({
 				onValueChange={setToolValue}
 				defaultValue={toolValue}
 				placeholder='Tools'
-				maxCount={1}
+				// maxCount={1}
 			/>
 			<DialogContent className='rounded-3xl sm:max-w-[864px] w-[90%] text-foreground  flex flex-col justify-between'>
 				<DialogHeader>

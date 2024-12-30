@@ -1,5 +1,5 @@
 import { cva, type VariantProps } from 'class-variance-authority';
-import { CheckIcon, ChevronDown, WandSparkles, Wrench, XCircle, XIcon } from 'lucide-react';
+import { CheckIcon, ChevronDown, Expand, WandSparkles, Wrench, XCircle, XIcon } from 'lucide-react';
 import { Badge } from 'modules/components/ui/badge';
 import { Button } from 'modules/components/ui/button';
 import {
@@ -11,10 +11,13 @@ import {
 	CommandList,
 	CommandSeparator
 } from 'modules/components/ui/command';
+import { DialogTrigger } from 'modules/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from 'modules/components/ui/popover';
 import { Separator } from 'modules/components/ui/separator';
 import * as React from 'react';
 import cn from 'utils/cn';
+
+import { PopoverContentDialog } from './ui/popover-dialog';
 
 /**
  * Variants for the multi-select component to handle different styles.
@@ -52,7 +55,6 @@ interface MultiSelectProps
 	options: {
 		/** The text to display for the option. */
 		label: string;
-		type?: string;
 		/** The unique value associated with the option. */
 		value: string;
 		/** Optional icon component to display alongside the option. */
@@ -106,7 +108,7 @@ interface MultiSelectProps
 	className?: string;
 }
 
-export const MultiSelectComboBox = React.forwardRef<HTMLButtonElement, MultiSelectProps>(
+export const MultiSelectWithDialog = React.forwardRef<HTMLButtonElement, MultiSelectProps>(
 	(
 		{
 			options,
@@ -139,8 +141,8 @@ export const MultiSelectComboBox = React.forwardRef<HTMLButtonElement, MultiSele
 		};
 
 		const toggleOption = (option: string) => {
-			const newSelectedValues = selectedValues.includes(option)
-				? selectedValues.filter(value => value !== option)
+			const newSelectedValues = selectedValues?.includes(option)
+				? selectedValues?.filter(value => value !== option)
 				: [...selectedValues, option];
 			setSelectedValues(newSelectedValues);
 			onValueChange(newSelectedValues);
@@ -162,7 +164,7 @@ export const MultiSelectComboBox = React.forwardRef<HTMLButtonElement, MultiSele
 		};
 
 		const toggleAll = () => {
-			if (selectedValues.length === options.length) {
+			if (selectedValues?.length === options?.length) {
 				handleClear();
 			} else {
 				const allValues = options.map(option => option.value);
@@ -183,10 +185,10 @@ export const MultiSelectComboBox = React.forwardRef<HTMLButtonElement, MultiSele
 							className
 						)}
 					>
-						{selectedValues.length > 0 ? (
+						{selectedValues?.length > 0 ? (
 							<div className='flex justify-between items-center w-full'>
 								<div className='flex flex-wrap items-center'>
-									{selectedValues.slice(0, maxCount).map(value => {
+									{selectedValues?.slice(0, maxCount).map(value => {
 										const option = options.find(o => o.value === value);
 										const IconComponent = option?.icon;
 										return (
@@ -210,7 +212,7 @@ export const MultiSelectComboBox = React.forwardRef<HTMLButtonElement, MultiSele
 											</Badge>
 										);
 									})}
-									{selectedValues.length > maxCount && (
+									{selectedValues?.length > maxCount && (
 										<Badge
 											className={cn(
 												'bg-transparent text-foreground border-foreground/1 hover:bg-transparent',
@@ -219,7 +221,7 @@ export const MultiSelectComboBox = React.forwardRef<HTMLButtonElement, MultiSele
 											)}
 											style={{ animationDuration: `${animation}s` }}
 										>
-											{`+ ${selectedValues.length - maxCount} more`}
+											{`+ ${selectedValues?.length - maxCount} more`}
 											<XCircle
 												className='ml-2 h-4 w-4 cursor-pointer'
 												onClick={event => {
@@ -253,13 +255,28 @@ export const MultiSelectComboBox = React.forwardRef<HTMLButtonElement, MultiSele
 						)}
 					</Button>
 				</PopoverTrigger>
-				<PopoverContent
-					className='p-0 min-w-[var(--radix-popover-trigger-width)] w-full'
+				<PopoverContentDialog
+					className='p-0 min-w-[var(--radix-popover-trigger-width)] w-full pointer-events-auto'
 					align='start'
 					onEscapeKeyDown={() => setIsPopoverOpen(false)}
 				>
 					<Command>
-						<CommandInput placeholder='Search...' onKeyDown={handleInputKeyDown} />
+						<div className='flex items-center justify-between'>
+							<CommandInput placeholder='Search...' onKeyDown={handleInputKeyDown} />
+							<DialogTrigger>
+								<Button
+									asChild
+									variant='ghost'
+									className='bg-transparent text-foreground hover:bg-transparent hover:text-foreground p-0 border-0 shadow-none outline-none'
+								>
+									<div className='flex items-center gap-1 text-gray-500 text-xs px-2'>
+										<Expand width={10} />
+										<p>More tools</p>
+									</div>
+								</Button>
+							</DialogTrigger>
+						</div>
+
 						<CommandList>
 							<CommandEmpty>No results found.</CommandEmpty>
 							<CommandGroup>
@@ -267,7 +284,7 @@ export const MultiSelectComboBox = React.forwardRef<HTMLButtonElement, MultiSele
 									<div
 										className={cn(
 											'mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary',
-											selectedValues.length === options.length
+											selectedValues?.length === options.length
 												? 'bg-primary text-primary-foreground'
 												: 'opacity-50 [&_svg]:invisible'
 										)}
@@ -277,7 +294,7 @@ export const MultiSelectComboBox = React.forwardRef<HTMLButtonElement, MultiSele
 									<span>(Select All)</span>
 								</CommandItem>
 								{options.map(option => {
-									const isSelected = selectedValues.includes(option.value);
+									const isSelected = selectedValues?.includes(option.value);
 									return (
 										<CommandItem
 											key={option.value}
@@ -297,10 +314,7 @@ export const MultiSelectComboBox = React.forwardRef<HTMLButtonElement, MultiSele
 											{option.icon && (
 												<option.icon className='mr-2 h-4 w-4 text-muted-foreground' />
 											)}
-											<div className='flex flex-col'>
-												<span>{option.label}</span>
-												<span className='text-xs text-muted-foreground'>{option.type}</span>
-											</div>
+											<span>{option.label}</span>
 										</CommandItem>
 									);
 								})}
@@ -308,7 +322,7 @@ export const MultiSelectComboBox = React.forwardRef<HTMLButtonElement, MultiSele
 							<CommandSeparator />
 							<CommandGroup>
 								<div className='flex items-center justify-between'>
-									{selectedValues.length > 0 && (
+									{selectedValues?.length > 0 && (
 										<>
 											<CommandItem
 												onSelect={handleClear}
@@ -329,8 +343,8 @@ export const MultiSelectComboBox = React.forwardRef<HTMLButtonElement, MultiSele
 							</CommandGroup>
 						</CommandList>
 					</Command>
-				</PopoverContent>
-				{animation > 0 && selectedValues.length > 0 && (
+				</PopoverContentDialog>
+				{animation > 0 && selectedValues?.length > 0 && (
 					<WandSparkles
 						className={cn(
 							'cursor-pointer my-2 text-foreground bg-background w-3 h-3',
@@ -344,4 +358,4 @@ export const MultiSelectComboBox = React.forwardRef<HTMLButtonElement, MultiSele
 	}
 );
 
-MultiSelectComboBox.displayName = 'MultiSelectComboBox';
+MultiSelectWithDialog.displayName = 'MultiSelect';

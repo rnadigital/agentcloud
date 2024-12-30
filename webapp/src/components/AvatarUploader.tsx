@@ -92,7 +92,7 @@ export default function AvatarUploader({ callback, existingAvatar }) {
 			{error && <ErrorAlert error={error} />}
 			<div className='w-24 h-24 rounded-full overflow-hidden border-2 border-dashed'>
 				<label
-					{...getRootProps({ className: 'dropzone' })}
+					{...getRootProps({ className: 'dropzone', onClick: e => e.stopPropagation() })}
 					htmlFor='file'
 					className='block text-center h-full cursor-pointer'
 				>

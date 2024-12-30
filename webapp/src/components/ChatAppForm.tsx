@@ -77,7 +77,7 @@ export default function ChatAppForm({
 			: [{ name: '' }]
 	);
 	console.log(conversationStarters);
-	const [agentName, setAgentName] = useState(initialAgent?.name || selectedAgent?.name || '');
+	const [agentName, setAgentName] = useState(initialAgent?.name || '');
 	const [role, setRole] = useState(initialAgent?.role || '');
 	const [goal, setGoal] = useState(initialAgent?.goal || '');
 	const [backstory, setBackstory] = useState(initialAgent?.backstory || '');

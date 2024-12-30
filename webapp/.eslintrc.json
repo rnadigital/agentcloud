@@ -7,7 +7,7 @@
 		"src/**/*.test.ts"
 	],
 	"extends": [
-		"next/core-web-vitals",
+		// "next/core-web-vitals",
 		"plugin:prettier/recommended"
 	],
 	"parserOptions": {
@@ -21,6 +21,8 @@
 		"react-hooks/exhaustive-deps": "off",
 		"@next/next/no-img-element": "off",
 		"import/no-anonymous-default-export": "off",
-		"jsx-a11y/alt-text": "off"
+		"jsx-a11y/alt-text": "off",
+		"prettier/prettier": ["error", { "bracketSameLine": true }]
+
 	}
 }
