@@ -38,6 +38,7 @@ import { ModelEmbeddingLength, ModelType } from 'struct/model';
 import { ToolType } from 'struct/tool';
 
 import { ToolsDialogContent } from './ToolsDialogContent';
+import { Dialog, DialogContent } from 'modules/components/ui/dialog';
 // import { MultiSelectComboBox } from '../MultiSelectComboBox/multi-select-combobox';
 
 export const CreateAgentSheet = ({
@@ -395,6 +396,7 @@ export const CreateAgentSheet = ({
 
 	return (
 		<Sheet open={openEditSheet} onOpenChange={setOpenEditSheet}>
+			{modal}
 			<SheetTrigger className='font-medium border-0'>
 				<div className='w-full flex flex-col items-center justify-center bg-gray-100 p-6 rounded-lg'>
 					<div className='flex items-center justify-center mb-4'>
@@ -470,6 +472,7 @@ export const CreateAgentSheet = ({
 										Role
 									</Label>
 									<Textarea
+										name='role'
 										ref={autocompleteRole.inputRef}
 										className='bg-gray-50 border border-gray-300'
 										id='role'
@@ -517,6 +520,7 @@ export const CreateAgentSheet = ({
 										Goal
 									</Label>
 									<Textarea
+										name='goal'
 										ref={autocompleteGoal.inputRef}
 										id='goal'
 										className='resize-none h-20 bg-gray-50 border-gray-300'
@@ -542,6 +546,7 @@ export const CreateAgentSheet = ({
 										Backstory
 									</Label>
 									<Textarea
+										name='backstory'
 										ref={autocompleteBackstory.inputRef}
 										id='backstory'
 										className='resize-none h-28 bg-gray-50 border-gray-300'
