@@ -9,7 +9,6 @@ import { useAccountContext } from 'context/account';
 import { AgentDataReturnType, AgentsDataReturnType } from 'controllers/agent';
 import useAutocompleteDropdown from 'hooks/useAutoCompleteDropdown';
 import { BookText, ChevronDown, CircleUserRound, Cpu } from 'lucide-react';
-import { Cat, Dog, Fish, Rabbit, Turtle } from 'lucide-react';
 import { MultiSelectWithDialog } from 'modules/components/multi-select-dialog';
 import { Button } from 'modules/components/ui/button';
 import {
@@ -189,7 +188,6 @@ export const CreateAgentSheet = ({
 	const [datasourceState, setDatasourceState] = useState(
 		initialDatasources.length > 0 ? initialDatasources : null
 	); //Note: still technically tools, just only RAG tools
-
 	useEffect(() => {
 		if (models && models.length > 0 && !modelId) {
 			setAgent({
@@ -210,7 +208,7 @@ export const CreateAgentSheet = ({
 			functionModelId
 		});
 		const body: any = {
-			_csrf: e.target._csrf.value,
+			_csrf: csrf,
 			resourceSlug,
 			name: e.target.name.value,
 			modelId,
@@ -220,9 +218,7 @@ export const CreateAgentSheet = ({
 			role: e.target.role.value,
 			goal: e.target.goal.value,
 			backstory: e.target.backstory.value,
-			toolIds: (toolState || [])
-				.map(x => x.value)
-				.concat((datasourceState || []).map(x => x.value)),
+			toolIds: [...(toolValue || []), ...(datasourceState || [])],
 			iconId: icon?.id,
 			variableIds:
 				Array.from(
@@ -421,7 +417,7 @@ export const CreateAgentSheet = ({
 						</div>
 					</SheetTitle>
 					<SheetDescription className='border-t border-gray-200 py-3 px-1'>
-						<form>
+						<form onSubmit={agentPost}>
 							<section className='pb-3 flex flex-col gap-4'>
 								<div className='flex justify-between gap-2'>
 									{/* <div className='flex flex-col gap-2'>
@@ -463,7 +459,7 @@ export const CreateAgentSheet = ({
 										type='text'
 										id='name'
 										placeholder='Agent Name'
-										{...register('name')}
+										name='name'
 									/>
 								</div>
 
@@ -646,10 +642,7 @@ export const CreateAgentSheet = ({
 									Cancel
 								</Button>
 								<Button
-									onClick={() => {
-										setOpenEditSheet(false);
-										setAgentDisplay(true);
-									}}
+									type='submit'
 									className='bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white font-medium text-sm py-2'>
 									Save
 								</Button>

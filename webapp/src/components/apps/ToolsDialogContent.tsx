@@ -1,4 +1,3 @@
-import { MultiSelect } from 'modules/components/multi-select';
 import { Button } from 'modules/components/ui/button';
 import {
 	Dialog,
@@ -15,6 +14,7 @@ import { Initial } from './toolsdialogscreens/Initial';
 import { Install } from './toolsdialogscreens/Install';
 import { New } from './toolsdialogscreens/New';
 import { ToolDisplay } from './toolsdialogscreens/Tool';
+import { MultiSelect } from 'modules/components/multi-select';
 
 type Tool = {
 	title: string;
@@ -36,7 +36,6 @@ export const ToolsDialogContent = ({
 }: any) => {
 	const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
 	const [screen, setScreen] = useState<string>('initial'); // screen, install, new, custom
-	console.log(tools);
 
 	function handleCloseDialog() {
 		setSelectedTool(null);
@@ -82,23 +81,20 @@ export const ToolsDialogContent = ({
 					<div className='flex w-full justify-between items-center border-t border-gray-200 py-4'>
 						<Button
 							onClick={handleCloseDialog}
-							className='bg-transparent text-foreground hover:bg-transparent hover:text-foreground'
-						>
+							className='bg-transparent text-foreground hover:bg-transparent hover:text-foreground'>
 							Cancel
 						</Button>
 						{selectedTool && screen === 'tool' && (
 							<Button
 								onClick={() => setScreen('install')}
-								className='bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white py-2.5 px-4 rounded-lg'
-							>
+								className='bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white py-2.5 px-4 rounded-lg'>
 								Save
 							</Button>
 						)}
 						{screen === 'new' && (
 							<Button
 								onClick={() => setScreen('install')}
-								className='bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white py-2.5 px-4 rounded-lg'
-							>
+								className='bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white py-2.5 px-4 rounded-lg'>
 								Save
 							</Button>
 						)}

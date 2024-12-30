@@ -143,6 +143,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 			const newSelectedValues = selectedValues?.includes(option)
 				? selectedValues?.filter(value => value !== option)
 				: [...selectedValues, option];
+			console.log(option, newSelectedValues);
 			setSelectedValues(newSelectedValues);
 			onValueChange(newSelectedValues);
 		};
