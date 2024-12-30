@@ -1,4 +1,5 @@
 import * as API from '@api';
+
 import { AgentCreatedDisplay } from 'components/apps/AgentCreatedDisplay';
 import { AgentSelectDisplay } from 'components/apps/AgentSelectDisplay';
 import { CreateAgentSheet } from 'components/apps/CreateAgentSheet';
@@ -87,12 +88,14 @@ export default function Apps({
 		{ id: 2, text: 'What can you help me with?' }
 	]);
 	const [pendingAgentId, setPendingAgentId] = useState<string>();
-
+	const [run, setRun] = useState(false);
 	const [outsideOrg, setOutsideOrg] = useState(false);
 	const [modalOpen, setModalOpen]: any = useState(false);
 
 	const selectedAgentModel = modelChoices.find(model => model._id === selectedAgent?.modelId);
 	const selectedAgentTools = toolChoices.filter(tool => selectedAgent?.toolIds?.includes(tool._id));
+
+	const posthog = usePostHog();
 
 	const handleStarterEdit = (id: number, newText: string) => {
 		setConversationStarters(
@@ -183,6 +186,91 @@ export default function Apps({
 			break;
 	}
 
+	async function appPost(e) {
+		e.preventDefault();
+		const body = {
+			_csrf: e.target._csrf.value,
+			resourceSlug,
+			//app section
+			name: appName,
+			description,
+			conversationStarters: conversationStarters,
+			sharingEmails: sharingEmailState.map(x => x?.label.trim()).filter(x => x),
+			sharingMode,
+			shareLinkShareId,
+			run,
+			maxMessages,
+			//existing agent
+			agentId: selectedAgent?._id
+		};
+
+		if (editing === true) {
+			posthog.capture('updateApp', {
+				appId: app._id,
+				appType: AppType.CHAT,
+				appName,
+				run
+			});
+			await API.editApp(
+				app._id,
+				body,
+				() => {
+					toast.success('App Updated');
+					if (run === true) {
+						posthog.capture('startSession', {
+							appId: app._id,
+							appType: AppType.CHAT,
+							appName
+						});
+						API.addSession(
+							{
+								_csrf: e.target._csrf.value,
+								resourceSlug,
+								id: app._id
+							},
+							null,
+							toast.error,
+							router
+						);
+					}
+				},
+				toast.error,
+				null
+			);
+		} else {
+			API.addApp(
+				body,
+				res => {
+					posthog.capture('createApp', {
+						appId: res._id,
+						appType: AppType.CHAT,
+						appName,
+						run
+					});
+					if (run === true) {
+						posthog.capture('startSession', {
+							appId: res._id,
+							appType: AppType.CHAT,
+							appName
+						});
+						API.addSession(
+							{
+								_csrf: e.target._csrf.value,
+								resourceSlug,
+								id: res._id
+							},
+							null,
+							toast.error,
+							router
+						);
+					}
+				},
+				toast.error,
+				router
+			);
+		}
+	}
+
 	useEffect(() => {
 		if (sharingMode !== SharingMode.WHITELIST) {
 			setSharingEmailState([]);
@@ -211,7 +299,7 @@ export default function Apps({
 				<InsightChat hasLaunched={hasLaunched} setHasLaunched={setHasLaunched} />
 			) : (
 				<div className='flex border border-gray-200 rounded-lg'>
-					<section className='flex flex-col justify-between border border-gray-200 rounded-l-lg w-full minh-[790px]'>
+					<form className='flex flex-col justify-between border border-gray-200 rounded-l-lg w-full minh-[790px]'>
 						<article className='flex flex-col p-5 gap-6'>
 							<div className='flex items-center gap-3 h-24'>
 								<img className='rounded-3xl' src='/apps/identicon.png' />
@@ -383,20 +471,29 @@ export default function Apps({
 								/>
 							</div>
 						</article>
-						<article className='flex items-center justify-between px-3 py-3 border-t border-gray-200'>
+						<article className='flex items-center justify-between px-6 py-3 border-t border-gray-200'>
 							<Button
 								variant='ghost'
 								className='bg-transparent text-foreground hover:bg-transparent hover:text-foreground p-0 border-0 shadow-none outline-none'>
 								Cancel
 							</Button>
 							<Button
-								onClick={() => {}}
+								onClick={() => setRun(true)}
 								variant='ghost'
-								className='bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white font-medium text-sm py-2 hover:text-white'>
-								Launch &gt;
+								className='ml-auto bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white font-medium text-sm py-2 hover:text-white'>
+								Save
+							</Button>
+							<Button
+								type='submit'
+								onClick={() => {
+									setRun(true);
+								}}
+								variant='ghost'
+								className='ml-2 bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white font-medium text-sm py-2 hover:text-white'>
+								Save & Launch
 							</Button>
 						</article>
-					</section>
+					</form>
 
 					<section className='border border-gray-200 rounded-r-lg w-96 flex flex-col justify-between hidden md:flex'>
 						<article className='flex flex-col justify-center items-center h-full'>
