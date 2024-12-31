@@ -1,7 +1,6 @@
 import * as API from '@api';
 import { HomeIcon, PlusIcon } from '@heroicons/react/20/solid';
 import AgentList from 'components/AgentList';
-import AgentList2 from 'components/AgentList2';
 import NewButtonSection from 'components/NewButtonSection';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import Spinner from 'components/Spinner';
@@ -18,22 +17,8 @@ export default function Agents(props) {
 
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
-	const { agents, tools } = state;
-	console.log('state');
-	console.log(state);
+	const { agents } = state;
 	const filteredAgents = agents?.filter(x => !x.hidden);
-	const agentsWithTools = filteredAgents?.map(agent => {
-		const agentTools = agent.toolIds
-			?.map(toolId => {
-				return tools?.find(tool => tool._id.toString() === toolId.toString());
-			})
-			.filter(Boolean);
-
-		return {
-			...agent,
-			tools: agentTools || []
-		};
-	});
 
 	function fetchAgents() {
 		API.getAgents({ resourceSlug }, dispatch, setError, router);
@@ -52,6 +37,13 @@ export default function Agents(props) {
 			<Head>
 				<title>{`Agents - ${teamName}`}</title>
 			</Head>
+
+			<PageTitleWithNewButton
+				list={filteredAgents}
+				title='Agents'
+				buttonText='New Agent'
+				href='/agent/add'
+			/>
 
 			{agents.length === 0 && (
 				<NewButtonSection
@@ -84,7 +76,7 @@ export default function Agents(props) {
 					buttonMessage={'New Agent'}
 				/>
 			)}
-			<AgentList2 agents={agentsWithTools} fetchAgents={fetchAgents} />
+			<AgentList agents={filteredAgents} fetchAgents={fetchAgents} />
 		</>
 	);
 }
