@@ -189,19 +189,22 @@ export default function Apps({
 	async function appPost(e) {
 		e.preventDefault();
 		const body = {
-			_csrf: e.target._csrf.value,
+			_csrf: csrf,
 			resourceSlug,
 			//app section
 			name: appName,
 			description,
-			conversationStarters: conversationStarters,
+			conversationStarters: conversationStarters.map(x => x.text),
 			sharingEmails: sharingEmailState.map(x => x?.label.trim()).filter(x => x),
 			sharingMode,
 			shareLinkShareId,
 			run,
 			maxMessages,
 			//existing agent
-			agentId: selectedAgent?._id
+			agentId: selectedAgent?._id,
+			type: AppType.CHAT,
+			// iconId: icon?.id,
+			cloning: app && !editing
 		};
 
 		if (editing === true) {
@@ -224,7 +227,7 @@ export default function Apps({
 						});
 						API.addSession(
 							{
-								_csrf: e.target._csrf.value,
+								_csrf: csrf,
 								resourceSlug,
 								id: app._id
 							},
@@ -255,7 +258,7 @@ export default function Apps({
 						});
 						API.addSession(
 							{
-								_csrf: e.target._csrf.value,
+								_csrf: csrf,
 								resourceSlug,
 								id: res._id
 							},
@@ -299,7 +302,9 @@ export default function Apps({
 				<InsightChat hasLaunched={hasLaunched} setHasLaunched={setHasLaunched} />
 			) : (
 				<div className='flex border border-gray-200 rounded-lg'>
-					<form className='flex flex-col justify-between border border-gray-200 rounded-l-lg w-full minh-[790px]'>
+					<form
+						className='flex flex-col justify-between border border-gray-200 rounded-l-lg w-full minh-[790px]'
+						onSubmit={appPost}>
 						<article className='flex flex-col p-5 gap-6'>
 							<div className='flex items-center gap-3 h-24'>
 								<img className='rounded-3xl' src='/apps/identicon.png' />
