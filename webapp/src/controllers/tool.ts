@@ -127,6 +127,8 @@ export async function toolAddPage(app, req, res, next) {
 }
 
 function validateTool(tool) {
+	const toolType = tool.type;
+
 	return chainValidations(
 		tool,
 		[
@@ -134,7 +136,11 @@ function validateTool(tool) {
 			{ field: 'type', validation: { notEmpty: true, inSet: new Set(Object.values(ToolTypes)) } },
 			{
 				field: 'retriever',
-				validation: { notEmpty: true, inSet: new Set(Object.values(Retriever)) }
+				validation: {
+					notEmpty: true,
+					inSet: new Set(Object.values(Retriever))
+				},
+				validateIf: { field: 'type', condition: value => value === ToolType.RAG_TOOL }
 			},
 			{
 				field: 'description',
@@ -143,7 +149,11 @@ function validateTool(tool) {
 			},
 			{
 				field: 'datasourceId',
-				validation: { notEmpty: true, hasLength: 24, customError: 'Invalid data sources' },
+				validation: {
+					notEmpty: toolType === ToolType.RAG_TOOL,
+					hasLength: 24,
+					customError: 'Invalid data sources'
+				},
 				validateIf: { field: 'type', condition: value => value == ToolType.RAG_TOOL }
 			},
 			{
