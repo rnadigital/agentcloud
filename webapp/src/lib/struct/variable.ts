@@ -12,4 +12,5 @@ export interface Variable {
 	createDate?: Date;
 	usedInTasks?: (ObjectId | string)[];
 	usedInAgents?: (ObjectId | string)[];
+	description?: string;
 }

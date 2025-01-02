@@ -5,6 +5,7 @@ import { Fragment, useEffect, useState } from 'react';
 
 import VariableForm from './VariableForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from 'modules/components/ui/dialog';
+import { Separator } from 'modules/components/ui/separator';
 
 interface CreateVariableModalProps {
 	open: boolean;
@@ -19,7 +20,6 @@ export default function CreateVariableModal({ open, setOpen, callback }: CreateV
 	const { resourceSlug } = router.query;
 	const [state, dispatch] = useState({});
 	const [error, setError] = useState();
-	console.log(callback);
 
 	async function fetchVariableFormData() {
 		await API.getVariables({ resourceSlug }, dispatch, setError, router);
@@ -33,7 +33,8 @@ export default function CreateVariableModal({ open, setOpen, callback }: CreateV
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogContent>
 				<DialogHeader>
-					<DialogTitle>Create a Variable</DialogTitle>
+					<DialogTitle className='text-2xl'>New Variable</DialogTitle>
+					<Separator />
 				</DialogHeader>
 				<VariableForm callback={callback} fetchVariableFormData={fetchVariableFormData} />
 			</DialogContent>
