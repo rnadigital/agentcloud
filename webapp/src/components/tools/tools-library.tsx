@@ -20,7 +20,15 @@ import { useAccountContext } from 'context/account';
 import { usePostHog } from 'posthog-js/react';
 import { toast } from 'react-toastify';
 
-export const ToolsLibrary = ({ tools, fetchTools }: { tools: Tool[]; fetchTools: () => void }) => {
+export const ToolsLibrary = ({
+	tools,
+	fetchTools,
+	setActiveTab
+}: {
+	tools: Tool[];
+	fetchTools: Function;
+	setActiveTab: Function;
+}) => {
 	// const { tools } = useToolStore();
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
@@ -33,31 +41,6 @@ export const ToolsLibrary = ({ tools, fetchTools }: { tools: Tool[]; fetchTools:
 		setDialogScreen('toolDisplay');
 	}
 
-	const [accountContext]: any = useAccountContext();
-	const { account, csrf } = accountContext as any;
-	const router = useRouter();
-	const { resourceSlug } = router.query;
-	const posthog = usePostHog();
-
-	async function deleteTool(toolId) {
-		API.deleteTool(
-			{
-				_csrf: csrf,
-				resourceSlug,
-				toolId
-			},
-			() => {
-				fetchTools();
-				toast('Deleted tool');
-			},
-			error => {
-				toast.error(error || 'Error deleting tool', {
-					autoClose: 10000 //Long error text, TODO have a different ay of shoing this?
-				});
-			},
-			router
-		);
-	}
 	return (
 		<Fragment>
 			<Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -75,13 +58,16 @@ export const ToolsLibrary = ({ tools, fetchTools }: { tools: Tool[]; fetchTools:
 								setSelectedTool={setSelectedTool}
 								handleCloseDialog={handleCloseDialog}
 								setDialogScreen={setDialogScreen}
+								callback={() => fetchTools()}
 							/>
 						) : dialogScreen === 'installed' ? (
 							<Install
 								type={'page'}
 								setScreen={setDialogScreen}
 								setSelectedTool={setSelectedTool}
+								selectedTool={selectedTool}
 								setIsDialogOpen={setIsDialogOpen}
+								setActiveTab={setActiveTab}
 							/>
 						) : null)}
 				</DialogContent>
@@ -106,33 +92,35 @@ export const ToolsLibrary = ({ tools, fetchTools }: { tools: Tool[]; fetchTools:
 								<div className='flex justify-between items-center text-xs'></div>
 							</div>
 						</div>
-						{tools?.map((tool, index) => (
-							<div
-								onClick={() => {
-									setIsDialogOpen(true);
-									setSelectedTool(tool);
-								}}
-								key={index}
-								className='w-full h-[170px] border border-gray-200 p-4 gap-2 shadow-sm hover:shadow-md transition flex cursor-pointer overflow-auto'>
-								{/* {!tool.isInstalled && <Box color='#2F2A89' width={40} className='mt-3 lg:mt-1' />} */}
-								<div className='flex flex-col justify-around lg:justify-between'>
-									<div className='flex flex-col gap-1'>
-										<p className='font-semibold'>{tool.name}</p>
-										<p className='text-sm text-gray-500 line-clamp-3'>{tool.description}</p>
-									</div>
-									<div className='flex justify-between items-center text-xs'>
-										<p key={index} className='py-1 px-2 rounded-full w-fit'>
-											Custom Tool
-										</p>
-										{!tool.linkedToolId && (
-											<Button variant='outline' className='text-xs'>
-												Install
-											</Button>
-										)}
+						{tools
+							.filter(tool => !tool.linkedToolId)
+							.map((tool, index) => (
+								<div
+									onClick={() => {
+										setIsDialogOpen(true);
+										setSelectedTool(tool);
+									}}
+									key={index}
+									className='w-full h-[170px] border border-gray-200 p-4 gap-2 shadow-sm hover:shadow-md transition flex cursor-pointer overflow-auto'>
+									{/* {!tool.isInstalled && <Box color='#2F2A89' width={40} className='mt-3 lg:mt-1' />} */}
+									<div className='flex flex-col justify-around lg:justify-between'>
+										<div className='flex flex-col gap-1'>
+											<p className='font-semibold'>{tool.name}</p>
+											<p className='text-sm text-gray-500 line-clamp-3'>{tool.description}</p>
+										</div>
+										<div className='flex justify-between items-center text-xs'>
+											<p key={index} className='py-1 px-2 rounded-full w-fit'>
+												Custom Tool
+											</p>
+											{!tool.linkedToolId && (
+												<Button variant='outline' className='text-xs'>
+													Install
+												</Button>
+											)}
+										</div>
 									</div>
 								</div>
-							</div>
-						))}
+							))}
 					</div>
 				)}
 			</TabsContent>

@@ -24,6 +24,7 @@ export default function ToolList2({ tools, fetchTools }: { tools: Tool[]; fetchT
 	const posthog = usePostHog();
 
 	const [filteredTools, setFilteredTools] = useState(tools);
+	const [activeTab, setActiveTab] = useState('tool-library');
 
 	useEffect(() => {
 		const filteredTools = tools.filter(tool => {
@@ -69,17 +70,25 @@ export default function ToolList2({ tools, fetchTools }: { tools: Tool[]; fetchT
 				</div>
 			</section>
 			<section>
-				<Tabs defaultValue='tool-library' className='mt-4 w-full'>
+				<Tabs defaultValue='tool-library' className='mt-4 w-full' value={activeTab}>
 					<TabsList className='bg-transparent p-0 flex items-center'>
-						<TabsTrigger className='w-fit text-gray-500' variant='underline' value='my-tools'>
+						<TabsTrigger
+							className='w-fit text-gray-500'
+							variant='underline'
+							value='my-tools'
+							onClick={() => setActiveTab('my-tools')}>
 							My Tools
 						</TabsTrigger>
-						<TabsTrigger className='w-fit text-gray-500' variant='underline' value='tool-library'>
+						<TabsTrigger
+							className='w-fit text-gray-500'
+							variant='underline'
+							value='tool-library'
+							onClick={() => setActiveTab('tool-library')}>
 							Tool Library
 						</TabsTrigger>
 					</TabsList>
-					<ToolsMytools />
-					<ToolsLibrary tools={filteredTools} />
+					<ToolsMytools tools={filteredTools} fetchTools={fetchTools} />
+					<ToolsLibrary tools={filteredTools} fetchTools={fetchTools} setActiveTab={setActiveTab} />
 				</Tabs>
 			</section>
 		</main>

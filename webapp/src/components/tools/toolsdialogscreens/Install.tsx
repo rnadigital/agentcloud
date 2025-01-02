@@ -1,34 +1,28 @@
 import { Box, Check } from 'lucide-react';
 import { Button } from 'modules/components/ui/button';
-
-type Tool = {
-	title: string;
-	description: string;
-	isInstalled: boolean;
-	tags: {
-		name: string;
-		textColor: string;
-		backgroundColor: string;
-	}[];
-};
+import { Tool } from 'struct/tool';
 
 export const Install = ({
+	selectedTool,
 	setSelectedTool,
 	setScreen,
 	type,
-	setIsDialogOpen
+	setIsDialogOpen,
+	setActiveTab
 }: {
+	selectedTool: Tool | null;
 	setSelectedTool: React.Dispatch<React.SetStateAction<Tool | null>>;
 	setScreen: React.Dispatch<React.SetStateAction<string>>;
 	setIsDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
 	type: string;
+	setActiveTab: Function;
 }) => {
 	return (
 		<section className='flex flex-col gap-6 items-center rounded-lg border border-gray-200 shadow-md h-full justify-center p-10'>
 			<div className='flex flex-col gap-2 items-center'>
 				<div className='flex items-center gap-2'>
 					<Box color='#2F2A89' width={14} />
-					<p className='font-semibold'>Agent Cloud Rag Tool(1)</p>
+					<p className='font-semibold'>{selectedTool?.name}</p>
 				</div>
 				<div className='flex items-center gap-2'>
 					<div>
@@ -50,6 +44,7 @@ export const Install = ({
 					} else {
 						setScreen('initial');
 					}
+					setActiveTab('my-tools');
 				}}>
 				{type === 'page' ? 'Go to My Tools' : 'Add Tool to Agent'}
 			</Button>
