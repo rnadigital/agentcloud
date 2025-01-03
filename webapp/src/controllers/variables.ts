@@ -127,7 +127,8 @@ export async function editVariableApi(req, res, next) {
 
 	const updatedVariable = {
 		name: req.body.name,
-		defaultValue: req.body.defaultValue
+		defaultValue: req.body.defaultValue,
+		description: req.body.description
 	};
 
 	await updateVariable(req.params.resourceSlug, req.params.variableId, updatedVariable);
