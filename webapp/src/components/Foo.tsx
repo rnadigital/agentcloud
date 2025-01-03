@@ -1,19 +1,23 @@
+import { PlusIcon } from 'lucide-react';
+import { Button } from 'modules/components/ui/button';
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger
+} from 'modules/components/ui/dropdown-menu';
 import { useState, useRef, useEffect } from 'react';
+import { Task } from 'struct/task';
 
-export default function TaskFlow() {
-	const initialTasks = [
-		'Data Collection',
-		'Data Cleaning',
-		'Data Analysis',
-		'Predictive Modeling',
-		'Model Evaluation',
-		'Report Generation',
-		'Automation of Workflow',
-		'Deployment'
-	];
-
+export default function TaskFlow({
+	taskChoices,
+	setModalOpen
+}: {
+	taskChoices: Task[];
+	setModalOpen: (modal: string) => void;
+}) {
 	const [tasks, setTasks] = useState([]);
-	const [availableTasks, setAvailableTasks] = useState(initialTasks);
+	const [availableTasks, setAvailableTasks] = useState(taskChoices.map(task => task.name));
 	const [rows, setRows] = useState([]);
 	const [createTaskFits, setCreateTaskFits] = useState(false);
 	const [isModalOpen, setIsModalOpen] = useState(false);
@@ -40,42 +44,39 @@ export default function TaskFlow() {
 		let currentRowWidth = 0;
 		let taskCounter = 1;
 
-		// First row starts with Start element
 		currentRow.push({ type: 'start', width: startWidth });
 		currentRowWidth = startWidth;
 
 		tasks.forEach(task => {
-			// Create temporary element to measure text width
 			const tempSpan = document.createElement('span');
 			tempSpan.style.visibility = 'hidden';
 			tempSpan.style.position = 'absolute';
-			tempSpan.style.fontSize = '14px'; // Match your task text size
-			tempSpan.style.padding = '8px 16px'; // Match your task padding
+			tempSpan.style.fontSize = '14px';
+			tempSpan.style.padding = '8px 16px';
 			tempSpan.innerText = task;
 			document.body.appendChild(tempSpan);
 
-			// Get width and add some padding for the task container
-			const taskWidth = tempSpan.offsetWidth + 40; // Add padding for container
+			const taskWidth = tempSpan.offsetWidth + 40;
 			document.body.removeChild(tempSpan);
 
-			// Calculate width needed for new task (task + connecting line)
 			const newElementWidth = taskWidth + lineWidth;
 			const totalWidthNeeded = currentRowWidth + lineWidth + newElementWidth;
 
-			// Check if new task fits in current row
 			if (totalWidthNeeded > maxWidth) {
+				const remainingWidth = maxWidth - currentRowWidth;
+				if (remainingWidth > 0) {
+					currentRow.push({ type: 'line', width: remainingWidth });
+				}
 				allRows.push([...currentRow]);
 				currentRow = [{ type: 'line', width: lineWidth }];
 				currentRowWidth = lineWidth;
 			}
 
-			// Add connecting line if row is not empty
 			if (currentRowWidth > 0) {
 				currentRow.push({ type: 'line', width: lineWidth });
 				currentRowWidth += lineWidth;
 			}
 
-			// Add task
 			currentRow.push({
 				type: 'task',
 				width: taskWidth,
@@ -86,7 +87,6 @@ export default function TaskFlow() {
 			currentRowWidth += taskWidth;
 		});
 
-		// Check if combo box fits in current row
 		const comboBoxTotalWidth = lineWidth + comboBoxWidth;
 		const comboBoxFits = currentRowWidth + comboBoxTotalWidth <= maxWidth;
 
@@ -95,6 +95,11 @@ export default function TaskFlow() {
 			currentRow.push({ type: 'comboBox', width: comboBoxWidth, height: rowHeight });
 			setCreateTaskFits(true);
 		} else {
+			// Add fill line before creating new row
+			const remainingWidth = maxWidth - currentRowWidth;
+			if (remainingWidth > 0) {
+				currentRow.push({ type: 'line', width: remainingWidth });
+			}
 			allRows.push([...currentRow]);
 			currentRow = [
 				{ type: 'line', width: lineWidth },
@@ -113,7 +118,7 @@ export default function TaskFlow() {
 	};
 
 	const handleCreateNewTask = () => {
-		setIsModalOpen(true);
+		setModalOpen('task');
 	};
 
 	const handleSaveNewTask = () => {
@@ -125,8 +130,7 @@ export default function TaskFlow() {
 	};
 
 	return (
-		<div className='w-full max-w-4xl mx-auto mt-8 p-4 border rounded-md bg-gray-50'>
-			{/* Tasks Container */}
+		<div className='w-full mx-auto  bg-gray-50'>
 			<div ref={containerRef} className='space-y-2'>
 				{rows.map((row, rowIndex) => (
 					<div
@@ -137,7 +141,7 @@ export default function TaskFlow() {
 							item.type === 'start' ? (
 								<div
 									key={itemIndex}
-									className='flex items-center justify-center w-20 h-12 bg-blue-500 text-white rounded-full text-sm'>
+									className='ml-4 flex items-center justify-center w-20 h-12 bg-blue-500 text-white rounded-full text-sm'>
 									Start
 								</div>
 							) : item.type === 'line' ? (
@@ -154,39 +158,60 @@ export default function TaskFlow() {
 										style={{ flexGrow: 1, width: `${item.width}px` }}></div>
 								) : null
 							) : item.type === 'comboBox' ? (
-								<div key={itemIndex} className='relative'>
-									<select
-										className='px-4 py-2 border rounded-md bg-white w-[180px] h-[50px]'
-										onChange={e => {
-											if (e.target.value === 'create') {
-												handleCreateNewTask();
-											} else if (e.target.value) {
-												handleAddTask(e.target.value);
-											}
-											e.target.value = ''; // Reset dropdown
-										}}>
-										<option value=''>+ Add Task</option>
-										{availableTasks.map((task, index) => (
-											<option key={index} value={task}>
+								<DropdownMenu>
+									<DropdownMenuTrigger>
+										<Button variant='outline' className='w-[180px]'>
+											<PlusIcon className='w-4 h-4' />
+											<p>Add a Task</p>
+										</Button>
+									</DropdownMenuTrigger>
+
+									<DropdownMenuContent className='w-[--radix-dropdown-menu-trigger-width]'>
+										{availableTasks.map(task => (
+											<DropdownMenuItem key={task} onClick={() => handleAddTask(task)}>
 												{task}
-											</option>
+											</DropdownMenuItem>
 										))}
-										<option value='create'>Create New Task</option>
-									</select>
-								</div>
+										<DropdownMenuItem onClick={handleCreateNewTask}>
+											Create New Task
+										</DropdownMenuItem>
+									</DropdownMenuContent>
+								</DropdownMenu>
 							) : (
+								// <div key={itemIndex} className='relative'>
+								// 	<select
+								// 		className='px-4 py-2 border rounded-md bg-white w-[180px] h-[50px]'
+								// 		onChange={e => {
+								// 			if (e.target.value === 'create') {
+								// 				handleCreateNewTask();
+								// 			} else if (e.target.value) {
+								// 				handleAddTask(e.target.value);
+								// 			}
+								// 			e.target.value = ''; // Reset dropdown
+								// 		}}>
+								// 		<option value=''>+ Add Task</option>
+								// 		{availableTasks.map((task, index) => (
+								// 			<option key={index} value={task}>
+								// 				{task}
+								// 			</option>
+								// 		))}
+								// 		<option value='create'>Create New Task</option>
+								// 	</select>
+								// </div>
 								<div
 									key={itemIndex}
-									className='flex items-center space-x-2 px-4 py-2 border rounded-md bg-gray-200 shadow h-[50px] relative'
+									className='flex items-center space-x-2 px-4 py-2 border rounded-md bg-gray-100 shadow h-[50px] relative border-gray-200'
 									style={{
 										display: 'flex',
 										alignItems: 'center',
 										width: `${item.width}px`
 									}}>
-									<span className='text-xs absolute -left-3 rounded-full bg-white px-2 py-1'>
+									<span className='text-xs absolute -left-3 rounded-full bg-white px-2 py-1 botder border-gray-200'>
 										{item.number}
 									</span>
-									<span className='text-sm font-medium line-clamp-1'>{item.task}</span>
+									<span className='text-sm font-medium line-clamp-1 text-gray-900'>
+										{item.task}
+									</span>
 								</div>
 							)
 						)}
@@ -194,7 +219,6 @@ export default function TaskFlow() {
 				))}
 			</div>
 
-			{/* Modal for New Task */}
 			{isModalOpen && (
 				<div className='fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-10'>
 					<div className='bg-white p-6 rounded-md w-full max-w-sm'>

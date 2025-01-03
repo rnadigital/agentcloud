@@ -19,7 +19,7 @@ import { Model } from 'db/model';
 import { ObjectId } from 'mongodb';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import Select from 'react-tailwindcss-select';
+// import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { Agent } from 'struct/agent';
 import { App, AppType } from 'struct/app';
@@ -28,6 +28,17 @@ import { ModelType } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
 import { Task } from 'struct/task';
 import { Variable } from 'struct/variable';
+import Foo from './Foo';
+import { Circle, Pencil } from 'lucide-react';
+import { InsightChat } from './apps/InsightChat';
+
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue
+} from 'modules/components/ui/select';
 
 export default function CrewAppForm({
 	agentChoices = [],
@@ -82,9 +93,10 @@ export default function CrewAppForm({
 	const [verboseInt, setVerboseInt] = useState(verbose || 0);
 	const [process, setProcess] = useState(crewState?.process || ProcessImpl.SEQUENTIAL);
 	const [run, setRun] = useState(false);
+	const [isEditing, setIsEditing] = useState<boolean>(false);
 
+	const [hasLaunched, setHasLaunched] = useState<boolean>(false);
 	const [appName, setAppName] = useState(app?.name || '');
-	const [description, setDescription] = useState(app?.description || '');
 
 	function getInitialData(initData) {
 		const { agents, tasks } = initData;
@@ -400,7 +412,8 @@ export default function CrewAppForm({
 												<p className='font-semibold text-lg'>{appName}</p>
 											)}
 											<button
-												onClick={() => {
+												onClick={e => {
+													e.preventDefault();
 													setIsEditing(!isEditing);
 													if (appName === 'Untitled Chat App') {
 														setAppName('');
@@ -420,173 +433,30 @@ export default function CrewAppForm({
 										onChange={e => setDescription(e.target.value)}
 										className='w-full h-full rounded-lg mt-2 text-gray-500 px-4 py-2 bg-gray-50 border border-gray-300'
 										placeholder='Describe the essential tasks and goals this chat app aims to
-                    achieve.'
+	                achieve.'
 									/>
 								</div>
 							</div>
-							{selectedAgent && (
-								<AgentCreatedDisplay
-									selectedAgent={selectedAgent}
-									setOpenEditSheet={setOpenEditSheet}
-									selectedAgentModel={selectedAgentModel}
-									selectedAgentTools={selectedAgentTools}
-									setSelectedAgent={setSelectedAgent}
-								/>
-							)}
-							{!selectedAgent && agentChoices?.length > 0 && (
-								<AgentSelectDisplay
-									agentChoices={agentChoices}
-									toolChoices={toolChoices}
-									setSelectedAgent={setSelectedAgent}
-									setOpenEditSheet={setOpenEditSheet}
-								/>
-							)}
-
-							{(agentChoices?.length === 0 || openEditSheet) && (
-								<CreateAgentSheet
-									openEditSheet={openEditSheet}
-									setOpenEditSheet={setOpenEditSheet}
-									callback={async (agentId, agent) => {
-										await fetchFormData();
-										setOpenEditSheet(false);
-										setPendingAgentId(agentId);
-									}}
-								/>
-							)}
-
-							<div className='w-full flex flex-col justify-between bg-gray-100 p-6 rounded-lg gap-2'>
-								<p className='text-gray-500'>Conversation starters</p>
-								{conversationStarters.map(starter => (
-									<div key={starter.id} className='flex items-center gap-2'>
-										<div
-											className='bg-gray-50 px-4 py-3 w-full border border-gray-300 rounded-lg'
-											onClick={() => setEditingStarterId(starter.id)}>
-											{editingStarterId === starter.id ? (
-												<input
-													type='text'
-													value={starter.text}
-													onChange={e => handleStarterEdit(starter.id, e.target.value)}
-													onBlur={() => {
-														if (!starter.text.trim()) {
-															handleStarterDelete(starter.id);
-														}
-														setEditingStarterId(null);
-													}}
-													onKeyDown={e => {
-														if (e.key === 'Enter') {
-															if (!starter.text.trim()) {
-																handleStarterDelete(starter.id);
-															}
-															setEditingStarterId(null);
-														}
-													}}
-													className='w-full bg-transparent text-sm text-gray-500 outline-none'
-													placeholder='Type a conversation starter'
-													autoFocus
-												/>
-											) : (
-												<p className='text-sm text-gray-500'>{starter.text}</p>
-											)}
-										</div>
-										<Trash2
-											color='#9CA3AF'
-											className='cursor-pointer hover:text-red-500'
-											onClick={() => handleStarterDelete(starter.id)}
-										/>
-									</div>
-								))}
-								<p
-									className='text-[#4F46E5] cursor-pointer self-end hover:text-[#3730a3]'
-									onClick={handleAddStarter}>
-									+ Add
-								</p>
-							</div>
-							{/* <div className='w-full flex items-center justify-between bg-gray-100 p-6 rounded-lg'>
-								<p className='text-gray-500'>Display Settings</p>
-								<DropdownMenu>
-									<DropdownMenuTrigger className='bg-background rounded-sm border border-gray-200'>
-										<ChevronDown width={25} color='#6B7280' />
-									</DropdownMenuTrigger>
-									<DropdownMenuContent>
-										<DropdownMenuItem>Dropdown Item</DropdownMenuItem>
-									</DropdownMenuContent>
-								</DropdownMenu>
-							</div> */}
-
-							<SharingModeSelect
-								sharingMode={sharingMode}
-								setSharingMode={setSharingMode}
-								showInfoAlert={true}
-								setShareLinkShareId={setShareLinkShareId}
-								shareLinkShareId={shareLinkShareId}
-								emailState={sharingEmailState}
-								emailOptions={initialEmails}
-								onChange={setSharingEmailState}
-								setModalOpen={x => {
-									setModalOpen('whitelist');
-								}}
-								shareEmail={shareEmail}
-								setShareEmail={setShareEmail}
-							/>
-							<div className='sm:col-span-'>
-								<label
-									htmlFor='maxMessages'
-									className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-									Max Messages
-								</label>
-								<input
-									required
-									type='number'
-									name='maxMessages'
-									id='maxMessages'
-									value={maxMessages}
-									onChange={e => {
-										setMaxMessages(parseInt(e.target.value, 10));
-									}}
-									className='mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-								/>
-							</div>
 						</article>
-						<article className='flex items-center justify-between px-6 py-3 border-t border-gray-200'>
-							<Button
-								variant='ghost'
-								className='bg-transparent text-foreground hover:bg-transparent hover:text-foreground p-0 border-0 shadow-none outline-none'>
-								Cancel
-							</Button>
-							<Button
-								onClick={() => setRun(true)}
-								variant='ghost'
-								className='ml-auto bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white font-medium text-sm py-2 hover:text-white'>
-								Save
-							</Button>
-							<Button
-								type='submit'
-								onClick={() => {
-									setRun(true);
-								}}
-								variant='ghost'
-								className='ml-2 bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white font-medium text-sm py-2 hover:text-white'>
-								Save & Launch
-							</Button>
-						</article>
+						<section className='border border-gray-200 rounded-lg mx-6'>
+							<div className='flex w-full items-center bg-gray-100 px-4 py-2'>
+								<h4 className='text-gray-700 font-semibold'>Tasks</h4>
+								<div className='ml-auto'>Execution order:</div>
+								<Select value={process} onValueChange={setProcess}>
+									<SelectTrigger className='w-[180px]'>
+										<SelectValue placeholder='Sequential' />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value={ProcessImpl.SEQUENTIAL}>Sequential</SelectItem>
+										<SelectItem value={ProcessImpl.HIERARCHICAL}>Hierarchical</SelectItem>
+									</SelectContent>
+								</Select>
+							</div>
+							<div>
+								<Foo taskChoices={taskChoices} setModalOpen={setModalOpen} />
+							</div>
+						</section>
 					</form>
-
-					<section className='border border-gray-200 rounded-r-lg w-96 flex flex-col justify-between hidden md:flex'>
-						<article className='flex flex-col justify-center items-center h-full'>
-							<p className='text-gray-500 text-center'>
-								Preview will update as you add your agent’s details
-							</p>
-						</article>
-
-						<article className='flex items-center gap-3 px-3 py-3 border-t border-gray-200'>
-							<input
-								className='bg-gray-50 border border-gray-300 px-4 py-2 rounded-lg text-gray-500 text-sm w-full'
-								type='text'
-								placeholder='Write your message here...'
-							/>
-							<SendHorizonal color='#4F46E5' />
-						</article>
-					</section>
 				</div>
 			)}
 		</main>

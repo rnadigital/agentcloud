@@ -3,6 +3,7 @@ import { CheckBadgeIcon } from '@heroicons/react/24/outline';
 import ChatAppForm from 'components/ChatAppForm';
 import ChatAppForm2 from 'components/ChatAppForm2';
 import CrewAppForm from 'components/CrewAppForm';
+import CrewAppForm2 from 'components/CrewAppForm2';
 import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
@@ -138,8 +139,7 @@ export default function AddApp(props: AppsDataReturnType) {
 
 									<button
 										className='w-full md:w-24 h-9 disabled:bg-primary-200 group-hover:bg-primary-500 group-hover:text-white rounded-lg flex justify-center items-center text-sm mt-4 md:mt-auto max-w-sm border border-gray-200 dark:text-white ml-auto'
-										onClick={handleCreateChatApp}
-									>
+										onClick={handleCreateChatApp}>
 										+ Create
 									</button>
 								</div>
@@ -176,8 +176,7 @@ export default function AddApp(props: AppsDataReturnType) {
 
 									<button
 										className='w-full md:w-24 h-9 disabled:bg-primary-200 group-hover:bg-primary-500 group-hover:text-white rounded-lg flex justify-center items-center text-sm mt-4 md:mt-auto max-w-sm border border-gray-200 dark:text-white ml-auto'
-										onClick={handleCreateProcessApp}
-									>
+										onClick={handleCreateProcessApp}>
 										+ Create
 									</button>
 								</div>
@@ -204,7 +203,7 @@ export default function AddApp(props: AppsDataReturnType) {
 				);
 			case 2:
 				return (
-					<CrewAppForm
+					<CrewAppForm2
 						agentChoices={agents}
 						taskChoices={tasks}
 						modelChoices={models}
