@@ -2,6 +2,7 @@ import * as API from '@api';
 import { PlusIcon } from '@heroicons/react/20/solid';
 import AppCard from 'components/AppCard';
 import ErrorAlert from 'components/ErrorAlert';
+import Foo from 'components/Foo';
 import NewButtonSection from 'components/NewButtonSection';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import Spinner from 'components/Spinner';
@@ -56,6 +57,7 @@ export default function Apps(props) {
 				<title>{`Apps - ${teamName}`}</title>
 			</Head>
 
+			<Foo />
 			<PageTitleWithNewButton
 				list={filteredApps}
 				title='Apps'
@@ -75,16 +77,14 @@ export default function Apps(props) {
 							fill='none'
 							viewBox='0 0 24 24'
 							stroke='currentColor'
-							aria-hidden='true'
-						>
+							aria-hidden='true'>
 							<svg
 								xmlns='http://www.w3.org/2000/svg'
 								fill='none'
 								viewBox='0 0 24 24'
 								strokeWidth={1.5}
 								stroke='currentColor'
-								className='w-6 h-6'
-							>
+								className='w-6 h-6'>
 								<path
 									strokeLinecap='round'
 									strokeLinejoin='round'
