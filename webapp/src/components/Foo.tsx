@@ -1,4 +1,4 @@
-import { PlusIcon } from 'lucide-react';
+import { PlusIcon, Trash2Icon } from 'lucide-react';
 import { Button } from 'modules/components/ui/button';
 import {
 	DropdownMenu,
@@ -117,16 +117,24 @@ export default function TaskFlow({
 		setAvailableTasks(availableTasks.filter(t => t !== task));
 	};
 
-	const handleCreateNewTask = () => {
+	const handleCreateNewTask = e => {
+		e.preventDefault();
 		setModalOpen('task');
 	};
 
-	const handleSaveNewTask = () => {
+	const handleSaveNewTask = e => {
+		e.preventDefault();
 		if (newTaskName.trim()) {
 			setTasks([...tasks, newTaskName.trim()]);
 			setNewTaskName('');
 			setIsModalOpen(false);
 		}
+	};
+
+	const handleDeleteTask = (e, taskToDelete) => {
+		e.preventDefault();
+		setTasks(tasks.filter(task => task !== taskToDelete));
+		setAvailableTasks([...availableTasks, taskToDelete]);
 	};
 
 	return (
@@ -168,7 +176,12 @@ export default function TaskFlow({
 
 									<DropdownMenuContent className='w-[--radix-dropdown-menu-trigger-width]'>
 										{availableTasks.map(task => (
-											<DropdownMenuItem key={task} onClick={() => handleAddTask(task)}>
+											<DropdownMenuItem
+												key={task}
+												onClick={e => {
+													e.preventDefault();
+													handleAddTask(task);
+												}}>
 												{task}
 											</DropdownMenuItem>
 										))}
@@ -178,29 +191,9 @@ export default function TaskFlow({
 									</DropdownMenuContent>
 								</DropdownMenu>
 							) : (
-								// <div key={itemIndex} className='relative'>
-								// 	<select
-								// 		className='px-4 py-2 border rounded-md bg-white w-[180px] h-[50px]'
-								// 		onChange={e => {
-								// 			if (e.target.value === 'create') {
-								// 				handleCreateNewTask();
-								// 			} else if (e.target.value) {
-								// 				handleAddTask(e.target.value);
-								// 			}
-								// 			e.target.value = ''; // Reset dropdown
-								// 		}}>
-								// 		<option value=''>+ Add Task</option>
-								// 		{availableTasks.map((task, index) => (
-								// 			<option key={index} value={task}>
-								// 				{task}
-								// 			</option>
-								// 		))}
-								// 		<option value='create'>Create New Task</option>
-								// 	</select>
-								// </div>
 								<div
 									key={itemIndex}
-									className='flex items-center space-x-2 px-4 py-2 border rounded-md bg-gray-100 shadow h-[50px] relative border-gray-200'
+									className='flex items-center justify-between space-x-2 px-4 py-2 border rounded-md bg-gray-100 shadow h-[50px] relative border-gray-200'
 									style={{
 										display: 'flex',
 										alignItems: 'center',
@@ -212,6 +205,11 @@ export default function TaskFlow({
 									<span className='text-sm font-medium line-clamp-1 text-gray-900'>
 										{item.task}
 									</span>
+									<button
+										onClick={e => handleDeleteTask(e, item.task)}
+										className='text-gray-500 hover:text-red-500 transition-colors'>
+										<Trash2Icon className='w-4 h-4' />
+									</button>
 								</div>
 							)
 						)}
@@ -232,7 +230,10 @@ export default function TaskFlow({
 						/>
 						<div className='flex justify-end space-x-2'>
 							<button
-								onClick={() => setIsModalOpen(false)}
+								onClick={e => {
+									e.preventDefault();
+									setIsModalOpen(false);
+								}}
 								className='px-4 py-2 bg-gray-300 rounded-md'>
 								Cancel
 							</button>
