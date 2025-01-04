@@ -373,6 +373,7 @@ export default function CrewAppForm({
 
 	return (
 		<main className='text-foreground flex flex-col gap-2'>
+			{modal}
 			<div className='flex gap-2 mb-2 text-sm'>
 				<h4 className='text-gray-700 font-semibold'>Apps</h4>
 				<span className='text-gray-500'>&gt;</span>
