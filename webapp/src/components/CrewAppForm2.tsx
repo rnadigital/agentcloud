@@ -28,7 +28,6 @@ import { ModelType } from 'struct/model';
 import { SharingMode } from 'struct/sharing';
 import { Task } from 'struct/task';
 import { Variable } from 'struct/variable';
-import Foo from './Foo';
 import { Circle, Pencil } from 'lucide-react';
 import { InsightChat } from './apps/InsightChat';
 
@@ -39,6 +38,7 @@ import {
 	SelectTrigger,
 	SelectValue
 } from 'modules/components/ui/select';
+import TaskFlow from './Foo';
 
 export default function CrewAppForm({
 	agentChoices = [],
@@ -454,7 +454,12 @@ export default function CrewAppForm({
 								</Select>
 							</div>
 							<div>
-								<Foo taskChoices={taskChoices} setModalOpen={setModalOpen} />
+								<TaskFlow
+									tasks={tasksState}
+									setTasks={setTasksState}
+									taskChoices={taskChoices}
+									setModalOpen={setModalOpen}
+								/>
 							</div>
 						</section>
 					</form>

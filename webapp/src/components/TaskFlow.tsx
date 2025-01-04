@@ -11,13 +11,16 @@ import { Task } from 'struct/task';
 
 export default function TaskFlow({
 	taskChoices,
-	setModalOpen
+	setModalOpen,
+	tasks,
+	setTasks
 }: {
 	taskChoices: Task[];
 	setModalOpen: (modal: string) => void;
+	tasks: { label: string; value: string }[];
+	setTasks: (tasks: { label: string; value: string }[]) => void;
 }) {
-	const [tasks, setTasks] = useState([]);
-	const [availableTasks, setAvailableTasks] = useState(taskChoices.map(task => task.name));
+	const [availableTasks, setAvailableTasks] = useState(taskChoices);
 	const [rows, setRows] = useState([]);
 	const [createTaskFits, setCreateTaskFits] = useState(false);
 	const [isModalOpen, setIsModalOpen] = useState(false);
@@ -112,9 +115,9 @@ export default function TaskFlow({
 		setRows(allRows);
 	};
 
-	const handleAddTask = task => {
-		setTasks([...tasks, task]);
-		setAvailableTasks(availableTasks.filter(t => t !== task));
+	const handleAddTask = (selectedTask: Task) => {
+		setTasks([...tasks, { label: selectedTask.name, value: selectedTask._id.toString() }]);
+		setAvailableTasks(availableTasks.filter(t => t._id.toString() !== selectedTask._id.toString()));
 	};
 
 	const handleCreateNewTask = e => {
@@ -125,16 +128,19 @@ export default function TaskFlow({
 	const handleSaveNewTask = e => {
 		e.preventDefault();
 		if (newTaskName.trim()) {
-			setTasks([...tasks, newTaskName.trim()]);
+			setTasks([...tasks, { label: newTaskName.trim(), value: newTaskName.trim() }]);
 			setNewTaskName('');
 			setIsModalOpen(false);
 		}
 	};
 
-	const handleDeleteTask = (e, taskToDelete) => {
+	const handleDeleteTask = (e: React.MouseEvent, taskId: string) => {
 		e.preventDefault();
-		setTasks(tasks.filter(task => task !== taskToDelete));
-		setAvailableTasks([...availableTasks, taskToDelete]);
+		setTasks(tasks.filter(task => task.value !== taskId));
+		const taskToRestore = taskChoices.find(t => t._id.toString() === taskId);
+		if (taskToRestore) {
+			setAvailableTasks([...availableTasks, taskToRestore]);
+		}
 	};
 
 	return (
@@ -177,12 +183,12 @@ export default function TaskFlow({
 									<DropdownMenuContent className='w-[--radix-dropdown-menu-trigger-width]'>
 										{availableTasks.map(task => (
 											<DropdownMenuItem
-												key={task}
+												key={task._id.toString()}
 												onClick={e => {
 													e.preventDefault();
 													handleAddTask(task);
 												}}>
-												{task}
+												{task.name}
 											</DropdownMenuItem>
 										))}
 										<DropdownMenuItem onClick={handleCreateNewTask}>
@@ -203,10 +209,10 @@ export default function TaskFlow({
 										{item.number}
 									</span>
 									<span className='text-sm font-medium line-clamp-1 text-gray-900'>
-										{item.task}
+										{taskChoices.find(t => t._id.toString() === item.task.value)?.name}
 									</span>
 									<button
-										onClick={e => handleDeleteTask(e, item.task)}
+										onClick={e => handleDeleteTask(e, item.task.value)}
 										className='text-gray-500 hover:text-red-500 transition-colors'>
 										<Trash2Icon className='w-4 h-4' />
 									</button>
