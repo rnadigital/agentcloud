@@ -38,7 +38,7 @@ import {
 	SelectTrigger,
 	SelectValue
 } from 'modules/components/ui/select';
-import TaskFlow from './Foo';
+import TaskFlow from './TaskFlow';
 
 export default function CrewAppForm({
 	agentChoices = [],

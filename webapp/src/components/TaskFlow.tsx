@@ -56,7 +56,7 @@ export default function TaskFlow({
 			tempSpan.style.position = 'absolute';
 			tempSpan.style.fontSize = '14px';
 			tempSpan.style.padding = '8px 16px';
-			tempSpan.innerText = task;
+			tempSpan.innerText = task.label;
 			document.body.appendChild(tempSpan);
 
 			const taskWidth = tempSpan.offsetWidth + 40;
@@ -155,7 +155,7 @@ export default function TaskFlow({
 							item.type === 'start' ? (
 								<div
 									key={itemIndex}
-									className='ml-4 flex items-center justify-center w-20 h-12 bg-blue-500 text-white rounded-full text-sm'>
+									className='ml-4 flex items-center justify-center w-20 h-12 bg-indigo-50 text-indigo-500 rounded-full text-sm'>
 									Start
 								</div>
 							) : item.type === 'line' ? (
