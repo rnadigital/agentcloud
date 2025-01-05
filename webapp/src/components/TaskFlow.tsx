@@ -155,7 +155,7 @@ export default function TaskFlow({
 							item.type === 'start' ? (
 								<div
 									key={itemIndex}
-									className='ml-4 flex items-center justify-center w-20 h-12 bg-indigo-50 text-indigo-500 rounded-full text-sm'>
+									className='ml-4 flex items-center justify-center w-20 h-12 bg-indigo-50 text-indigo-500	 rounded-full text-sm'>
 									Start
 								</div>
 							) : item.type === 'line' ? (

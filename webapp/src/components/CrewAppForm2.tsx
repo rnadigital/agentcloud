@@ -39,12 +39,15 @@ import {
 	SelectValue
 } from 'modules/components/ui/select';
 import TaskFlow from './TaskFlow';
+import AgentSelection from './apps/crew-apps/AgentSelection';
+import { Tool } from 'struct/tool';
 
 export default function CrewAppForm({
 	agentChoices = [],
 	taskChoices = [],
 	modelChoices = [],
 	variableChoices = [],
+	toolChoices = [],
 	whiteListSharingChoices = [],
 	crew = {},
 	app,
@@ -64,6 +67,7 @@ export default function CrewAppForm({
 	callback?: Function;
 	fetchFormData?: Function;
 	variableChoices?: Variable[];
+	toolChoices?: Tool[];
 }) {
 	//TODO: fix any types
 
@@ -459,6 +463,16 @@ export default function CrewAppForm({
 									setTasks={setTasksState}
 									taskChoices={taskChoices}
 									setModalOpen={setModalOpen}
+								/>
+							</div>
+							<div>
+								<AgentSelection
+									agentChoices={agentChoices}
+									agentState={agentsState}
+									setAgentState={setAgentsState}
+									toolChoices={toolChoices}
+									modelChoices={modelChoices}
+									createAgentCallback={createAgentCallback}
 								/>
 							</div>
 						</section>

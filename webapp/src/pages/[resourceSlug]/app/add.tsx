@@ -212,6 +212,7 @@ export default function AddApp(props: AppsDataReturnType) {
 						crew={cloneState?.app?.crew}
 						variableChoices={variables}
 						whiteListSharingChoices={teamMembers}
+						toolChoices={tools}
 					/>
 				);
 			default:

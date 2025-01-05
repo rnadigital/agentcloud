@@ -47,7 +47,14 @@ const NewAgentSheet = ({
 	agentId,
 	editing,
 	callback
-}: any) => {
+}: {
+	setAgentDisplay?: (agent: AgentDataReturnType['agent']) => void;
+	openEditSheet: boolean;
+	setOpenEditSheet: (open: boolean) => void;
+	agentId?: string;
+	editing?: boolean;
+	callback?: (addedAgentId: string, body: any) => void;
+}) => {
 	const [toolValue, setToolValue] = useState<string[]>([]);
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 
