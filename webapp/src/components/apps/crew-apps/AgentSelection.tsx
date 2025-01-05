@@ -157,25 +157,35 @@ const AgentSelection = ({
 						/>
 					</div>
 					<div className='grid grid-cols-3 gap-4'>
-						{filteredAgents.map(agent => (
-							<div
-								key={agent._id as string}
-								className='border rounded-lg p-4 cursor-pointer hover:border-blue-500'
-								onClick={() => handleAgentSelect(agent)}>
-								<img src='/apps/identicon.png' className='w-12 h-12 rounded-full mb-2' />
-								<h4 className='font-semibold'>{agent.name}</h4>
-								<p className='text-gray-600 text-sm'>{agent.role}</p>
-								<div className='mt-2 text-sm text-gray-500'>
-									{agent.toolIds?.length && (
-										<div className='flex items-center gap-1'>
-											<span>🔧</span>
-											<span>Email Scrapper</span>
-										</div>
-									)}
+						{filteredAgents.map(agent => {
+							const tools = toolChoices.filter(tool =>
+								agent.toolIds?.includes(tool._id.toString())
+							);
+							const model = modelChoices.find(
+								model => agent.modelId?.toString() === model._id?.toString()
+							);
+							return (
+								<div
+									key={agent._id as string}
+									className='border rounded-lg p-4 cursor-pointer hover:border-blue-500 flex flex-col'
+									onClick={() => handleAgentSelect(agent)}>
+									<img src='/apps/identicon.png' className='w-12 h-12 rounded-full mb-2' />
+									<h4 className='font-semibold'>{agent.name}</h4>
+									<p className='text-gray-600 text-sm'>{agent.role}</p>
+									<div className='mt-2 mb-4 text-sm text-gray-500'>
+										{tools.map(tool => (
+											<div className='flex items-center gap-1'>
+												<span>🔧</span>
+												<span>{tool.name}</span>
+											</div>
+										))}
+									</div>
+									<button className='w-full mt-auto py-2 text-center border rounded-lg'>
+										Select
+									</button>
 								</div>
-								<button className='w-full mt-4 py-2 text-center border rounded-lg'>Select</button>
-							</div>
-						))}
+							);
+						})}
 					</div>
 				</div>
 			)}
