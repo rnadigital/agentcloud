@@ -41,6 +41,9 @@ import {
 import TaskFlow from './TaskFlow';
 import AgentSelection from './apps/crew-apps/AgentSelection';
 import { Tool } from 'struct/tool';
+import { MultiSelect } from 'modules/components/multi-select';
+import { Config } from './apps/crew-apps/Config';
+import { Button } from 'modules/components/ui/button';
 
 export default function CrewAppForm({
 	agentChoices = [],
@@ -79,8 +82,8 @@ export default function CrewAppForm({
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [modalOpen, setModalOpen]: any = useState(false);
-	const [crewState, setCrew] = useState(crew);
-	const [appState, setApp] = useState(app);
+	const [crewState] = useState(crew);
+	const [appState] = useState(app);
 	const initialModel = modelChoices.find(model => model._id == crew.managerModelId);
 	const [managerModel, setManagerModel]: any = useState(
 		initialModel ? { label: initialModel.name, value: initialModel._id } : null
@@ -180,7 +183,7 @@ export default function CrewAppForm({
 	async function appPost(e) {
 		e.preventDefault();
 		const body = {
-			_csrf: e.target._csrf.value,
+			_csrf: csrf,
 			resourceSlug,
 			name: e.target.name.value,
 			description,
@@ -383,7 +386,7 @@ export default function CrewAppForm({
 				<span className='text-gray-500'>&gt;</span>
 				<h4 className='text-gray-700 font-semibold'>Create App</h4>
 				<span className='text-gray-500'>&gt;</span>
-				<h4 className='text-gray-500 font-semibold'>Chat App</h4>
+				<h4 className='text-gray-500 font-semibold'>Crew App</h4>
 			</div>
 
 			{hasLaunched ? (
@@ -443,8 +446,9 @@ export default function CrewAppForm({
 								</div>
 							</div>
 						</article>
+
 						<section className='border border-gray-200 rounded-lg mx-6'>
-							<div className='flex w-full items-center bg-gray-100 px-4 py-2'>
+							<div className='lg:flex w-full items-center bg-gray-100 px-4 py-2'>
 								<h4 className='text-gray-700 font-semibold'>Tasks</h4>
 								<div className='ml-auto'>Execution order:</div>
 								<Select value={process} onValueChange={setProcess}>
@@ -473,9 +477,59 @@ export default function CrewAppForm({
 									toolChoices={toolChoices}
 									modelChoices={modelChoices}
 									createAgentCallback={createAgentCallback}
+									missingAgents={missingAgents}
 								/>
 							</div>
 						</section>
+
+						<div className='mt-4 mx-6'>
+							<Config
+								combinedVariables={combinedVariables}
+								setKickOffVariables={setKickOffVariables}
+								sharingMode={sharingMode}
+								setSharingMode={setSharingMode}
+								shareLinkShareId={shareLinkShareId}
+								setShareLinkShareId={setShareLinkShareId}
+								sharingEmailState={sharingEmailState}
+								initialEmails={initialEmails}
+								setSharingEmailState={setSharingEmailState}
+								setModalOpen={x => {
+									setModalOpen('whitelist');
+								}}
+								shareEmail={shareEmail}
+								setShareEmail={setShareEmail}
+								fullOutput={fullOutput}
+								setFullOutput={setFullOutput}
+								appCache={appCache}
+								setAppCache={setAppCache}
+								appMemory={appMemory}
+								setAppMemory={setAppMemory}
+								verboseInt={verboseInt}
+								setVerboseInt={setVerboseInt}
+							/>
+						</div>
+						<div className='flex justify-between mt-3 border-t border-gray-200 py-4 px-6'>
+							<Button type='button' variant='outline'>
+								Cancel
+							</Button>
+							<Button
+								className='bg-indigo-500 ml-auto mr-2'
+								onClick={() => {
+									if (outsideOrg) {
+										setModalOpen('confirmOutsideOrg');
+									}
+									setRun(false);
+								}}>
+								Save
+							</Button>
+							<Button
+								className='bg-indigo-500'
+								type='submit'
+								disabled={missingAgents?.length > 0}
+								onClick={() => setRun(true)}>
+								Save and Run
+							</Button>
+						</div>
 					</form>
 				</div>
 			)}

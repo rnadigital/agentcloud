@@ -3,7 +3,6 @@ import { Agent } from 'struct/agent';
 import { MagnifyingGlassIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Tool, ToolType } from 'struct/tool';
 import { Model } from 'db/model';
-import { CreateAgentSheet } from '../CreateAgentSheet';
 import NewAgentSheet from 'components/agents/NewAgentSheet';
 
 type AgentsState = {
@@ -18,7 +17,8 @@ const AgentSelection = ({
 	setAgentState,
 	toolChoices,
 	modelChoices,
-	createAgentCallback
+	createAgentCallback,
+	missingAgents
 }: {
 	agentChoices: Agent[];
 	agentState: AgentsState;
@@ -26,6 +26,7 @@ const AgentSelection = ({
 	toolChoices: Tool[];
 	modelChoices: Model[];
 	createAgentCallback: (addedAgentId: string, body: any) => void;
+	missingAgents: Agent[];
 }) => {
 	const [showAgentSelect, setShowAgentSelect] = React.useState(false);
 	const [searchTerm, setSearchTerm] = React.useState('');
@@ -66,12 +67,12 @@ const AgentSelection = ({
 				setOpenEditSheet={setOpenEditSheet}
 				callback={createAgentCallback}
 			/>
-			<h2 className='text-xl font-semibold mb-2'>Process-Level Agents</h2>
+			<h2 className='font-semibold mb-2'>Process-Level Agents</h2>
 			<p className='text-gray-600 mb-4'>
 				Process agents assist multiple tasks, enhance collaboration, and act as backups when
 				task-specific agents need support.
 			</p>
-			<div className='flex w-full gap-2 flex-wrap'>
+			<div className='w-full gap-2 grid grid-cols-1 lg:grid-cols-2'>
 				{agentState.map(agentItem => {
 					const selectedAgent = agentChoices.find(a => a._id === agentItem.value);
 					const tools = toolChoices.filter(tool =>
@@ -81,16 +82,16 @@ const AgentSelection = ({
 						model => selectedAgent?.modelId?.toString() === model._id?.toString()
 					);
 					return (
-						<div key={agentItem.value} className='bg-white p-4 rounded-lg mb-4 border lg:w-[45%]'>
+						<div key={agentItem.value} className='bg-white p-4 rounded-lg mb-4 border text-sm'>
 							<div className='flex items-start'>
 								<img src='/apps/identicon.png' className='w-12 h-12 rounded-full mr-3' />
 								<div className='flex-1'>
-									<h3 className='font-semibold text-lg'>{agentItem.label}</h3>
+									<h3 className='font-semibold'>{agentItem.label}</h3>
 									<p className='text-gray-600'>Social Media Manager</p>
 									<div className='flex gap-2 mt-2 flex-wrap max-h-[60px] overflow-auto'>
 										{tools.map((tool, index) => (
 											<>
-												<span className='flex items-center text-sm text-gray-500'>
+												<span className='flex items-center text-gray-500'>
 													<span className='mr-2'>
 														{tool.type === ToolType.RAG_TOOL ? '🗄️' : '🔧'}
 													</span>
@@ -102,7 +103,7 @@ const AgentSelection = ({
 									</div>
 
 									<div className='mt-2'>
-										<span className='flex items-center text-sm text-gray-500'>
+										<span className='flex items-center text-gray-500'>
 											<span className='mr-2'>🤖</span>
 											{model?.name}
 										</span>
@@ -119,16 +120,33 @@ const AgentSelection = ({
 				})}
 			</div>
 			{!showAgentSelect ? (
-				<button
-					onClick={() => setShowAgentSelect(true)}
-					className='text-blue-600 hover:text-blue-700 flex items-center gap-2'>
-					<PlusIcon className='w-5 h-5' />
-					Add Agent
-				</button>
+				<div>
+					<button
+						onClick={() => setShowAgentSelect(true)}
+						className='text-blue-600 hover:text-blue-700 flex items-center gap-2'>
+						<PlusIcon className='w-5 h-5' />
+						Add Agent
+					</button>
+					{missingAgents.length > 0 && (
+						<>
+							<div className='text-sm font-medium text-gray-700 mt-4 mb-2'>Required Agents</div>
+							<div className='flex gap-2 flex-wrap'>
+								{missingAgents.map(agent => (
+									<button
+										key={agent._id as string}
+										onClick={() => handleAgentSelect(agent)}
+										className='text-gray-600 hover:text-blue-600'>
+										{agent.name}
+									</button>
+								))}
+							</div>
+						</>
+					)}
+				</div>
 			) : (
 				<div className='bg-white border rounded-lg p-4'>
 					<div className='flex justify-between items-center mb-4'>
-						<h3 className='text-lg font-semibold'>Agents</h3>
+						<h3 className='font-semibold'>Agents</h3>
 						<div className='flex gap-2'>
 							<button
 								className='flex items-center gap-1 border rounded-lg px-4 py-2'

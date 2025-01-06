@@ -259,7 +259,6 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 					)}
 					align='start'
 					onEscapeKeyDown={() => setIsPopoverOpen(false)}>
-					<input className='pointer-events-auto' />
 					<Command>
 						<CommandInput placeholder='Search...' onKeyDown={handleInputKeyDown} />
 						<CommandList>
