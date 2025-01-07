@@ -9,6 +9,7 @@ import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
 import { useThemeContext } from 'context/themecontext';
 import { AppsDataReturnType } from 'controllers/app';
+import { Sheet, SheetContent, SheetTrigger } from 'modules/components/ui/sheet';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
@@ -42,6 +43,7 @@ export default function AddApp(props: AppsDataReturnType) {
 	const [loading, setLoading] = useState(true);
 	const { apps, tools, agents, tasks, models, datasources, teamMembers, variables } = state;
 
+	const [moalOpen, setModalOpen] = useState(false);
 	const { theme } = useThemeContext();
 
 	async function fetchAppFormData() {
@@ -225,6 +227,7 @@ export default function AddApp(props: AppsDataReturnType) {
 			<Head>
 				<title>{`New App - ${teamName}`}</title>
 			</Head>
+
 			{renderStepContent()}
 		</>
 	);

@@ -4,12 +4,20 @@ import TaskForm from 'components/TaskForm';
 import { useAccountContext } from 'context/account';
 import { BookText } from 'lucide-react';
 import { Separator } from 'modules/components/ui/separator';
-import { Sheet, SheetContent, SheetTitle } from 'modules/components/ui/sheet';
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from 'modules/components/ui/sheet';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 
-export default function NewTaskSheet() {
+export default function NewTaskSheet({
+	open,
+	callback,
+	setOpen
+}: {
+	open: boolean;
+	callback?: (addedTaskId: string, body: any) => void;
+	setOpen: (open: boolean) => void;
+}) {
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf, teamName } = accountContext as any;
 	const router = useRouter();
@@ -54,12 +62,12 @@ export default function NewTaskSheet() {
 	}
 
 	return (
-		<Sheet open>
+		<Sheet open={open} onOpenChange={setOpen}>
 			<SheetContent className='text-foreground sm:max-w-[576px] overflow-auto'>
 				<SheetTitle>
 					<div className='flex items-center gap-2'>
 						<BookText width={15} />
-						<p className='font-medium text-gray-900 text-sm'>New Agent</p>
+						<p className='font-medium text-gray-900 text-sm'>New Task</p>
 					</div>
 				</SheetTitle>
 				<Separator className='my-4' />

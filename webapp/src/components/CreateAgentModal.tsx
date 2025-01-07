@@ -25,7 +25,7 @@ export default function CreateAgentModal({ open, setOpen, callback }) {
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
-			<DialogContent>
+			<DialogContent className='overflow-y-auto max-h-[90vh]'>
 				<DialogTitle>Create an agent</DialogTitle>
 				<AgentForm
 					models={models}

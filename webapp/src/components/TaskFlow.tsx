@@ -16,14 +16,13 @@ export default function TaskFlow({
 	setTasks
 }: {
 	taskChoices: Task[];
-	setModalOpen: (modal: string) => void;
+	setModalOpen: Function;
 	tasks: { label: string; value: string }[];
 	setTasks: (tasks: { label: string; value: string }[]) => void;
 }) {
 	const [availableTasks, setAvailableTasks] = useState(taskChoices);
 	const [rows, setRows] = useState([]);
 	const [createTaskFits, setCreateTaskFits] = useState(false);
-	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [newTaskName, setNewTaskName] = useState('');
 
 	const containerRef = useRef(null);
@@ -120,20 +119,6 @@ export default function TaskFlow({
 		setAvailableTasks(availableTasks.filter(t => t._id.toString() !== selectedTask._id.toString()));
 	};
 
-	const handleCreateNewTask = e => {
-		e.preventDefault();
-		setModalOpen('task');
-	};
-
-	const handleSaveNewTask = e => {
-		e.preventDefault();
-		if (newTaskName.trim()) {
-			setTasks([...tasks, { label: newTaskName.trim(), value: newTaskName.trim() }]);
-			setNewTaskName('');
-			setIsModalOpen(false);
-		}
-	};
-
 	const handleDeleteTask = (e: React.MouseEvent, taskId: string) => {
 		e.preventDefault();
 		setTasks(tasks.filter(task => task.value !== taskId));
@@ -191,9 +176,6 @@ export default function TaskFlow({
 												{task.name}
 											</DropdownMenuItem>
 										))}
-										<DropdownMenuItem onClick={handleCreateNewTask}>
-											Create New Task
-										</DropdownMenuItem>
 									</DropdownMenuContent>
 								</DropdownMenu>
 							) : (
@@ -221,9 +203,19 @@ export default function TaskFlow({
 						)}
 					</div>
 				))}
+
+				<Button
+					onClick={e => {
+						e.preventDefault();
+						setModalOpen(true);
+					}}
+					className='ml-2 w-[180px]'
+					variant='outline'>
+					Create New Task
+				</Button>
 			</div>
 
-			{isModalOpen && (
+			{/* {isModalOpen && (
 				<div className='fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-10'>
 					<div className='bg-white p-6 rounded-md w-full max-w-sm'>
 						<h2 className='text-lg font-bold mb-4'>Create New Task</h2>
@@ -251,7 +243,7 @@ export default function TaskFlow({
 						</div>
 					</div>
 				</div>
-			)}
+			)} */}
 		</div>
 	);
 }

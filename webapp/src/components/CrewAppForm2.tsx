@@ -45,7 +45,7 @@ import { MultiSelect } from 'modules/components/multi-select';
 import { Config } from './apps/crew-apps/Config';
 import { Button } from 'modules/components/ui/button';
 import NewTaskSheet from './tasks/NewTaskSheet';
-import { Sheet, SheetContent } from 'modules/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger } from 'modules/components/ui/sheet';
 
 export default function CrewAppForm({
 	agentChoices = [],
@@ -106,6 +106,7 @@ export default function CrewAppForm({
 
 	const [hasLaunched, setHasLaunched] = useState<boolean>(false);
 	const [appName, setAppName] = useState(app?.name || '');
+	const [moalOpen, setMoalOpen] = useState(false);
 
 	function getInitialData(initData) {
 		const { agents, tasks } = initData;
@@ -260,7 +261,7 @@ export default function CrewAppForm({
 		setModalOpen(false);
 	}
 
-	async function createTaskCallback(addedTaskId, body) {
+	async function createTaskCallback(addedTaskId: string, body: any) {
 		(await fetchFormData) && fetchFormData();
 		setTasksState(oldTasksState => {
 			return oldTasksState.concat({ label: body.name, value: addedTaskId });
@@ -297,15 +298,15 @@ export default function CrewAppForm({
 				/>
 			);
 			break;
-		case 'task':
-			modal = (
-				<CreateTaskModal
-					open={modalOpen !== false}
-					setOpen={setModalOpen}
-					callback={createTaskCallback}
-				/>
-			);
-			break;
+		// case 'task':
+		// 	modal = (
+		// 		<CreateTaskModal
+		// 			open={modalOpen !== false}
+		// 			setOpen={setModalOpen}
+		// 			callback={createTaskCallback}
+		// 		/>
+		// 	);
+		// 	break;
 		case 'model':
 			modal = (
 				<CreateModelModal
@@ -468,7 +469,7 @@ export default function CrewAppForm({
 									tasks={tasksState}
 									setTasks={setTasksState}
 									taskChoices={taskChoices}
-									setModalOpen={setModalOpen}
+									setModalOpen={setMoalOpen}
 								/>
 							</div>
 							<div>
@@ -535,7 +536,7 @@ export default function CrewAppForm({
 					</form>
 				</div>
 			)}
-			<NewTaskSheet />
+			<NewTaskSheet open={moalOpen} callback={createTaskCallback} setOpen={setMoalOpen} />
 		</main>
 	);
 }

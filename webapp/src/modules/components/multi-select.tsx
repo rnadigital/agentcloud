@@ -1,5 +1,5 @@
 import { cva, type VariantProps } from 'class-variance-authority';
-import { CheckIcon, ChevronDown, WandSparkles, XCircle, XIcon } from 'lucide-react';
+import { CheckIcon, ChevronDown, PlusCircleIcon, WandSparkles, XCircle, XIcon } from 'lucide-react';
 import * as React from 'react';
 import cn from 'utils/cn';
 
@@ -73,7 +73,7 @@ interface MultiSelectProps
 	 * Placeholder text to be displayed when no values are selected.
 	 * Optional, defaults to "Select options".
 	 */
-	placeholder?: string;
+	placeholder?: React.ReactNode;
 
 	/**
 	 * Animation duration in seconds for the visual effects (e.g., bouncing badges).
@@ -105,6 +105,16 @@ interface MultiSelectProps
 	 * Optional, can be used to add custom styles.
 	 */
 	className?: string;
+
+	/**
+	 * Callback function triggered when the "New" option is selected.
+	 */
+	newCallback?: () => void;
+
+	/**
+	 * Label to be displayed when the "New" option is selected.
+	 */
+	newLabel?: string;
 }
 
 export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>(
@@ -120,6 +130,8 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 			modalPopover = false,
 			asChild = false,
 			className,
+			newCallback,
+			newLabel,
 			...props
 		},
 		ref
@@ -264,6 +276,14 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 						<CommandList>
 							<CommandEmpty>No results found.</CommandEmpty>
 							<CommandGroup>
+								{newCallback && newLabel && (
+									<CommandItem key='new' onSelect={newCallback}>
+										<div className='flex items-center w-full'>
+											<PlusCircleIcon className='h-4 w-4 mr-2' />
+											<span>{newLabel}</span>
+										</div>
+									</CommandItem>
+								)}
 								<CommandItem key='all' onSelect={toggleAll} className='cursor-pointer'>
 									<div
 										className={cn(
@@ -276,6 +296,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 									</div>
 									<span>(Select All)</span>
 								</CommandItem>
+
 								{options.map(option => {
 									const isSelected = selectedValues?.includes(option.value);
 									return (
