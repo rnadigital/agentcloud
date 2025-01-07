@@ -14,7 +14,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
 import React, { useEffect, useState } from 'react';
-import Select from 'react-tailwindcss-select';
+import SelectOld from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { NotificationType } from 'struct/notification';
 import { FormFieldConfig, Task } from 'struct/task';
@@ -29,6 +29,16 @@ import InfoAlert from './InfoAlert';
 import ToolTip from './shared/ToolTip';
 import CreateVariableModal from './variables/CreateVariableModal';
 import AutocompleteDropdown from './variables/VariableDropdown';
+import { Input } from 'modules/components/ui/input';
+import { Textarea } from 'modules/components/ui/textarea';
+import { MultiSelect } from 'modules/components/multi-select';
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue
+} from 'modules/components/ui/select';
 
 const jsonPlaceholder = `{
 	"schema": {
@@ -403,28 +413,26 @@ export default function TaskForm({
 						<div className='col-span-full'>
 							<label
 								htmlFor='task_name'
-								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-							>
+								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								Name<span className='text-red-700'> *</span>
 							</label>
-							<input
+							<Input
 								required
 								type='text'
 								id='task_name'
 								name='task_name'
-								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 								defaultValue={taskState?.name}
+								placeholder='A concise name that summarizes the task purpose'
 							/>
 						</div>
 
 						<div className='col-span-full'>
 							<label
 								htmlFor='task_description'
-								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-							>
+								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								Task Description<span className='text-red-700'> *</span>
 							</label>
-							<textarea
+							<Textarea
 								ref={autocompleteDescription.inputRef}
 								value={description}
 								onChange={autocompleteDescription.handleChange}
@@ -434,7 +442,6 @@ export default function TaskForm({
 								name='task_description'
 								placeholder='A clear, concise statement of what the task entails.'
 								rows={4}
-								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 								defaultValue={taskState?.description}
 							/>
 							{autocompleteDescription.showDropdown &&
@@ -453,8 +460,7 @@ export default function TaskForm({
 							<div className='flex w-full mb-2 items-center'>
 								<label
 									htmlFor='expectedOutput'
-									className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-								>
+									className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 									Expected Output<span className='text-red-700'> *</span>
 								</label>
 
@@ -464,8 +470,7 @@ export default function TaskForm({
 								<Switch
 									checked={isStructuredOutput}
 									onChange={setIsStructuredOutput}
-									className='group inline-flex h-5 w-11 items-center rounded-full bg-gray-400 transition data-[checked]:bg-blue-600'
-								>
+									className='group inline-flex h-5 w-11 items-center rounded-full bg-gray-400 transition data-[checked]:bg-blue-600'>
 									<span className='size-3 translate-x-1 rounded-full bg-white transition group-data-[checked]:translate-x-6' />
 								</Switch>
 							</div>
@@ -491,19 +496,17 @@ export default function TaskForm({
 										className='text-sm text-blue-500 dark:text-blue-400 underline'
 										href='https://docs.agentcloud.dev/documentation/guides/structure-output'
 										target='_blank'
-										rel='noreferrer'
-									>
+										rel='noreferrer'>
 										Instructions on how to create a schema for structure output
 									</a>
 								</>
 							) : (
-								<textarea
+								<Textarea
 									ref={autocompleteExpectedOutput.inputRef}
 									id='expectedOutput'
 									name='expectedOutput'
 									placeholder='Clear and detailed definition of expected output for the task.'
 									rows={4}
-									className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 									defaultValue={taskState?.expectedOutput}
 									value={autocompleteExpectedOutput.text}
 									onChange={autocompleteExpectedOutput.handleChange}
@@ -527,56 +530,39 @@ export default function TaskForm({
 								<ToolTip
 									content='Save task ouput to a variable. This variable will be available in next tasks as well as arguments for tools.'
 									placement='top-start'
-									arrow={false}
-								>
+									arrow={false}>
 									<div className='mt-2'>
 										<div className='sm:col-span-12'>
 											<label
 												htmlFor='requiresHumanInput'
-												className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-											>
+												className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 												Assign Task Output to Variable
 											</label>
 											<Select
-												primaryColor='indigo'
-												value={
-													taskOutputVariable
-														? {
-																label: taskOutputVariable.name,
-																value: taskOutputVariable._id.toString()
-															}
-														: null
-												}
-												onChange={(v: any) => {
-													/* Note: using a unique non objectid valud e.g. "new" instead of null because
-										   isClearable selects that aren't isMultiple have an empty value of null, which conflicts
-										   and triggers the new modal every time the input is cleared */
-													if (v?.value == 'new') {
+												value={taskOutputVariable?.name}
+												onValueChange={value => {
+													if (value == 'new') {
 														return setModalOpen('variable');
 													}
 													setTask(oldTask => {
 														return {
 															...oldTask,
-															taskOutputVariableName: v?.label
+															taskOutputVariableName: value
 														};
 													});
-												}}
-												options={[{ label: '+ Create new variable', value: 'new' }].concat(
-													variables.map(a => ({
-														label: a.name.toString(),
-														value: a._id.toString()
-													}))
-												)}
-												classNames={{
-													menuButton: () =>
-														'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-slate-800 dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
-													menu: 'absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-slate-700 dark:border-slate-600',
-													list: 'dark:bg-slate-700',
-													listGroupLabel: 'dark:bg-slate-700',
-													listItem: (value?: { isSelected?: boolean }) =>
-														`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`
-												}}
-											/>
+												}}>
+												<SelectTrigger>
+													<SelectValue placeholder='Select a variable' />
+												</SelectTrigger>
+												<SelectContent>
+													<SelectItem value='new'>+ Create new variable</SelectItem>
+													{variables.map(v => (
+														<SelectItem key={v._id.toString()} value={v.name}>
+															{v.name}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
 										</div>
 									</div>
 								</ToolTip>
@@ -586,12 +572,11 @@ export default function TaskForm({
 						<div className='sm:col-span-full'>
 							<label
 								htmlFor='members'
-								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-							>
+								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								Context
 							</label>
 							<div className='mt-2'>
-								<Select
+								<SelectOld
 									isMultiple
 									isSearchable
 									isClearable
@@ -636,8 +621,7 @@ export default function TaskForm({
 											<li
 												className={`transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 justify-between flex hover:overflow-visible ${
 													data.isSelected ? 'bg-blue-100 text-blue-500' : 'dark:text-white'
-												}`}
-											>
+												}`}>
 												{data.label}
 												{optionTask ? ` (${optionTask.description})` : null}
 											</li>
@@ -671,8 +655,7 @@ export default function TaskForm({
 							<InfoAlert
 								textColor='black'
 								className='col-span-full bg-yellow-100 text-yellow-900 p-4 text-sm rounded-md'
-								message='Agent Tool Conflict Warning'
-							>
+								message='Agent Tool Conflict Warning'>
 								We noticed you have added an agent with a tool associated to them. Please note,
 								since the tools are associated to the agents, they can be used on any task where the
 								agent is working. If you would like a more deterministic approach, please only
@@ -684,12 +667,11 @@ export default function TaskForm({
 						<div className='col-span-full'>
 							<label
 								htmlFor='preferredAgent'
-								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-							>
+								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								Preferred Agent
 							</label>
 							<div className='mt-2'>
-								<Select
+								<SelectOld
 									isClearable
 									isSearchable
 									primaryColor={'indigo'}
@@ -736,8 +718,7 @@ export default function TaskForm({
 											<li
 												className={`transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 justify-between flex hover:overflow-visible ${
 													data.isSelected ? 'bg-blue-100 text-blue-500' : 'dark:text-white'
-												}`}
-											>
+												}`}>
 												{data.label}
 												{optionAgent ? ` - ${optionAgent.role}` : null}
 												{data.allowDelegation && (
@@ -787,17 +768,15 @@ export default function TaskForm({
 							<ToolTip
 								content='Use human input when the task description and expected output require a human response instead of an AI response. This input will be used for the next task in a process app.'
 								placement='top-start'
-								arrow={false}
-							>
+								arrow={false}>
 								<div className='mt-2'>
 									<div className='sm:col-span-12'>
 										<label
 											htmlFor='requiresHumanInput'
-											className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-										>
+											className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 											Human Input
 										</label>
-										<Select
+										<SelectOld
 											primaryColor='indigo'
 											value={
 												requiredHumanInput
@@ -861,14 +840,12 @@ export default function TaskForm({
 							<ToolTip
 								content='Hides intermediate thought messages from agents and only display the final task output.'
 								placement='top-start'
-								arrow={false}
-							>
+								arrow={false}>
 								<div className='mt-2'>
 									<div className='sm:col-span-12'>
 										<label
 											htmlFor='displayOnlyFinalOutput'
-											className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-										>
+											className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 											<input
 												type='checkbox'
 												id='displayOnlyFinalOutput'
@@ -902,14 +879,12 @@ export default function TaskForm({
 							<ToolTip
 								content='Stores the task output in a file that can be downloaded by the user after the task is completed.'
 								placement='top-start'
-								arrow={false}
-							>
+								arrow={false}>
 								<div className='mt-2'>
 									<div className='sm:col-span-12'>
 										<label
 											htmlFor='storeTaskOutput'
-											className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-										>
+											className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 											<input
 												type='checkbox'
 												id='storeTaskOutput'
@@ -936,13 +911,11 @@ export default function TaskForm({
 							<ToolTip
 								content='Task output file name can only be .txt or .csv'
 								placement='top-start'
-								arrow={false}
-							>
+								arrow={false}>
 								<div className='col-span-full'>
 									<label
 										htmlFor='name'
-										className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-									>
+										className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 										Task Output File Name<span className='text-red-700'> *</span>
 									</label>
 									<input
@@ -963,8 +936,7 @@ export default function TaskForm({
 					{!compact && <Link href={`/${resourceSlug}/tasks`}>Back</Link>}
 					<button
 						type='submit'
-						className={`rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${compact ? 'w-full' : ''}`}
-					>
+						className={`rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${compact ? 'w-full' : ''}`}>
 						Save
 					</button>
 				</div>

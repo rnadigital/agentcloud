@@ -44,6 +44,8 @@ import { Tool } from 'struct/tool';
 import { MultiSelect } from 'modules/components/multi-select';
 import { Config } from './apps/crew-apps/Config';
 import { Button } from 'modules/components/ui/button';
+import NewTaskSheet from './tasks/NewTaskSheet';
+import { Sheet, SheetContent } from 'modules/components/ui/sheet';
 
 export default function CrewAppForm({
 	agentChoices = [],
@@ -533,6 +535,7 @@ export default function CrewAppForm({
 					</form>
 				</div>
 			)}
+			<NewTaskSheet />
 		</main>
 	);
 }
