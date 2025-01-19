@@ -1,5 +1,6 @@
 
 let accountInformationMap: Map<String, any> = new Map();
+let objectIds: string[];
 export enum fetchTypes {
 	POST = 'POST',
 	GET = 'GET',
@@ -90,4 +91,8 @@ export async function updateAllAccountCsrf() {
         const { sessionCookie } = await getInitialData(accountDetails[accountStr]);
         setInitialData(accountDetails[accountStr], { accountData: accountJson, sessionCookie });
     };
+}
+
+export async function wait(ms: number) {
+    return new Promise( resolve => setTimeout(resolve, ms) );
 }

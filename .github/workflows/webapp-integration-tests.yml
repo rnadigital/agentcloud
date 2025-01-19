@@ -1,0 +1,43 @@
+
+name: Run Webapp Integration Tests
+
+on:
+  pull_request:
+    branches: [ "develop" ]
+
+jobs:
+  integration-tests:
+    name: Build app and run integration tests
+    runs-on: ubuntu-latest
+    env:
+        TERM: xterm
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup firefox
+        id: setup-firefox
+        uses: browser-actions/setup-firefox@v1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set environment variables
+        run: ./setemptyenv.sh
+
+      - name: Install webapp dependencies
+        working-directory: ./webapp
+        run: npm install
+      
+      - name: run ./install.sh
+        run: ./install.sh
+
+      - name: run integration tests
+        working-directory: ./webapp
+        run: npm run test:integration
