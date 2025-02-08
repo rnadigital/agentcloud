@@ -516,7 +516,7 @@ export async function editToolApi(req, res, next) {
 		schema: schema,
 		datasourceId: toObjectId(datasourceId),
 		retriever_type: retriever || null,
-		retriever_config: { ...retriever_config, metadata_field_info } || {}, //TODO: validation
+		retriever_config: { ...retriever_config, metadata_field_info },
 		data: toolData,
 		icon: attachedIconToTool ? (iconId ? attachedIconToTool : null) : null,
 		parameters,
@@ -784,6 +784,9 @@ export async function applyToolRevisionApi(req, res, next) {
  * @apiParam {String} toolID tool id
  */
 export async function deleteToolApi(req, res, next) {
+	const log = debug('webapp:controllers:tool:delete');
+	log('Starting tool deletion for toolId: %s', req.body.toolId);
+
 	let validationError = chainValidations(
 		req.body,
 		[{ field: 'toolId', validation: { notEmpty: true, ofType: 'string', lengthMin: 24 } }],
@@ -791,23 +794,30 @@ export async function deleteToolApi(req, res, next) {
 	);
 
 	if (validationError) {
+		log('Validation error: %O', validationError);
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
 	const { toolId } = req.body;
+	log('Fetching existing tool with id: %s', toolId);
 
 	const existingTool: Tool = await getToolById(req.params.resourceSlug, toolId);
 
 	if (!existingTool) {
+		log('Tool not found: %s', toolId);
 		return dynamicResponse(req, res, 404, { error: 'Tool not found' });
 	}
 
+	log('Found tool: %s (type: %s)', existingTool.name, existingTool.type);
+
 	if (existingTool.type === ToolType.FUNCTION_TOOL) {
+		log('Deleting function tool with functionId: %s', existingTool.functionId);
 		const functionProvider = FunctionProviderFactory.getFunctionProvider();
 		try {
 			await functionProvider.deleteFunction(existingTool?.functionId);
+			log('Successfully deleted function');
 		} catch (e) {
-			log(e);
+			log('Error deleting function: %O', e);
 			if (e.code !== 5) {
 				return dynamicResponse(req, res, 400, {
 					error: 'Failed to update tool'
@@ -816,11 +826,17 @@ export async function deleteToolApi(req, res, next) {
 		}
 	} else if (existingTool.type === ToolType.RAG_TOOL) {
 		if (existingTool.datasourceId) {
+			log(
+				'Checking RAG tool datasource dependencies for datasourceId: %s',
+				existingTool.datasourceId
+			);
 			const existingToolsForDatasource: Tool[] = await getToolsForDatasource(
 				req.params.resourceSlug,
 				existingTool?.datasourceId
 			);
+			log('Found %d tools for datasource', existingToolsForDatasource?.length);
 			if (existingToolsForDatasource && existingToolsForDatasource.length === 1) {
+				log('Cannot delete - datasource requires at least one tool');
 				return dynamicResponse(req, res, 409, {
 					error:
 						'This tool cannot be deleted as datasources require at least one tool associated with them. Please create another tool for this datasource if you would like to delete this tool.'
@@ -829,15 +845,20 @@ export async function deleteToolApi(req, res, next) {
 		}
 	}
 
+	log('Deleting tool from database');
 	const oldTool = await deleteToolByIdReturnTool(req.params.resourceSlug, toolId);
 	if (oldTool?.icon?.id) {
+		log('Deleting tool icon asset: %s', oldTool.icon.id);
 		deleteAssetById(oldTool.icon.id);
 	}
+
+	log('Cleaning up tool dependencies');
 	await Promise.all([
 		removeAgentsTool(req.params.resourceSlug, toolId),
 		deleteRevisionsForTool(req.params.resourceSlug, toolId)
 	]);
 
+	log('Tool deletion completed successfully');
 	return dynamicResponse(req, res, 200, {
 		/*redirect: `/${req.params.resourceSlug}/agents`*/
 	});

@@ -105,8 +105,7 @@ export default function CrewAppForm({
 	const [isEditing, setIsEditing] = useState<boolean>(false);
 
 	const [hasLaunched, setHasLaunched] = useState<boolean>(false);
-	const [appName, setAppName] = useState(app?.name || '');
-	const [moalOpen, setMoalOpen] = useState(false);
+	const [appName, setAppName] = useState(app?.name || 'Untitled Crew App');
 
 	function getInitialData(initData) {
 		const { agents, tasks } = initData;
@@ -188,7 +187,7 @@ export default function CrewAppForm({
 		const body = {
 			_csrf: csrf,
 			resourceSlug,
-			name: e.target.name.value,
+			name: appName,
 			description,
 			process,
 			agents: agentsState.map(a => a.value),
@@ -469,7 +468,7 @@ export default function CrewAppForm({
 									tasks={tasksState}
 									setTasks={setTasksState}
 									taskChoices={taskChoices}
-									setModalOpen={setMoalOpen}
+									setModalOpen={setModalOpen}
 								/>
 							</div>
 							<div>
@@ -536,7 +535,11 @@ export default function CrewAppForm({
 					</form>
 				</div>
 			)}
-			<NewTaskSheet open={moalOpen} callback={createTaskCallback} setOpen={setMoalOpen} />
+			<NewTaskSheet
+				open={modalOpen === 'task'}
+				callback={createTaskCallback}
+				setOpen={setModalOpen}
+			/>
 		</main>
 	);
 }

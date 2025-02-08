@@ -1,141 +1,109 @@
-import { Stepper } from 'modules/components/stepper';
-import { Input } from 'modules/components/ui/input';
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue
-} from 'modules/components/ui/select';
-import { Textarea } from 'modules/components/ui/textarea';
 import { useState } from 'react';
-import { useDataSourcesStore } from 'store/data-source';
-import { StepperEditSource } from './tools-stepper-edit/stepper-edit-source';
-import { StepperEditDependencies } from './tools-stepper-edit/stepper-edit-dependencies';
-import { StepperEditConfig } from './tools-stepper-edit/stepper-edit-config';
-import { StepperEditVersionHistory } from './tools-stepper-edit/stepper-edit-version-history';
+import ToolForm from './ToolForm';
+import { ToolDisplay } from './toolsdialogscreens/Tool';
+import { Install } from './toolsdialogscreens/Install';
 import { Button } from 'modules/components/ui/button';
-import { MoveLeft, MoveRight } from 'lucide-react';
-
-type Step = {
-	id: number;
-	stepName: string;
-	title?: string;
-	description?: string;
-};
+import { useDataSourcesStore } from 'store/data-source';
+import { Tool, ToolType } from 'struct/tool';
+import {
+    Dialog,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle
+} from 'modules/components/ui/dialog';
 
 export const ToolsEdit = ({
-	setDisplayScreen
+    tool,
+	setSelectedTool,
+    isDialogOpen,
+    setIsDialogOpen,
+    dialogScreen,
+    setDialogScreen,
+    setDisplayScreen,
+    setActiveTab,
+    fetchTools
 }: {
-	setDisplayScreen: React.Dispatch<React.SetStateAction<string>>;
+    tool: Tool;
+	setSelectedTool: Function;
+    isDialogOpen: boolean;
+    setIsDialogOpen: Function;
+    dialogScreen: any;
+    setDialogScreen: any;
+    setDisplayScreen: React.Dispatch<React.SetStateAction<string>>;
+    setActiveTab: Function;
+    fetchTools: Function;
 }) => {
-	const steps: Step[] = [
-		{
-			id: 1,
-			stepName: 'Source'
-		},
-		{
-			id: 2,
-			stepName: 'Dependencies'
-		},
-		{
-			id: 3,
-			stepName: 'Config'
-		},
-		{
-			id: 4,
-			stepName: 'Version History'
-		}
-	];
+    const { dataSources } = useDataSourcesStore();
 
-	const [currentStep, setCurrentStep] = useState<number>(1);
-	const { dataSources } = useDataSourcesStore();
+    function handleCloseDialog() {
+        setIsDialogOpen(false);
+        setDisplayScreen('tools');
+    }
 
-	return (
-		<div className='flex flex-col gap-4 pb-6 rounded-lg border border-gray-200 mt-4'>
-			<div className='p-4 border border-gray-200'>
-				<p className='text-sm'>Edit Tool</p>
-			</div>
-			<div className='flex px-6'>
-				<div className='flex flex-col gap-4 w-full'>
-					<div className='text-sm flex flex-col gap-2'>
-						<p>Name</p>
-						<Input placeholder='Tool name' className='p-5 bg-gray-50 border border-gray-300' />
-					</div>
-					<div className='text-sm flex flex-col gap-2'>
-						<p>Description</p>
-						<p className='text-gray-500'>
-							A verbose and detailed description helps agents to better understand when to use this
-							tool
-						</p>
-						<Textarea
-							id='goal'
-							className='resize-none h-20 bg-gray-50 border-gray-300'
-							placeholder='Help potential customers understand product benefits and close sales.'
-						/>
-					</div>
-					<div className='text-sm flex flex-col gap-2'>
-						<p>Data Source</p>
-						<Select>
-							<SelectTrigger className='w-[180px] w-full lg:w-fit'>
-								<SelectValue placeholder='Select data source' />
-							</SelectTrigger>
-							<SelectContent>
-								{dataSources.map(dataSource => (
-									<SelectItem key={dataSource.value} value={dataSource.value}>
-										{dataSource.label}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-					</div>
-					<div className='text-sm flex gap-2 border border-gray-300 rounded-md'>
-						<div className='p-4 border-r border-gray-300'>
-							<Stepper steps={steps} currentStep={currentStep} />
-						</div>
-						<div className='flex flex-col justify-between gap-4 p-4 w-full'>
-							{currentStep === 1 && <StepperEditSource />}
-							{currentStep === 2 && <StepperEditDependencies />}
-							{currentStep === 3 && <StepperEditConfig />}
-							{currentStep === 4 && <StepperEditVersionHistory />}
-							<div className='flex items-center justify-between'>
-								{currentStep > 1 && (
-									<Button
-										onClick={() => currentStep > 1 && setCurrentStep(currentStep - 1)}
-										asChild>
-										<div className='flex items-center gap-2 font-medium cursor-pointer bg-transparent hover:bg-transparent border-0 shadow-none outline-none'>
-											<MoveLeft color='#6B7280' />
-											<p className='text-gray-500'>Back</p>
-										</div>
-									</Button>
-								)}
-								{currentStep < steps.length && (
-									<Button
-										onClick={() => currentStep < steps.length && setCurrentStep(currentStep + 1)}
-										asChild>
-										<div className='ml-auto flex items-center gap-2 font-medium cursor-pointer bg-transparent hover:bg-transparent border-0 shadow-none outline-none'>
-											<p className='text-[#4F46E5]'>Next</p>
-											<MoveRight color='#4F46E5' />
-										</div>
-									</Button>
-								)}
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-			<div className='flex items-center justify-between border-t border-gray-200 p-[16px]'>
-				<Button
-					onClick={() => setDisplayScreen('tools')}
-					className='bg-transparent text-foreground hover:bg-transparent hover:text-foreground'>
-					Cancel
-				</Button>
-				<Button
-					onClick={() => setDisplayScreen('tools')}
-					className='bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white py-2.5 px-4 rounded-lg'>
-					Save
-				</Button>
-			</div>
-		</div>
-	);
+
+    return (
+        <div className='flex flex-col gap-4 pb-6 rounded-lg border border-gray-200 mt-4'>
+            <div className='p-4 border border-gray-200'>
+                <p className='text-sm'>Edit Tool</p>
+            </div>
+            <div className='flex px-6'>
+                <div className='flex flex-col gap-4 w-full'>
+                    {tool.type === ToolType.FUNCTION_TOOL ? (
+                        <ToolForm
+                            tool={tool}
+                            datasources={dataSources}
+                            editing={true}
+							initialType={ToolType.FUNCTION_TOOL}
+                            fetchFormData={fetchTools}
+                            setDisplayScreen={setDisplayScreen}
+							fetchTools={fetchTools}
+                        />
+                    ) : (
+                        // <Install
+                        //     selectedTool={tool}
+                        //     setSelectedTool={setSelectedTool}
+                        //     setScreen={setDisplayScreen}
+                        //     type={'edit'}
+                        //     setIsDialogOpen={setIsDialogOpen}
+                        //     setActiveTab={() => {}}
+                        // />
+                        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                        <DialogContent className='rounded-3xl sm:max-w-[864px] w-[90%] text-foreground  flex flex-col justify-between'>
+                            <DialogHeader>
+                                <DialogTitle className='font-semibold text-2xl text-foreground'>
+                                    Install Tool
+                                </DialogTitle>
+                            </DialogHeader>
+  
+                                {dialogScreen === 'toolDisplay' && (
+                                    <ToolDisplay
+                                        setDisplayScreen={setDisplayScreen}
+                                        setScreen={setDialogScreen}
+                                        selectedTool={tool}
+                                        editing={true}
+                                        fetchTools={fetchTools}
+                                        setSelectedTool={setSelectedTool}
+                                        handleCloseDialog={handleCloseDialog}
+                                        setDialogScreen={setDialogScreen}
+                                        callback={() => fetchTools()}
+                                    />
+                                )}
+                                {/* // ) : dialogScreen === 'installed' ? (
+                                //     <Install
+                                //         type={'page'}
+                                //         setScreen={setDialogScreen}
+                                //         setSelectedTool={setSelectedTool}
+                                //         selectedTool={tool}
+                                //         setIsDialogOpen={setIsDialogOpen}
+                                //         setActiveTab={setActiveTab}
+                                //     />
+                                // ) : null} */}
+                        </DialogContent>
+                    </Dialog>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
 };

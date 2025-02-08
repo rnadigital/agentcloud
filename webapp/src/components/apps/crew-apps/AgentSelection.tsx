@@ -3,7 +3,7 @@ import { Agent } from 'struct/agent';
 import { MagnifyingGlassIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Tool, ToolType } from 'struct/tool';
 import { Model } from 'db/model';
-import NewAgentSheet from 'components/agents/NewAgentSheet';
+import { NewAgentSheet } from 'components/agents/NewAgentSheet';
 
 type AgentsState = {
 	label: string;

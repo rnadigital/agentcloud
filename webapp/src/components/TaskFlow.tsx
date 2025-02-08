@@ -207,7 +207,7 @@ export default function TaskFlow({
 				<Button
 					onClick={e => {
 						e.preventDefault();
-						setModalOpen(true);
+						setModalOpen('task');
 					}}
 					className='ml-2 w-[180px]'
 					variant='outline'>

@@ -79,6 +79,8 @@ export default function NewTaskSheet({
 					taskChoices={tasks}
 					editing={false}
 					variables={variables}
+					compact
+					callback={callback}
 				/>
 			</SheetContent>
 		</Sheet>

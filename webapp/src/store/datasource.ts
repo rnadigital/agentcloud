@@ -6,6 +6,8 @@ import { StreamConfigMap } from 'struct/datasource';
 import { create } from 'zustand';
 
 import { StreamState } from './connections';
+import { ModelsJsonData } from 'controllers/model';
+import { VectorDb, VectorDbDocument } from 'struct/vectordb';
 
 interface DatasourceStore {
 	// State
@@ -23,7 +25,8 @@ interface DatasourceStore {
 	stagedDatasource?: any;
 	streamState: StreamConfigMap;
 	embeddingField: string;
-
+	teamModels: ModelsJsonData['models'];
+	vectorDbs: VectorDbDocument[];
 	// Actions
 	setStore: (data: Partial<DatasourceStore>) => void;
 	initConnectors: (router: any) => Promise<void>;
@@ -41,6 +44,8 @@ interface DatasourceStore {
 		posthog: any,
 		router: any
 	) => Promise<void>;
+	fetchTeamModels: (router: any) => Promise<void>;
+	fetchVectorDbs: (router: any) => Promise<void>;
 }
 
 export const useDatasourceStore = create<DatasourceStore>((set, get) => ({
@@ -58,6 +63,8 @@ export const useDatasourceStore = create<DatasourceStore>((set, get) => ({
 	spec: null,
 	loading: false,
 	embeddingField: '',
+	teamModels: [],
+	vectorDbs: [],
 	// Actions
 	setStore: data => set(state => ({ ...state, ...data })),
 
@@ -186,5 +193,26 @@ export const useDatasourceStore = create<DatasourceStore>((set, get) => ({
 			await new Promise(res => setTimeout(res, 750));
 			set({ submitting: false });
 		}
+	},
+
+	fetchTeamModels: async router => {
+		const { csrf, resourceSlug } = get();
+
+		await API.getModels(
+			{ resourceSlug },
+			({ models }) => set(state => ({ ...state, teamModels: models })),
+			toast.error,
+			router
+		);
+	},
+	fetchVectorDbs: async router => {
+		const { csrf, resourceSlug } = get();
+
+		await API.getVectorDbs(
+			{ resourceSlug },
+			({ vectorDbs }) => set(state => ({ ...state, vectorDbs })),
+			toast.error,
+			router
+		);
 	}
 }));

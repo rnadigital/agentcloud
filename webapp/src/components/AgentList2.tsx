@@ -39,18 +39,39 @@ import {
 	TooltipTrigger
 } from 'modules/components/ui/tooltip';
 import { ToolType } from 'struct/tool';
-import NewAgentSheet from './agents/NewAgentSheet';
+import { NewAgentSheet } from './agents/NewAgentSheet';
 
 const DeleteDialog = ({
 	openDeleteDialog,
-	setOpenDeleteDialog
+	setOpenDeleteDialog,
+	onDelete
 }: {
 	openDeleteDialog: boolean;
-	setOpenDeleteDialog: React.Dispatch<React.SetStateAction<boolean>>;
+	setOpenDeleteDialog: (open: boolean) => void;
+	onDelete: () => void;
 }) => {
 	return (
-		<Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
-			<DialogContent className='w-[95%] lg:w-fit rounded-lg'>
+		<Dialog 
+			open={openDeleteDialog} 
+			onOpenChange={(open) => {
+				setOpenDeleteDialog(open);
+				if (!open) {
+					// Reset focus and state when dialog closes
+					document.body.style.pointerEvents = 'auto';
+				}
+			}}
+		>
+			<DialogContent 
+				onPointerDownOutside={() => {
+					setOpenDeleteDialog(false);
+					document.body.style.pointerEvents = 'auto';
+				}}
+				onEscapeKeyDown={() => {
+					setOpenDeleteDialog(false);
+					document.body.style.pointerEvents = 'auto';
+				}}
+				className='w-[95%] lg:w-fit rounded-lg'
+			>
 				<DialogHeader>
 					<DialogTitle className='flex flex-col gap-4 items-center'>
 						<TriangleAlert
@@ -70,8 +91,25 @@ const DeleteDialog = ({
 					</DialogDescription>
 				</DialogHeader>
 				<DialogFooter className='flex items-center justify-center gap-6 mx-auto mt-4'>
-					<Button className='bg-background text-foreground hover:bg-background'>Cancel</Button>
-					<Button className='bg-red-700 text-white hover:bg-red-800'>Delete agent</Button>
+						<Button 
+						onClick={() => {
+							setOpenDeleteDialog(false);
+							document.body.style.pointerEvents = 'auto';
+						}}
+						className='bg-background text-foreground hover:bg-background'
+					>
+						Cancel
+					</Button>
+					<Button 
+						onClick={() => {
+							onDelete();
+							setOpenDeleteDialog(false);
+							document.body.style.pointerEvents = 'auto';
+						}}
+						className='bg-red-700 text-white hover:bg-red-800'
+					>
+						Delete agent
+					</Button>
 				</DialogFooter>
 			</DialogContent>
 		</Dialog>
@@ -90,6 +128,7 @@ export default function AgentList2({ agents, fetchAgents }) {
 	const [openEditSheet, setOpenEditSheet] = useState<boolean>(false);
 	const [openNewAgentSheet, setOpenNewAgentSheet] = useState<boolean>(false);
 	const [filteredAgents, setFilteredAgents] = useState<any[]>([]);
+	const [selectedAgentId, setSelectedAgentId] = useState<string>(null);
 
 	const [searchTerm, setSearchTerm] = useState<string>();
 	const agentsToDisplay = filteredAgents.length > 0 ? filteredAgents : agents;
@@ -103,6 +142,8 @@ export default function AgentList2({ agents, fetchAgents }) {
 	}, [searchTerm]);
 
 	async function deleteAgent(agentId) {
+		if (!agentId) return;
+		
 		API.deleteAgent(
 			{
 				_csrf: csrf,
@@ -111,10 +152,12 @@ export default function AgentList2({ agents, fetchAgents }) {
 			},
 			() => {
 				fetchAgents();
-				toast('Deleted agent');
+				toast.success('Agent deleted successfully');
+				setSelectedAgentId(null);
 			},
-			() => {
-				toast.error('Error deleting agent');
+			(error) => {
+				toast.error(error || 'Error deleting agent');
+				setSelectedAgentId(null);
 			},
 			router
 		);
@@ -122,7 +165,7 @@ export default function AgentList2({ agents, fetchAgents }) {
 
 	return (
 		<>
-			<DeleteDialog openDeleteDialog={openDeleteDialog} setOpenDeleteDialog={setOpenDeleteDialog} />
+			<DeleteDialog openDeleteDialog={openDeleteDialog} setOpenDeleteDialog={setOpenDeleteDialog} onDelete={() => deleteAgent(selectedAgentId)} />
 			<main className='text-foreground flex flex-col gap-2'>
 				<section className='flex items-center justify-between mb-4'>
 					<h4 className='text-gray-900 font-semibold text-2xl'>Agents</h4>
@@ -152,6 +195,10 @@ export default function AgentList2({ agents, fetchAgents }) {
 						setAgentDisplay={setAgentDisplay}
 						openEditSheet={openEditSheet}
 						setOpenEditSheet={setOpenEditSheet}
+						callback={async () => {
+							await fetchAgents();
+							setOpenEditSheet(false);
+						}}
 					/>
 				) : (
 					<section className='gap-4 grid grid-cols-1 lg:grid-cols-4 md:grid-cols-3'>
@@ -172,7 +219,10 @@ export default function AgentList2({ agents, fetchAgents }) {
 														<DropdownMenuContent align='end'>
 															<DropdownMenuItem
 																className='text-red-600'
-																onClick={() => setOpenDeleteDialog(true)}>
+																onClick={() => {
+																	setSelectedAgentId(agent._id);
+																	setOpenDeleteDialog(true);
+																}}>
 																Delete
 															</DropdownMenuItem>
 															<DropdownMenuItem onClick={() => alert('Pin action triggered')}>

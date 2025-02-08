@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from 'react';
 import * as API from '@api';
 import InviteFormModal from 'components/InviteFormModal';
 import MemberList from 'components/MemberList';
@@ -8,109 +9,119 @@ import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Permissions from 'permissions/permissions';
-import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 
 export default function Team(props) {
-	const [accountContext, refreshAccountContext]: any = useAccountContext();
-	const { csrf, teamName, permissions } = accountContext as any;
-	const router = useRouter();
-	const { resourceSlug } = router.query;
-	const [state, dispatch] = useState(props);
-	const [error, setError] = useState();
-	const [modalOpen, setModalOpen]: any = useState(false);
-	const { team, invites } = state;
+    const [accountContext, refreshAccountContext]: any = useAccountContext();
+    const { csrf, teamName, permissions } = accountContext as any;
+    const router = useRouter();
+    const { resourceSlug } = router.query;
+    const [state, dispatch] = useState(props);
+    const [error, setError] = useState();
+    const [modalOpen, setModalOpen]: any = useState(false);
+    const [searchQuery, setSearchQuery] = useState(''); // Search query state
+    const { team, invites } = state;
 
-	async function fetchTeam() {
-		await API.getTeam({ resourceSlug }, dispatch, setError, router);
-	}
+    async function fetchTeam() {
+        await API.getTeam({ resourceSlug }, dispatch, setError, router);
+    }
 
-	async function refreshTeam() {
-		fetchTeam();
-		refreshAccountContext();
-		setModalOpen(false);
-	}
+    useEffect(() => {
+        console.log('Team object:', team);
+    }, [team]);
 
-	useEffect(() => {
-		fetchTeam();
-	}, [resourceSlug]);
+    async function refreshTeam() {
+        fetchTeam();
+        refreshAccountContext();
+        setModalOpen(false);
+    }
 
-	async function deleteCallback(memberId) {
-		await API.deleteTeamMember(
-			{
-				_csrf: csrf,
-				resourceSlug,
-				memberId
-			},
-			() => {
-				toast.success('Team member removed successfully');
-				fetchTeam();
-			},
-			err => {
-				toast.error(err);
-			},
-			router
-		);
-	}
+    useEffect(() => {
+        fetchTeam();
+    }, [resourceSlug]);
 
-	if (!team) {
-		return <Spinner />;
-	}
+    async function deleteCallback(memberId) {
+        await API.deleteTeamMember(
+            {
+                _csrf: csrf,
+                resourceSlug,
+                memberId,
+            },
+            () => {
+                toast.success('Team member removed successfully');
+                fetchTeam();
+            },
+            (err) => {
+                toast.error(err);
+            },
+            router
+        );
+    }
 
-	let modal;
-	switch (modalOpen) {
-		case 'member':
-			modal = (
-				<InviteFormModal open={modalOpen !== false} setOpen={setModalOpen} callback={refreshTeam} />
-			);
-			break;
-		default:
-			modal = null;
-			break;
-	}
+    if (!team) {
+        return <Spinner />;
+    }
 
-	return (
-		<>
-			{modal}
-			<Head>
-				<title>{`Team - ${teamName}`}</title>
-			</Head>
+    // Filter members based on the search query
+    const filteredMembers = team?.members?.filter((member) =>
+        member.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
-			{permissions.get(Permissions.EDIT_TEAM) && (
-				<>
-					<div className='border-b pb-2 my-2'>
-						<h3 className='pl-2 font-semibold text-gray-900 dark:text-gray-50'>Settings</h3>
-					</div>
-					<TeamSettingsForm callback={refreshTeam} />
-				</>
-			)}
+    const memberCount = filteredMembers?.length || 0;  // Count of members
 
-			<PageTitleWithNewButton
-				list={team?.members}
-				title='Team Members'
-				buttonText='Invite Member'
-				onClick={() => setModalOpen('member')}
-				showButton={permissions.get(Permissions.ADD_TEAM_MEMBER)}
-			/>
+    let modal;
+    switch (modalOpen) {
+        case 'member':
+            modal = (
+                <InviteFormModal open={modalOpen !== false} setOpen={setModalOpen} callback={refreshTeam} />
+            );
+            break;
+        default:
+            modal = null;
+            break;
+    }
 
-			<MemberList
-				permissions={team?.permissions}
-				members={team?.members}
-				fetchTeam={fetchTeam}
-				deleteCallback={deleteCallback}
-			/>
-		</>
-	);
+    return (
+        <>
+            {modal}
+            <Head>
+                <title>{`Team - ${teamName}`}</title>
+            </Head>
+
+            {permissions.get(Permissions.EDIT_TEAM) && (
+                <>
+                    <TeamSettingsForm callback={refreshTeam} memberCount={memberCount} />
+                </>
+            )}
+
+            <PageTitleWithNewButton
+                list={team?.members}
+                title='Team Members'
+                buttonText='Invite Member'
+                onClick={() => setModalOpen('member')}
+                showButton={permissions.get(Permissions.ADD_TEAM_MEMBER)}
+				searchQuery={searchQuery}
+				setSearchQuery={setSearchQuery}
+            />
+
+            <MemberList
+                permissions={team?.permissions}
+                members={filteredMembers} // Pass the filtered list here
+                fetchTeam={fetchTeam}
+                deleteCallback={deleteCallback}
+            />
+        </>
+    );
 }
 
 export async function getServerSideProps({
-	req,
-	res,
-	query,
-	resolvedUrl,
-	locale,
-	locales,
-	defaultLocale
+    req,
+    res,
+    query,
+    resolvedUrl,
+    locale,
+    locales,
+    defaultLocale,
 }) {
-	return JSON.parse(JSON.stringify({ props: res?.locals?.data || {} }));
+    return JSON.parse(JSON.stringify({ props: res?.locals?.data || {} }));
 }

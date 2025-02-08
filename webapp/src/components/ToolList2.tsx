@@ -73,21 +73,21 @@ export default function ToolList2({ tools, fetchTools }: { tools: Tool[]; fetchT
 				<Tabs defaultValue='tool-library' className='mt-4 w-full' value={activeTab}>
 					<TabsList className='bg-transparent p-0 flex items-center'>
 						<TabsTrigger
-							className='w-fit text-gray-500'
+							className='w-fit text-gray-500 bg-transparent'
 							variant='underline'
 							value='my-tools'
 							onClick={() => setActiveTab('my-tools')}>
 							My Tools
 						</TabsTrigger>
 						<TabsTrigger
-							className='w-fit text-gray-500'
+							className='w-fit text-gray-500 bg-transparent'
 							variant='underline'
 							value='tool-library'
 							onClick={() => setActiveTab('tool-library')}>
 							Tool Library
 						</TabsTrigger>
 					</TabsList>
-					<ToolsMytools tools={filteredTools} fetchTools={fetchTools} />
+					<ToolsMytools tools={filteredTools} fetchTools={fetchTools} setActiveTab={setActiveTab} />
 					<ToolsLibrary tools={filteredTools} fetchTools={fetchTools} setActiveTab={setActiveTab} />
 				</Tabs>
 			</section>

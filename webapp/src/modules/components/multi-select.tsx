@@ -115,6 +115,11 @@ interface MultiSelectProps
 	 * Label to be displayed when the "New" option is selected.
 	 */
 	newLabel?: string;
+
+	/**
+	 * The selected values when the component mounts.
+	 */
+	value?: { label: string; value: string }[] | string[] | null;
 }
 
 export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>(
@@ -124,6 +129,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 			onValueChange,
 			variant,
 			defaultValue = [],
+			value,
 			placeholder = 'Select options',
 			animation = 0,
 			maxCount = 3,
@@ -136,7 +142,23 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 		},
 		ref
 	) => {
-		const [selectedValues, setSelectedValues] = React.useState<string[]>(defaultValue);
+		const [selectedValues, setSelectedValues] = React.useState<string[]>([]);
+		const [hasSelection, setHasSelection] = React.useState(false);
+
+		React.useEffect(() => {
+			if (value) {
+				const newValues = value.map(v => {
+					// Handle both object and string cases
+					if (typeof v === 'string') {
+						return v;
+					}
+					return (v as { value: string }).value;
+				});
+				setSelectedValues(newValues);
+				setHasSelection(newValues.length > 0);
+			}
+		}, [value]);
+
 		const [isPopoverOpen, setIsPopoverOpen] = React.useState(false);
 		const [isAnimating, setIsAnimating] = React.useState(false);
 
@@ -196,7 +218,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 							'flex w-full p-1 rounded-md border min-h-10 h-auto items-center justify-between bg-inherit hover:bg-inherit [&_svg]:pointer-events-auto',
 							className
 						)}>
-						{selectedValues?.length > 0 ? (
+							{hasSelection ? (
 							<div className='flex justify-between items-center w-full'>
 								<div className='flex flex-wrap items-center'>
 									{selectedValues?.slice(0, maxCount).map(value => {
@@ -288,7 +310,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 									<div
 										className={cn(
 											'mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary',
-											selectedValues?.length === options.length
+											selectedValues?.length === options?.length
 												? 'bg-primary text-primary-foreground'
 												: 'opacity-50 [&_svg]:invisible'
 										)}>
@@ -297,7 +319,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 									<span>(Select All)</span>
 								</CommandItem>
 
-								{options.map(option => {
+								{options?.map(option => {
 									const isSelected = selectedValues?.includes(option.value);
 									return (
 										<CommandItem

@@ -19,8 +19,6 @@ export default function Agents(props) {
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
 	const { agents, tools } = state;
-	console.log('state');
-	console.log(state);
 	const filteredAgents = agents?.filter(x => !x.hidden);
 	const agentsWithTools = filteredAgents?.map(agent => {
 		const agentTools = agent.toolIds

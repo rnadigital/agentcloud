@@ -39,7 +39,7 @@ import {
 	SelectTrigger,
 	SelectValue
 } from 'modules/components/ui/select';
-import { Database, User } from 'lucide-react';
+import { Database, PlusCircleIcon, User } from 'lucide-react';
 import { WrenchScrewdriverIcon } from '@heroicons/react/24/outline';
 
 const jsonPlaceholder = `{
@@ -112,6 +112,7 @@ export default function TaskForm({
 	const requiredHumanInput = taskState?.requiresHumanInput;
 
 	const preferredAgent = agents.find(a => a?._id === taskState?.agentId);
+	console.log(preferredAgent);
 	const taskOutputVariable = variables.find(v => v.name === taskState?.taskOutputVariableName);
 	const [showToolConflictWarning, setShowToolConflictWarning] = useState(false);
 
@@ -142,6 +143,7 @@ export default function TaskForm({
 		initialDatasources.length > 0 ? initialDatasources : null
 	); //Note: still technically tools, just only RAG tools
 
+	console.log(datasourceState);
 	const [descriptionSelectedVariables, setDescriptionSelectedVariables] = useState<string[]>([]);
 	const [expectedOutputSelectedVariables, setExpectedOutputSelectedVariables] =
 		useState<string[]>();
@@ -208,10 +210,9 @@ export default function TaskForm({
 	}
 	async function taskPost(e) {
 		e.preventDefault();
-		const toolIds = toolState ? toolState.map(x => x?.value) : [];
-		const datasourceIds = datasourceState ? datasourceState.map(x => x?.value) : [];
+		const toolIds = toolState ? toolState : [];
+		const datasourceIds = datasourceState ? datasourceState : [];
 		const dedupedCombinedToolIds = [...new Set([...toolIds, ...datasourceIds])];
-
 		const displayOnlyFinalOutput =
 			taskState?.requiresHumanInput && (!formFields || formFields.length === 0)
 				? false
@@ -551,9 +552,31 @@ export default function TaskForm({
 										label: t.name,
 										value: t._id.toString()
 									}))}
+								onValueChange={values => setToolState(values)}
+								value={toolState}
+							/>
+
+							{/* Tool selection */}
+							<MultiSelect
+								className='bg-white mt-4'
+								placeholder={
+									<div className='flex items-center gap-2'>
+										<Database className='h-4 w-4' />
+										<p>Connections</p>
+									</div>
+								}
+								newCallback={() => setModalOpen('datasource')}
+								newLabel='New Datasource'
+								options={tools
+									.filter(t => (t?.type as ToolType) === ToolType.RAG_TOOL)
+									.map(t => ({
+										label: t.name,
+										value: t._id.toString()
+									}))}
 								onValueChange={values => {
 									setDatasourceState(values);
 								}}
+								value={datasourceState}
 							/>
 
 							{/* Preferred agent */}
@@ -563,17 +586,19 @@ export default function TaskForm({
 									if (value == 'new') {
 										return setModalOpen('agent');
 									}
-									setTask(oldTask => {
-										return {
-											...oldTask,
-											agentId: value
-										};
-									});
+									if (value) {
+										setTask(oldTask => {
+											return {
+												...oldTask,
+												agentId: value
+											};
+										});
+									}
 								}}>
 								<SelectTrigger className='bg-white mt-4'>
 									<SelectValue
 										placeholder={
-											<div className='flex items-center gap-2'>
+											<div className='flex items-center gap-2 text-gray-600'>
 												<User className='h-4 w-4' />
 												<p>Agent</p>
 											</div>
@@ -581,7 +606,12 @@ export default function TaskForm({
 									/>
 								</SelectTrigger>
 								<SelectContent className='bg-white'>
-									<SelectItem value='new'>+ Create new agent</SelectItem>
+									<SelectItem value='new'>
+										<div className='flex items-center w-full'>
+											<PlusCircleIcon className='h-4 w-4 mr-2' />
+											Create new agent
+										</div>
+									</SelectItem>
 									{agents.map(a => (
 										<SelectItem key={a._id.toString()} value={a._id.toString()}>
 											{a.name}
@@ -593,7 +623,7 @@ export default function TaskForm({
 							{showToolConflictWarning && (
 								<InfoAlert
 									textColor='black'
-									className='col-span-full bg-yellow-100 text-yellow-900 p-4 text-sm rounded-md'
+									className='col-span-full bg-yellow-100 text-yellow-900 p-4 text-sm rounded-md mt-3'
 									message='Agent Tool Conflict Warning'>
 									We noticed you have added an agent with a tool associated to them. Please note,
 									since the tools are associated to the agents, they can be used on any task where

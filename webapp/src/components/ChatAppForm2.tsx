@@ -92,6 +92,8 @@ export default function Apps({
 	const [outsideOrg, setOutsideOrg] = useState(false);
 	const [modalOpen, setModalOpen]: any = useState(false);
 
+	const [isAgentUpdating, setIsAgentUpdating] = useState(false);
+
 	const selectedAgentModel = modelChoices.find(model => model._id === selectedAgent?.modelId);
 	const selectedAgentTools = toolChoices.filter(tool => selectedAgent?.toolIds?.includes(tool._id));
 
@@ -200,10 +202,8 @@ export default function Apps({
 			shareLinkShareId,
 			run,
 			maxMessages,
-			//existing agent
 			agentId: selectedAgent?._id,
 			type: AppType.CHAT,
-			// iconId: icon?.id,
 			cloning: app && !editing
 		};
 
@@ -282,11 +282,62 @@ export default function Apps({
 
 	useEffect(() => {
 		if (pendingAgentId && agentChoices) {
+			// When setting a new agent, always get the fresh version from choices
 			const newAgent = agentChoices.find(a => a._id === pendingAgentId);
-			setSelectedAgent(newAgent);
+			if (newAgent) {
+				setSelectedAgent(newAgent);
+			}
 			setPendingAgentId(null);
 		}
 	}, [pendingAgentId, agentChoices]);
+
+	const handleAgentUpdate = async (updatedAgent: Agent) => {
+		try {
+			setIsAgentUpdating(true);
+			
+			 // First fetch fresh data
+			await fetchFormData();
+			
+			// Then find the latest version of the agent from updated choices
+			const freshAgent = agentChoices.find(a => a._id === updatedAgent._id);
+			if (freshAgent) {
+				setSelectedAgent(freshAgent);
+			} else {
+				setSelectedAgent(updatedAgent); // Fallback to passed agent if not found
+			}
+		} catch (error) {
+			console.error('Error updating agent:', error);
+			toast.error('Failed to refresh agent data');
+		} finally {
+			setIsAgentUpdating(false);
+		}
+	};
+
+	// Add this effect to keep selectedAgent in sync with agentChoices
+	useEffect(() => {
+		if (selectedAgent && agentChoices) {
+			const freshAgent = agentChoices.find(a => a._id === selectedAgent._id);
+			if (freshAgent && JSON.stringify(freshAgent) !== JSON.stringify(selectedAgent)) {
+				setSelectedAgent(freshAgent);
+			}
+		}
+	}, [agentChoices]);
+
+	const refreshAgentData = async () => {
+		if (isAgentUpdating) return;
+		
+		try {
+			await fetchFormData();
+			if (selectedAgent?._id) {
+				const refreshedAgent = agentChoices.find(a => a._id === selectedAgent._id);
+				if (refreshedAgent) {
+					setSelectedAgent(refreshedAgent);
+				}
+			}
+		} catch (error) {
+			console.error('Error refreshing agent data:', error);
+		}
+	};
 
 	return (
 		<main className='text-foreground flex flex-col gap-2'>
@@ -329,6 +380,7 @@ export default function Apps({
 												<p className='font-semibold text-lg'>{appName}</p>
 											)}
 											<button
+												type='button'
 												onClick={() => {
 													setIsEditing(!isEditing);
 													if (appName === 'Untitled Chat App') {
@@ -356,10 +408,14 @@ export default function Apps({
 							{selectedAgent && (
 								<AgentCreatedDisplay
 									selectedAgent={selectedAgent}
+									openEditSheet={openEditSheet}
 									setOpenEditSheet={setOpenEditSheet}
 									selectedAgentModel={selectedAgentModel}
 									selectedAgentTools={selectedAgentTools}
-									setSelectedAgent={setSelectedAgent}
+									setSelectedAgent={handleAgentUpdate}
+									onAgentUpdate={refreshAgentData}
+									isUpdating={isAgentUpdating}
+									onChangeAgent={() => setSelectedAgent(null)} // Add this prop
 								/>
 							)}
 							{!selectedAgent && agentChoices?.length > 0 && (
@@ -371,8 +427,26 @@ export default function Apps({
 								/>
 							)}
 
-							{(agentChoices?.length === 0 || openEditSheet) && (
+							{/* FOR EDITING */}
+							{(agentChoices?.length === 0 || openEditSheet) && selectedAgent && (
 								<CreateAgentSheet
+									editing={true}
+									selectedAgent={selectedAgent}
+									openEditSheet={openEditSheet}
+									setOpenEditSheet={setOpenEditSheet}
+									callback={async (agentId, agent) => {
+										await fetchFormData();
+										setOpenEditSheet(false);
+										setPendingAgentId(agentId);
+									}}
+								/>
+							)}
+
+							{/* FOR ADDING */}
+							{(agentChoices?.length === 0 || openEditSheet) && !selectedAgent && (
+								<CreateAgentSheet
+									editing={false}
+									selectedAgent={selectedAgent}
 									openEditSheet={openEditSheet}
 									setOpenEditSheet={setOpenEditSheet}
 									callback={async (agentId, agent) => {
@@ -478,12 +552,13 @@ export default function Apps({
 						</article>
 						<article className='flex items-center justify-between px-6 py-3 border-t border-gray-200'>
 							<Button
+								type='button'
 								variant='ghost'
 								className='bg-transparent text-foreground hover:bg-transparent hover:text-foreground p-0 border-0 shadow-none outline-none'>
 								Cancel
 							</Button>
 							<Button
-								onClick={() => setRun(true)}
+								onClick={() => setRun(false)}
 								variant='ghost'
 								className='ml-auto bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white font-medium text-sm py-2 hover:text-white'>
 								Save

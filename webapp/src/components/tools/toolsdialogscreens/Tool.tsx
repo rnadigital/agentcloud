@@ -14,6 +14,8 @@ import { Button } from 'modules/components/ui/button';
 export const ToolDisplay = ({
 	selectedTool,
 	setSelectedTool,
+	setDisplayScreen,
+	fetchTools,
 	setScreen,
 	editing,
 	compact,
@@ -23,6 +25,8 @@ export const ToolDisplay = ({
 }: {
 	selectedTool: Tool | null;
 	setSelectedTool: React.Dispatch<React.SetStateAction<Tool | null>>;
+	setDisplayScreen: any;
+	fetchTools: any;
 	setScreen: React.Dispatch<React.SetStateAction<string>>;
 	editing?: boolean;
 	compact?: boolean;
@@ -99,7 +103,9 @@ export const ToolDisplay = ({
 							toolId: selectedTool?._id,
 							revisionId: selectedTool?.revisionId
 						});
+						setDisplayScreen('tools');
 						toast.success('Tool updated sucessfully');
+						fetchTools();
 					},
 					err => {
 						posthog.capture(posthogEvent, {

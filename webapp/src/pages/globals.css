@@ -420,3 +420,27 @@ div.bg-gray-200.border.rounded-sm.flex.space-x-1.pl-1 {
 		@apply bg-background text-foreground;
 	}
 }
+
+
+/* Scrollbarr for Sidebar Content */
+
+.sidebar-content::-webkit-scrollbar {
+	width: 8px;
+  }
+  
+  .sidebar-content::-webkit-scrollbar-track {
+	background: transparent;
+  }
+  
+  .sidebar-content::-webkit-scrollbar-thumb {
+	background-color: rgba(255, 255, 255, 0.3);
+	border-radius: 10px;
+  }
+  
+  .sidebar-content::-webkit-scrollbar-thumb:hover {
+	background-color: rgba(255, 255, 255, 0.5);
+  }
+  
+  
+  
+

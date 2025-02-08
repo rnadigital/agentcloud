@@ -30,16 +30,16 @@ const LeftFrame = ({
 	}, [showAnimation]);
 
 	return (
-		<div className='w-full gradient-animation max-w-xl text-white pt-12 px-12 flex flex-col relative'>
+		<div className='w-full gradient-animation text-white pt-4 md:pt-12 px-4 md:px-12 flex flex-col relative pb-4 md:pb-0'>
 			<Lottie
 				lottieRef={lottieRef}
 				animationData={animationData}
 				loop={true}
-				className='absolute top-[-200px] left-0 w-full h-full opacity-30'
+				className='hidden md:block absolute top-[-200px] left-0 w-full h-full opacity-30'
 			/>
 			<div className='flex items-center gap-x-2'>
 				<CubeIcon className='h-5 w-5 stroke-2' />
-				<h1 className='text-2xl font-bold'>Agent Cloud</h1>
+				<h1 className='text-lg md:text-2xl font-bold'>Agent Cloud</h1>
 			</div>
 
 			{children}
