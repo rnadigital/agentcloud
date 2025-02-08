@@ -215,7 +215,7 @@ export default function CrewAppForm({
 					if (run === true) {
 						API.addSession(
 							{
-								_csrf: e.target._csrf.value,
+								_csrf: csrf,
 								resourceSlug,
 								id: app._id
 							},
@@ -235,7 +235,7 @@ export default function CrewAppForm({
 					if (run === true) {
 						API.addSession(
 							{
-								_csrf: e.target._csrf.value,
+								_csrf: csrf,
 								resourceSlug,
 								id: res._id
 							},
