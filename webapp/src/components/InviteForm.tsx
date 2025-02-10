@@ -4,7 +4,7 @@ import * as API from '@api';
 import ButtonSpinner from 'components/ButtonSpinner';
 import SubscriptionModal from 'components/SubscriptionModal';
 import { useAccountContext } from 'context/account';
-import cn from 'lib/cn';
+import cn from 'utils/cn';
 import { useRouter } from 'next/router';
 import { TeamRoleOptions } from 'permissions/roles';
 import { usePostHog } from 'posthog-js/react';
@@ -13,7 +13,7 @@ import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { SubscriptionPlan } from 'struct/billing';
 
-export default function InviteForm({ callback }: { callback?: Function }) {
+export default function InviteForm({ callback, setOpen }: { callback?: Function; setOpen: any; }) {
 	const [accountContext]: any = useAccountContext();
 	const { csrf, account } = accountContext as any;
 	const { stripePlan } = account?.stripe || {};
@@ -25,7 +25,7 @@ export default function InviteForm({ callback }: { callback?: Function }) {
 	const [role, setRole] = useState(TeamRoleOptions[0]);
 	const [error, setError] = useState('');
 	const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
-	const [selectedRole, setSelectedRole] = useState(TeamRoleOptions[0].value);
+	const [selectedRole, setSelectedRole] = useState('');
 	const posthog = usePostHog();
 
 	async function handleSubmit(e) {
@@ -45,7 +45,8 @@ export default function InviteForm({ callback }: { callback?: Function }) {
 			setInviting(false);
 			return setSubscriptionModalOpen(true);
 		}
-		if (!email || !name) {
+		if (!email || !name || !selectedRole) {
+			setInviting(false);
 			return;
 		}
 		try {
@@ -133,12 +134,12 @@ export default function InviteForm({ callback }: { callback?: Function }) {
 					<div>
 						<label
 							htmlFor='role'
-							className='block text-sm font-medium text-gray-700 dark:text-gray-50'
+							className='block text-sm font-medium text-gray-700 dark:text-gray-50 mb-1'
 						>
 							Role
 						</label>
 						<select
-							// className='mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md'
+							required
 							className={cn(
 								'bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600 w-full h-10 p-1 pl-3 text-gray-500 dark:text-white disabled:bg-gray-200 text-sm'
 							)}
@@ -147,9 +148,7 @@ export default function InviteForm({ callback }: { callback?: Function }) {
 							value={selectedRole}
 							onChange={e => setSelectedRole(e.target.value)}
 						>
-							<option value='' disabled>
-								Select Role
-							</option>
+							<option value=''>Select Role</option>
 							{TeamRoleOptions.map(role => (
 								<option key={role.value} value={role.value}>
 									{role.label}
@@ -160,7 +159,18 @@ export default function InviteForm({ callback }: { callback?: Function }) {
 
 					{error && <p className='text-sm text-red-600'>{error}</p>}
 
-					<div>
+					<div className="w-full flex justify-between">
+						<button
+						onClick={() => {
+							setName('');
+							setEmail('');
+							setSelectedRole(TeamRoleOptions[0].value);
+							setOpen(false);
+						  }}
+							className='rounded-md bg-transparent px-4 py-2 mt-2 border border-gray-300 backdrop-blur-sm text-sm font-semibold text-black'
+						>
+							Cancel
+						</button>
 						<button
 							type='submit'
 							className='rounded-md bg-indigo-600 px-4 py-2 mt-2 text-sm font-semibold text-white hover:bg-indigo-500'

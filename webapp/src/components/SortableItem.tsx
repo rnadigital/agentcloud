@@ -1,7 +1,7 @@
 import { Switch } from '@headlessui/react';
 import { TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { TasksDataReturnType } from 'controllers/task';
-import cn from 'lib/cn';
+import cn from 'utils/cn';
 import React, { CSSProperties, forwardRef, useEffect, useState } from 'react';
 import { FormFieldConfig } from 'struct/task';
 

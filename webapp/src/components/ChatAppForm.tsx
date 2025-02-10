@@ -76,6 +76,7 @@ export default function ChatAppForm({
 			? app?.chatAppConfig?.conversationStarters.map(x => ({ name: x }))
 			: [{ name: '' }]
 	);
+	console.log(conversationStarters);
 	const [agentName, setAgentName] = useState(initialAgent?.name || '');
 	const [role, setRole] = useState(initialAgent?.role || '');
 	const [goal, setGoal] = useState(initialAgent?.goal || '');

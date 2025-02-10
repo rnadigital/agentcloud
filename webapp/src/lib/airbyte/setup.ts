@@ -233,10 +233,10 @@ export async function init() {
 		process.env.AIRBYTE_ADMIN_WORKSPACE_ID = airbyteAdminWorkspaceId;
 
 		// Get destination list
-		const destinationsList = await fetchDestinationList(airbyteAdminWorkspaceId);
+		const destinationsList: any = await fetchDestinationList(airbyteAdminWorkspaceId);
 		log('destinationsList: %s', destinationsList?.data?.map(x => x.name)?.join());
 
-		let airbyteAdminDestination = destinationsList.data?.find(d =>
+		let airbyteAdminDestination: any = destinationsList.data?.find(d =>
 			['RabbitMQ', 'Google Pub/Sub'].includes(d?.name)
 		);
 		log('AIRBYTE_ADMIN_DESTINATION_ID', airbyteAdminDestination?.destinationId);

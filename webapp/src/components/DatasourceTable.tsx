@@ -13,12 +13,12 @@ import DatasourceStatusIndicator from 'components/DatasourceStatusIndicator'; //
 import DevBadge from 'components/DevBadge';
 import { useAccountContext } from 'context/account';
 import { useNotificationContext } from 'context/notifications';
-import cn from 'lib/cn';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Fragment, useReducer, useState } from 'react';
 import { toast } from 'react-toastify';
 import { DatasourceStatus, datasourceStatusColors } from 'struct/datasource';
+import cn from 'utils/cn';
 import submittingReducer from 'utils/submittingreducer';
 
 export default function DatasourceTable({

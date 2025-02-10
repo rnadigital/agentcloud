@@ -8,6 +8,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { TEAM_BITS } from 'permissions/bits';
 import React, { useEffect, useState } from 'react';
+import { ChevronRightIcon } from '@heroicons/react/20/solid';
 
 export default function EditTeamMember(props) {
 	const [accountContext]: any = useAccountContext();
@@ -39,12 +40,24 @@ export default function EditTeamMember(props) {
 			{error && <ErrorAlert error={error} />}
 
 			<div className='border-b dark:border-slate-400 pb-2 my-2'>
-				<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>Edit Team Member</h3>
+				<h3 className='pl-2 text-sm font-medium text-gray-500 dark:text-white align-middle'>
+					<span 
+						onClick={() => router.push(`/${resourceSlug}/team`)}
+						className="cursor-pointer text-gray-600 hover:text-blue-600"
+					>
+						Team
+					</span>
+						<ChevronRightIcon className="inline-block w-4 h-4 mx-1 mb-1" />
+					Edit Team Member
+				</h3>
 			</div>
 
 			<PermissionsEditor
 				editingPermission={new Permission(teamMember?.permissions)}
 				filterBits={TEAM_BITS}
+				memberName={teamMember?.name}
+				memberEmail={teamMember?.email}
+				initialRole={teamMember?.role}
 			/>
 		</>
 	);

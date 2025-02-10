@@ -45,11 +45,9 @@ export default async function useJWT(req, res, next): Promise<void> {
 	} else if (req.headers && req.headers['authorization']?.startsWith('Bearer ')) {
 		token = req.headers['authorization'].substring(7);
 	}
-	log('useJWT token: %s', token);
 	if (token && token.length > 0) {
 		try {
 			const verifiedToken: JWTData = await verifyJwt(token);
-			// log('useJWT verifiedToken: %s', verifiedToken);
 			if (verifiedToken != null) {
 				const account: Account = await getAccountById(verifiedToken.accountId);
 				const org: Org = await getOrgById(account.currentOrg);
@@ -65,7 +63,8 @@ export default async function useJWT(req, res, next): Promise<void> {
 						stripe: org.stripe,
 						oauth: account.oauth,
 						permissions: account.permissions,
-						onboarded: account.onboarded
+						onboarded: account.onboarded,
+						currentOrgDateCreated: org.dateCreated
 					};
 					return next();
 				}

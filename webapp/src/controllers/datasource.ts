@@ -67,6 +67,8 @@ export async function datasourcesData(req, res, _next) {
 	};
 }
 
+export type DatasourcesDataReturnType = Awaited<ReturnType<typeof datasourcesData>>;
+
 /**
  * GET /[resourceSlug]/datasources
  * datasource page html
@@ -75,6 +77,12 @@ export async function datasourcesPage(app, req, res, next) {
 	const data = await datasourcesData(req, res, next);
 	res.locals.data = { ...data, account: res.locals.account };
 	return app.render(req, res, `/${req.params.resourceSlug}/datasources`);
+}
+
+export async function connectionsPage(app, req, res, next) {
+	const data = await datasourceData(req, res, next);
+	res.locals.data = { ...data, account: res.locals.account };
+	return app.render(req, res, `/${req.params.resourceSlug}/connections`);
 }
 
 /**

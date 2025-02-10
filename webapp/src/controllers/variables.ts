@@ -93,6 +93,7 @@ export async function addVariableApi(req, res, next) {
 		teamId: toObjectId(req.params.resourceSlug),
 		name: req.body.name,
 		defaultValue: req.body.defaultValue,
+		description: req.body.description,
 		createdBy: toObjectId(res.locals.account._id),
 		createDate: new Date(),
 		usedInTasks: [],
@@ -126,7 +127,8 @@ export async function editVariableApi(req, res, next) {
 
 	const updatedVariable = {
 		name: req.body.name,
-		defaultValue: req.body.defaultValue
+		defaultValue: req.body.defaultValue,
+		description: req.body.description
 	};
 
 	await updateVariable(req.params.resourceSlug, req.params.variableId, updatedVariable);

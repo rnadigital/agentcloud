@@ -1,5 +1,5 @@
 import { ArrowPathIcon, Bars3Icon, CircleStackIcon } from '@heroicons/react/24/outline';
-import cn from 'lib/cn';
+import cn from 'utils/cn';
 import React from 'react';
 
 const steps = [

@@ -159,6 +159,7 @@ export interface Datasource {
 	byoVectorDb?: boolean;
 	region?: Region;
 	cloud?: Cloud;
+	vectordbtype?: string;
 }
 
 const datasourceSchema = new Schema<Datasource>(
@@ -191,7 +192,8 @@ const datasourceSchema = new Schema<Datasource>(
 		namespace: String,
 		byoVectorDb: Boolean,
 		region: String,
-		cloud: String
+		cloud: String,
+		vectordbtype: String
 	},
 	{ timestamps: true }
 );

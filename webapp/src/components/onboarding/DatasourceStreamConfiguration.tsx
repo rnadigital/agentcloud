@@ -1,7 +1,8 @@
 import ButtonSpinner from 'components/ButtonSpinner';
-import { StreamsList } from 'components/DatasourceStream';
 import { useOnboardingFormContext } from 'context/onboardingform';
 import React from 'react';
+
+import { StreamsList } from './OldDatasourceStream';
 
 interface DatasourceStreamConfigurationProps {
 	discoveredSchema: any;

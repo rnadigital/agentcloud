@@ -10,5 +10,6 @@
     "arrowParens": "avoid",
     "endOfLine": "lf",
     "printWidth": 100,
-    "quoteProps": "as-needed"
+    "quoteProps": "as-needed", 
+    "jsxBracketSameLine": true
 }

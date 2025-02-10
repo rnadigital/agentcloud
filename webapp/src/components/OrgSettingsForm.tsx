@@ -3,7 +3,7 @@
 import * as API from '@api';
 import ButtonSpinner from 'components/ButtonSpinner';
 import { useAccountContext } from 'context/account';
-import cn from 'lib/cn';
+import cn from 'utils/cn';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
