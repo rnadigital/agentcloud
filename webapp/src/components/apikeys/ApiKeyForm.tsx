@@ -39,7 +39,7 @@ const dropdownOptions = [
 	}
 ];
 
-export default function ApiKeyForm() {
+export default function ApiKeyForm({ callback }: { callback: () => void }) {
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext;
 	const posthog = usePostHog();
@@ -70,10 +70,11 @@ export default function ApiKeyForm() {
 				},
 				null,
 				setError,
-				router
+				callback ? null : router
 			);
 		} finally {
 			setSubmitting(false);
+			callback && callback();
 		}
 	};
 
@@ -88,9 +89,8 @@ export default function ApiKeyForm() {
 					onSubmit={handleSubmit(onSubmit)}
 					action='/forms/account/apikey/add'
 					method='POST'
-					className='space-y-4'
-				>
-					<div className='w-full md:w-1/2'>
+					className='space-y-4'>
+					<div className='w-full'>
 						<InputField<ApiKeyFormValues>
 							name='name'
 							control={control}
@@ -103,7 +103,7 @@ export default function ApiKeyForm() {
 						/>
 					</div>
 
-					<div className='w-full md:w-1/2'>
+					<div className='w-full'>
 						<InputField<ApiKeyFormValues>
 							name='description'
 							control={control}
@@ -118,7 +118,7 @@ export default function ApiKeyForm() {
 					<div className='col-span-full'>
 						<p className='text-sm text-gray-900 pb-2'>Expiration</p>
 						<div className='flex flex-row w-full gap-4'>
-							<div className='w-full md:w-1/2'>
+							<div className='w-full'>
 								<Controller
 									render={({ field: { onChange, onBlur, value, ref } }) => {
 										const label = dropdownOptions.find(x => x.value === value)?.label;
@@ -169,8 +169,7 @@ export default function ApiKeyForm() {
 						</Link>
 						<button
 							type='submit'
-							className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-						>
+							className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'>
 							Submit
 						</button>
 					</div>

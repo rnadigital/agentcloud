@@ -28,7 +28,6 @@ const DynamicConnectorForm = dynamic(
 );
 import classNames from 'components/ClassNames';
 import DatasourceChunkingForm from 'components/DatasourceChunkingForm';
-import { StreamsList } from 'components/DatasourceStream';
 import ToolTip from 'components/shared/ToolTip';
 import FormContext from 'context/connectorform';
 import { defaultChunkingOptions } from 'misc/defaultchunkingoptions';
@@ -37,6 +36,7 @@ import { VectorDbDocument } from 'struct/vectordb';
 import { Cloud, CloudRegionMap, Region } from 'struct/vectorproxy';
 import submittingReducer from 'utils/submittingreducer';
 
+import { StreamsList } from './onboarding/OldDatasourceStream';
 import CreateVectorDbModal from './vectordbs/CreateVectorDbModal';
 
 const stepList = [

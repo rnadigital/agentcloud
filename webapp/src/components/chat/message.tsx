@@ -14,7 +14,7 @@ const Markdown = dynamic(() => import('react-markdown'), {
 	ssr: false
 });
 import { useAccountContext } from 'context/account';
-import cn from 'lib/cn';
+import cn from 'utils/cn';
 import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
 import { toast } from 'react-toastify';

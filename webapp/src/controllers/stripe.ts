@@ -1,7 +1,12 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
-import { updateStripeCustomer } from 'db/account';
+import {
+	getOrgById,
+	getOrgByStripeCustomerId,
+	setOrgStripeCustomerId,
+	updateOrgStripeCustomer
+} from 'db/org';
 import { addPortalLink } from 'db/portallink';
 import debug from 'debug';
 import StripeClient from 'lib/stripe';
@@ -104,9 +109,6 @@ export async function webhookHandler(req, res, next) {
 		case 'customer.subscription.updated': {
 			const subscriptionUpdated = event.data.object;
 
-			//NOTE: when updating plans, only UPDATED items come through, not the original plan, so we need to get the plan regardless
-			// const { planItem, addonUsersItem, addonStorageItem } = destructureSubscription(subscriptionUpdated);
-
 			const { planItem, addonUsersItem, addonStorageItem } = await getSubscriptionsDetails(
 				subscriptionUpdated.customer
 			);
@@ -124,7 +126,7 @@ export async function webhookHandler(req, res, next) {
 				stripeEndsAt: subscriptionUpdated?.current_period_end
 					? subscriptionUpdated?.current_period_end * 1000
 					: null,
-				stripeTrial: subscriptionUpdated?.status === 'trialing' // https://docs.stripe.com/api/subscriptions/object#subscription_object-status
+				stripeTrial: subscriptionUpdated?.status === 'trialing'
 			};
 			log('Customer subscription update 1 %O', update);
 			if (subscriptionUpdated['status'] === 'canceled') {
@@ -143,13 +145,25 @@ export async function webhookHandler(req, res, next) {
 				update['stripePlan'] = SubscriptionPlan.FREE;
 			}
 			log('Customer subscription update 2 %O', update);
-			await updateStripeCustomer(subscriptionUpdated.customer, update);
+
+			// Get org by stripe customer ID
+			const org = await getOrgByStripeCustomerId(subscriptionUpdated.customer);
+			if (!org) {
+				log('No org found for stripe customer ID:', subscriptionUpdated.customer);
+				return;
+			}
+			await updateOrgStripeCustomer(org._id, update);
 			break;
 		}
 
 		case 'customer.subscription.deleted': {
 			const subscriptionDeleted = event.data.object;
-			await updateStripeCustomer(subscriptionDeleted.customer, {
+			const org = await getOrgByStripeCustomerId(subscriptionDeleted.customer);
+			if (!org) {
+				log('No org found for stripe customer ID:', subscriptionDeleted.customer);
+				return;
+			}
+			await updateOrgStripeCustomer(org._id, {
 				stripePlan: SubscriptionPlan.FREE,
 				stripeAddons: { users: 0, storage: 0 },
 				stripeCancelled: true,
@@ -160,7 +174,12 @@ export async function webhookHandler(req, res, next) {
 
 		case 'customer.subscription.paused': {
 			const subscriptionPaused = event.data.object;
-			await updateStripeCustomer(subscriptionPaused.customer, {
+			const org = await getOrgByStripeCustomerId(subscriptionPaused.customer);
+			if (!org) {
+				log('No org found for stripe customer ID:', subscriptionPaused.customer);
+				return;
+			}
+			await updateOrgStripeCustomer(org._id, {
 				stripePlan: SubscriptionPlan.FREE,
 				stripeAddons: { users: 0, storage: 0 },
 				stripeCancelled: true,
@@ -179,11 +198,10 @@ export async function webhookHandler(req, res, next) {
 }
 
 export async function hasPaymentMethod(req, res, next) {
-	let stripeCustomerId = res.locals.account?.stripe?.stripeCustomerId;
-
+	const stripeCustomerId = res.locals.account.stripe?.stripeCustomerId;
 	if (!stripeCustomerId) {
 		return dynamicResponse(req, res, 400, {
-			error: 'Missing Stripe Customer ID - please contact support'
+			error: 'Organization not configured with Stripe - please contact support'
 		});
 	}
 
@@ -220,11 +238,11 @@ export async function requestChangePlan(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Missing STRIPE_ACCOUNT_SECRET' });
 	}
 
-	let stripeCustomerId = res.locals.account?.stripe?.stripeCustomerId;
+	const stripeCustomerId = res.locals.account.stripe?.stripeCustomerId;
 
 	if (!stripeCustomerId) {
 		return dynamicResponse(req, res, 400, {
-			error: 'Missing Stripe Customer ID - please contact support'
+			error: 'Organization not configured with Stripe - please contact support'
 		});
 	}
 
@@ -278,6 +296,7 @@ export async function requestChangePlan(req, res, next) {
 		currency: 'USD',
 		mode: 'subscription'
 	});
+
 	const checkoutSession = await StripeClient.get().checkout.sessions.retrieve(
 		createdCheckoutSession.id,
 		{

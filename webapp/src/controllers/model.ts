@@ -43,6 +43,9 @@ export async function modelsPage(app, req, res, next) {
  * GET /[resourceSlug]/models.json
  * models json data
  */
+
+export type ModelsJsonData = Awaited<ReturnType<typeof modelsData>>;
+
 export async function modelsJson(req, res, next) {
 	const data = await modelsData(req, res, next);
 	return res.json({ ...data, account: res.locals.account });

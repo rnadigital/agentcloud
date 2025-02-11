@@ -6,7 +6,7 @@ import DeleteModal from 'components/DeleteModal';
 import DevBadge from 'components/DevBadge';
 import ErrorAlert from 'components/ErrorAlert';
 import { useAccountContext } from 'context/account';
-import cn from 'lib/cn';
+import cn from 'utils/cn';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { ModelContextWindow, ModelKnowledgeCutoff } from 'struct/model';

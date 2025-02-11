@@ -9,7 +9,9 @@ import InfoAlert from 'components/InfoAlert';
 import Link from 'next/link';
 import { useEffect, useReducer, useState } from 'react';
 import Select from 'react-tailwindcss-select';
+import { useConnectionsStore } from 'store/connections';
 import { FieldDescriptionMap, StreamConfig, StreamConfigMap, SyncModes } from 'struct/datasource';
+import { useShallow } from 'zustand/react/shallow';
 
 import SelectClassNames from '../lib/styles/SelectClassNames';
 import submittingReducer from '../lib/utils/submittingreducer';
@@ -19,15 +21,15 @@ export function StreamRow({
 	stream,
 	streamProperty,
 	readonly,
-	setStreamReducer,
 	streamState
 }: {
 	stream: any;
 	streamProperty: any;
 	readonly?: boolean;
-	setStreamReducer: Function;
 	streamState: StreamConfig;
 }) {
+	const setStreamState = useConnectionsStore(state => state.setStreamState);
+
 	const [isExpanded, setIsExpanded] = useState(streamState?.checkedChildren != null && !readonly);
 	const streamName = stream?.stream?.name || stream?.name;
 
@@ -84,7 +86,7 @@ export function StreamRow({
 	}
 
 	useEffect(() => {
-		setStreamReducer({
+		setStreamState({
 			[streamName]: {
 				checkedChildren,
 				primaryKey,
@@ -346,15 +348,14 @@ export function StreamsList({
 	streams,
 	streamProperties,
 	readonly,
-	streamState,
-	setStreamReducer
+	streamState
 }: {
 	streams?: any;
 	streamProperties?: any;
 	readonly?: boolean;
 	streamState?: StreamConfigMap;
-	setStreamReducer?: Function;
 }) {
+	console.log(streams, streamState);
 	return (
 		<div className='my-4'>
 			{streams?.map((stream, index) => {
@@ -368,7 +369,6 @@ export function StreamsList({
 						stream={stream}
 						streamProperty={streamProperty}
 						streamState={initialStreamState}
-						setStreamReducer={setStreamReducer}
 					/>
 				);
 			})}

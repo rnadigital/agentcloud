@@ -4,7 +4,7 @@ import * as API from '@api';
 import ModelTypeRequirementsComponent from 'components/models/ModelTypeRequirements';
 import SubscriptionModal from 'components/SubscriptionModal';
 import { useAccountContext } from 'context/account';
-import cn from 'lib/cn';
+import cn from 'utils/cn';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useReducer } from 'react';
@@ -108,20 +108,14 @@ export default function ModelForm({
 				<div className='space-y-12'>
 					<div className='space-y-6'>
 						{!compact && !editing && (
-							<div>
-								<h2 className='text-base font-semibold leading-7 text-gray-900 dark:text-white'>
-									Model
-								</h2>
-								<p className='mt-1 text-sm leading-6 text-gray-600 dark:text-gray-50'>
-									Configure models to be used for agents and/or embedding data sources.
-								</p>
-							</div>
+							<p className='mt-1 text-sm leading-6 text-gray-600 dark:text-gray-50'>
+								Configure models to be used for agents and/or embedding data sources.
+							</p>
 						)}
 						<div>
 							<label
 								htmlFor='modelName'
-								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-							>
+								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								Name
 							</label>
 							<div className='mt-2'>
@@ -139,8 +133,7 @@ export default function ModelForm({
 						<div className='sm:col-span-12'>
 							<label
 								htmlFor='type'
-								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-							>
+								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								Vendor
 							</label>
 							<div className='mt-2'>
@@ -161,8 +154,7 @@ export default function ModelForm({
 											...oldModel,
 											type: newType
 										}));
-									}}
-								>
+									}}>
 									<option disabled value=''>
 										Select a type...
 									</option>
@@ -186,15 +178,13 @@ export default function ModelForm({
 					{!compact && (
 						<Link
 							className='text-sm font-semibold leading-6 text-gray-900'
-							href={`/${resourceSlug}/models`}
-						>
+							href={`/${resourceSlug}/models`}>
 							Back
 						</Link>
 					)}
 					<button
 						type='submit'
-						className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-					>
+						className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'>
 						Save
 					</button>
 				</div>

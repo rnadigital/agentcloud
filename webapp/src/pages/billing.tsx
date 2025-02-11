@@ -4,10 +4,11 @@ import ConfirmModal from 'components/ConfirmModal';
 import ErrorAlert from 'components/ErrorAlert';
 import InfoAlert from 'components/InfoAlert';
 import Invoice from 'components/Invoice';
+import { Button } from 'modules/components/ui/button';
+import { Card, CardContent, CardHeader } from 'modules/components/ui/card';
 import ProgressBar from 'components/ProgressBar';
 import Spinner from 'components/Spinner';
 import StripeCheckoutModal from 'components/StripeCheckoutModal';
-import SubscriptionCard from 'components/SubscriptionCard';
 import { useAccountContext } from 'context/account';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
@@ -15,34 +16,87 @@ import { usePostHog } from 'posthog-js/react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { pricingMatrix, SubscriptionPlan, subscriptionPlans as plans } from 'struct/billing';
-import { Tool, ToolType } from 'struct/tool';
+import { type Tool, ToolType } from 'struct/tool';
 
 //DEVNOTE: see "src/lib/vectorproxy/client.ts" and "getVectorStorageForTeam", create an API route for this to get the used vector storage for this team. Once that's been retrieved use the stripe object to get the total avaiable storage and calculate the percentage
 
-const tabs = [
-	{ name: 'Billing', href: '#billing' },
-	{ name: 'Usage', href: '#usage' }
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+
+const pricingPlans = [
+	{
+		name: 'Free',
+		price: '$0',
+		plan: SubscriptionPlan.FREE,
+		usage: ['Single User', '1 org with 1 team', '25 app runs per month', '5MB maximum file upload'],
+		features: [
+			'Conversational Chat Apps',
+			{ text: 'File Support', subtext: '(CSV, DOC, TXT, PDF)' },
+			'100MB Vector Storage',
+			'Bring Your Own LLM'
+		]
+	},
+	{
+		name: 'Pro',
+		price: '$99',
+		plan: SubscriptionPlan.PRO,
+		usage: ['All Free Plan +', '1,000 app runs per month', '1GB Vector Storage'],
+		features: [
+			'Process Multi-Agent Apps',
+			{
+				text: 'Data Integration',
+				subtext: '(One Drive, Google Drive, Postgres, HubSpot, Google BigQuery, Airtable, Notion)'
+			},
+			'Deep Data Sync for RAG',
+			'10 Custom Code Tools'
+		]
+	},
+	{
+		name: 'Teams',
+		price: '$199',
+		plan: SubscriptionPlan.TEAMS,
+		usage: ['All Plan Pro +', '10 Users', '10GB Vector Storage', 'Unlimited Sessions'],
+		features: [
+			{ text: 'Embeddable Chat Apps', subtext: '(via HTML iframe)' },
+			'Role-Based Access Controls',
+			'Pro+ Integrations: Sharepoint, Snowflake, Salesforce, Gong, Zendesk, Confluence, and more',
+			'20 Custom Code Tools',
+			'Support Ticketing'
+		]
+	},
+	{
+		name: 'Enterprise',
+		price: '$Custom',
+		plan: SubscriptionPlan.ENTERPRISE,
+		usage: ['All Teams +', 'SSO', 'Data Sync in Minutes', 'Self-Host (On-Prem)'],
+		features: ['Multiple Teams + RBAC', 'Custom Data Connectors', 'Dedicated Support with SLA']
+	}
 ];
 
-function classNames(...classes) {
-	return classes.filter(Boolean).join(' ');
-}
+const CheckMarkIcon = () => (
+	<div className='h-3 w-3 rounded-full bg-indigo-600 flex items-center justify-center'>
+		<svg className='h-2.5 w-2.5 text-white' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+			<path strokeLinecap='round' strokeLinejoin='round' strokeWidth='3' d='M5 13l4 4L19 7' />
+		</svg>
+	</div>
+);
 
-export type teamUsageData = {
-	totalCodeFunctions: number;
-	totalMembers: number;
-};
+const ListItem = ({ text, subtext = null }) => (
+	<li className='flex items-center gap-2'>
+		<CheckMarkIcon />
+		<div className=''>
+			{text}{' '}
+			<span className='innline-block'>
+				{subtext && <span className='text-gray-500'>{subtext}</span>}
+			</span>
+		</div>
+	</li>
+);
 
-export type orgUsageData = {
-	usedVectorDbStorage: number | string | null;
-	totalAvailableVectorDbStorage: number | string | null;
-};
-
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 export default function Billing(props) {
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext as any;
-	const { stripeCustomerId, stripePlan, stripeAddons } = account?.stripe || {};
+	const currentOrg = account?.orgs?.find(o => o.id === account?.currentOrg);
+	const { stripeCustomerId, stripePlan, stripeAddons } = currentOrg?.stripe || {};
 	const [selectedPlan, setSelectedPlan] = useState(stripePlan);
 	const router = useRouter();
 	const [_, dispatch] = useState(props);
@@ -52,31 +106,10 @@ export default function Billing(props) {
 	const [show, setShow] = useState(false);
 	const [showPaymentModal, setShowPaymentModal] = useState(false);
 	const [showConfirmModal, setShowConfirmModal] = useState(false);
-	const [currentTab, setCurrentTab] = useState(tabs[0]);
 	const [continued, setContinued] = useState(false);
 	const [last4, setLast4] = useState(null);
-	const [usageState, setUsageState] = useState(null);
-	const [toolsState, setToolsState] = useState(null);
-	const [vectorDbState, setVectorDbState] = useState(null);
-	const [totalBytes, setTotalBytes] = useState(0);
-	//maybe refactor this into a barrier in _app or just wrapping billing pages/components
 	const [missingEnvs, setMissingEnvs] = useState(null);
 	const posthog = usePostHog();
-
-	//usage information
-	const [usedVectorGb, setUsedVectorGb] = useState({
-		//on a team level, each team has xGB of storage available (make this modular so that it can be easily interchanged with differnt api calls to the vector db proxy).
-		totalAvailable: 0,
-		totalUsed: 0
-	});
-	const [users, setUsers] = useState({
-		totalAvailable: 0,
-		totalUsed: 0
-	});
-	const [codeTools, setCodeTools] = useState({
-		totalAvailable: 0,
-		totalUsed: 0
-	}); //getTools
 
 	function getPayload() {
 		return {
@@ -87,7 +120,6 @@ export default function Billing(props) {
 		};
 	}
 
-	// TODO: move this to a lib (IF its useful in other files)
 	const stripeMethods = [API.getPortalLink];
 	function createApiCallHandler(apiMethod) {
 		return async e => {
@@ -100,76 +132,17 @@ export default function Billing(props) {
 				toast.error,
 				null
 			);
-			if (res.redirect && typeof window !== undefined) {
-				const openedWindow = window.open(res.redirect, '_blank');
-				openedWindow?.focus();
-				if (!openedWindow) {
-					//Something prevented opening new tab e.g. adblocker, or an open file selector
-					window.location = res.redirect;
-				}
+			if (res?.url) {
+				window.location.href = res.url;
 			}
 		};
 	}
 	const [getPortalLink] = stripeMethods.map(createApiCallHandler);
 
-	function fetchAccount() {
-		if (resourceSlug) {
-			API.getAccount({ resourceSlug }, dispatch, setError, router);
-		}
-	}
-
-	async function fetchOrg(slug) {
-		await API.getOrg({ resourceSlug: slug }, setUsageState, setError, router);
-	}
-
-	async function fetchTools(slug) {
-		await API.getTools({ resourceSlug: slug }, setToolsState, setError, router);
-	}
-
-	async function fetchVectorUsage(slug) {
-		await API.getAllTeamVectorStorage({ resourceSlug: slug }, setVectorDbState, setError, router);
-	}
-
-	async function fetchAllUsage(slug) {
-		fetchOrg(slug);
-		fetchTools(slug);
-		fetchVectorUsage(slug);
-		calculateTotalVectorDbUsage();
-		refreshAccountContext();
-	}
-
-	function calculateTotalVectorDbUsage() {
-		const totalBytes = usageState?.org?.teamIds?.reduce((acc, teamId) => {
-			return acc + (vectorDbState[teamId]?.data?.total_size || 0);
-		}, 0);
-
-		setTotalBytes(totalBytes);
-	}
-
-	console.log('vectorUsage: ', vectorDbState);
-
-	useEffect(() => {
-		fetchAllUsage(accountContext?.account?.currentTeam);
-		if (typeof window !== 'undefined') {
-			const hashTab = window.location.hash;
-			const foundTab = tabs.find(t => t.href === hashTab);
-			if (foundTab) {
-				setCurrentTab(foundTab);
-			} else {
-				setCurrentTab(tabs[0]);
-			}
-		}
-	}, []);
-
-	useEffect(() => {
-		calculateTotalVectorDbUsage();
-	}, [vectorDbState]);
-
 	useEffect(() => {
 		API.checkStripeReady(
 			x => {
 				setMissingEnvs(x.missingEnvs);
-				fetchAccount();
 				API.hasPaymentMethod(
 					res => {
 						if (res && res?.ok === true && res?.last4) {
@@ -185,8 +158,6 @@ export default function Billing(props) {
 		);
 	}, [resourceSlug]);
 
-	console.log('UsageState', usageState);
-
 	useEffect(() => {
 		const timeout = setTimeout(() => {
 			refreshAccountContext();
@@ -197,7 +168,7 @@ export default function Billing(props) {
 	}, [showConfirmModal]);
 
 	useEffect(() => {
-		let timeout = setTimeout(() => {
+		const timeout = setTimeout(() => {
 			setShow(stagedChange != null);
 		}, 500);
 		return () => {
@@ -220,237 +191,184 @@ ${missingEnvs.join('\n')}`}
 
 	const payload = getPayload();
 
-	//set the state of all the usage variable
-	let tools: Tool[];
-	let numOfFnTools = 0;
-	if (usageState && toolsState) {
-		const { members, org } = usageState;
-		tools = toolsState?.tools;
-		let totalAvailable = pricingMatrix[stripePlan]?.users + stripeAddons?.users;
-		const newState = {
-			totalAvailable: totalAvailable,
-			totalUsed: members?.length
-		};
-		tools.forEach(tool => {
-			if (tool.type === ToolType.FUNCTION_TOOL) {
-				numOfFnTools += 1;
-			}
-		});
-	}
+	const renderPlanCard = planData => (
+		<Card className='rounded-none border-none shadow-none'>
+			<CardContent className='p-6'>
+				<div className='bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 -skew-x-6 w-fit px-4 py-0 rounded-sm mb-5'>
+					<span className='-skew-x-7 inline-block text-white font-medium'>{planData.name}</span>
+				</div>
+				<div className='mb-4'>
+					<span className='text-3xl font-bold'>{planData.price}</span>
+					{planData.price !== '$Custom' && <span className='text-muted-foreground'>/month</span>}
+				</div>
+				<Button
+					className='w-full bg-gradient-to-r from-indigo-600 via-indigo-600 to-purple-700 hover:bg-indigo-700 mb-6'
+					onClick={() => {
+						setSelectedPlan(planData.plan);
+						setStagedChange({ plan: planData.plan });
+						setShowConfirmModal(true);
+					}}>
+					{account?.stripe.stripePlan === planData.name
+						? 'Update Subscription'
+						: planData.name === 'Enterprise'
+							? 'Contact Us'
+							: 'Change Plan'}
+				</Button>
+
+				<div className='space-y-4'>
+					<h3 className='font-medium'>Usage</h3>
+					<ul className='space-y-2'>
+						{planData.usage.map((item, index) => (
+							<ListItem key={`usage-${index}`} text={item} />
+						))}
+					</ul>
+
+					<h3 className='font-medium pt-2'>Features</h3>
+					<ul className='space-y-2'>
+						{planData.features.map((item, index) => (
+							<ListItem
+								key={`feature-${index}`}
+								text={typeof item === 'string' ? item : item.text}
+								subtext={typeof item === 'string' ? null : item.subtext}
+							/>
+						))}
+					</ul>
+				</div>
+			</CardContent>
+		</Card>
+	);
 
 	return (
-		<>
+		<div className='p-6'>
 			<Head>
 				<title>Billing</title>
 			</Head>
 
 			{error && <ErrorAlert error={error} />}
-			<nav className='-mb-px flex space-x-8' aria-label='Tabs'>
-				{tabs.map(tab => (
-					<a
-						key={tab.name}
-						href={tab.href}
-						onClick={e => {
-							setCurrentTab(tabs.find(t => t.name === tab.name));
-						}}
-						className={classNames(
-							currentTab.name === tab.name
-								? 'border-indigo-500 text-indigo-600'
-								: 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
-							'whitespace-nowrap border-b-2 px-2 py-4 mb-5 text-lg font-medium flex'
-						)}
-						aria-current={currentTab.name === tab.name ? 'page' : undefined}
-					>
-						{tab.name}
-					</a>
-				))}
-			</nav>
 
-			{currentTab?.name === 'Billing' && (
-				<>
-					<div className='border-b dark:border-slate-400 mt-2 mb-4'>
-						<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>
-							Manage Subscription
-						</h3>
-					</div>
-					<InfoAlert
-						message='Click the button below to manage or remove payment methods, cancel your subscription, or view invoice history.'
-						textColor='blue'
-					/>
-					<div className='flex flex-row flex-wrap gap-4 mb-6 items-center'>
-						<button
-							onClick={getPortalLink}
-							disabled={!stripeCustomerId}
-							className={
-								'mt-2 transition-colors flex justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-600'
-							}
-						>
-							Open Customer Portal
-						</button>
-					</div>
-					<div className='border-b dark:border-slate-400 pb-2 my-2'>
-						<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>Plan Selection</h3>
-					</div>
-					<div className='flex flex-row flex-wrap gap-4 py-4 items-center'>
-						{plans.map(plan => (
-							<SubscriptionCard
-								key={plan.plan}
-								title={plan.title}
-								price={plan.price}
-								plan={plan.plan}
-								isPopular={plan.isPopular}
-								link={plan.link}
-								storageAddon={plan.storageAddon}
-								usersAddon={plan.usersAddon}
-								selectedPlan={selectedPlan}
-								setSelectedPlan={setSelectedPlan}
-								setStagedChange={setStagedChange}
-								showConfirmModal={showConfirmModal}
-								stripePlan={stripePlan}
-							/>
-						))}
-					</div>
-					<ConfirmModal
-						open={showConfirmModal}
-						setOpen={setShowConfirmModal}
-						confirmFunction={async () => {
-							const { plan, users, storage } = payload;
-							const posthogBody = {
-								email: account?.email,
-								oldPlan: stripePlan,
-								oldAddons: stripeAddons,
-								newPlan: plan,
-								newAddons: { users, storage }
-							};
-							if (stripePlan === SubscriptionPlan.FREE) {
-								posthog.capture('subscribe', posthogBody);
-							} else if (plan !== stripePlan) {
-								posthog.capture('changePlan', posthogBody);
-							}
-							if (users !== stripeAddons.users || storage !== stripeAddons.storage) {
-								posthog.capture('updateAddons', posthogBody);
-							}
+			<div className='mb-8'>
+				<h2 className='text-xl font-semibold mb-2'>Manage Your Billing & Subscriptions</h2>
+				<p className='text-muted-foreground mb-4'>
+					View your payment history, manage your subscriptions, or cancel your plan easily through
+					our secure customer portal.
+				</p>
+				<Button
+					variant='outline'
+					className='w-fit text-black hover:bg-gray-100'
+					onClick={getPortalLink}>
+					Go to Customer Portal
+				</Button>
+			</div>
 
-							await API.confirmChangePlan(
-								payload,
-								res => {
-									setTimeout(() => {
-										toast.success('Subscription updated successfully');
-										setStagedChange(null);
-										setShowConfirmModal(false);
-										setShowPaymentModal(false);
-										setShow(false);
-									}, 500);
-								},
-								toast.error,
-								router
-							);
-						}}
-						cancelFunction={async () => {
-							setShowConfirmModal(false);
-							setShowPaymentModal(false);
-							setShow(false);
-							setTimeout(() => setStagedChange(null), 500);
-						}}
-						title='Confirm Subscription Change'
-						message='Are you sure you want to change your subscription? Changes will apply immediately.'
-					/>
-					<StripeCheckoutModal
-						showPaymentModal={showPaymentModal}
-						payload={payload}
-						setShow={setShowPaymentModal}
-						setStagedChange={setStagedChange}
-						onComplete={() => {
-							setShowPaymentModal(false);
+			<div className='mb-8'>
+				<h2 className='text-xl font-semibold mb-6'>Plan Selection</h2>
+				<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4'>
+					{pricingPlans.map((plan, index) => renderPlanCard(plan))}
+				</div>
+			</div>
+
+			{/* Modals */}
+			<ConfirmModal
+				open={showConfirmModal}
+				setOpen={setShowConfirmModal}
+				confirmFunction={async () => {
+					const { plan, users, storage } = payload;
+					const posthogBody = {
+						email: account?.email,
+						oldPlan: stripePlan,
+						oldAddons: stripeAddons,
+						newPlan: plan,
+						newAddons: { users, storage }
+					};
+					if (stripePlan === SubscriptionPlan.FREE) {
+						posthog.capture('subscribe', posthogBody);
+					} else if (plan !== stripePlan) {
+						posthog.capture('changePlan', posthogBody);
+					}
+					if (users !== stripeAddons.users || storage !== stripeAddons.storage) {
+						posthog.capture('updateAddons', posthogBody);
+					}
+
+					await API.confirmChangePlan(
+						payload,
+						res => {
+							setTimeout(() => {
+								toast.success('Subscription updated successfully');
+								setStagedChange(null);
+								setShowConfirmModal(false);
+								setShowPaymentModal(false);
+								setShow(false);
+							}, 500);
+						},
+						toast.error,
+						router
+					);
+				}}
+				cancelFunction={async () => {
+					setShowConfirmModal(false);
+					setShowPaymentModal(false);
+					setShow(false);
+					setTimeout(() => setStagedChange(null), 500);
+				}}
+				title='Confirm Subscription Change'
+				message='Are you sure you want to change your subscription? Changes will apply immediately.'
+			/>
+
+			<StripeCheckoutModal
+				showPaymentModal={showPaymentModal}
+				payload={payload}
+				setShow={setShowPaymentModal}
+				setStagedChange={setStagedChange}
+				onComplete={() => {
+					setShowPaymentModal(false);
+					API.hasPaymentMethod(
+						res => {
+							if (res && res?.ok === true && res?.last4) {
+								setLast4(res?.last4);
+							}
+						},
+						toast.error,
+						router
+					);
+					setContinued(true);
+				}}
+			/>
+
+			<Invoice
+				continued={continued}
+				session={stagedChange}
+				show={show}
+				last4={last4}
+				cancelFunction={() => setShow(false)}
+				confirmFunction={async () => {
+					return new Promise((resolve, reject) => {
+						try {
 							API.hasPaymentMethod(
 								res => {
-									if (res && res?.ok === true && res?.last4) {
+									if (res && res?.ok === true) {
 										setLast4(res?.last4);
+										setContinued(true);
+										setShowConfirmModal(true);
+									} else if (payload.plan === SubscriptionPlan.FREE) {
+										setContinued(true);
+										setShowConfirmModal(true);
+									} else {
+										resolve(null);
+										setShowPaymentModal(true);
 									}
 								},
 								toast.error,
 								router
 							);
-							setContinued(true);
-						}}
-					/>
-					<Invoice
-						continued={continued}
-						session={stagedChange}
-						show={show}
-						last4={last4}
-						cancelFunction={() => setShow(false)}
-						confirmFunction={async () => {
-							return new Promise((resolve, reject) => {
-								try {
-									API.hasPaymentMethod(
-										res => {
-											if (res && res?.ok === true) {
-												setLast4(res?.last4);
-												setContinued(true);
-												setShowConfirmModal(true);
-											} else if (payload.plan === SubscriptionPlan.FREE) {
-												setContinued(true);
-												setShowConfirmModal(true);
-											} else {
-												resolve(null);
-												setShowPaymentModal(true);
-											}
-										},
-										toast.error,
-										router
-									);
-								} catch (e) {
-									console.error(e);
-									toast.success('Error updating subscription - please contact support');
-									reject(e);
-								}
-							});
-						}}
-					/>
-				</>
-			)}
-
-			{currentTab?.name === 'Usage' && (
-				<>
-					<div className='border-b dark:border-slate-400 mt-2 mb-4'>
-						<h3 className='pl-2 font-semibold text-gray-900 dark:text-white'>View Usage</h3>
-					</div>
-					<div className='flex flex-col w-full gap-3'>
-						<ProgressBar
-							max={pricingMatrix[stripePlan]?.users + stripeAddons?.users}
-							filled={usageState?.members?.length}
-							text={'Users'}
-							numberText='users'
-						/>
-						<ProgressBar
-							max={pricingMatrix[stripePlan]?.maxFunctionTools}
-							filled={numOfFnTools}
-							text='Custom Functions'
-							numberText='functions'
-						/>
-						<ProgressBar
-							max={pricingMatrix[stripePlan]?.teams}
-							filled={usageState?.org?.teamIds.length}
-							text='Teams'
-							numberText='teams'
-							cta='Add More Teams?'
-						/>
-						{vectorDbState !== null ? (
-							<ProgressBar
-								max={pricingMatrix[stripePlan]?.maxVectorStorageBytes / 1024 / 1024 / 1024} //convert to GB for visibility
-								filled={totalBytes / 1024 / 1024 / 1024}
-								text='Vector Database Storage'
-								numberText='GB'
-								cta='Need More Storage?'
-							/>
-						) : (
-							<Spinner />
-						)}
-					</div>
-				</>
-			)}
-		</>
+						} catch (e) {
+							console.error(e);
+							toast.error('Error updating subscription - please contact support');
+							reject(e);
+						}
+					});
+				}}
+			/>
+		</div>
 	);
 }
 

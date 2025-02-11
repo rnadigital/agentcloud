@@ -9,7 +9,7 @@ import {
 	getAgentsByTeam,
 	unsafeGetAgentNameMap
 } from 'db/agent';
-import { getAppById, unsafeGetAppById } from 'db/app';
+import { getAppById, getAppsByTeam, unsafeGetAppById } from 'db/app';
 import {
 	ChatChunk,
 	getChatMessageAfterId,
@@ -45,9 +45,15 @@ import { chainValidations } from 'utils/validationutils';
 export async function sessionsData(req, res, _next) {
 	const before = req?.query?.before === 'null' ? null : req?.query?.before;
 	const sessions = await getSessionsByTeam(req.params.resourceSlug, before, 10);
+	const apps = await getAppsByTeam(req.params.resourceSlug);
+
+	const sessionsWithApps = sessions.map(session => {
+		const app = apps.find(app => app._id.equals(session.appId));
+		return { ...session, app };
+	});
 	return {
 		csrf: req.csrfToken(),
-		sessions
+		sessions: sessionsWithApps
 	};
 }
 
@@ -55,6 +61,7 @@ export async function sessionsData(req, res, _next) {
  * GET /[resourceSlug]/sessions.json
  * team sessions json data
  */
+export type SessionJSONReturnType = Awaited<ReturnType<typeof sessionsData>>;
 export async function sessionsJson(req, res, next) {
 	let validationError = chainValidations(
 		req.query,

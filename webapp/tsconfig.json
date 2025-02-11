@@ -92,6 +92,15 @@
       ],
       "secret/*": [
         "lib/secret/*"
+      ],
+      "modules/*": [
+        "modules/*"
+      ],
+      "store/*": [
+        "store/*"
+      ],
+      "data/*": [
+        "data/*"
       ]
     }
   },

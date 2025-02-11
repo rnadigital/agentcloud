@@ -1,10 +1,4 @@
 import * as API from '@api';
-import { ChevronRightIcon } from '@heroicons/react/20/solid';
-import { ArrowLeftIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
-import dataSyncAnimation from 'animations/dataSyncLoaderAnimation.json';
-import ButtonSpinner from 'components/ButtonSpinner';
-import ErrorAlert from 'components/ErrorAlert';
-import InputField from 'components/form/InputField';
 import DataSourceConfigSteps from 'components/onboarding/DataSourceConfigSteps';
 import DataSourceDetails from 'components/onboarding/DataSourceDetails';
 import DataSourceGrid from 'components/onboarding/DataSourceGrid';
@@ -14,39 +8,26 @@ import DatasourceStreamConfiguration from 'components/onboarding/DatasourceStrea
 import DatasourceSyncing from 'components/onboarding/DatasourceSyncing';
 import EmbeddingModelSelect from 'components/onboarding/EmbeddingModelSelect';
 import LeftFrame from 'components/onboarding/LeftFrame';
-import OnboardingSelect from 'components/onboarding/OnboardingSelect';
 import VectorDBSelection from 'components/onboarding/VectorDBSelection';
-import { error } from 'console';
 import { useAccountContext } from 'context/account';
 import OnboardingFormContext from 'context/onboardingform';
-import { useThemeContext } from 'context/themecontext';
-import cn from 'lib/cn';
-import Lottie from 'lottie-react';
 import { defaultChunkingOptions } from 'misc/defaultchunkingoptions';
-import passwordPattern from 'misc/passwordpattern';
 import Head from 'next/head';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { RegisterFormValues } from 'pages/register';
 import { usePostHog } from 'posthog-js/react';
-import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import React, { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Connector } from 'struct/connector';
 import submittingReducer from 'utils/submittingreducer';
 
 export default function Onboarding() {
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
-	const { csrf } = accountContext;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
-
-	const lottieRef = useRef<any>(null);
 
 	const [connectors, setConnectors] = useState([]);
 	const [searchInput, setSearchInput] = useState<string>();
 	const [currentStep, setCurrentStep] = useState(0);
 	const [currentDatasourceStep, setCurrentDatasourceStep] = useState(0);
-	const [spec, setSpec] = useState(null);
 
 	const [streamState, setStreamReducer] = useReducer(submittingReducer, {});
 
@@ -54,15 +35,11 @@ export default function Onboarding() {
 		...defaultChunkingOptions
 	});
 
-	const posthog = usePostHog();
-
 	const filteredConnectors: Connector[] = useMemo(() => {
 		return Array.from(new Set(connectors.map(connector => connector.name.toLowerCase())))
 			.map(name => connectors.find(connector => connector.name.toLowerCase() === name))
 			.filter(connector => connector.name.toLowerCase().includes(searchInput?.toLowerCase() || ''));
 	}, [connectors, searchInput]);
-
-	const [error, setError] = useState<string>();
 
 	const initConnectors = async () => {
 		try {
@@ -78,13 +55,12 @@ export default function Onboarding() {
 					setConnectors(connectorsJson);
 				},
 				err => {
-					setError('Falied to fetch connector list, please ensure Airbyte is running.');
+					console.error('Falied to fetch connector list, please ensure Airbyte is running.');
 				},
 				null
 			);
 		} catch (e) {
 			console.error(e);
-			setError(e?.message || e);
 		}
 	};
 

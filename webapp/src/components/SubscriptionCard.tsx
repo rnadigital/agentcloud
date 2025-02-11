@@ -11,7 +11,7 @@ import { SubscriptionPlan, subscriptionPlans as plans } from 'struct/billing';
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 import classNames from 'components//ClassNames';
 import StripeCheckoutModal from 'components/StripeCheckoutModal';
-import cn from 'lib/cn';
+import cn from 'utils/cn';
 
 export default function SubscriptionCard({
 	title,

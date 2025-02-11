@@ -1,6 +1,6 @@
 import { PaperAirplaneIcon, StopIcon } from '@heroicons/react/20/solid';
 import { useAccountContext } from 'context/account';
-import cn from 'lib/cn';
+import cn from 'utils/cn';
 import handleShiftNewlines from 'lib/misc/handleshiftnewlines';
 import { usePostHog } from 'posthog-js/react';
 import React, { useState } from 'react';

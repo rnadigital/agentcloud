@@ -9,6 +9,7 @@ import { useRouter } from 'next/router';
 import React, { Fragment, useReducer } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { toast } from 'react-toastify';
+import cn from 'utils/cn';
 import submittingReducer from 'utils/submittingreducer';
 
 function classNames(...classes) {
@@ -26,11 +27,13 @@ export default function FunctionToolForm({
 	style,
 	PreWithRef,
 	isBuiltin,
-	runtimeOptions
+	runtimeOptions,
+	isModal
 }) {
 	const onInitializePane: MonacoOnInitializePane = (monacoEditorRef, editorRef, model) => {
 		/* noop */
 	};
+	console.log('isModal', isModal);
 	return (
 		<>
 			<div>
@@ -40,8 +43,7 @@ export default function FunctionToolForm({
 						name='runtime'
 						className='w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 						value={runtimeState}
-						onChange={e => setRuntimeState(e.target.value)}
-					>
+						onChange={e => setRuntimeState(e.target.value)}>
 						{runtimeOptions.map(option => (
 							<option key={option.value} value={option.value}>
 								{option.label}
@@ -62,33 +64,38 @@ export default function FunctionToolForm({
 					</h2>
 				</div>
 				<div className='grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6'>
-					<div className='col-span-full grid grid-cols-6 md:space-x-2'>
-						<div className='md:col-span-4 col-span-6 rounded-[5px] overflow-hidden'>
-							<ScriptEditor
-								height='32.5em'
-								code={toolCode}
-								setCode={setToolCode}
-								editorOptions={{
-									stopRenderingLineAfter: 1000,
-									fontSize: '12pt',
-									//@ts-ignore because minimap is a valid option and I don't care what typescript thinks
-									minimap: { enabled: false },
-									scrollBeyondLastLine: false
-								}}
-								onInitializePane={onInitializePane}
-							/>
-						</div>
-						<div className='md:col-span-2 col-span-6 rounded overflow-hidden'>
-							<SyntaxHighlighter
-								language='python'
-								style={style}
-								showLineNumbers={true}
-								PreTag={PreWithRef}
-								customStyle={{ margin: 0, maxHeight: 'unset', height: '40em' }}
-							>
-								{wrappedCode}
-							</SyntaxHighlighter>
-						</div>
+					<div
+						className={cn(
+							'rounded-[5px] overflow-hidden',
+							isModal ? 'col-span-6' : 'md:col-span-3 col-span-6'
+						)}>
+						<ScriptEditor
+							height='32.5em'
+							code={toolCode}
+							setCode={setToolCode}
+							editorOptions={{
+								stopRenderingLineAfter: 1000,
+								fontSize: '12pt',
+								//@ts-ignore because minimap is a valid option and I don't care what typescript thinks
+								minimap: { enabled: false },
+								scrollBeyondLastLine: false
+							}}
+							onInitializePane={onInitializePane}
+						/>
+					</div>
+					<div
+						className={cn(
+							'rounded overflow-hidden',
+							isModal ? 'col-span-6' : 'md:col-span-3 col-span-6'
+						)}>
+						<SyntaxHighlighter
+							language='python'
+							style={style}
+							showLineNumbers={true}
+							PreTag={PreWithRef}
+							customStyle={{ margin: 0, maxHeight: 'unset', height: '40em' }}>
+							{wrappedCode}
+						</SyntaxHighlighter>
 					</div>
 				</div>
 			</div>
