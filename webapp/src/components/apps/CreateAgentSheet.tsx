@@ -39,11 +39,12 @@ import { ToolType } from 'struct/tool';
 import { ToolsDialogContent } from './ToolsDialogContent';
 import { Dialog, DialogContent } from 'modules/components/ui/dialog';
 import { MultiSelect } from 'modules/components/multi-select';
+import { Agent } from 'struct/agent';
 // import { MultiSelectComboBox } from '../MultiSelectComboBox/multi-select-combobox';
 
 export const CreateAgentSheet = ({
 	selectedAgentTools,
-	selectedAgent,  // Add selectedAgent to props
+	selectedAgent, // Add selectedAgent to props
 	setAgentDisplay,
 	openEditSheet,
 	setOpenEditSheet,
@@ -52,7 +53,7 @@ export const CreateAgentSheet = ({
 	callback
 }: {
 	selectedAgentTools?: any;
-	selectedAgent?: Agent;  // Add type
+	selectedAgent?: Agent; // Add type
 	setAgentDisplay?: (agent: AgentDataReturnType['agent']) => void;
 	openEditSheet: boolean;
 	setOpenEditSheet: (open: boolean) => void;
@@ -151,21 +152,21 @@ export const CreateAgentSheet = ({
 		const foundTool = tools.find(t => t._id === tid);
 		if (!foundTool) {
 			return acc;
-			}
-			
-			// Format tool value correctly as an object with label and value
-			const toolVal = { 
-				label: foundTool.name, 
-				value: foundTool._id.toString() // Ensure value is string
-			};
-			
-			if ((foundTool?.type as ToolType) !== ToolType.RAG_TOOL) {
-				acc.initialTools.push(toolVal);
-			} else {
-				acc.initialDatasources.push(toolVal);
-			}
-			return acc;
+		}
+
+		// Format tool value correctly as an object with label and value
+		const toolVal = {
+			label: foundTool.name,
+			value: foundTool._id.toString() // Ensure value is string
 		};
+
+		if ((foundTool?.type as ToolType) !== ToolType.RAG_TOOL) {
+			acc.initialTools.push(toolVal);
+		} else {
+			acc.initialDatasources.push(toolVal);
+		}
+		return acc;
+	};
 
 	useEffect(() => {
 		setAgent(cloneState?.agent);
@@ -252,7 +253,8 @@ export const CreateAgentSheet = ({
 
 			// Set initial tools and datasources from selectedAgentTools
 			if (selectedAgentTools) {
-				const { initialTools, initialDatasources } = selectedAgentTools.reduce((acc, tool) => {
+				const { initialTools, initialDatasources } = selectedAgentTools.reduce(
+					(acc, tool) => {
 						const toolValue = tool._id;
 						if (tool.type !== ToolType.RAG_TOOL) {
 							acc.initialTools.push(toolValue);
@@ -286,9 +288,14 @@ export const CreateAgentSheet = ({
 			backstory: e.target.backstory.value,
 			toolIds: [...(toolState || []), ...(datasourceState || [])],
 			iconId: icon?.id,
-			variableIds: Array.from(
-				new Set([...roleSelectedVariables, ...goalSelectedVariables, ...backstorySelectedVariables])
-			) || [],
+			variableIds:
+				Array.from(
+					new Set([
+						...roleSelectedVariables,
+						...goalSelectedVariables,
+						...backstorySelectedVariables
+					])
+				) || [],
 			cloning: cloneState?.agent && editing
 		};
 
@@ -299,7 +306,7 @@ export const CreateAgentSheet = ({
 				() => {
 					toast.success('Agent Updated');
 					setOpenEditSheet(false);
-					callback && callback(agentState._id, body);
+					callback && callback(agentState._id.toString(), body);
 				},
 				res => {
 					toast.error(res);
@@ -557,7 +564,12 @@ export const CreateAgentSheet = ({
 
 								</div> */}
 
-									<AvatarUploader existingAvatar={icon} callback={iconCallback} />
+									<AvatarUploader
+										existingAvatar={icon}
+										callback={iconCallback}
+										isDialogOpen={modalOpen === 'avatar'}
+										setIsDialogOpen={setModalOpen}
+									/>
 									<div className='flex flex-col gap-2 justify-center'>
 										<p className='bg-gray-100 text-gray-500 rounded-sm p-2 text-sm'>
 											Leave blank to auto-generate a profile photo based on the name.
@@ -609,21 +621,21 @@ export const CreateAgentSheet = ({
 									<div className='flex gap-2 items-center text-xs'>
 										<p>Suggestions:</p>
 										<div className='flex items-center gap-2'>
-										<p
-											className='text-gray-900 py-1 px-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors'
-											onClick={() => setRole('Technical Support')}>
-											Technical Support
-										</p>
-										<p
-											className='text-gray-900 py-1 px-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors'
-											onClick={() => setRole('Code Helper')}>
-											Code Helper
-										</p>
-										<p
-											className='text-gray-900 py-1 px-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors'
-											onClick={() => setRole('API Integrator')}>
-											API Integrator
-										</p>
+											<p
+												className='text-gray-900 py-1 px-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors'
+												onClick={() => setRole('Technical Support')}>
+												Technical Support
+											</p>
+											<p
+												className='text-gray-900 py-1 px-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors'
+												onClick={() => setRole('Code Helper')}>
+												Code Helper
+											</p>
+											<p
+												className='text-gray-900 py-1 px-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors'
+												onClick={() => setRole('API Integrator')}>
+												API Integrator
+											</p>
 										</div>
 									</div>
 								</div>

@@ -4,12 +4,12 @@ import ConfirmModal from 'components/ConfirmModal';
 import ErrorAlert from 'components/ErrorAlert';
 import InfoAlert from 'components/InfoAlert';
 import Invoice from 'components/Invoice';
-import { Button } from 'modules/components/ui/button';
-import { Card, CardContent, CardHeader } from 'modules/components/ui/card';
 import ProgressBar from 'components/ProgressBar';
 import Spinner from 'components/Spinner';
 import StripeCheckoutModal from 'components/StripeCheckoutModal';
 import { useAccountContext } from 'context/account';
+import { Button } from 'modules/components/ui/button';
+import { Card, CardContent, CardHeader } from 'modules/components/ui/card';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
@@ -207,7 +207,8 @@ ${missingEnvs.join('\n')}`}
 						setSelectedPlan(planData.plan);
 						setStagedChange({ plan: planData.plan });
 						setShowConfirmModal(true);
-					}}>
+					}}
+				>
 					{account?.stripe.stripePlan === planData.name
 						? 'Update Subscription'
 						: planData.name === 'Enterprise'
@@ -255,7 +256,8 @@ ${missingEnvs.join('\n')}`}
 				<Button
 					variant='outline'
 					className='w-fit text-black hover:bg-gray-100'
-					onClick={getPortalLink}>
+					onClick={getPortalLink}
+				>
 					Go to Customer Portal
 				</Button>
 			</div>

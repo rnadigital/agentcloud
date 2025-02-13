@@ -455,7 +455,8 @@ export default function ToolForm({
 											onChange={e => {
 												setCurrentTab(tabs.find(t => t.name === e.target.value));
 											}}
-											defaultValue={currentTab.name}>
+											defaultValue={currentTab.name}
+										>
 											{tabs
 												.filter(tab => !tab.toolTypes || tab.toolTypes?.includes(toolType))
 												.map(tab => (
@@ -481,13 +482,15 @@ export default function ToolForm({
 																	: 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
 																'whitespace-nowrap border-b-2 px-2 py-4 text-sm font-medium flex'
 															)}
-															aria-current={currentTab.name === tab.name ? 'page' : undefined}>
+															aria-current={currentTab.name === tab.name ? 'page' : undefined}
+														>
 															{tab.name}
 															{tab.name === 'Version History' && tool?.functionLogs && (
 																<svg
 																	className='ms-2 h-2 w-2 fill-red-500'
 																	viewBox='0 0 6 6'
-																	aria-hidden='true'>
+																	aria-hidden='true'
+																>
 																	<circle cx='3' cy='3' r='3' />
 																</svg>
 															)}
@@ -588,7 +591,8 @@ export default function ToolForm({
 												className='text-sm text-blue-500 dark:text-blue-400 underline'
 												href='https://qdrant.tech/documentation/concepts/filtering/#filtering'
 												target='_blank'
-												rel='noreferrer'>
+												rel='noreferrer'
+											>
 												Instructions on how to format filters
 											</a>
 											<ScriptEditor
@@ -629,14 +633,16 @@ export default function ToolForm({
 					{!compact && (
 						<Button
 							className='text-sm font-semibold leading-6 bg-indigo-600 text-white hover:bg-indigo-500'
-							onClick={() => setDisplayScreen('tools')}>
+							onClick={() => setDisplayScreen('tools')}
+						>
 							Back
 						</Button>
 					)}
 					<button
 						type='submit'
 						disabled={submitting}
-						className={`flex justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${compact ? 'w-full' : ''}`}>
+						className={`flex justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${compact ? 'w-full' : ''}`}
+					>
 						{submitting && <ButtonSpinner className='mr-2' />}
 						Save
 					</button>

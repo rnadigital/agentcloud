@@ -175,8 +175,7 @@ export default function Apps(props: AppsDataReturnType) {
 											)}
 											<button
 												onClick={() => setIsEditing(!isEditing)}
-												className='hover:text-[#4F46E5] transition-colors'
-											>
+												className='hover:text-[#4F46E5] transition-colors'>
 												<Pencil width={20} />
 											</button>
 										</div>
@@ -195,14 +194,27 @@ export default function Apps(props: AppsDataReturnType) {
 
 							{agentDisplay ? (
 								<AgentCreatedDisplay
-									setAgentDisplay={setAgentDisplay}
+									// setAgentDisplay={setAgentDisplay}
 									setOpenEditSheet={setOpenEditSheet}
+									setSelectedAgent={() => {}}
+									openEditSheet={openEditSheet}
+									selectedAgent={null}
+									selectedAgentModel={null}
+									selectedAgentTools={[]}
+									onChangeAgent={() => {}}
+									isUpdating={false}
 								/>
 							) : agents.length > 0 ? (
-								<AgentSelectDisplay setAgentDisplay={setAgentDisplay} />
+								<AgentSelectDisplay
+									// setAgentDisplay={setAgentDisplay}
+									setOpenEditSheet={setOpenEditSheet}
+									setSelectedAgent={() => {}}
+									agentChoices={agents}
+									toolChoices={[]}
+								/>
 							) : (
 								<CreateAgentSheet
-									setAgentDisplay={setAgentDisplay}
+									// setAgentDisplay={setAgentDisplay}
 									openEditSheet={openEditSheet}
 									setOpenEditSheet={setOpenEditSheet}
 								/>
@@ -213,8 +225,7 @@ export default function Apps(props: AppsDataReturnType) {
 									<div key={starter.id} className='flex items-center gap-2'>
 										<div
 											className='bg-gray-50 px-4 py-3 w-full border border-gray-300 rounded-lg'
-											onClick={() => setEditingStarterId(starter.id)}
-										>
+											onClick={() => setEditingStarterId(starter.id)}>
 											{editingStarterId === starter.id ? (
 												<input
 													type='text'
@@ -251,8 +262,7 @@ export default function Apps(props: AppsDataReturnType) {
 								))}
 								<p
 									className='text-[#4F46E5] cursor-pointer self-end hover:text-[#3730a3]'
-									onClick={handleAddStarter}
-								>
+									onClick={handleAddStarter}>
 									+ Add
 								</p>
 							</div>
@@ -271,15 +281,13 @@ export default function Apps(props: AppsDataReturnType) {
 						<article className='flex items-center justify-between px-3 py-3 border-t border-gray-200'>
 							<Button
 								variant='ghost'
-								className='bg-transparent text-foreground hover:bg-transparent hover:text-foreground p-0 border-0 shadow-none outline-none'
-							>
+								className='bg-transparent text-foreground hover:bg-transparent hover:text-foreground p-0 border-0 shadow-none outline-none'>
 								Cancel
 							</Button>
 							<Button
 								onClick={() => setHasLaunched(true)}
 								variant='ghost'
-								className='bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white font-medium text-sm py-2 hover:text-white'
-							>
+								className='bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white font-medium text-sm py-2 hover:text-white'>
 								Launch &gt;
 							</Button>
 						</article>

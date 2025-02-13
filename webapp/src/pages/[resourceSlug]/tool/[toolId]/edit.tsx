@@ -47,6 +47,9 @@ export default function EditTool(props) {
 			</div>
 
 			<ToolForm
+				setDisplayScreen={() => {}}
+				fetchTools={() => {}}
+				setActiveTab={() => {}}
 				tool={tool}
 				datasources={datasources}
 				editing={true}

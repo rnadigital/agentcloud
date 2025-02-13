@@ -39,6 +39,8 @@ export default function Agents(props) {
 			</Head>
 
 			<PageTitleWithNewButton
+				searchQuery=''
+				setSearchQuery={() => {}}
 				list={filteredAgents}
 				title='Agents'
 				buttonText='New Agent'
@@ -47,6 +49,7 @@ export default function Agents(props) {
 
 			{agents.length === 0 && (
 				<NewButtonSection
+					setOpen={() => {}}
 					link={`/${resourceSlug}/agent/add`}
 					emptyMessage={'No agents'}
 					icon={

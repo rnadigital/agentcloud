@@ -77,7 +77,12 @@ export default function Datasources(props) {
 				<title>{`Datasources - ${teamName}`}</title>
 			</Head>
 
-			<PageTitleWithNewButton list={filteredDatasources} title='File Uploads' />
+			<PageTitleWithNewButton
+				list={filteredDatasources}
+				title='File Uploads'
+				searchQuery=''
+				setSearchQuery={() => {}}
+			/>
 
 			<span className='pt-1 mb-3 w-full'>
 				<CreateDatasourceForm
@@ -101,6 +106,8 @@ export default function Datasources(props) {
 
 			{airbyteState?.isEnabled && (
 				<PageTitleWithNewButton
+					searchQuery=''
+					setSearchQuery={() => {}}
 					list={filteredDatasources}
 					title='Data Connections'
 					buttonText='New Connection'
@@ -135,8 +142,7 @@ export default function Datasources(props) {
 						setAirbyteLoading(false);
 					}}
 					className='inline-flex items-center rounded-md bg-indigo-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-300 disabled:text-gray-700 disabled:cursor-not-allowed ml-auto mb-2'
-					disabled={airbyteLoading}
-				>
+					disabled={airbyteLoading}>
 					{airbyteLoading ? 'Enabling Airbyte...' : 'Enable Airbyte'}
 				</button>
 			)}

@@ -13,7 +13,7 @@ export default function PageTitleWithNewButton({
 	showButton = true,
 	slug = true,
 	searchQuery,
-	setSearchQuery,
+	setSearchQuery
 }: {
 	onClick?: any;
 	list?: any[];
@@ -29,14 +29,17 @@ export default function PageTitleWithNewButton({
 	const [accountContext]: any = useAccountContext();
 	const { teamName, account, csrf } = accountContext as any;
 	const resourceSlug = router?.query?.resourceSlug || account?.currentTeam;
-	
+
 	const b = (
 		<button
 			onClick={onClick}
 			type='button'
 			className='inline-flex items-center rounded-md bg-gradient-to-r from-indigo-500 via-indigo-700 to-purple-800 px-4 py-2 h-full text-sm text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-300 disabled:text-gray-700 disabled:cursor-not-allowed'
 		>
-			<PlusIcon className='-ml-0.5 mr-1.5 h-3 w-3 rounded-full border border-white' aria-hidden='true' />
+			<PlusIcon
+				className='-ml-0.5 mr-1.5 h-3 w-3 rounded-full border border-white'
+				aria-hidden='true'
+			/>
 			{buttonText}
 		</button>
 	);
@@ -49,7 +52,7 @@ export default function PageTitleWithNewButton({
 					<input
 						type='text'
 						value={searchQuery}
-						onChange={(e) => setSearchQuery(e.target.value)}
+						onChange={e => setSearchQuery(e.target.value)}
 						placeholder='Search Member'
 						className='pt-[0.40rem] pl-9 border rounded-md h-full w-[200px]'
 					/>
@@ -57,7 +60,9 @@ export default function PageTitleWithNewButton({
 				{showButton && (
 					<>
 						{slug && (
-							<>{buttonText ? href ? <Link href={`/${resourceSlug}${href}`}>{b}</Link> : b : null}</>
+							<>
+								{buttonText ? href ? <Link href={`/${resourceSlug}${href}`}>{b}</Link> : b : null}
+							</>
 						)}
 						{!slug && <>{buttonText ? href ? <Link href={`/${href}`}>{b}</Link> : b : null}</>}
 					</>

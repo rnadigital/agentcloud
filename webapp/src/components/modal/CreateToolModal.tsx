@@ -36,6 +36,9 @@ export default function CreateToolModal({ open, setOpen, callback, initialType =
 						datasources={datasources}
 						initialType={ToolType.FUNCTION_TOOL}
 						fetchFormData={fetchToolFormData}
+						setDisplayScreen={() => {}}
+						fetchTools={() => {}}
+						setActiveTab={() => {}}
 					/>
 				</div>
 			</DialogContent>

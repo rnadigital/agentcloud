@@ -51,9 +51,9 @@ const DeleteDialog = ({
 	onDelete: () => void;
 }) => {
 	return (
-		<Dialog 
-			open={openDeleteDialog} 
-			onOpenChange={(open) => {
+		<Dialog
+			open={openDeleteDialog}
+			onOpenChange={open => {
 				setOpenDeleteDialog(open);
 				if (!open) {
 					// Reset focus and state when dialog closes
@@ -61,7 +61,7 @@ const DeleteDialog = ({
 				}
 			}}
 		>
-			<DialogContent 
+			<DialogContent
 				onPointerDownOutside={() => {
 					setOpenDeleteDialog(false);
 					document.body.style.pointerEvents = 'auto';
@@ -91,7 +91,7 @@ const DeleteDialog = ({
 					</DialogDescription>
 				</DialogHeader>
 				<DialogFooter className='flex items-center justify-center gap-6 mx-auto mt-4'>
-						<Button 
+					<Button
 						onClick={() => {
 							setOpenDeleteDialog(false);
 							document.body.style.pointerEvents = 'auto';
@@ -100,7 +100,7 @@ const DeleteDialog = ({
 					>
 						Cancel
 					</Button>
-					<Button 
+					<Button
 						onClick={() => {
 							onDelete();
 							setOpenDeleteDialog(false);
@@ -143,7 +143,7 @@ export default function AgentList2({ agents, fetchAgents }) {
 
 	async function deleteAgent(agentId) {
 		if (!agentId) return;
-		
+
 		API.deleteAgent(
 			{
 				_csrf: csrf,
@@ -155,7 +155,7 @@ export default function AgentList2({ agents, fetchAgents }) {
 				toast.success('Agent deleted successfully');
 				setSelectedAgentId(null);
 			},
-			(error) => {
+			error => {
 				toast.error(error || 'Error deleting agent');
 				setSelectedAgentId(null);
 			},
@@ -165,7 +165,11 @@ export default function AgentList2({ agents, fetchAgents }) {
 
 	return (
 		<>
-			<DeleteDialog openDeleteDialog={openDeleteDialog} setOpenDeleteDialog={setOpenDeleteDialog} onDelete={() => deleteAgent(selectedAgentId)} />
+			<DeleteDialog
+				openDeleteDialog={openDeleteDialog}
+				setOpenDeleteDialog={setOpenDeleteDialog}
+				onDelete={() => deleteAgent(selectedAgentId)}
+			/>
 			<main className='text-foreground flex flex-col gap-2'>
 				<section className='flex items-center justify-between mb-4'>
 					<h4 className='text-gray-900 font-semibold text-2xl'>Agents</h4>
@@ -182,7 +186,8 @@ export default function AgentList2({ agents, fetchAgents }) {
 						<Button
 							onClick={() => setOpenNewAgentSheet(true)}
 							asChild
-							className='flex items-center gap-2 bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white py-2.5 px-4 rounded-lg cursor-pointer'>
+							className='flex items-center gap-2 bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white py-2.5 px-4 rounded-lg cursor-pointer'
+						>
 							<div>
 								<CirclePlus width={10.5} />
 								<p className='font-semibold text-sm'>New Agent</p>
@@ -192,6 +197,7 @@ export default function AgentList2({ agents, fetchAgents }) {
 				</section>
 				{agents.length <= 0 ? (
 					<CreateAgentSheet
+						//@ts-ignore
 						setAgentDisplay={setAgentDisplay}
 						openEditSheet={openEditSheet}
 						setOpenEditSheet={setOpenEditSheet}
@@ -206,7 +212,8 @@ export default function AgentList2({ agents, fetchAgents }) {
 							return (
 								<Card
 									key={agent.id}
-									className='rounded-2xl gap-[21px] flex flex-col border-0 shadow-none lg:border lg:border-gray-200 max-h-80 overflow-auto'>
+									className='rounded-2xl gap-[21px] flex flex-col border-0 shadow-none lg:border lg:border-gray-200 max-h-80 overflow-auto'
+								>
 									<CardHeader>
 										<CardTitle>
 											<div className='flex flex-col gap-2'>
@@ -222,7 +229,8 @@ export default function AgentList2({ agents, fetchAgents }) {
 																onClick={() => {
 																	setSelectedAgentId(agent._id);
 																	setOpenDeleteDialog(true);
-																}}>
+																}}
+															>
 																Delete
 															</DropdownMenuItem>
 															<DropdownMenuItem onClick={() => alert('Pin action triggered')}>
@@ -305,6 +313,7 @@ export default function AgentList2({ agents, fetchAgents }) {
 			</main>
 
 			<NewAgentSheet
+				//@ts-ignore
 				setAgentDisplay={setAgentDisplay}
 				openEditSheet={openNewAgentSheet}
 				setOpenEditSheet={setOpenNewAgentSheet}

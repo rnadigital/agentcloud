@@ -22,7 +22,7 @@ export default function NewTaskSheet({
 	const { account, csrf, teamName } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
-	const [state, dispatch] = useState();
+	const [state, dispatch] = useState<any>();
 	const [cloneState, setCloneState] = useState(null);
 	const [error, setError] = useState();
 	const [loading, setLoading] = useState(true);

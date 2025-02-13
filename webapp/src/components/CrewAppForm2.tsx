@@ -397,7 +397,8 @@ export default function CrewAppForm({
 				<div className='flex border border-gray-200 rounded-lg'>
 					<form
 						className='flex flex-col justify-between border border-gray-200 rounded-l-lg w-full minh-[790px]'
-						onSubmit={appPost}>
+						onSubmit={appPost}
+					>
 						<article className='flex flex-col p-5 gap-6'>
 							<div className='flex items-center gap-3 h-24'>
 								<img className='rounded-3xl' src='/apps/identicon.png' />
@@ -429,7 +430,8 @@ export default function CrewAppForm({
 														setAppName('');
 													}
 												}}
-												className='hover:text-[#4F46E5] transition-colors'>
+												className='hover:text-[#4F46E5] transition-colors'
+											>
 												<Pencil width={20} />
 											</button>
 										</div>
@@ -521,14 +523,16 @@ export default function CrewAppForm({
 										setModalOpen('confirmOutsideOrg');
 									}
 									setRun(false);
-								}}>
+								}}
+							>
 								Save
 							</Button>
 							<Button
 								className='bg-indigo-500'
 								type='submit'
 								disabled={missingAgents?.length > 0}
-								onClick={() => setRun(true)}>
+								onClick={() => setRun(true)}
+							>
 								Save and Run
 							</Button>
 						</div>

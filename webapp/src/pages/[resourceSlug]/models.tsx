@@ -55,6 +55,7 @@ export default function Models(props) {
 
 			{models.length === 0 && (
 				<NewButtonSection
+					setOpen={setCreateModelOpen}
 					link={`/${resourceSlug}/model/add`}
 					emptyMessage={'No models'}
 					icon={

@@ -158,7 +158,8 @@ export const ToolDisplay = ({
 					setScreen('initial');
 					setSelectedTool(null);
 				}}
-				className='flex items-center gap-2 text-gray-500 text-sm cursor-pointer'>
+				className='flex items-center gap-2 text-gray-500 text-sm cursor-pointer'
+			>
 				<CircleChevronLeft width={15} />
 				<p>Back to list</p>
 			</article>
@@ -236,7 +237,8 @@ export const ToolDisplay = ({
 				<div className='flex w-full justify-between items-center border-t border-gray-200 py-4'>
 					<Button
 						onClick={handleCloseDialog}
-						className='bg-transparent text-foreground hover:bg-transparent hover:text-foreground'>
+						className='bg-transparent text-foreground hover:bg-transparent hover:text-foreground'
+					>
 						Cancel
 					</Button>
 					<Button
@@ -244,7 +246,8 @@ export const ToolDisplay = ({
 							await toolPost();
 							setDialogScreen('installed');
 						}}
-						className='bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white py-2.5 px-4 rounded-lg'>
+						className='bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white py-2.5 px-4 rounded-lg'
+					>
 						Save
 					</Button>
 				</div>

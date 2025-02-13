@@ -9,7 +9,7 @@ import { useAccountContext } from 'context/account';
 import { AgentDataReturnType, AgentsDataReturnType } from 'controllers/agent';
 import useAutocompleteDropdown from 'hooks/useAutoCompleteDropdown';
 import { BookText, ChevronDown, CircleUserRound, Cpu, Database } from 'lucide-react';
-import { MultiSelectWithDialog } from 'modules/components/multi-select-dialog';
+import { MultiSelect } from 'modules/components/multi-select';
 import { Button } from 'modules/components/ui/button';
 import {
 	DropdownMenu,
@@ -33,17 +33,16 @@ import posthog from 'posthog-js';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
+import { Agent } from 'struct/agent';
 import { ModelEmbeddingLength, ModelType } from 'struct/model';
 import { ToolType } from 'struct/tool';
 
-import { ToolsDialogContent } from './ToolsDialogContent';
-import { Dialog, DialogContent } from 'modules/components/ui/dialog';
-import { MultiSelect } from 'modules/components/multi-select';
+// import { ToolsDialogContent } from './ToolsDialogContent';
 // import { MultiSelectComboBox } from '../MultiSelectComboBox/multi-select-combobox';
 
 export const NewAgentSheet = ({
 	selectedAgentTools,
-	selectedAgent,  // Add selectedAgent to props
+	selectedAgent, // Add selectedAgent to props
 	setAgentDisplay,
 	openEditSheet,
 	setOpenEditSheet,
@@ -52,7 +51,7 @@ export const NewAgentSheet = ({
 	callback
 }: {
 	selectedAgentTools?: any;
-	selectedAgent?: Agent;  // Add type
+	selectedAgent?: Agent; // Add type
 	setAgentDisplay?: (agent: AgentDataReturnType['agent']) => void;
 	openEditSheet: boolean;
 	setOpenEditSheet: (open: boolean) => void;
@@ -151,21 +150,21 @@ export const NewAgentSheet = ({
 		const foundTool = tools.find(t => t._id === tid);
 		if (!foundTool) {
 			return acc;
-			}
-			
-			// Format tool value correctly as an object with label and value
-			const toolVal = { 
-				label: foundTool.name, 
-				value: foundTool._id.toString() // Ensure value is string
-			};
-			
-			if ((foundTool?.type as ToolType) !== ToolType.RAG_TOOL) {
-				acc.initialTools.push(toolVal);
-			} else {
-				acc.initialDatasources.push(toolVal);
-			}
-			return acc;
+		}
+
+		// Format tool value correctly as an object with label and value
+		const toolVal = {
+			label: foundTool.name,
+			value: foundTool._id.toString() // Ensure value is string
 		};
+
+		if ((foundTool?.type as ToolType) !== ToolType.RAG_TOOL) {
+			acc.initialTools.push(toolVal);
+		} else {
+			acc.initialDatasources.push(toolVal);
+		}
+		return acc;
+	};
 
 	useEffect(() => {
 		setAgent(cloneState?.agent);
@@ -252,7 +251,8 @@ export const NewAgentSheet = ({
 
 			// Set initial tools and datasources from selectedAgentTools
 			if (selectedAgentTools) {
-				const { initialTools, initialDatasources } = selectedAgentTools.reduce((acc, tool) => {
+				const { initialTools, initialDatasources } = selectedAgentTools.reduce(
+					(acc, tool) => {
 						const toolValue = tool._id;
 						if (tool.type !== ToolType.RAG_TOOL) {
 							acc.initialTools.push(toolValue);
@@ -286,9 +286,14 @@ export const NewAgentSheet = ({
 			backstory: e.target.backstory.value,
 			toolIds: [...(toolState || []), ...(datasourceState || [])],
 			iconId: icon?.id,
-			variableIds: Array.from(
-				new Set([...roleSelectedVariables, ...goalSelectedVariables, ...backstorySelectedVariables])
-			) || [],
+			variableIds:
+				Array.from(
+					new Set([
+						...roleSelectedVariables,
+						...goalSelectedVariables,
+						...backstorySelectedVariables
+					])
+				) || [],
 			cloning: cloneState?.agent && editing
 		};
 
@@ -299,7 +304,7 @@ export const NewAgentSheet = ({
 				() => {
 					toast.success('Agent Updated');
 					setOpenEditSheet(false);
-					callback && callback(agentState._id, body);
+					callback && callback(agentState._id.toString(), body);
 				},
 				res => {
 					toast.error(res);
@@ -557,7 +562,12 @@ export const NewAgentSheet = ({
 
 								</div> */}
 
-									<AvatarUploader existingAvatar={icon} callback={iconCallback} />
+									<AvatarUploader
+										existingAvatar={icon}
+										callback={iconCallback}
+										isDialogOpen={modalOpen === 'avatar'}
+										setIsDialogOpen={setModalOpen}
+									/>
 									<div className='flex flex-col gap-2 justify-center'>
 										<p className='bg-gray-100 text-gray-500 rounded-sm p-2 text-sm'>
 											Leave blank to auto-generate a profile photo based on the name.
@@ -609,21 +619,24 @@ export const NewAgentSheet = ({
 									<div className='flex gap-2 items-center text-xs'>
 										<p>Suggestions:</p>
 										<div className='flex items-center gap-2'>
-										<p
-											className='text-gray-900 py-1 px-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors'
-											onClick={() => setRole('Technical Support')}>
-											Technical Support
-										</p>
-										<p
-											className='text-gray-900 py-1 px-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors'
-											onClick={() => setRole('Code Helper')}>
-											Code Helper
-										</p>
-										<p
-											className='text-gray-900 py-1 px-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors'
-											onClick={() => setRole('API Integrator')}>
-											API Integrator
-										</p>
+											<p
+												className='text-gray-900 py-1 px-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors'
+												onClick={() => setRole('Technical Support')}
+											>
+												Technical Support
+											</p>
+											<p
+												className='text-gray-900 py-1 px-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors'
+												onClick={() => setRole('Code Helper')}
+											>
+												Code Helper
+											</p>
+											<p
+												className='text-gray-900 py-1 px-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors'
+												onClick={() => setRole('API Integrator')}
+											>
+												API Integrator
+											</p>
 										</div>
 									</div>
 								</div>
@@ -701,7 +714,8 @@ export const NewAgentSheet = ({
 															...oldAgent,
 															modelId: model._id
 														}))
-													}>
+													}
+												>
 													{model.name}
 												</DropdownMenuItem>
 											))}
@@ -803,12 +817,14 @@ export const NewAgentSheet = ({
 							<section className='border-t border-gray-200 pt-4 flex justify-between sticky bottom-0 bg-white text-sm'>
 								<Button
 									onClick={() => setOpenEditSheet(false)}
-									className='text-foreground hover:bg-transparent hover:text-foreground p-0 border border-gray-200 py-2.5 px-5 bg-white'>
+									className='text-foreground hover:bg-transparent hover:text-foreground p-0 border border-gray-200 py-2.5 px-5 bg-white'
+								>
 									Cancel
 								</Button>
 								<Button
 									type='submit'
-									className='bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white font-medium text-sm py-2'>
+									className='bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white font-medium text-sm py-2'
+								>
 									Save
 								</Button>
 							</section>
