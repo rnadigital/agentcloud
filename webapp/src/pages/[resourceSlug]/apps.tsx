@@ -41,7 +41,9 @@ import { App, AppType } from 'struct/app';
 import { SharingMode } from 'struct/sharing';
 import { toast } from 'react-toastify';
 import ChatAppForm2 from 'components/ChatAppForm2';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "modules/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from 'modules/components/ui/sheet';
+import { Model } from 'db/model';
+import { Agent } from 'struct/agent';
 
 const DeleteDialog = ({
 	openDeleteDialog,
@@ -53,13 +55,15 @@ const DeleteDialog = ({
 	onDelete: () => void;
 }) => {
 	return (
-		<Dialog open={openDeleteDialog} onOpenChange={(open) => {
-			setOpenDeleteDialog(open);
-			// Reset pointer events when dialog closes
-			if (!open) {
-				document.body.style.pointerEvents = 'auto';
-			}
-		}}>
+		<Dialog
+			open={openDeleteDialog}
+			onOpenChange={open => {
+				setOpenDeleteDialog(open);
+				// Reset pointer events when dialog closes
+				if (!open) {
+					document.body.style.pointerEvents = 'auto';
+				}
+			}}>
 			<DialogContent className='w-[95%] lg:w-fit rounded-lg'>
 				<DialogHeader>
 					<DialogTitle className='flex flex-col gap-4 items-center'>
@@ -72,26 +76,22 @@ const DeleteDialog = ({
 						<p className='font-semibold text-red-800'>Are you sure?</p>
 					</DialogTitle>
 					<DialogDescription className='flex flex-col items-center text-center'>
-						<p>
-							Are you sure you want to delete this app? This action cannot be undone.
-						</p>
+						<p>Are you sure you want to delete this app? This action cannot be undone.</p>
 					</DialogDescription>
 				</DialogHeader>
 				<DialogFooter className='flex items-center justify-center gap-6 mx-auto mt-4'>
-					<Button 
-						variant="secondary"
-						onClick={() => setOpenDeleteDialog(false)} 
-						className='bg-background text-foreground hover:bg-background'
-					>
+					<Button
+						variant='secondary'
+						onClick={() => setOpenDeleteDialog(false)}
+						className='bg-background text-foreground hover:bg-background'>
 						Cancel
 					</Button>
-					<Button 
+					<Button
 						onClick={() => {
 							onDelete();
 							setOpenDeleteDialog(false);
-						}} 
-						className='bg-red-700 text-white hover:bg-red-800'
-					>
+						}}
+						className='bg-red-700 text-white hover:bg-red-800'>
 						Delete app
 					</Button>
 				</DialogFooter>
@@ -100,16 +100,16 @@ const DeleteDialog = ({
 	);
 };
 
-const EditAppSheet = ({ 
-	open, 
-	setOpen, 
+const EditAppSheet = ({
+	open,
+	setOpen,
 	selectedApp,
 	onAppUpdate,
 	toolChoices,
 	modelChoices,
 	agentChoices,
-	fetchFormData  // Add this prop
-}: { 
+	fetchFormData // Add this prop
+}: {
 	open: boolean;
 	setOpen: (open: boolean) => void;
 	selectedApp: App;
@@ -117,7 +117,7 @@ const EditAppSheet = ({
 	toolChoices: any[];
 	modelChoices: any[];
 	agentChoices: any[];
-	fetchFormData: () => Promise<void>;  // Add this type
+	fetchFormData: () => Promise<void>; // Add this type
 }) => {
 	// Add default values for missing properties
 	const enrichedApp = {
@@ -131,19 +131,16 @@ const EditAppSheet = ({
 			mode: selectedApp?.sharingConfig?.mode || SharingMode.TEAM,
 			permissions: selectedApp?.sharingConfig?.permissions || {}
 		},
-		conversationStarters: selectedApp?.conversationStarters || [
-			'Help me brainstorm some ideas',
-			'What can you help me with?'
-		],
+		conversationStarters: ['Help me brainstorm some ideas', 'What can you help me with?'],
 		description: selectedApp?.description || '',
 		name: selectedApp?.name || 'Untitled Chat App',
-		type: selectedApp?.type || AppType.CHAT,
+		type: selectedApp?.type || AppType.CHAT
 	};
 
 	return (
-		<Sheet 
-			open={open} 
-			onOpenChange={(open) => {
+		<Sheet
+			open={open}
+			onOpenChange={open => {
 				if (!open) {
 					// Force a slight delay before resetting pointer events
 					setTimeout(() => {
@@ -152,17 +149,15 @@ const EditAppSheet = ({
 					}, 100);
 				}
 				setOpen(open);
-			}}
-		>
-			<SheetContent 
-				className="w-full overflow-auto max-w-3xl"
+			}}>
+			<SheetContent
+				className='w-full overflow-auto max-w-3xl'
 				// Add pointer-events override for sheet content
-				style={{ pointerEvents: 'auto' }}
-			>
+				style={{ pointerEvents: 'auto' }}>
 				<SheetHeader>
 					<SheetTitle>Edit App</SheetTitle>
 				</SheetHeader>
-				<div className="mt-4">
+				<div className='mt-4'>
 					<ChatAppForm2
 						fetchFormData={fetchFormData}
 						app={enrichedApp}
@@ -171,12 +166,10 @@ const EditAppSheet = ({
 							setOpen(false);
 							onAppUpdate();
 						}}
-						toolChoices={toolChoices}  // Pass these from parent if available
+						toolChoices={toolChoices} // Pass these from parent if available
 						modelChoices={modelChoices} // Pass these from parent if available
 						agentChoices={agentChoices} // Pass these from parent if available
-						whiteListSharingChoices={
-							Object.values(enrichedApp.sharingConfig.permissions || {})
-						}
+						whiteListSharingChoices={Object.values(enrichedApp.sharingConfig.permissions || {})}
 					/>
 				</div>
 			</SheetContent>
@@ -215,9 +208,9 @@ export default function Apps(props) {
 		try {
 			// Add your API calls here to fetch tools, models, and agents
 			const [toolsRes, modelsRes, agentsRes] = await Promise.all([
-				API.getTools({ resourceSlug, _csrf: csrf }),
-				API.getModels({ resourceSlug, _csrf: csrf }),
-				API.getAgents({ resourceSlug, _csrf: csrf })
+				API.getTools({ resourceSlug, _csrf: csrf }, dispatch, setError, router),
+				API.getModels({ resourceSlug, _csrf: csrf }, dispatch, setError, router),
+				API.getAgents({ resourceSlug, _csrf: csrf }, dispatch, setError, router)
 			]);
 
 			// Ensure we're setting arrays even if the response is null/undefined
@@ -258,7 +251,7 @@ export default function Apps(props) {
 
 	async function deleteApp(appId) {
 		if (!appId) return;
-		
+
 		await API.deleteApp(
 			{
 				_csrf: csrf,
@@ -270,7 +263,7 @@ export default function Apps(props) {
 				toast.success('App deleted successfully');
 				setSelectedAgentId(null);
 			},
-			(error) => {
+			error => {
 				toast.error(error || 'Error deleting app');
 				setSelectedAgentId(null);
 			},
@@ -314,17 +307,21 @@ export default function Apps(props) {
 
 	return (
 		<>
-			<DeleteDialog openDeleteDialog={openDeleteDialog} setOpenDeleteDialog={setOpenDeleteDialog} onDelete={() => deleteApp(selectedAgentId)}/>
-				<EditAppSheet
-					open={openEditSheet}
-					setOpen={setOpenEditSheet}
-					selectedApp={selectedApp}
-					onAppUpdate={fetchApps}
-					toolChoices={toolChoices}
-					modelChoices={modelChoices}
-					agentChoices={agentChoices}
-					fetchFormData={fetchFormData}  // Add this prop
-				/>
+			<DeleteDialog
+				openDeleteDialog={openDeleteDialog}
+				setOpenDeleteDialog={setOpenDeleteDialog}
+				onDelete={() => deleteApp(selectedAgentId)}
+			/>
+			<EditAppSheet
+				open={openEditSheet}
+				setOpen={setOpenEditSheet}
+				selectedApp={selectedApp}
+				onAppUpdate={fetchApps}
+				toolChoices={toolChoices}
+				modelChoices={modelChoices}
+				agentChoices={agentChoices}
+				fetchFormData={fetchFormData} // Add this prop
+			/>
 			<main className='text-foreground flex flex-col gap-2'>
 				<section className='flex items-center justify-between mb-4'>
 					<h4 className='text-gray-900 font-semibold text-2xl'>Apps</h4>
@@ -349,7 +346,7 @@ export default function Apps(props) {
 				</section>
 				{agents.length <= 0 ? (
 					<CreateAgentSheet
-						setAgentDisplay={setAgentDisplay}
+						// setAgentDisplay={setAgentDisplay}
 						openEditSheet={openEditSheet}
 						setOpenEditSheet={setOpenEditSheet}
 					/>
@@ -374,20 +371,19 @@ export default function Apps(props) {
 															)}
 														</div>
 													</div>
-													<div className="flex flex-col place-items-end">
+													<div className='flex flex-col place-items-end'>
 														<DropdownMenu>
 															<DropdownMenuTrigger>
 																<Ellipsis />
 															</DropdownMenuTrigger>
 															<DropdownMenuContent align='end'>
-																<DropdownMenuItem 
-																	onClick={() => handleOpenEditSheet(app)}>
+																<DropdownMenuItem onClick={() => handleOpenEditSheet(app)}>
 																	Edit
 																</DropdownMenuItem>
 																<DropdownMenuItem
 																	className='text-red-600'
 																	onClick={() => {
-																		setSelectedAgentId(app._id);
+																		setSelectedAgentId(app._id.toString());
 																		setOpenDeleteDialog(true);
 																	}}>
 																	Delete
@@ -424,8 +420,7 @@ export default function Apps(props) {
 									</CardFooter>
 								</Card>
 							);
-						}
-						)}
+						})}
 					</section>
 				)}
 			</main>

@@ -370,7 +370,12 @@ export default function CrewAppForm({
 								Avatar
 							</label>
 							<div className='mt-2'>
-								<AvatarUploader existingAvatar={icon} callback={iconCallback} />
+								<AvatarUploader
+									existingAvatar={icon}
+									callback={iconCallback}
+									isDialogOpen={modalOpen === 'avatar'}
+									setIsDialogOpen={setModalOpen}
+								/>
 							</div>
 						</div>
 					</div>

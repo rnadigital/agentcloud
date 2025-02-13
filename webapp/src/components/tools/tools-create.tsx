@@ -96,7 +96,8 @@ export const ToolsCreate = ({
 								{currentStep > 1 && (
 									<Button
 										onClick={() => currentStep > 1 && setCurrentStep(currentStep - 1)}
-										asChild>
+										asChild
+									>
 										<div className='flex items-center gap-2 font-medium cursor-pointer bg-transparent hover:bg-transparent border-0 shadow-none outline-none'>
 											<MoveLeft color='#6B7280' />
 											<p className='text-gray-500'>Back</p>
@@ -106,7 +107,8 @@ export const ToolsCreate = ({
 								{currentStep < steps.length && (
 									<Button
 										onClick={() => currentStep < steps.length && setCurrentStep(currentStep + 1)}
-										asChild>
+										asChild
+									>
 										<div className='ml-auto flex items-center gap-2 font-medium cursor-pointer bg-transparent hover:bg-transparent border-0 shadow-none outline-none'>
 											<p className='text-[#4F46E5]'>Next</p>
 											<MoveRight color='#4F46E5' />
@@ -121,12 +123,14 @@ export const ToolsCreate = ({
 			<div className='flex items-center justify-between border-t border-gray-200 p-[16px]'>
 				<Button
 					onClick={() => setDisplayScreen('tools')}
-					className='bg-transparent text-foreground hover:bg-transparent hover:text-foreground'>
+					className='bg-transparent text-foreground hover:bg-transparent hover:text-foreground'
+				>
 					Cancel
 				</Button>
 				<Button
 					onClick={() => setDisplayScreen('tools')}
-					className='bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white py-2.5 px-4 rounded-lg'>
+					className='bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white py-2.5 px-4 rounded-lg'
+				>
 					Save
 				</Button>
 			</div>

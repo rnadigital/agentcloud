@@ -35,7 +35,8 @@ export function SessionTable({ sessions, onDelete }: SessionTableProps) {
 					<Card
 						key={session._id.toString()}
 						className='cursor-pointer'
-						onClick={() => router.push(`/${resourceSlug}/session/${session._id}`)}>
+						onClick={() => router.push(`/${resourceSlug}/session/${session._id}`)}
+					>
 						<CardContent className='pt-6'>
 							<div className='flex items-center justify-between'>
 								<div className='flex items-center gap-2'>
@@ -61,7 +62,8 @@ export function SessionTable({ sessions, onDelete }: SessionTableProps) {
 												'bg-yellow-100 text-yellow-800 hover:bg-yellow-100',
 											session.status === SessionStatus.TERMINATED &&
 												'bg-gray-100 text-gray-800 hover:bg-gray-100'
-										)}>
+										)}
+									>
 										<div className='flex items-center gap-2'>
 											{session.status === SessionStatus.RUNNING
 												? 'Live'
@@ -76,7 +78,8 @@ export function SessionTable({ sessions, onDelete }: SessionTableProps) {
 										onClick={e => {
 											e.stopPropagation();
 											onDelete?.(session._id.toString());
-										}}>
+										}}
+									>
 										<Trash2 className='h-4 w-4' />
 									</Button>
 								</div>
@@ -121,7 +124,8 @@ export function SessionTable({ sessions, onDelete }: SessionTableProps) {
 						<TableRow
 							key={session._id.toString()}
 							onClick={() => router.push(`/${resourceSlug}/session/${session._id}`)}
-							className='cursor-pointer'>
+							className='cursor-pointer'
+						>
 							<TableCell className='px-4'>
 								{session.app.type === 'chat' ? (
 									<ChatBubbleLeftRightIcon width={20} className='text-gray-800' />
@@ -153,14 +157,16 @@ export function SessionTable({ sessions, onDelete }: SessionTableProps) {
 											'bg-yellow-100 text-yellow-800 hover:bg-yellow-100',
 										session.status === SessionStatus.TERMINATED &&
 											'bg-gray-100 text-gray-800 hover:bg-gray-100'
-									)}>
+									)}
+								>
 									<div className='flex items-center justify-center gap-2'>
 										{session.status === SessionStatus.RUNNING && (
 											<svg
 												viewBox='0 0 24 24'
 												className='w-4 h-4'
 												fill='none'
-												stroke='currentColor'>
+												stroke='currentColor'
+											>
 												<path d='M5 3l14 9-14 9V3z' strokeWidth={2} />
 											</svg>
 										)}
@@ -186,7 +192,8 @@ export function SessionTable({ sessions, onDelete }: SessionTableProps) {
 												viewBox='0 0 24 24'
 												className='w-4 h-4'
 												fill='none'
-												stroke='currentColor'>
+												stroke='currentColor'
+											>
 												<circle cx='12' cy='12' r='10' strokeWidth={2} />
 											</svg>
 										)}
@@ -206,7 +213,8 @@ export function SessionTable({ sessions, onDelete }: SessionTableProps) {
 										onClick={e => {
 											e.stopPropagation();
 											onDelete?.(session._id.toString());
-										}}>
+										}}
+									>
 										<Trash2 className='h-4 w-4' />
 									</Button>
 								</div>

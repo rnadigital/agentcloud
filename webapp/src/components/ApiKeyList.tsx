@@ -121,23 +121,27 @@ export default function ApiKeyList({ keys, fetchKeys }: { keys: any[]; fetchKeys
 						<tr>
 							<th
 								scope='col'
-								className='w-min px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'>
+								className='w-min px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'
+							>
 								Name
 							</th>
 							<th
 								scope='col'
-								className='w-min px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'>
+								className='w-min px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'
+							>
 								Description
 							</th>
 
 							<th
 								scope='col'
-								className='w-min px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'>
+								className='w-min px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'
+							>
 								Token
 							</th>
 							<th
 								scope='col'
-								className='w-min px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'>
+								className='w-min px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'
+							>
 								Expiry
 							</th>
 
@@ -145,7 +149,8 @@ export default function ApiKeyList({ keys, fetchKeys }: { keys: any[]; fetchKeys
 
 							<th
 								scope='col'
-								className='w-min px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'>
+								className='w-min px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'
+							>
 								Actions
 							</th>
 						</tr>
@@ -167,7 +172,8 @@ export default function ApiKeyList({ keys, fetchKeys }: { keys: any[]; fetchKeys
 											? 'bg-red-400'
 											: 'hover:bg-gray-50 dark:hover:bg-gray-500 dark:text-gray-50'
 									)}
-									style={{ borderColor: deletingMap[key._id] ? 'red' : '' }}>
+									style={{ borderColor: deletingMap[key._id] ? 'red' : '' }}
+								>
 									<td className={'px-6 py-4 whitespace-nowrap'} onClick={() => router.push(``)}>
 										<div className='text-sm text-gray-900 dark:text-white'>{key.name}</div>
 									</td>
@@ -178,7 +184,8 @@ export default function ApiKeyList({ keys, fetchKeys }: { keys: any[]; fetchKeys
 									</td>
 									<td
 										className='px-6 py-4 whitespace-nowrap'
-										onClick={() => handleCopyClick(key?.token)}>
+										onClick={() => handleCopyClick(key?.token)}
+									>
 										<div className='text-sm max-w-36 text-gray-900 dark:text-white truncate hover:text-blue-600 hover:underline cursor-pointer'>
 											{key?.token}
 										</div>
@@ -195,7 +202,8 @@ export default function ApiKeyList({ keys, fetchKeys }: { keys: any[]; fetchKeys
 												setRegeneratingKey(key);
 												setRegenerateOpen(true);
 											}}
-											className='text-gray-900 hover:text-gray-400'>
+											className='text-gray-900 hover:text-gray-400'
+										>
 											<ArrowPathIcon className='h-5 w-5' aria-hidden='true' />
 										</button>
 
@@ -208,7 +216,8 @@ export default function ApiKeyList({ keys, fetchKeys }: { keys: any[]; fetchKeys
 													setDeleteOpen(true);
 												}}
 												className='text-red-500 hover:text-red-700'
-												data-tooltip-target='delete-tooltip'>
+												data-tooltip-target='delete-tooltip'
+											>
 												<TrashIcon className='h-5 w-5' aria-hidden='true' />
 											</button>
 										</>

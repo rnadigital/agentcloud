@@ -13,7 +13,7 @@ import Select from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { SubscriptionPlan } from 'struct/billing';
 
-export default function InviteForm({ callback, setOpen }: { callback?: Function; setOpen: any; }) {
+export default function InviteForm({ callback, setOpen }: { callback?: Function; setOpen: any }) {
 	const [accountContext]: any = useAccountContext();
 	const { csrf, account } = accountContext as any;
 	const { stripePlan } = account?.stripe || {};
@@ -159,14 +159,14 @@ export default function InviteForm({ callback, setOpen }: { callback?: Function;
 
 					{error && <p className='text-sm text-red-600'>{error}</p>}
 
-					<div className="w-full flex justify-between">
+					<div className='w-full flex justify-between'>
 						<button
-						onClick={() => {
-							setName('');
-							setEmail('');
-							setSelectedRole(TeamRoleOptions[0].value);
-							setOpen(false);
-						  }}
+							onClick={() => {
+								setName('');
+								setEmail('');
+								setSelectedRole(TeamRoleOptions[0].value);
+								setOpen(false);
+							}}
 							className='rounded-md bg-transparent px-4 py-2 mt-2 border border-gray-300 backdrop-blur-sm text-sm font-semibold text-black'
 						>
 							Cancel

@@ -45,7 +45,7 @@ const multiSelectVariants = cva(
  * Props for MultiSelect component
  */
 interface MultiSelectProps
-	extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+	extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'value'>,
 		VariantProps<typeof multiSelectVariants> {
 	/**
 	 * An array of option objects to be displayed in the multi-select component.
@@ -218,7 +218,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 							'flex w-full p-1 rounded-md border min-h-10 h-auto items-center justify-between bg-inherit hover:bg-inherit [&_svg]:pointer-events-auto',
 							className
 						)}>
-							{hasSelection ? (
+						{hasSelection ? (
 							<div className='flex justify-between items-center w-full'>
 								<div className='flex flex-wrap items-center'>
 									{selectedValues?.slice(0, maxCount).map(value => {

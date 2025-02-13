@@ -142,7 +142,8 @@ export default function AddApp(props: AppsDataReturnType) {
 
 									<Button
 										className='flex items-center gap-2 bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white rounded-lg mt-2 md:mt-0'
-										onClick={handleCreateChatApp}>
+										onClick={handleCreateChatApp}
+									>
 										+ Create
 									</Button>
 								</div>
@@ -179,7 +180,8 @@ export default function AddApp(props: AppsDataReturnType) {
 
 									<Button
 										className='flex items-center gap-2 bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white rounded-lg mt-2 md:mt-0'
-										onClick={handleCreateProcessApp}>
+										onClick={handleCreateProcessApp}
+									>
 										+ Create
 									</Button>
 								</div>

@@ -81,13 +81,15 @@ export default function VariableForm({
 					e.preventDefault();
 					e.stopPropagation();
 					return handleSubmit(onSubmit)(e);
-				}}>
+				}}
+			>
 				<input type='hidden' name='_csrf' value={csrf} />
 				<div className='space-y-6'>
 					<div>
 						<label
 							htmlFor='name'
-							className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+							className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+						>
 							Name<span className='text-red-700'> *</span>
 						</label>
 						<Input
@@ -109,7 +111,8 @@ export default function VariableForm({
 					<div>
 						<label
 							htmlFor='description'
-							className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+							className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+						>
 							Description
 						</label>
 						<Textarea
@@ -123,7 +126,8 @@ export default function VariableForm({
 					<div>
 						<label
 							htmlFor='defaultValue'
-							className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+							className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+						>
 							Default Value<span className='text-red-700'> *</span>
 						</label>
 						<Input
@@ -142,12 +146,14 @@ export default function VariableForm({
 								router.push(`/${resourceSlug}/variables`);
 							}}
 							type='button'
-							variant='outline'>
+							variant='outline'
+						>
 							Cancel
 						</Button>
 						<Button
 							type='submit'
-							className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'>
+							className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+						>
 							{editing ? 'Update Variable' : 'Save'}
 						</Button>
 					</div>

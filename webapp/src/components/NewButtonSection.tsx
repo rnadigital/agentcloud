@@ -17,7 +17,7 @@ export default function NewButtonSection({
 	buttonIcon: any;
 	buttonMessage: string;
 	disabled?: boolean;
-	setOpen: (open: boolean) => void;
+	setOpen?: (open: boolean) => void;
 	link?: string;
 }) {
 	return (

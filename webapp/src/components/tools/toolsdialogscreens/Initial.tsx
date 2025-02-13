@@ -63,7 +63,8 @@ export const Initial = ({
 					<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 h-[600px] overflow-y-auto overflow-x-hidden pr-2'>
 						<div
 							onClick={() => setScreen('new')}
-							className='w-full h-[200px] sm:w-[272px] h-[170px] border border-gray-200 p-4 gap-2 shadow-sm hover:shadow-md transition flex cursor-pointer'>
+							className='w-full h-[200px] sm:w-[272px] h-[170px] border border-gray-200 p-4 gap-2 shadow-sm hover:shadow-md transition flex cursor-pointer'
+						>
 							<div className='flex flex-col justify-around lg:justify-between'>
 								<div className='flex flex-col gap-1'>
 									<p className='font-semibold'>+ New RAG Tool</p>
@@ -76,7 +77,8 @@ export const Initial = ({
 						</div>
 						<div
 							onClick={() => setScreen('custom')}
-							className='w-full h-[200px] sm:w-[272px] h-[170px] border border-gray-200 p-4 gap-2 shadow-sm hover:shadow-md transition flex cursor-pointer'>
+							className='w-full h-[200px] sm:w-[272px] h-[170px] border border-gray-200 p-4 gap-2 shadow-sm hover:shadow-md transition flex cursor-pointer'
+						>
 							<div className='flex flex-col justify-around lg:justify-between'>
 								<div className='flex flex-col gap-1'>
 									<p className='font-semibold'>+ Custom Code Tool</p>
@@ -90,7 +92,8 @@ export const Initial = ({
 						{tools.map((tool, index) => (
 							<div
 								key={index}
-								className='w-full h-[200px] sm:w-[272px] h-[170px] border border-gray-200 p-4 gap-2 shadow-sm hover:shadow-md transition flex cursor-pointer'>
+								className='w-full h-[200px] sm:w-[272px] h-[170px] border border-gray-200 p-4 gap-2 shadow-sm hover:shadow-md transition flex cursor-pointer'
+							>
 								{!tool.isInstalled && <Box color='#2F2A89' width={40} className='mt-3 lg:mt-1' />}
 								<div className='flex flex-col justify-around lg:justify-between'>
 									<div className='flex flex-col gap-1'>
@@ -105,7 +108,8 @@ export const Initial = ({
 												style={{
 													color: tag.textColor,
 													backgroundColor: tag.backgroundColor
-												}}>
+												}}
+											>
 												{tag.name}
 											</p>
 										))}
@@ -116,7 +120,8 @@ export const Initial = ({
 												onClick={() => {
 													setSelectedTool(tool);
 													setScreen('tool');
-												}}>
+												}}
+											>
 												Install
 											</Button>
 										)}
@@ -138,7 +143,8 @@ export const Initial = ({
 							{tools.map((tool, index) => (
 								<div
 									key={index}
-									className='w-full h-[200px] sm:w-[272px] h-[170px] border border-gray-200 p-4 gap-2 shadow-sm hover:shadow-md transition flex cursor-pointer'>
+									className='w-full h-[200px] sm:w-[272px] h-[170px] border border-gray-200 p-4 gap-2 shadow-sm hover:shadow-md transition flex cursor-pointer'
+								>
 									{!tool.isInstalled && <Box color='#2F2A89' width={40} className='mt-3 lg:mt-1' />}
 									<div className='flex flex-col justify-around lg:justify-between'>
 										<div className='flex flex-col gap-1'>
@@ -153,7 +159,8 @@ export const Initial = ({
 													style={{
 														color: tag.textColor,
 														backgroundColor: tag.backgroundColor
-													}}>
+													}}
+												>
 													{tag.name}
 												</p>
 											))}
@@ -161,7 +168,8 @@ export const Initial = ({
 												<Button
 													variant='outline'
 													className='text-xs'
-													onClick={() => setSelectedTool(tool)}>
+													onClick={() => setSelectedTool(tool)}
+												>
 													Install
 												</Button>
 											)}

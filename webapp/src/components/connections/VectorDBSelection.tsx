@@ -229,7 +229,8 @@ const VectorDBSelection = () => {
 							setValue('byoVectorDb', false);
 							setSelectedDB(null);
 						}
-					}}>
+					}}
+				>
 					<SelectTrigger>
 						<SelectValue placeholder='Select a vector database' />
 					</SelectTrigger>
@@ -261,7 +262,8 @@ const VectorDBSelection = () => {
 							} else {
 								setValue('byoVectorDb', false);
 							}
-						}}>
+						}}
+					>
 						{connector.value === selectedDB && (
 							<CheckCircleIcon className='h-8 w-8 text-primary-500 absolute top-4 right-4' />
 						)}
@@ -313,7 +315,8 @@ const VectorDBSelection = () => {
 			<div className='flex justify-end mt-4 ml-auto'>
 				<button
 					type='submit'
-					className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 flex items-center justify-center'>
+					className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 flex items-center justify-center'
+				>
 					{loading && <ButtonSpinner />}
 					{loading ? 'Saving Datasource ...' : 'Continue'}
 				</button>
@@ -395,7 +398,8 @@ const PineConeFields = ({
 				<button
 					type='button'
 					className='bg-white w-full flex p-4 items-center'
-					onClick={() => connectWithAPIKey()}>
+					onClick={() => connectWithAPIKey()}
+				>
 					<span className='text-sm font-medium'>Connect Securely with Pinecone</span>
 					<div className='px-5 py-2 bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white rounded-md ml-auto'>
 						Connect{' '}

@@ -62,7 +62,8 @@ export function StepperEditConfig() {
 								<div className='flex'>
 									<div
 										className='w-full flex items-center'
-										onClick={() => setEditingParameterId(parameter.id)}>
+										onClick={() => setEditingParameterId(parameter.id)}
+									>
 										{editingParameterId === parameter.id ? (
 											<Input
 												onChange={e => handleParameterEdit(parameter.id, e.target.value)}
@@ -92,7 +93,8 @@ export function StepperEditConfig() {
 									<div className='w-[300px]'>
 										<Select
 											value={parameter.type}
-											onValueChange={e => handleParameterEdit(parameter.id, e)}>
+											onValueChange={e => handleParameterEdit(parameter.id, e)}
+										>
 											<SelectTrigger className='w-full rounded-none outline-none'>
 												<SelectValue placeholder='Type' />
 											</SelectTrigger>
@@ -124,7 +126,8 @@ export function StepperEditConfig() {
 					))}
 					<p
 						className='text-[#4F46E5] cursor-pointer self-end hover:text-[#3730a3] font-medium'
-						onClick={handleParameterAdd}>
+						onClick={handleParameterAdd}
+					>
 						+ Add
 					</p>
 				</div>

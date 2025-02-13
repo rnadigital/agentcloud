@@ -79,7 +79,8 @@ async function augmentJobs(jobList) {
 						limitOwnerId = datasourceOrg?.ownerId;
 					}
 					const ownerAccount = await getAccountById(limitOwnerId);
-					job.stripe = ownerAccount?.stripe;
+					const ownerOrg = await getOrgById(ownerAccount?.currentOrg);
+					job.stripe = ownerOrg?.stripe;
 				}
 			} catch (e) {
 				log(e);

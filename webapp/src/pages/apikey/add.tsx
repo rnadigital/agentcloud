@@ -31,7 +31,7 @@ export default function AddTool(props) {
 
 			<div className='border-b pb-2 my-2'>
 				<h3 className='pl-2 font-semibold text-gray-900'>New API Key</h3>
-				<ApiKeyForm />
+				<ApiKeyForm callback={() => {}} />
 			</div>
 		</>
 	);
