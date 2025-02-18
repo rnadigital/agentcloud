@@ -96,8 +96,6 @@ export default function CrewAppForm({
 	const [appCache, setAppCache] = useState(app?.cache === true);
 	const [fullOutput, setFullOutput] = useState(crew.fullOutput === true);
 	const [description, setDescription] = useState(app?.description || '');
-	console.log('crew ', crewState);
-	console.log('app', appState);
 	const { name, agents, tasks, verbose } = crewState || {};
 	const [verboseInt, setVerboseInt] = useState(verbose || 0);
 	const [process, setProcess] = useState(crewState?.process || ProcessImpl.SEQUENTIAL);

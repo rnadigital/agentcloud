@@ -172,7 +172,6 @@ const VectorDBSelection = () => {
 
 	const onSubmit = async (data: any) => {
 		setLoading(true);
-		console.log(data);
 		if (data.byoVectorDb) {
 			await API.addVectorDb(
 				{ _csrf: csrf, resourceSlug, ...data, type: selectedDB },

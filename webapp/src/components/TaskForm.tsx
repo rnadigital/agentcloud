@@ -112,7 +112,6 @@ export default function TaskForm({
 	const requiredHumanInput = taskState?.requiresHumanInput;
 
 	const preferredAgent = agents.find(a => a?._id === taskState?.agentId);
-	console.log(preferredAgent);
 	const taskOutputVariable = variables.find(v => v.name === taskState?.taskOutputVariableName);
 	const [showToolConflictWarning, setShowToolConflictWarning] = useState(false);
 
@@ -143,7 +142,6 @@ export default function TaskForm({
 		initialDatasources.length > 0 ? initialDatasources : null
 	); //Note: still technically tools, just only RAG tools
 
-	console.log(datasourceState);
 	const [descriptionSelectedVariables, setDescriptionSelectedVariables] = useState<string[]>([]);
 	const [expectedOutputSelectedVariables, setExpectedOutputSelectedVariables] =
 		useState<string[]>();

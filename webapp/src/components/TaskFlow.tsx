@@ -135,26 +135,30 @@ export default function TaskFlow({
 					<div
 						key={rowIndex}
 						className='flex items-center'
-						style={{ height: '80px', alignItems: 'center' }}>
+						style={{ height: '80px', alignItems: 'center' }}
+					>
 						{row.map((item, itemIndex) =>
 							item.type === 'start' ? (
 								<div
 									key={itemIndex}
-									className='ml-4 flex items-center justify-center w-20 h-12 bg-indigo-50 text-indigo-500	 rounded-full text-sm'>
+									className='ml-4 flex items-center justify-center w-20 h-12 bg-indigo-50 text-indigo-500	 rounded-full text-sm'
+								>
 									Start
 								</div>
 							) : item.type === 'line' ? (
 								<div
 									key={itemIndex}
 									className='h-0 border-t-2 border-dashed'
-									style={{ width: `${item.width}px` }}></div>
+									style={{ width: `${item.width}px` }}
+								></div>
 							) : item.type === 'fill' ? (
 								rowIndex < rows.length - 1 || !createTaskFits ? (
 									// Only add filler lines for non-last rows or when combo box doesn't fit
 									<div
 										key={itemIndex}
 										className='border-t-2 border-dashed'
-										style={{ flexGrow: 1, width: `${item.width}px` }}></div>
+										style={{ flexGrow: 1, width: `${item.width}px` }}
+									></div>
 								) : null
 							) : item.type === 'comboBox' ? (
 								<DropdownMenu>
@@ -172,7 +176,8 @@ export default function TaskFlow({
 												onClick={e => {
 													e.preventDefault();
 													handleAddTask(task);
-												}}>
+												}}
+											>
 												{task.name}
 											</DropdownMenuItem>
 										))}
@@ -186,7 +191,8 @@ export default function TaskFlow({
 										display: 'flex',
 										alignItems: 'center',
 										width: `${item.width}px`
-									}}>
+									}}
+								>
 									<span className='text-xs absolute -left-3 rounded-full bg-white px-2 py-1 botder border-gray-200'>
 										{item.number}
 									</span>
@@ -195,7 +201,8 @@ export default function TaskFlow({
 									</span>
 									<button
 										onClick={e => handleDeleteTask(e, item.task.value)}
-										className='text-gray-500 hover:text-red-500 transition-colors'>
+										className='text-gray-500 hover:text-red-500 transition-colors'
+									>
 										<Trash2Icon className='w-4 h-4' />
 									</button>
 								</div>
@@ -210,7 +217,8 @@ export default function TaskFlow({
 						setModalOpen('task');
 					}}
 					className='ml-2 w-[180px]'
-					variant='outline'>
+					variant='outline'
+				>
 					Create New Task
 				</Button>
 			</div>

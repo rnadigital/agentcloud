@@ -347,7 +347,12 @@ export default function AgentForm({
 								Avatar
 							</label>
 							<div className='mt-2'>
-								<AvatarUploader existingAvatar={icon} callback={iconCallback} />
+								<AvatarUploader
+									existingAvatar={icon}
+									callback={iconCallback}
+									isDialogOpen={false}
+									setIsDialogOpen={() => {}}
+								/>
 							</div>
 						</div>
 					</div>

@@ -93,7 +93,8 @@ export default function OrgSelector2({ orgs }) {
 				style={{
 					pointerEvents: isOpen ? 'auto' : 'none',
 					zIndex: isOpen ? 10 : -1
-				}}>
+				}}
+			>
 				{orgs
 					.filter(o => o?.teams?.length > 0)
 					.map((org, oi) => (
@@ -110,7 +111,8 @@ export default function OrgSelector2({ orgs }) {
 											resourceSlug === team.id ? 'bg-indigo-200' : ''
 										)}
 										key={`org_${oi}_team_${ti}`}
-										onClick={() => switchTeam(org.id, team.id)}>
+										onClick={() => switchTeam(org.id, team.id)}
+									>
 										{team.name}
 									</DropdownMenuItem>
 								))}

@@ -70,8 +70,6 @@ export const useDatasourceStore = create<DatasourceStore>((set, get) => ({
 
 	initConnectors: async router => {
 		const { resourceSlug } = get();
-		console.log('getting connectors');
-		console.log(resourceSlug);
 
 		try {
 			await API.getConnectors(

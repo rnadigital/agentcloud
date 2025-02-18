@@ -16,8 +16,6 @@ import { NotificationType, WebhookType } from 'struct/notification';
 import submittingReducer from 'utils/submittingreducer';
 
 const ConnectionsPage = props => {
-	console.log('ConnectionsPage');
-	console.log(props);
 	const { isMobile } = useResponsive();
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 

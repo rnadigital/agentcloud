@@ -98,7 +98,8 @@ export const ToolsMytools = ({
 							?.map((tool, index) => (
 								<div
 									key={index}
-									className='w-full h-[170px] border border-gray-200 p-4 gap-2 shadow-sm hover:shadow-md transition flex justify-around cursor-pointer overflow-auto'>
+									className='w-full h-[170px] border border-gray-200 p-4 gap-2 shadow-sm hover:shadow-md transition flex justify-around cursor-pointer overflow-auto'
+								>
 									<div className='flex flex-col justify-around lg:justify-between'>
 										<div className='flex flex-col gap-1'>
 											<p className='font-semibold align-middle'>
@@ -110,7 +111,8 @@ export const ToolsMytools = ({
 										<div className='w-full flex justify-between items-center text-xs'>
 											<p
 												key={index}
-												className='py-1 px-2 rounded-full w-fit font-weight-bolder bg-gray-100 text-gray-500'>
+												className='py-1 px-2 rounded-full w-fit font-weight-bolder bg-gray-100 text-gray-500'
+											>
 												BuiltIn
 											</p>
 										</div>
@@ -125,7 +127,8 @@ export const ToolsMytools = ({
 											</DropdownMenuItem>
 											<DropdownMenuItem
 												className='text-red-600'
-												onClick={() => deleteTool(tool._id.toString())}>
+												onClick={() => deleteTool(tool._id.toString())}
+											>
 												Delete
 											</DropdownMenuItem>
 										</DropdownMenuContent>
@@ -138,7 +141,8 @@ export const ToolsMytools = ({
 							?.map((tool, index) => (
 								<div
 									key={index}
-									className='h-[170px] w-full border border-gray-200 rounded-xl p-4 gap-2 shadow-sm hover:shadow-md transition flex justify-around cursor-pointer overflow-auto'>
+									className='h-[170px] w-full border border-gray-200 rounded-xl p-4 gap-2 shadow-sm hover:shadow-md transition flex justify-around cursor-pointer overflow-auto'
+								>
 									<div className='flex flex-col justify-around lg:justify-between w-full'>
 										<div className='flex flex-col gap-1 overflow-hidden'>
 											<p className='font-semibold'>{tool.name}</p>
@@ -147,7 +151,8 @@ export const ToolsMytools = ({
 										<div className='w-full flex justify-between items-center text-xs'>
 											<p
 												key={index}
-												className='py-1 px-2 rounded-full w-fit font-weight-bolder bg-gray-100 text-gray-500'>
+												className='py-1 px-2 rounded-full w-fit font-weight-bolder bg-gray-100 text-gray-500'
+											>
 												CustomTool
 											</p>
 										</div>
@@ -160,7 +165,8 @@ export const ToolsMytools = ({
 											<DropdownMenuItem onClick={() => handleEdit(tool)}>Edit</DropdownMenuItem>
 											<DropdownMenuItem
 												className='text-red-600'
-												onClick={() => deleteTool(tool._id.toString())}>
+												onClick={() => deleteTool(tool._id.toString())}
+											>
 												Delete
 											</DropdownMenuItem>
 										</DropdownMenuContent>

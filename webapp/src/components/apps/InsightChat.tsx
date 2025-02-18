@@ -70,15 +70,13 @@ export const InsightChat = ({ hasLaunched, setHasLaunched }: any) => {
 														toast({
 															title: 'Text copied'
 														});
-														console.log('Text copied');
 													})
 													.catch(err => {
 														console.error('Failed to copy text: ', err);
 													});
 											}}
 											asChild
-											className='bg-white text-gray-900 hover:bg-white cursor-pointer'
-										>
+											className='bg-white text-gray-900 hover:bg-white cursor-pointer'>
 											<div className='flex items-center gap-1'>
 												<Files />
 												<p>Copy</p>
@@ -88,8 +86,7 @@ export const InsightChat = ({ hasLaunched, setHasLaunched }: any) => {
 									<Link
 										target='_blank'
 										href={linkText}
-										className='text-[#4F46E5] font-medium cursor-pointer'
-									>
+										className='text-[#4F46E5] font-medium cursor-pointer'>
 										Preview link in new tab
 									</Link>
 								</div>
@@ -112,8 +109,7 @@ export const InsightChat = ({ hasLaunched, setHasLaunched }: any) => {
 													console.error('Failed to copy code: ', err);
 												});
 										}}
-										className='rounded-t-lg text-gray-200 text-sm bg-gray-700 p-2 flex items-center gap-2 justify-between cursor-pointer'
-									>
+										className='rounded-t-lg text-gray-200 text-sm bg-gray-700 p-2 flex items-center gap-2 justify-between cursor-pointer'>
 										<p>html</p>
 										<div className='flex items-center gap-1'>
 											<Files />
@@ -138,8 +134,7 @@ export const InsightChat = ({ hasLaunched, setHasLaunched }: any) => {
 				<CardFooter className='flex justify-between items-center'>
 					<Button
 						onClick={() => setHasLaunched(false)}
-						className='bg-white text-gray-900 hover:bg-white'
-					>
+						className='bg-white text-gray-900 hover:bg-white'>
 						Back
 					</Button>
 					<Button className='bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white'>

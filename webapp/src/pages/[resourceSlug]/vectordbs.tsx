@@ -54,6 +54,7 @@ export default function VectorDbs(props) {
 
 			{vectorDbs.length === 0 && (
 				<NewButtonSection
+					setOpen={() => {}}
 					link={`/${resourceSlug}/vectordb/add`}
 					emptyMessage={'No vector databases'}
 					message={'Get started by vector databases.'}

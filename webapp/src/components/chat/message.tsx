@@ -38,8 +38,7 @@ export function CopyToClipboardButton({ dataToCopy }) {
 		<button
 			onClick={handleCopyClick}
 			className='px-1 py-1 hover:bg-blue-600 hover:text-white text-gray-900 rounded-md shadow focus:outline-none focus:ring-2 focus:ring-blue-300'
-			aria-label='Copy to clipboard'
-		>
+			aria-label='Copy to clipboard'>
 			<ClipboardDocumentIcon className='h-5 w-5 ' />
 		</button>
 	);
@@ -53,7 +52,6 @@ function CollapsingCodeBody({ messageLanguage, messageContent, style, chunking }
 	const [collapsed, setCollapsed] = useState(isLongMessage && !chunking);
 	const codeBlockRef = useRef(null);
 	const PreWithRef = preProps => {
-		// console.log(preProps);
 		return <pre {...preProps} ref={codeBlockRef} />;
 	};
 	const cachedResult = useMemo(
@@ -71,8 +69,7 @@ function CollapsingCodeBody({ messageLanguage, messageContent, style, chunking }
 						style={style}
 						showLineNumbers={true}
 						PreTag={PreWithRef}
-						customStyle={{ margin: 0, maxHeight: collapsed ? '10em' : 'unset' }}
-					>
+						customStyle={{ margin: 0, maxHeight: collapsed ? '10em' : 'unset' }}>
 						{messageContent}
 					</SyntaxHighlighter>
 					{isLongMessage && !chunking && (
@@ -80,8 +77,7 @@ function CollapsingCodeBody({ messageLanguage, messageContent, style, chunking }
 							className='overlay-button btn bg-indigo-600 rounded-md text-white'
 							onClick={() => {
 								setCollapsed(oldCollapsed => !oldCollapsed);
-							}}
-						>
+							}}>
 							{collapsed ? 'Expand' : 'Collapse'}
 						</button>
 					)}
@@ -138,8 +134,7 @@ function MessageBody({ message, messageType, messageLanguage, style, chunking })
 									</code>
 								);
 							}
-						}}
-					>
+						}}>
 						{message}
 					</Markdown>
 				);
@@ -245,11 +240,9 @@ export function Message({
 
 	const profilePicture = (
 		<div
-			className={`min-w-max w-9 h-9 rounded-full flex items-center justify-center ${incoming ? 'ms-2 mt-auto' : 'me-2'} select-none`}
-		>
+			className={`min-w-max w-9 h-9 rounded-full flex items-center justify-center ${incoming ? 'ms-2 mt-auto' : 'me-2'} select-none`}>
 			<span
-				className={`overflow-hidden w-8 h-8 rounded-full text-center font-bold ring-gray-300 ring-1`}
-			>
+				className={`overflow-hidden w-8 h-8 rounded-full text-center font-bold ring-gray-300 ring-1`}>
 				<AgentAvatar agent={agent} size={8} />
 			</span>
 		</div>
@@ -259,12 +252,10 @@ export function Message({
 		//TODO: enum and handle "other" types not just like bubble
 		return (
 			<div
-				className={`grid grid-cols-1 xl:grid-cols-5 pb-2 bg-gray-50 dark:bg-slate-900 ${isFeedback && isLastMessage ? 'bg-yellow-50 dark:bg-slate-800' : ''}`}
-			>
+				className={`grid grid-cols-1 xl:grid-cols-5 pb-2 bg-gray-50 dark:bg-slate-900 ${isFeedback && isLastMessage ? 'bg-yellow-50 dark:bg-slate-800' : ''}`}>
 				<div className='invisible xl:visible col-span-1'></div>
 				<div
-					className={`me-auto ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} col-span-1 xl:col-span-3`}
-				>
+					className={`me-auto ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} col-span-1 xl:col-span-3`}>
 					<div className='flex text-sm text-white px-2 ms-11 col-span-1 xl:col-span-3 py-2 bg-slate-700 rounded-lg'>
 						{/* TODO: (tom) change how this works so bubles have a flag that says whether to show a spinner */}
 						{!ERROR_TEXTS.has(message) ? (
@@ -295,8 +286,7 @@ export function Message({
 				prevMessage && !sameAuthorAsPrevious ? 'dark:border-slate-900' : '',
 				incoming ? 'bg-gray-50 dark:bg-slate-900' : 'bg-gray-50 dark:bg-slate-900',
 				isFeedback && isLastMessage ? 'bg-yellow-50 dark:bg-slate-900' : ''
-			)}
-		>
+			)}>
 			<div className='invisible xl:visible col-span-1'></div>
 			<small className={`flex px-2 pt-4 col-span-1 xl:col-span-3 ${incoming ? 'justify-end' : ''}`}>
 				<strong className='capitalize pe-1'>{authorName.replaceAll('_', ' ')}</strong>
@@ -316,8 +306,7 @@ export function Message({
 						: 'bg-white dark:bg-slate-900',
 				incoming ? 'rounded-br-none' : 'rounded-tl-none',
 				messageType !== 'code' ? 'px-3 py-2' : 'p-2 w-full'
-			)}
-		>
+			)}>
 			<div className={`${incoming ? 'text-white' : ''} w-full`}>
 				{isThought ? (
 					<details open={isLastMessage}>
@@ -342,8 +331,7 @@ export function Message({
 					/>
 				)}
 				<small
-					className={`flex justify-end pt-1 ${incoming ? 'text-indigo-300' : isThought ? 'text-white' : 'text-gray-500 dark:text-white'}`}
-				>
+					className={`flex justify-end pt-1 ${incoming ? 'text-indigo-300' : isThought ? 'text-white' : 'text-gray-500 dark:text-white'}`}>
 					{tokens > 0 && (
 						<span className='me-1'>
 							{tokens.toLocaleString()} token{tokens === 1 ? '' : 's'} -{' '}
@@ -352,8 +340,7 @@ export function Message({
 					<time
 						className='cursor-pointer'
 						title={today ? dateString : relativeDateString}
-						dateTime={messageDate.toISOString()}
-					>
+						dateTime={messageDate.toISOString()}>
 						{today ? relativeDateString : dateString}
 					</time>
 				</small>
@@ -365,12 +352,10 @@ export function Message({
 		<>
 			{authorNameSection}
 			<div
-				className={`grid grid-cols-1 xl:grid-cols-5 pb-2 ${incoming ? 'bg-gray-50 dark:bg-slate-900' : 'bg-gray-50 dark:bg-slate-900'} ${isFeedback && isLastMessage ? 'bg-yellow-50 dark:bg-slate-800' : ''} ${isLastSeen && !isLastMessage && !isFeedback ? 'border-b border-red-500' : ''}`}
-			>
+				className={`grid grid-cols-1 xl:grid-cols-5 pb-2 ${incoming ? 'bg-gray-50 dark:bg-slate-900' : 'bg-gray-50 dark:bg-slate-900'} ${isFeedback && isLastMessage ? 'bg-yellow-50 dark:bg-slate-800' : ''} ${isLastSeen && !isLastMessage && !isFeedback ? 'border-b border-red-500' : ''}`}>
 				<div className='invisible xl:visible col-span-1'></div>
 				<div
-					className={`flex ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} px-4 pt-1 col-span-1 xl:col-span-3`}
-				>
+					className={`flex ${incoming ? 'pe-2 justify-end' : 'ps-2 justify-start'} px-4 pt-1 col-span-1 xl:col-span-3`}>
 					{!incoming && profilePicture}
 					{messageBodySection}
 					{incoming && profilePicture}

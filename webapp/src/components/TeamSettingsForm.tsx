@@ -7,10 +7,16 @@ import cn from 'utils/cn';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
-import { FiEdit } from 'react-icons/fi';  // Pencil icon from react-icons
+import { FiEdit } from 'react-icons/fi'; // Pencil icon from react-icons
 import { FaCircle } from 'react-icons/fa';
 
-export default function TeamSettingsForm({ callback, memberCount }: { callback?: Function; memberCount: number }) {
+export default function TeamSettingsForm({
+	callback,
+	memberCount
+}: {
+	callback?: Function;
+	memberCount: number;
+}) {
 	const [accountContext]: any = useAccountContext();
 	const { csrf, account, teamName } = accountContext as any;
 	const router = useRouter();
@@ -19,9 +25,7 @@ export default function TeamSettingsForm({ callback, memberCount }: { callback?:
 	const [saving, setSaving] = useState(false);
 	const [isEditing, setIsEditing] = useState(false);
 
-
-
-	async function handleSubmit(e : any) {
+	async function handleSubmit(e: any) {
 		setSaving(true);
 		e.preventDefault();
 
@@ -54,10 +58,10 @@ export default function TeamSettingsForm({ callback, memberCount }: { callback?:
 		<div>
 			{/* If not editing, show team name with pencil icon */}
 			{!isEditing ? (
-				<div className="flex items-center space-x-2">
-					<span className="text-2xl font-medium text-gray-800 dark:text-white">{name}</span>
-					<div onClick={() => setIsEditing(true)} className="cursor-pointer">
-						<FiEdit className="text-md text-gray-400 hover:text-indigo-600" />
+				<div className='flex items-center space-x-2'>
+					<span className='text-2xl font-medium text-gray-800 dark:text-white'>{name}</span>
+					<div onClick={() => setIsEditing(true)} className='cursor-pointer'>
+						<FiEdit className='text-md text-gray-400 hover:text-indigo-600' />
 					</div>
 				</div>
 			) : (
@@ -99,7 +103,11 @@ export default function TeamSettingsForm({ callback, memberCount }: { callback?:
 					</div>
 				</form>
 			)}
-			<span className="text-gray-500 text-sm">Team<FaCircle className="inline-block h-1 w-2 mx-[0.20rem]" />{memberCount} Members</span>
+			<span className='text-gray-500 text-sm'>
+				Team
+				<FaCircle className='inline-block h-1 w-2 mx-[0.20rem]' />
+				{memberCount} Members
+			</span>
 		</div>
 	);
 }

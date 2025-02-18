@@ -56,6 +56,7 @@ export default function Tools(props) {
 
 			{tools.length === 0 && (
 				<NewButtonSection
+					setOpen={() => {}}
 					link={`/${resourceSlug}/tool/add`}
 					emptyMessage={'No tools'}
 					icon={

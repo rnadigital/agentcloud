@@ -44,7 +44,6 @@ export async function vectorDbsJson(req, res, next) {
  * Variable JSON data
  */
 export async function vectorDbJson(req, res, next) {
-	console.log('getching');
 	const vectorDb = await getVectorDbById(req.params.vectorDbId);
 	if (!vectorDb) {
 		return res.status(404).json({ error: 'VectorDb not found' });

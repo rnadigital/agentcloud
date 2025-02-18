@@ -89,7 +89,8 @@ export default function ApiKeyForm({ callback }: { callback: () => void }) {
 					onSubmit={handleSubmit(onSubmit)}
 					action='/forms/account/apikey/add'
 					method='POST'
-					className='space-y-4'>
+					className='space-y-4'
+				>
 					<div className='w-full'>
 						<InputField<ApiKeyFormValues>
 							name='name'
@@ -169,7 +170,8 @@ export default function ApiKeyForm({ callback }: { callback: () => void }) {
 						</Link>
 						<button
 							type='submit'
-							className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'>
+							className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+						>
 							Submit
 						</button>
 					</div>

@@ -33,7 +33,6 @@ export default function FunctionToolForm({
 	const onInitializePane: MonacoOnInitializePane = (monacoEditorRef, editorRef, model) => {
 		/* noop */
 	};
-	console.log('isModal', isModal);
 	return (
 		<>
 			<div>

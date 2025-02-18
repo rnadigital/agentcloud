@@ -45,7 +45,8 @@ export default function APIKeys(props) {
 
 				<button
 					onClick={() => setCreateKeyOpen(true)}
-					className='flex items-center gap-2 bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white py-2.5 px-4 rounded-lg'>
+					className='flex items-center gap-2 bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white py-2.5 px-4 rounded-lg'
+				>
 					<CirclePlus width={14} />
 					<p className='font-semibold text-sm'>New Key</p>
 				</button>

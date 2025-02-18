@@ -93,6 +93,8 @@ export default function Org(props) {
 			)}
 
 			<PageTitleWithNewButton
+				searchQuery=''
+				setSearchQuery={() => {}}
 				list={members}
 				title='Org Members'
 				buttonText='Invite Member'

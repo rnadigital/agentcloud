@@ -294,10 +294,10 @@ export default function Apps({
 	const handleAgentUpdate = async (updatedAgent: Agent) => {
 		try {
 			setIsAgentUpdating(true);
-			
-			 // First fetch fresh data
+
+			// First fetch fresh data
 			await fetchFormData();
-			
+
 			// Then find the latest version of the agent from updated choices
 			const freshAgent = agentChoices.find(a => a._id === updatedAgent._id);
 			if (freshAgent) {
@@ -325,7 +325,7 @@ export default function Apps({
 
 	const refreshAgentData = async () => {
 		if (isAgentUpdating) return;
-		
+
 		try {
 			await fetchFormData();
 			if (selectedAgent?._id) {
@@ -355,7 +355,8 @@ export default function Apps({
 				<div className='flex border border-gray-200 rounded-lg'>
 					<form
 						className='flex flex-col justify-between border border-gray-200 rounded-l-lg w-full minh-[790px]'
-						onSubmit={appPost}>
+						onSubmit={appPost}
+					>
 						<article className='flex flex-col p-5 gap-6'>
 							<div className='flex items-center gap-3 h-24'>
 								<img className='rounded-3xl' src='/apps/identicon.png' />
@@ -387,7 +388,8 @@ export default function Apps({
 														setAppName('');
 													}
 												}}
-												className='hover:text-[#4F46E5] transition-colors'>
+												className='hover:text-[#4F46E5] transition-colors'
+											>
 												<Pencil width={20} />
 											</button>
 										</div>
@@ -463,7 +465,8 @@ export default function Apps({
 									<div key={starter.id} className='flex items-center gap-2'>
 										<div
 											className='bg-gray-50 px-4 py-3 w-full border border-gray-300 rounded-lg'
-											onClick={() => setEditingStarterId(starter.id)}>
+											onClick={() => setEditingStarterId(starter.id)}
+										>
 											{editingStarterId === starter.id ? (
 												<input
 													type='text'
@@ -500,7 +503,8 @@ export default function Apps({
 								))}
 								<p
 									className='text-[#4F46E5] cursor-pointer self-end hover:text-[#3730a3]'
-									onClick={handleAddStarter}>
+									onClick={handleAddStarter}
+								>
 									+ Add
 								</p>
 							</div>
@@ -534,7 +538,8 @@ export default function Apps({
 							<div className='sm:col-span-'>
 								<label
 									htmlFor='maxMessages'
-									className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+									className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+								>
 									Max Messages
 								</label>
 								<input
@@ -554,13 +559,15 @@ export default function Apps({
 							<Button
 								type='button'
 								variant='ghost'
-								className='bg-transparent text-foreground hover:bg-transparent hover:text-foreground p-0 border-0 shadow-none outline-none'>
+								className='bg-transparent text-foreground hover:bg-transparent hover:text-foreground p-0 border-0 shadow-none outline-none'
+							>
 								Cancel
 							</Button>
 							<Button
 								onClick={() => setRun(false)}
 								variant='ghost'
-								className='ml-auto bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white font-medium text-sm py-2 hover:text-white'>
+								className='ml-auto bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white font-medium text-sm py-2 hover:text-white'
+							>
 								Save
 							</Button>
 							<Button
@@ -569,7 +576,8 @@ export default function Apps({
 									setRun(true);
 								}}
 								variant='ghost'
-								className='ml-2 bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white font-medium text-sm py-2 hover:text-white'>
+								className='ml-2 bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white font-medium text-sm py-2 hover:text-white'
+							>
 								Save & Launch
 							</Button>
 						</article>

@@ -45,7 +45,8 @@ export const Install = ({
 						setScreen('initial');
 					}
 					setActiveTab('my-tools');
-				}}>
+				}}
+			>
 				{type === 'page' ? 'Go to My Tools' : 'Add Tool to Agent'}
 			</Button>
 		</section>
