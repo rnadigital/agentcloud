@@ -128,7 +128,6 @@ const DataSourceDetails = () => {
 	useEffect(() => {
 		if (!embeddingField) {
 			const initialEmbeddingField = getInitialEmbeddingField();
-			console.log('setting initial embedding field', initialEmbeddingField);
 			setStore({ embeddingField: initialEmbeddingField });
 		}
 	}, [stagedDatasource]);
@@ -139,8 +138,7 @@ const DataSourceDetails = () => {
 				<div>
 					<label
 						htmlFor='embeddingField'
-						className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-					>
+						className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 						Field To Embed<span className='text-red-700'> *</span>
 					</label>
 					<div>
@@ -152,8 +150,7 @@ const DataSourceDetails = () => {
 								setStore({ embeddingField: e.target.value });
 							}}
 							value={embeddingField}
-							className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-						>
+							className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'>
 							<optgroup label='Select field to embed' key='embeddingField_optgroup_0' disabled>
 								Select field to embed
 							</optgroup>
@@ -228,8 +225,7 @@ const DataSourceDetails = () => {
 					<div className='mt-2'>
 						<label
 							htmlFor='toolDecayRate'
-							className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-						>
+							className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 							Decay Rate
 						</label>
 						<div>
@@ -300,15 +296,13 @@ const DataSourceDetails = () => {
 				<div className=''>
 					<label
 						htmlFor='overlap_all'
-						className='inline-flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-					>
+						className='inline-flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 						Enable row chunking
 						<span className='ml-2'>
 							<ToolTip
 								content='If enabled, applies the configured chunking strategy to the "Field to embed". Useful if your field to embed contains text or markdown that needs to be broken into smaller chunks.'
 								placement='top'
-								arrow={true}
-							>
+								arrow={true}>
 								<InformationCircleIcon className='h-4 w-4' />
 							</ToolTip>
 						</span>
@@ -334,8 +328,7 @@ const DataSourceDetails = () => {
 					<button
 						type='button'
 						className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-						onClick={moveToNextStep}
-					>
+						onClick={moveToNextStep}>
 						Continue
 					</button>
 				</div>

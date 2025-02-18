@@ -53,6 +53,7 @@
     "@radix-ui/react-tabs": "^1.1.2",
     "@radix-ui/react-toast": "^1.2.4",
     "@react-email/components": "^0.0.21",
+    "@react-email/render": "^1.0.5",
     "@rjsf/core": "^5.15.1",
     "@rjsf/utils": "^5.15.1",
     "@rjsf/validator-ajv8": "^5.15.1",

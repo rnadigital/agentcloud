@@ -21,7 +21,6 @@ export const ConnectionsTable = ({
 	const { resourceSlug } = router.query;
 
 	const columns = ['Name', 'Source', 'Destination', 'Status', 'Sync', 'Actions'];
-	console.log(datasources);
 
 	const goToDatasourcePage = (id: string) => {
 		router.push(`/${resourceSlug}/connections/${id}`);
@@ -47,8 +46,7 @@ export const ConnectionsTable = ({
 					<TableRow
 						onClick={() => goToDatasourcePage(connection._id.toString())}
 						className='py-4 cursor-pointer text-foreground'
-						key={index}
-					>
+						key={index}>
 						<TableCell className='p-5'>
 							<div>
 								<p className='font-semibold'>{connection.name}</p>
@@ -71,8 +69,7 @@ export const ConnectionsTable = ({
 												: connection.status === DatasourceStatus.EMBEDDING
 													? 'bg-purple-100 text-purple-700'
 													: 'bg-red-100 text-red-700'
-								}`}
-							>
+								}`}>
 								{connection.status === DatasourceStatus.READY ? (
 									<CircleCheck width={15} />
 								) : connection.status === DatasourceStatus.DRAFT ? (

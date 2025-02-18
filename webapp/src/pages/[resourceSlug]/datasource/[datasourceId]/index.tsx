@@ -212,8 +212,6 @@ export default function Datasource(props) {
 		return <Spinner />;
 	}
 
-	console.log('datasource.streamConfig', datasource.streamConfig);
-
 	return (
 		<>
 			<Head>

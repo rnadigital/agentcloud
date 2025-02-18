@@ -167,7 +167,6 @@ export async function testDatasourceApi(req, res, next) {
 	}
 
 	const connector = (await getConnectorSpecification(connectorId)) as any;
-	log('connector', connector);
 
 	const connectorList = await getConnectors();
 	const submittedConnector = connectorList.find(c => c.definitionId === connectorId);
@@ -623,7 +622,6 @@ export async function updateDatasourceScheduleApi(req, res, next) {
 			.then(res => res.data);
 		log('updatedConnection', updatedConnection);
 	} catch (e) {
-		console.log(JSON.stringify(e, null, 2));
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
@@ -823,7 +821,6 @@ export async function syncDatasourceApi(req, res, next) {
 			log('createdJob', createdJob);
 		} catch (e) {
 			log(e);
-			console.log(e);
 			return dynamicResponse(req, res, 400, { error: 'Error submitting sync job' });
 		}
 

@@ -12,7 +12,6 @@ export default function EditVariable(props) {
 	const { teamName } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug, vectorDbId } = router.query;
-	console.log(vectorDbId);
 	const [vectorDb, setVectorDb] = useState<VectorDbDocument>(props.variable);
 	const [error, setError] = useState();
 
