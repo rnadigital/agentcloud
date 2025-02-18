@@ -13,7 +13,6 @@ export default function TrialNag() {
 	const { account, csrf } = accountContext as any;
 	const { currentOrgDateCreated } = account || {};
 	const { stripePlan, stripeTrial, stripeEndsAt, stripeCancelled } = account?.stripe || {};
-	console.log(account);
 
 	const now = Date.now();
 	const orgCreatedDate = new Date(currentOrgDateCreated).getTime();
