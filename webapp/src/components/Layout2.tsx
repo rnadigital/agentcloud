@@ -77,8 +77,7 @@ const agentNavigation: any[] = [
 				height='24'
 				viewBox='0 0 24 24'
 				fill='none'
-				xmlns='http://www.w3.org/2000/svg'
-			>
+				xmlns='http://www.w3.org/2000/svg'>
 				<path
 					d='M22.125 11.85C21.7125 11.5875 21.225 11.7375 20.9625 12.1125L16.9875 18.4125C16.9125 18.4875 16.8375 18.6 16.8 18.7125C16.725 18.825 16.6875 18.9375 16.6875 19.05L15.375 22.5L18 19.8375C18.075 19.7625 18.15 19.6875 18.225 19.6125C18.3 19.5375 18.375 19.425 18.4125 19.3125L22.3875 13.0125C22.6125 12.6 22.5 12.075 22.125 11.85Z'
 					fill='currentColor'
@@ -335,15 +334,13 @@ export default withRouter(function Layout(props) {
 										<li key={link.name} className='p-2.5 flex gap-2 items-center'>
 											<Link
 												className='flex items-center gap-2'
-												href={link.noResourceSlug ? link.path : `/${resourceSlug}${link.path}`}
-											>
+												href={link.noResourceSlug ? link.path : `/${resourceSlug}${link.path}`}>
 												{link.icon ? link.icon : <img width={15} src={link.imgPath} />}
 												<p
 													className={cn(
 														'cursor-pointer hover:text-gray-300',
 														path?.endsWith(link.path) ? 'text-gray-100' : 'text-gray-300'
-													)}
-												>
+													)}>
 													{link.name}
 												</p>
 											</Link>
@@ -357,15 +354,13 @@ export default withRouter(function Layout(props) {
 									<Link
 										key={item.id}
 										href={`/${resourceSlug}${item.href}`}
-										className='p-2.5 flex gap-2 items-center'
-									>
+										className='p-2.5 flex gap-2 items-center'>
 										{item.icon}
 										<p
 											className={cn(
 												'cursor-pointer hover:text-gray-300',
 												path?.endsWith(item.href) ? 'text-gray-100' : 'text-gray-300'
-											)}
-										>
+											)}>
 											{item.name}
 										</p>
 									</Link>
@@ -384,8 +379,7 @@ export default withRouter(function Layout(props) {
 											null,
 											router
 										);
-									}}
-								>
+									}}>
 									<LogOut width={15} />
 									<p>Logout</p>
 								</button>
@@ -414,19 +408,6 @@ export default withRouter(function Layout(props) {
 						</div>
 					</SidebarContent>
 					<SidebarFooter>
-						<div className='w-full bg-background rounded-lg p-4 mt-2 flex text-foreground flex-col gap-2'>
-							<p className='font-bold'>{account?.stripe?.stripePlan} Plan</p>
-							<p className='text-xs text-gray-500' suppressHydrationWarning>
-								Until {calculateUntilDate(account?.currentOrgDateCreated)}
-							</p>
-							<Progress value={account?.stripe?.stripeAddons?.storage} />
-							<p
-								className='text-sm text-[#4f46e5] cursor-pointer font-bold'
-								onClick={() => router.push('/billing')}
-							>
-								Upgrade your plan
-							</p>
-						</div>
 						<TrialNag />
 					</SidebarFooter>
 				</Sidebar>
@@ -453,8 +434,7 @@ export default withRouter(function Layout(props) {
 										<span className='hidden lg:flex lg:items-center ps-2'>
 											<span
 												className='text-sm font-semibold leading-6 text-gray-900 dark:text-white'
-												aria-hidden='true'
-											>
+												aria-hidden='true'>
 												{account.name}
 											</span>
 											<ChevronDownIcon
@@ -470,8 +450,7 @@ export default withRouter(function Layout(props) {
 										enterTo='transform opacity-100 scale-100'
 										leave='transition ease-in duration-75'
 										leaveFrom='transform opacity-100 scale-100'
-										leaveTo='transform opacity-0 scale-95'
-									>
+										leaveTo='transform opacity-0 scale-95'>
 										<Menu.Items className='absolute right-0 z-10 mt-2.5 w-64 origin-top-right rounded-md bg-white dark:bg-slate-800 py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none'>
 											{account && (
 												<div className='px-3 py-3 dark:text-white' key='accountdetails'>
@@ -503,8 +482,7 @@ export default withRouter(function Layout(props) {
 																			null,
 																			router
 																		);
-																	}}
-																>
+																	}}>
 																	Log out
 																</button>
 															);
@@ -519,8 +497,7 @@ export default withRouter(function Layout(props) {
 																		<Switch
 																			checked={developerMode}
 																			onChange={() => toggleDeveloperMode()}
-																			className='group relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer items-center justify-center rounded-full focus:outline-none focus:ring-0 active:bg-transparent'
-																		>
+																			className='group relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer items-center justify-center rounded-full focus:outline-none focus:ring-0 active:bg-transparent'>
 																			<span className='sr-only'>Use setting</span>
 																			<span
 																				aria-hidden='true'
@@ -551,20 +528,17 @@ export default withRouter(function Layout(props) {
 																	</p>
 																	<button
 																		className='w-full text-left px-3 py-1.5 text-sm hover:bg-gray-50 dark:hover:bg-slate-700 dark:text-white'
-																		onClick={() => toggleTheme('light')}
-																	>
+																		onClick={() => toggleTheme('light')}>
 																		Light
 																	</button>
 																	<button
 																		className='w-full text-left px-3 py-1.5 text-sm hover:bg-gray-50 dark:hover:bg-slate-700 dark:text-white'
-																		onClick={() => toggleTheme('dark')}
-																	>
+																		onClick={() => toggleTheme('dark')}>
 																		Dark
 																	</button>
 																	<button
 																		className='w-full text-left px-3 py-1.5 text-sm hover:bg-gray-50 dark:hover:bg-slate-700 dark:text-white'
-																		onClick={() => toggleUseSystemTheme()}
-																	>
+																		onClick={() => toggleUseSystemTheme()}>
 																		System
 																	</button>
 
@@ -578,8 +552,7 @@ export default withRouter(function Layout(props) {
 																className={cn(
 																	active ? 'bg-gray-50 dark:bg-slate-700' : '',
 																	'block px-3 py-1 text-sm leading-6 text-gray-900 dark:text-white'
-																)}
-															>
+																)}>
 																{item.name}
 															</a>
 														);
