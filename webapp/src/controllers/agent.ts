@@ -271,7 +271,6 @@ export async function addAgentApi(req, res, next) {
  * @apiParam {String} systemMessage Definition of skills, tasks, boundaries, outputs
  */
 export async function editAgentApi(req, res, next) {
-	console.log('Trigger edit');
 	const {
 		toolIds,
 		name,

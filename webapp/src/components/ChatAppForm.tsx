@@ -76,7 +76,6 @@ export default function ChatAppForm({
 			? app?.chatAppConfig?.conversationStarters.map(x => ({ name: x }))
 			: [{ name: '' }]
 	);
-	console.log(conversationStarters);
 	const [agentName, setAgentName] = useState(initialAgent?.name || '');
 	const [role, setRole] = useState(initialAgent?.role || '');
 	const [goal, setGoal] = useState(initialAgent?.goal || '');
@@ -317,7 +316,6 @@ export default function ChatAppForm({
 	};
 
 	async function createDatasourceCallback(createdDatasource) {
-		console.log('createDatasourceCallback', createdDatasource);
 		(await fetchFormData) && fetchFormData();
 		setDatasourceState(oldDatasources => {
 			const newOption = { label: createdDatasource.name, value: createdDatasource.datasourceId };
@@ -327,14 +325,12 @@ export default function ChatAppForm({
 	}
 
 	async function modelCallback(addedModelId) {
-		console.log('addedModelId', addedModelId);
 		(await fetchFormData) && fetchFormData();
 		setModelId(addedModelId);
 		setModalOpen(false);
 	}
 
 	async function toolCallback(addedToolId, addedTool) {
-		console.log('addedToolId', addedToolId);
 		(await fetchFormData) && fetchFormData();
 		if ((addedTool?.type as ToolType) == ToolType.RAG_TOOL) {
 			setDatasourceState(oldDatasourcesState =>

@@ -406,7 +406,6 @@ export async function addSessionApi(req, res, next) {
 	if (!skipRun && !hasVariables) {
 		const newSessionId = addedSession.insertedId.toString();
 		activeSessionRooms.push(`_${newSessionId}`);
-		console.log('activeSessionRooms after push', activeSessionRooms);
 		sessionTaskQueue.add(
 			'execute_rag',
 			{
@@ -632,8 +631,6 @@ export async function sendMessage(req, res, next) {
 			message: finalMessage
 		};
 		await upsertOrUpdateChatMessage(session._id, updatedMessage, chunk);
-
-		console.log('Message payload:', JSON.stringify(messagePayload, null, 2));
 
 		io.to(activeRoomSessionId).emit('message', messagePayload);
 

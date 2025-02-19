@@ -120,7 +120,6 @@ export async function addKeyApi(req, res, next) {
 		expirationDays == 'never' ? {} : { expiresIn: `${expirationDays}d` }
 	);
 
-	console.log('keyToken', keyToken);
 	//add the token back into the key object
 	const updatedKey = await addTokenToKey(addedKey?.insertedId, keyToken);
 

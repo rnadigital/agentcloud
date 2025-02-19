@@ -449,7 +449,6 @@ export async function editTaskApi(req, res, next) {
 
 	const existingVariablePromises = newVariableIdsArray.map(async (id: string) => {
 		const variable = await getVariableById(req.params.resourceSlug, id);
-		console.log(variable);
 		if (!variable) {
 			throw new Error(`Variable with ID ${id} not found`);
 		}

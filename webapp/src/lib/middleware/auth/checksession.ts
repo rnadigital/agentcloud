@@ -4,7 +4,6 @@ import { dynamicResponse } from '@dr';
 
 export default function checkSession(req, res, next) {
 	if (!res.locals.account?._id && !res.locals.isAgentBackend) {
-		// console.log("checkSession, reslocals: ", res.locals);
 		if (res.locals.isSocket) {
 			return res?.locals?.socket?.disconnect();
 		} else {

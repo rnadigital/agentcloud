@@ -37,7 +37,6 @@ import { chainValidations } from 'utils/validationutils';
 
 export async function teamData(req, res, _next) {
 	const team = await getTeamWithMembers(req.params.resourceSlug);
-	console.log('team', team);
 	return {
 		team,
 		csrf: req.csrfToken()

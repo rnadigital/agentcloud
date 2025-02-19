@@ -32,7 +32,6 @@ export default function AddConnection() {
 
 	useEffect(() => {
 		if (resourceSlug) {
-			console.log(resourceSlug);
 			initConnectors(router);
 			refreshAccountContext();
 		}

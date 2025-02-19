@@ -43,7 +43,6 @@ export default function Flow() {
 					x: event.clientX - 150,
 					y: event.clientY - 30
 				});
-			console.log('position', position);
 			const newNode = {
 				id: `${type}-${+new Date()}`,
 				type,
@@ -75,8 +74,7 @@ export default function Flow() {
 				onDrop={onDrop}
 				onDragOver={onDragOver}
 				colorMode={colorMode}
-				fitView
-			>
+				fitView>
 				<MiniMap />
 				<Background />
 				<Controls />
