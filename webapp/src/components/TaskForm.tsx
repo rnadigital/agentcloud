@@ -112,7 +112,6 @@ export default function TaskForm({
 	const requiredHumanInput = taskState?.requiresHumanInput;
 
 	const preferredAgent = agents.find(a => a?._id === taskState?.agentId);
-	console.log(preferredAgent);
 	const taskOutputVariable = variables.find(v => v.name === taskState?.taskOutputVariableName);
 	const [showToolConflictWarning, setShowToolConflictWarning] = useState(false);
 
@@ -143,7 +142,6 @@ export default function TaskForm({
 		initialDatasources.length > 0 ? initialDatasources : null
 	); //Note: still technically tools, just only RAG tools
 
-	console.log(datasourceState);
 	const [descriptionSelectedVariables, setDescriptionSelectedVariables] = useState<string[]>([]);
 	const [expectedOutputSelectedVariables, setExpectedOutputSelectedVariables] =
 		useState<string[]>();
@@ -416,8 +414,7 @@ export default function TaskForm({
 						<div className='col-span-full'>
 							<label
 								htmlFor='task_name'
-								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-							>
+								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								Name<span className='text-red-700'> *</span>
 							</label>
 							<Input
@@ -433,8 +430,7 @@ export default function TaskForm({
 						<div className='col-span-full'>
 							<label
 								htmlFor='task_description'
-								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-							>
+								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								Task Description<span className='text-red-700'> *</span>
 							</label>
 							<Textarea
@@ -465,8 +461,7 @@ export default function TaskForm({
 							<div className='flex w-full mb-2 items-center'>
 								<label
 									htmlFor='expectedOutput'
-									className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-								>
+									className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 									Expected Output<span className='text-red-700'> *</span>
 								</label>
 
@@ -476,8 +471,7 @@ export default function TaskForm({
 								<Switch
 									checked={isStructuredOutput}
 									onChange={setIsStructuredOutput}
-									className='group inline-flex h-5 w-11 items-center rounded-full bg-gray-400 transition data-[checked]:bg-blue-600'
-								>
+									className='group inline-flex h-5 w-11 items-center rounded-full bg-gray-400 transition data-[checked]:bg-blue-600'>
 									<span className='size-3 translate-x-1 rounded-full bg-white transition group-data-[checked]:translate-x-6' />
 								</Switch>
 							</div>
@@ -503,8 +497,7 @@ export default function TaskForm({
 										className='text-sm text-blue-500 dark:text-blue-400 underline'
 										href='https://docs.agentcloud.dev/documentation/guides/structure-output'
 										target='_blank'
-										rel='noreferrer'
-									>
+										rel='noreferrer'>
 										Instructions on how to create a schema for structure output
 									</a>
 								</>
@@ -599,8 +592,7 @@ export default function TaskForm({
 											};
 										});
 									}
-								}}
-							>
+								}}>
 								<SelectTrigger className='bg-white mt-4'>
 									<SelectValue
 										placeholder={
@@ -630,8 +622,7 @@ export default function TaskForm({
 								<InfoAlert
 									textColor='black'
 									className='col-span-full bg-yellow-100 text-yellow-900 p-4 text-sm rounded-md mt-3'
-									message='Agent Tool Conflict Warning'
-								>
+									message='Agent Tool Conflict Warning'>
 									We noticed you have added an agent with a tool associated to them. Please note,
 									since the tools are associated to the agents, they can be used on any task where
 									the agent is working. If you would like a more deterministic approach, please only
@@ -694,8 +685,7 @@ export default function TaskForm({
 									} else {
 										setFormFields(null);
 									}
-								}}
-							>
+								}}>
 								<SelectTrigger className='bg-white mt-2'>
 									<SelectValue placeholder='Select a human input type' />
 								</SelectTrigger>
@@ -724,8 +714,7 @@ export default function TaskForm({
 							<div className='p-6 bg-gray-100 rounded-md text-sm col-span-full '>
 								<label
 									htmlFor='requiresHumanInput'
-									className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-								>
+									className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 									Assign Task Output to Variable
 								</label>
 
@@ -749,8 +738,7 @@ export default function TaskForm({
 															taskOutputVariableName: value
 														};
 													});
-												}}
-											>
+												}}>
 												<SelectTrigger className='bg-white'>
 													<SelectValue placeholder='Select a variable' />
 												</SelectTrigger>
@@ -778,14 +766,12 @@ export default function TaskForm({
 							<ToolTip
 								content='Hides intermediate thought messages from agents and only display the final task output.'
 								placement='top-start'
-								arrow={false}
-							>
+								arrow={false}>
 								<div className='mt-2'>
 									<div className='sm:col-span-12'>
 										<label
 											htmlFor='displayOnlyFinalOutput'
-											className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-										>
+											className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 											<input
 												type='checkbox'
 												id='displayOnlyFinalOutput'
@@ -816,14 +802,12 @@ export default function TaskForm({
 							<ToolTip
 								content='Stores the task output in a file that can be downloaded by the user after the task is completed.'
 								placement='top-start'
-								arrow={false}
-							>
+								arrow={false}>
 								<div className='mt-2'>
 									<div className='sm:col-span-12'>
 										<label
 											htmlFor='storeTaskOutput'
-											className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-										>
+											className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 											<input
 												type='checkbox'
 												id='storeTaskOutput'
@@ -853,8 +837,7 @@ export default function TaskForm({
 								<div className='mt-2'>
 									<label
 										htmlFor='name'
-										className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-									>
+										className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 										Task Output File Name<span className='text-red-700'> *</span>
 									</label>
 									<input
@@ -904,8 +887,7 @@ export default function TaskForm({
 					{!compact && <Link href={`/${resourceSlug}/tasks`}>Back</Link>}
 					<button
 						type='submit'
-						className={`rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${compact ? 'w-full' : ''}`}
-					>
+						className={`rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${compact ? 'w-full' : ''}`}>
 						Save
 					</button>
 				</div>

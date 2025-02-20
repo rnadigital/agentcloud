@@ -412,8 +412,6 @@ export async function confirmChangePlan(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Could not find plan in pricing table' });
 	}
 
-	console.log(foundPlan);
-
 	if (
 		(!Array.isArray(paymentMethods?.data) || paymentMethods.data.length === 0) &&
 		foundPlan.price > 0

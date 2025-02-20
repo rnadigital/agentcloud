@@ -22,7 +22,6 @@ const MultiSelectField = ({
 }: MultiSelectFieldProps) => {
 	const { control, watch } = useFormContext();
 
-	console.log('MultiSelectField');
 	return (
 		<div>
 			<div className='flex items-center'>

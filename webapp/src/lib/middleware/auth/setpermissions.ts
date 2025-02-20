@@ -29,11 +29,6 @@ export function calcPerms(account, matchingOrg, matchingTeam) {
 			: Math.max(...Object.values(Permissions)); //If empty, get highest permission bit to use as bitfield size.
 		calculatedPermissions = new Permission(userPerms);
 
-		// calculatedPermissions.set(Permissions.EDIT_TEAM_MEMBER);
-		// console.log('account', account)
-		// console.log('matchingOrg', matchingOrg);
-		// console.log('matchingTeam', matchingTeam);
-
 		if (matchingOrg && matchingOrg.ownerId.toString() === account._id.toString()) {
 			// Setting  org owner perm
 			calculatedPermissions.set(Permissions.ORG_OWNER);

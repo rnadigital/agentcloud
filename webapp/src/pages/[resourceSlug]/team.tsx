@@ -26,10 +26,6 @@ export default function Team(props) {
 		await API.getTeam({ resourceSlug }, dispatch, setError, router);
 	}
 
-	useEffect(() => {
-		console.log('Team object:', team);
-	}, [team]);
-
 	async function refreshTeam() {
 		fetchTeam();
 		refreshAccountContext();

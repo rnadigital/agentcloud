@@ -141,7 +141,6 @@ export default function CreateDatasourceForm({
 	useEffect(() => {
 		if (!embeddingField) {
 			const initialEmbeddingField = getInitialEmbeddingField();
-			console.log('setting initial embedding field', initialEmbeddingField);
 			setEmbeddingField(getInitialEmbeddingField);
 		}
 	}, [discoveredSchema?.catalog?.streams?.length]);
@@ -374,8 +373,7 @@ export default function CreateDatasourceForm({
 						<div className='flex flex-col items-center space-y-2'>
 							<button
 								className='rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-								onClick={() => setStep(1)}
-							>
+								onClick={() => setStep(1)}>
 								File Upload
 							</button>
 							<div className='text-sm'>Upload a file from your computer.</div>
@@ -383,8 +381,7 @@ export default function CreateDatasourceForm({
 						<div className='flex flex-col items-center space-y-2'>
 							<button
 								className='rounded-md bg-cyan-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-cyan-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600'
-								onClick={() => setStep(2)}
-							>
+								onClick={() => setStep(2)}>
 								Data Connection
 							</button>
 							<div className='text-sm'>
@@ -410,13 +407,11 @@ export default function CreateDatasourceForm({
 							setDatasourceName('');
 							fetchDatasources();
 						}}
-						modalOpen={modelModalOpen}
-					>
+						modalOpen={modelModalOpen}>
 						<div>
 							<label
 								htmlFor='name'
-								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-							>
+								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								{/* cba moving */}
 								Datasource Name<span className='text-red-700'> *</span>
 							</label>
@@ -434,8 +429,7 @@ export default function CreateDatasourceForm({
 
 							<label
 								htmlFor='description'
-								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-2'
-							>
+								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-2'>
 								Description<span className='text-red-700'> *</span>
 							</label>
 							<div>
@@ -451,8 +445,7 @@ export default function CreateDatasourceForm({
 							</div>
 							<label
 								htmlFor='modelId'
-								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-3'
-							>
+								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-3'>
 								Embedding Model<span className='text-red-700'> *</span>
 							</label>
 							<div>
@@ -531,8 +524,7 @@ export default function CreateDatasourceForm({
 										<li
 											className={`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 	${
 												data.isSelected ? 'bg-blue-100 text-blue-500' : 'dark:text-white'
-											}`}
-										>
+											}`}>
 											<span className='flex justify-between'>
 												<span>
 													{data?.icon && (
@@ -549,8 +541,7 @@ export default function CreateDatasourceForm({
 														'px-1 rounded-full',
 														data.planAvailable === true ? 'bg-green-300' : 'bg-orange-200',
 														data.planAvailable === true ? 'text-green-800' : 'text-orange-800'
-													)}
-												>
+													)}>
 													{data.planAvailable ? (
 														<span className='flex mx-0.5'>
 															<CheckCircleIcon className='mt-0.5 h-4 w-4 me-1' /> Available
@@ -577,8 +568,7 @@ export default function CreateDatasourceForm({
 											<div>
 												<label
 													htmlFor='name'
-													className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-2'
-												>
+													className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-2'>
 													Datasource Name<span className='text-red-700'> *</span>
 												</label>
 												<div>
@@ -596,8 +586,7 @@ export default function CreateDatasourceForm({
 											<div>
 												<label
 													htmlFor='description'
-													className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-												>
+													className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 													Description<span className='text-red-700'> *</span>
 												</label>
 												<div>
@@ -648,8 +637,7 @@ export default function CreateDatasourceForm({
 							onSubmit={(e: any) => {
 								e.preventDefault();
 								setStep(4);
-							}}
-						>
+							}}>
 							<StreamsList
 								streams={discoveredSchema.catalog?.streams}
 								streamProperties={streamProperties}
@@ -659,8 +647,7 @@ export default function CreateDatasourceForm({
 								<button
 									disabled={submitting}
 									type='submit'
-									className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-								>
+									className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'>
 									{submitting && <ButtonSpinner />}
 									Continue
 								</button>
@@ -675,14 +662,12 @@ export default function CreateDatasourceForm({
 							onSubmit={e => {
 								e.preventDefault();
 								datasourcePost();
-							}}
-						>
+							}}>
 							<div className='space-y-4'>
 								<div>
 									<label
 										htmlFor='modelId'
-										className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-3'
-									>
+										className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-3'>
 										Vector Database<span className='text-red-700'> *</span>
 									</label>
 									<div>
@@ -712,15 +697,13 @@ export default function CreateDatasourceForm({
 											<div className='mt-2'>
 												<label
 													htmlFor='collectionName'
-													className='text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 inline-flex items-center'
-												>
+													className='text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 inline-flex items-center'>
 													Index
 													<span className='ml-1'>
 														<ToolTip
 															content='Your vector data will be stored in this index, organized under a unique namespace associated with the datasource ID.'
 															placement='top'
-															arrow={true}
-														>
+															arrow={true}>
 															<InformationCircleIcon className='h-4 w-4' />
 														</ToolTip>
 													</span>
@@ -745,8 +728,7 @@ export default function CreateDatasourceForm({
 												<div>
 													<label
 														htmlFor='cloudProvider'
-														className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-													>
+														className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 														Cloud Provider
 														<span className='text-red-700'> *</span>
 													</label>
@@ -758,8 +740,7 @@ export default function CreateDatasourceForm({
 														className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 														disabled={
 															byoVectorDb && (!foundVectorDb || foundVectorDb.type !== 'pinecone')
-														}
-													>
+														}>
 														<option value=''>Select Cloud</option>
 														{Object.values(Cloud).map(c => (
 															<option key={c} value={c}>
@@ -772,8 +753,7 @@ export default function CreateDatasourceForm({
 												<div>
 													<label
 														htmlFor='region'
-														className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-													>
+														className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 														Region
 														<span className='text-red-700'> *</span>
 													</label>
@@ -785,8 +765,7 @@ export default function CreateDatasourceForm({
 														className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 														disabled={
 															byoVectorDb && (!foundVectorDb || foundVectorDb.type !== 'pinecone')
-														}
-													>
+														}>
 														<option value=''>Select Region</option>
 														{CloudRegionMap[cloud].map(r => (
 															<option key={r} value={r}>
@@ -802,8 +781,7 @@ export default function CreateDatasourceForm({
 											<div className='sm:col-span-12'>
 												<label
 													htmlFor='displayOnlyFinalOutput'
-													className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-												>
+													className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 													<input
 														type='checkbox'
 														checked={!byoVectorDb}
@@ -822,8 +800,7 @@ export default function CreateDatasourceForm({
 
 									<label
 										htmlFor='embeddingField'
-										className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-									>
+										className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 										Field To Embed<span className='text-red-700'> *</span>
 									</label>
 									<div>
@@ -833,8 +810,7 @@ export default function CreateDatasourceForm({
 											id='embeddingField'
 											onChange={e => setEmbeddingField(e.target.value)}
 											value={embeddingField}
-											className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-										>
+											className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'>
 											{Object.entries(streamState)
 												.filter((e: [string, StreamConfig]) => e[1].checkedChildren.length > 0)
 												.map((stream: [string, StreamConfig], ei: number) => {
@@ -881,8 +857,7 @@ export default function CreateDatasourceForm({
 								<div>
 									<label
 										htmlFor='modelId'
-										className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-									>
+										className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 										Embedding Model
 									</label>
 									<div>
@@ -935,15 +910,13 @@ export default function CreateDatasourceForm({
 								<div className='mt-4'>
 									<label
 										htmlFor='overlap_all'
-										className='inline-flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-									>
+										className='inline-flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 										Enable row chunking
 										<span className='ml-2'>
 											<ToolTip
 												content='If enabled, applies the configured chunking strategy to the "Field to embed". Useful if your field to embed contains text or markdown that needs to be broken into smaller chunks.'
 												placement='top'
-												arrow={true}
-											>
+												arrow={true}>
 												<InformationCircleIcon className='h-4 w-4' />
 											</ToolTip>
 										</span>
@@ -966,8 +939,7 @@ export default function CreateDatasourceForm({
 								<button
 									// disabled={submitting}
 									type='submit'
-									className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-								>
+									className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'>
 									{submitting && <ButtonSpinner />}
 									Submit
 								</button>
@@ -1021,8 +993,7 @@ export default function CreateDatasourceForm({
 								{step > stepData.steps[stepData.steps.length - 1] ? (
 									<a
 										href={stepData.href}
-										className='group flex flex-col border-l-4 border-indigo-600 py-2 pl-4 hover:border-indigo-800 md:border-l-0 md:border-t-4 md:pb-0 md:pl-0 md:pt-4 dark:text-gray-50'
-									>
+										className='group flex flex-col border-l-4 border-indigo-600 py-2 pl-4 hover:border-indigo-800 md:border-l-0 md:border-t-4 md:pb-0 md:pl-0 md:pt-4 dark:text-gray-50'>
 										<span className='text-sm font-medium text-indigo-600 group-hover:text-indigo-800'>
 											{stepData.id}
 										</span>
@@ -1032,16 +1003,14 @@ export default function CreateDatasourceForm({
 									<a
 										href={stepData.href}
 										className='flex flex-col border-l-4 border-indigo-600 py-2 pl-4 md:border-l-0 md:border-t-4 md:pb-0 md:pl-0 md:pt-4'
-										aria-current='step'
-									>
+										aria-current='step'>
 										<span className='text-sm font-medium text-indigo-600'>{stepData.id}</span>
 										<span className='text-sm font-medium'>{stepData.name}</span>
 									</a>
 								) : (
 									<a
 										href={stepData.href}
-										className='group flex flex-col border-l-4 border-gray-200 py-2 pl-4 hover:border-gray-300 md:border-l-0 md:border-t-4 md:pb-0 md:pl-0 md:pt-4 dark:text-white'
-									>
+										className='group flex flex-col border-l-4 border-gray-200 py-2 pl-4 hover:border-gray-300 md:border-l-0 md:border-t-4 md:pb-0 md:pl-0 md:pt-4 dark:text-white'>
 										<span className='text-sm font-medium text-gray-500 group-hover:text-gray-700 dark:text-gray-50'>
 											{stepData.id}
 										</span>

@@ -244,7 +244,6 @@ export async function init() {
 		if (airbyteAdminDestination) {
 			const currentConfig = airbyteAdminDestination.connectionConfiguration;
 			const newConfig = await getDestinationConfiguration(provider);
-			console.log('newConfig', newConfig);
 			const configMismatch = Object.keys(newConfig).some(key => {
 				if (currentConfig && currentConfig[key] === '**********') {
 					//hidden fields
@@ -252,7 +251,6 @@ export async function init() {
 				}
 				return currentConfig && currentConfig[key] !== newConfig[key];
 			});
-			console.log('configMismatch', configMismatch);
 			if (configMismatch) {
 				log('Destination configuration mismatch detected, attempting to delete and re-create...');
 				await deleteDestination(airbyteAdminDestination.destinationId);

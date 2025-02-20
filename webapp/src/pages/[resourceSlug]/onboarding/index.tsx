@@ -74,7 +74,6 @@ export default function Onboarding() {
 			<Head>
 				<title>Register</title>
 			</Head>
-			{console.log('current step', currentStep)}
 
 			<div className='flex flex-1 bg-white'>
 				<LeftFrame>

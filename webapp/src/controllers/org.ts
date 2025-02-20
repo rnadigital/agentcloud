@@ -74,7 +74,6 @@ export async function vectorStorageAllTeams(req, res, next) {
 	await Promise.all(
 		data.teamIds.map(async teamId => {
 			const usageData = await VectorDBProxyClient.getVectorStorageForTeam(teamId);
-			console.log('orgController usageData: ', usageData);
 			teamObject[teamId.toString()] = usageData;
 		})
 	);
@@ -84,7 +83,6 @@ export async function vectorStorageAllTeams(req, res, next) {
 
 export async function memberEditPage(app, req, res, next) {
 	const data = await orgMemberData(req, res, next);
-	console.log('data', data);
 	res.locals.data = { ...data, account: res.locals.account };
 	return app.render(req, res, `/${req.params.resourceSlug}/org/${req.params.memberId}/edit`);
 }
