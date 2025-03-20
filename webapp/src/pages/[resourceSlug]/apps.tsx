@@ -42,8 +42,6 @@ import { SharingMode } from 'struct/sharing';
 import { toast } from 'react-toastify';
 import ChatAppForm2 from 'components/ChatAppForm2';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from 'modules/components/ui/sheet';
-import { Model } from 'db/model';
-import { Agent } from 'struct/agent';
 
 const DeleteDialog = ({
 	openDeleteDialog,
@@ -100,83 +98,6 @@ const DeleteDialog = ({
 	);
 };
 
-const EditAppSheet = ({
-	open,
-	setOpen,
-	selectedApp,
-	onAppUpdate,
-	toolChoices,
-	modelChoices,
-	agentChoices,
-	fetchFormData // Add this prop
-}: {
-	open: boolean;
-	setOpen: (open: boolean) => void;
-	selectedApp: App;
-	onAppUpdate: () => void;
-	toolChoices: any[];
-	modelChoices: any[];
-	agentChoices: any[];
-	fetchFormData: () => Promise<void>; // Add this type
-}) => {
-	// Add default values for missing properties
-	const enrichedApp = {
-		...selectedApp,
-		chatAppConfig: {
-			...selectedApp?.chatAppConfig,
-			maxMessages: selectedApp?.chatAppConfig?.maxMessages || 30
-		},
-		sharingConfig: {
-			...selectedApp?.sharingConfig,
-			mode: selectedApp?.sharingConfig?.mode || SharingMode.TEAM,
-			permissions: selectedApp?.sharingConfig?.permissions || {}
-		},
-		conversationStarters: ['Help me brainstorm some ideas', 'What can you help me with?'],
-		description: selectedApp?.description || '',
-		name: selectedApp?.name || 'Untitled Chat App',
-		type: selectedApp?.type || AppType.CHAT
-	};
-
-	return (
-		<Sheet
-			open={open}
-			onOpenChange={open => {
-				if (!open) {
-					// Force a slight delay before resetting pointer events
-					setTimeout(() => {
-						document.body.style.pointerEvents = 'auto';
-						document.body.style.cursor = 'auto';
-					}, 100);
-				}
-				setOpen(open);
-			}}>
-			<SheetContent
-				className='w-full overflow-auto max-w-3xl'
-				// Add pointer-events override for sheet content
-				style={{ pointerEvents: 'auto' }}>
-				<SheetHeader>
-					<SheetTitle>Edit App</SheetTitle>
-				</SheetHeader>
-				<div className='mt-4'>
-					<ChatAppForm2
-						fetchFormData={fetchFormData}
-						app={enrichedApp}
-						editing={true}
-						callback={() => {
-							setOpen(false);
-							onAppUpdate();
-						}}
-						toolChoices={toolChoices} // Pass these from parent if available
-						modelChoices={modelChoices} // Pass these from parent if available
-						agentChoices={agentChoices} // Pass these from parent if available
-						whiteListSharingChoices={Object.values(enrichedApp.sharingConfig.permissions || {})}
-					/>
-				</div>
-			</SheetContent>
-		</Sheet>
-	);
-};
-
 export default function Apps(props) {
 	const { agents } = useAgentStore();
 	const [openDeleteDialog, setOpenDeleteDialog] = useState<boolean>(false);
@@ -194,43 +115,8 @@ export default function Apps(props) {
 	const { apps } = state;
 
 	const [selectedAgentId, setSelectedAgentId] = useState<string>(null);
-	const [selectedApp, setSelectedApp] = useState<App>(null);
 
 	const appsToDisplay = filteredApps.length > 0 ? filteredApps : apps;
-
-	// Add these states to fetch required data
-	const [toolChoices, setToolChoices] = useState<any[]>([]);
-	const [modelChoices, setModelChoices] = useState<Model[]>([]);
-	const [agentChoices, setAgentChoices] = useState<Agent[]>([]);
-
-	// Add function to fetch all required data
-	const fetchFormData = async () => {
-		try {
-			// Add your API calls here to fetch tools, models, and agents
-			const [toolsRes, modelsRes, agentsRes] = await Promise.all([
-				API.getTools({ resourceSlug, _csrf: csrf }, dispatch, setError, router),
-				API.getModels({ resourceSlug, _csrf: csrf }, dispatch, setError, router),
-				API.getAgents({ resourceSlug, _csrf: csrf }, dispatch, setError, router)
-			]);
-
-			// Ensure we're setting arrays even if the response is null/undefined
-			setToolChoices(toolsRes?.data || []);
-			setModelChoices(modelsRes?.data || []);
-			setAgentChoices(agentsRes?.data || []);
-		} catch (error) {
-			console.error('Error fetching form data:', error);
-			toast.error('Error loading data');
-			// Set empty arrays on error to prevent undefined errors
-			setToolChoices([]);
-			setModelChoices([]);
-			setAgentChoices([]);
-		}
-	};
-
-	// Add useEffect to fetch data on mount
-	useEffect(() => {
-		fetchFormData();
-	}, [resourceSlug]);
 
 	async function startSession(appId: ObjectId) {
 		await API.addSession(
@@ -293,12 +179,8 @@ export default function Apps(props) {
 	}, []);
 
 	// Add handler for opening edit sheet
-	const handleOpenEditSheet = (app: App) => {
-		setSelectedApp(app);
-		setOpenEditSheet(true);
-		// Ensure body pointer events are reset when opening
-		document.body.style.pointerEvents = 'auto';
-		document.body.style.cursor = 'auto';
+	const handleEditApp = (app: App) => {
+		router.push(`/${resourceSlug}/app/${app._id}/edit`);
 	};
 
 	if (!apps) {
@@ -311,16 +193,6 @@ export default function Apps(props) {
 				openDeleteDialog={openDeleteDialog}
 				setOpenDeleteDialog={setOpenDeleteDialog}
 				onDelete={() => deleteApp(selectedAgentId)}
-			/>
-			<EditAppSheet
-				open={openEditSheet}
-				setOpen={setOpenEditSheet}
-				selectedApp={selectedApp}
-				onAppUpdate={fetchApps}
-				toolChoices={toolChoices}
-				modelChoices={modelChoices}
-				agentChoices={agentChoices}
-				fetchFormData={fetchFormData} // Add this prop
 			/>
 			<main className='text-foreground flex flex-col gap-2'>
 				<section className='flex items-center justify-between mb-4'>
@@ -377,7 +249,7 @@ export default function Apps(props) {
 																<Ellipsis />
 															</DropdownMenuTrigger>
 															<DropdownMenuContent align='end'>
-																<DropdownMenuItem onClick={() => handleOpenEditSheet(app)}>
+																<DropdownMenuItem onClick={() => handleEditApp(app)}>
 																	Edit
 																</DropdownMenuItem>
 																<DropdownMenuItem
