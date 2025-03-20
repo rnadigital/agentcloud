@@ -1,6 +1,6 @@
 import * as API from '@api';
 import { ChevronLeftIcon, PhotoIcon, UserCircleIcon } from '@heroicons/react/24/solid';
-import ChatAppForm from 'components/ChatAppForm';
+import ChatAppForm2 from 'components/ChatAppForm2';
 import CrewAppForm from 'components/CrewAppForm';
 import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import { AppType } from 'struct/app';
+import { Button } from 'modules/components/ui/button';
 
 export default function EditApp(props) {
 	const [accountContext]: any = useAccountContext();
@@ -35,6 +36,10 @@ export default function EditApp(props) {
 		fetchAppFormData();
 	}, [resourceSlug]);
 
+	const handleBack = () => {
+		router.push(`/${resourceSlug}/apps`);
+	};
+
 	if (app == null) {
 		return <Spinner />;
 	}
@@ -45,12 +50,17 @@ export default function EditApp(props) {
 				<title>{`Edit App - ${teamName}`}</title>
 			</Head>
 
-			<div className='border-b pb-2 my-2 mb-6'>
-				<h3 className='font-semibold text-gray-900'>Edit App - {app.name}</h3>
+			<div className='border-b pb-2 my-2 mb-6 flex items-center justify-between'>
+				<div className='flex items-center gap-2'>
+					<Button variant='ghost' className='hover:bg-transparent p-0' onClick={handleBack}>
+						<ChevronLeftIcon className='h-6 w-6' />
+					</Button>
+					<h3 className='font-semibold text-gray-900'>Edit App - {app.name}</h3>
+				</div>
 			</div>
 
 			{(app.type as AppType) === AppType.CHAT ? (
-				<ChatAppForm
+				<ChatAppForm2
 					editing={true}
 					app={app}
 					fetchFormData={fetchAppFormData}
@@ -61,6 +71,9 @@ export default function EditApp(props) {
 					toolChoices={tools}
 					whiteListSharingChoices={teamMembers}
 					variableChoices={variables}
+					callback={() => {
+						router.push(`/${resourceSlug}/apps`);
+					}}
 				/>
 			) : (
 				<CrewAppForm
@@ -75,6 +88,9 @@ export default function EditApp(props) {
 					whiteListSharingChoices={teamMembers}
 					// toolChoices={tools}
 					variableChoices={variables}
+					callback={() => {
+						router.push(`/${resourceSlug}/apps`);
+					}}
 				/>
 			)}
 		</>

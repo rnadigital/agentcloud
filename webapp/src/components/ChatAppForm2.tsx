@@ -1,61 +1,26 @@
 import * as API from '@api';
-
 import { AgentCreatedDisplay } from 'components/apps/AgentCreatedDisplay';
 import { AgentSelectDisplay } from 'components/apps/AgentSelectDisplay';
 import { CreateAgentSheet } from 'components/apps/CreateAgentSheet';
 import { InsightChat } from 'components/apps/InsightChat';
-import Spinner from 'components/Spinner';
-import { useAccountContext } from 'context/account';
-import { useStepContext } from 'context/stepwrapper';
-import { useThemeContext } from 'context/themecontext';
 import { AgentsDataReturnType } from 'controllers/agent';
-import { AppsDataReturnType } from 'controllers/app';
 import { Model } from 'db/model';
-import useAutocompleteDropdown from 'hooks/useAutoCompleteDropdown';
-import { ChevronDown, Circle, Layout, Pencil, SendHorizonal, Trash2 } from 'lucide-react';
-import { MultiSelect } from 'modules/components/multi-select';
+import { Circle, Pencil, SendHorizonal, Trash2 } from 'lucide-react';
 import { Button } from 'modules/components/ui/button';
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger
-} from 'modules/components/ui/dropdown-menu';
 import { useRouter } from 'next/router';
-// import agents from 'pages/[resourceSlug]/agents';
+
 import { usePostHog } from 'posthog-js/react';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import { useAgentStore } from 'store/agent';
 import { Agent } from 'struct/agent';
 import { App, AppType } from 'struct/app';
-import { ChatAppAllowedModels } from 'struct/model';
-import { SharingMode } from 'struct/sharing';
-import { ToolType } from 'struct/tool';
 
 import AddEmailModal from './AddEmailModal';
 import ConfirmModal from './ConfirmModal';
-import CreateDatasourceModal from './CreateDatasourceModal';
-import CreateModelModal from './CreateModelModal';
-import CreateToolModal from './modal/CreateToolModal';
 import SharingModeSelect from './SharingModeSelect';
-import CreateVariableModal from './variables/CreateVariableModal';
-
-const chatAppTaglines = [
-	'Build single agent chat bots (like GPTS)',
-	'Integrate RAG datasources',
-	'Add custom agent',
-	'Integrate custom tools',
-	'Embed your chat app via IFrame'
-];
-
-const processAppTaglines = [
-	'Build Multi-Agent Process Apps (powered by Crew AI)',
-	'Integrate RAG datasources',
-	'Add custom code tools',
-	'Add tasks',
-	'Embed your process app via IFrame'
-];
+import { SharingMode } from 'struct/sharing';
+import { useAccountContext } from 'context/account';
+import Link from 'next/link';
 
 export default function Apps({
 	app,
@@ -125,6 +90,8 @@ export default function Apps({
 
 	const router = useRouter();
 	const { resourceSlug } = router.query;
+
+	// const { step, setStep } = useStepContext();
 
 	const [sharingMode, setSharingMode] = useState(app?.sharingConfig?.mode || SharingMode.TEAM);
 	const [shareLinkShareId, setShareLinkShareId] = useState(editing ? app?.shareLinkShareId : null);
@@ -342,7 +309,9 @@ export default function Apps({
 	return (
 		<main className='text-foreground flex flex-col gap-2'>
 			<div className='flex gap-2 mb-2 text-sm'>
-				<h4 className='text-gray-700 font-semibold'>Apps</h4>
+				<Link href={`/${resourceSlug}/apps`}>
+					<h4 className='text-gray-700 font-semibold cursor-pointer'>Apps</h4>
+				</Link>
 				<span className='text-gray-500'>&gt;</span>
 				<h4 className='text-gray-700 font-semibold'>Create App</h4>
 				<span className='text-gray-500'>&gt;</span>
@@ -355,8 +324,7 @@ export default function Apps({
 				<div className='flex border border-gray-200 rounded-lg'>
 					<form
 						className='flex flex-col justify-between border border-gray-200 rounded-l-lg w-full minh-[790px]'
-						onSubmit={appPost}
-					>
+						onSubmit={appPost}>
 						<article className='flex flex-col p-5 gap-6'>
 							<div className='flex items-center gap-3 h-24'>
 								<img className='rounded-3xl' src='/apps/identicon.png' />
@@ -388,8 +356,7 @@ export default function Apps({
 														setAppName('');
 													}
 												}}
-												className='hover:text-[#4F46E5] transition-colors'
-											>
+												className='hover:text-[#4F46E5] transition-colors'>
 												<Pencil width={20} />
 											</button>
 										</div>
@@ -465,8 +432,7 @@ export default function Apps({
 									<div key={starter.id} className='flex items-center gap-2'>
 										<div
 											className='bg-gray-50 px-4 py-3 w-full border border-gray-300 rounded-lg'
-											onClick={() => setEditingStarterId(starter.id)}
-										>
+											onClick={() => setEditingStarterId(starter.id)}>
 											{editingStarterId === starter.id ? (
 												<input
 													type='text'
@@ -503,22 +469,10 @@ export default function Apps({
 								))}
 								<p
 									className='text-[#4F46E5] cursor-pointer self-end hover:text-[#3730a3]'
-									onClick={handleAddStarter}
-								>
+									onClick={handleAddStarter}>
 									+ Add
 								</p>
 							</div>
-							{/* <div className='w-full flex items-center justify-between bg-gray-100 p-6 rounded-lg'>
-								<p className='text-gray-500'>Display Settings</p>
-								<DropdownMenu>
-									<DropdownMenuTrigger className='bg-background rounded-sm border border-gray-200'>
-										<ChevronDown width={25} color='#6B7280' />
-									</DropdownMenuTrigger>
-									<DropdownMenuContent>
-										<DropdownMenuItem>Dropdown Item</DropdownMenuItem>
-									</DropdownMenuContent>
-								</DropdownMenu>
-							</div> */}
 
 							<SharingModeSelect
 								sharingMode={sharingMode}
@@ -538,8 +492,7 @@ export default function Apps({
 							<div className='sm:col-span-'>
 								<label
 									htmlFor='maxMessages'
-									className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-								>
+									className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 									Max Messages
 								</label>
 								<input
@@ -559,15 +512,14 @@ export default function Apps({
 							<Button
 								type='button'
 								variant='ghost'
-								className='bg-transparent text-foreground hover:bg-transparent hover:text-foreground p-0 border-0 shadow-none outline-none'
-							>
+								onClick={() => (editing ? callback?.() : router.back())}
+								className='bg-transparent text-foreground hover:bg-transparent hover:text-foreground p-0 border-0 shadow-none outline-none'>
 								Cancel
 							</Button>
 							<Button
 								onClick={() => setRun(false)}
 								variant='ghost'
-								className='ml-auto bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white font-medium text-sm py-2 hover:text-white'
-							>
+								className='ml-auto bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white font-medium text-sm py-2 hover:text-white'>
 								Save
 							</Button>
 							<Button
@@ -576,8 +528,7 @@ export default function Apps({
 									setRun(true);
 								}}
 								variant='ghost'
-								className='ml-2 bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white font-medium text-sm py-2 hover:text-white'
-							>
+								className='ml-2 bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white font-medium text-sm py-2 hover:text-white'>
 								Save & Launch
 							</Button>
 						</article>
