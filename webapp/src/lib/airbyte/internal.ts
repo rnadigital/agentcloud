@@ -18,11 +18,11 @@ async function getAirbyteInternalApi() {
 	}
 	const api = new OpenAPIClientAxios({
 		definition,
-		axiosConfigDefaults: {
-			headers: {
-				authorization: `Bearer ${await getAirbyteAuthToken()}`
-			}
-		}
+		// axiosConfigDefaults: {
+		// 	headers: {
+		// 		authorization: `Bearer ${await getAirbyteAuthToken()}`
+		// 	}
+		// }
 	});
 	client = await api.init();
 	if (process.env.AIRBYTE_API_URL !== 'https://cloud.airbyte.com') {
