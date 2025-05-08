@@ -207,8 +207,7 @@ ${missingEnvs.join('\n')}`}
 						setSelectedPlan(planData.plan);
 						setStagedChange({ plan: planData.plan });
 						setShowConfirmModal(true);
-					}}
-				>
+					}}>
 					{account?.stripe.stripePlan === planData.name
 						? 'Update Subscription'
 						: planData.name === 'Enterprise'
@@ -256,8 +255,10 @@ ${missingEnvs.join('\n')}`}
 				<Button
 					variant='outline'
 					className='w-fit text-black hover:bg-gray-100'
-					onClick={getPortalLink}
-				>
+					// onClick={getPortalLink}
+					onClick={() => {
+						window.open('https://billing.stripe.com/p/login/dR6cNudR20gl9JSbII', '_blank');
+					}}>
 					Go to Customer Portal
 				</Button>
 			</div>
