@@ -120,7 +120,7 @@ class CrewAIBuilder:
                         if linked_tool:
                             tool_name = linked_tool.data.name
                         else:
-                            logging.warn(f"linked tool ID {tool.linkedToolId} not found for installed tool {tool.id}")
+                            logging.warning(f"linked tool ID {tool.linkedToolId} not found for installed tool {tool.id}")
                     tool_class = BuiltinTools.get_tool_class(tool_name)
             # Assign tool models and datasources
             datasources = search_subordinate_keys(self.datasources_models, key)
