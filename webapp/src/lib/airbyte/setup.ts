@@ -49,7 +49,7 @@ async function fetchDestinationList(workspaceId: string) {
 			method: 'GET',
 			headers: {
 				'Content-Type': 'application/json',
-				Authorization: `Bearer ${await getAirbyteAuthToken()}`
+				// Authorization: `Bearer ${await getAirbyteAuthToken()}`
 			}
 		}
 	);
@@ -63,7 +63,7 @@ async function createDestination(workspaceId: string, provider: string) {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
-			Authorization: `Bearer ${await getAirbyteAuthToken()}`
+			// Authorization: `Bearer ${await getAirbyteAuthToken()}`
 		},
 		body: JSON.stringify({
 			name: provider === 'rabbitmq' ? 'RabbitMQ' : 'Google Pub/Sub',
@@ -82,7 +82,7 @@ async function deleteDestination(destinationId: string) {
 		{
 			method: 'DELETE',
 			headers: {
-				Authorization: `Bearer ${await getAirbyteAuthToken()}`
+				// Authorization: `Bearer ${await getAirbyteAuthToken()}`
 			}
 		}
 	);
@@ -100,7 +100,7 @@ export async function checkAirbyteStatus() {
 			method: 'GET',
 			headers: {
 				accept: 'application/json',
-				authorization: `Bearer ${await getAirbyteAuthToken()}`
+				// authorization: `Bearer ${await getAirbyteAuthToken()}`
 			}
 		});
 		if (response?.status !== 200) {
