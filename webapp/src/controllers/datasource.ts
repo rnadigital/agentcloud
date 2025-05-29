@@ -426,12 +426,15 @@ export async function addDatasourceApi(req, res, next) {
 		sourceId: datasource.sourceId,
 		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
 		configurations: {
-			streams: Object.entries(streamConfig).map((e: [string, StreamConfig]) => ({
-				name: e[0],
-				syncMode: e[1].syncMode,
-				cursorField: e[1].cursorField.length > 0 ? e[1].cursorField : null,
-				primaryKey: e[1].primaryKey.length > 0 ? e[1].primaryKey.map(x => [x]) : null
-			}))
+			streams: Object.entries(streamConfig).map((e: [string, StreamConfig]) => {
+				const streamData = e[1][1];
+				return {
+					name: e[1][0],
+					syncMode: streamData.syncMode,
+					cursorField: streamData.cursorField?.length > 0 ? streamData.cursorField : null,
+					primaryKey: streamData.primaryKey?.length > 0 ? streamData.primaryKey.map(x => [x]) : null
+				};
+			})
 		},
 		dataResidency: 'auto',
 		namespaceDefinition: 'destination',
@@ -689,12 +692,15 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 		sourceId: datasource.sourceId,
 		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
 		configurations: {
-			streams: Object.entries(streamConfig).map((e: [string, StreamConfig]) => ({
-				name: e[0],
-				syncMode: e[1].syncMode,
-				cursorField: e[1].cursorField.length > 0 ? e[1].cursorField : null,
-				primaryKey: e[1].primaryKey.length > 0 ? e[1].primaryKey.map(x => [x]) : null
-			}))
+			streams: Object.entries(streamConfig).map((e: [string, StreamConfig]) => {
+				const streamData = e[1][1];
+				return {
+					name: e[1][0],
+					syncMode: streamData.syncMode,
+					cursorField: streamData.cursorField?.length > 0 ? streamData.cursorField : null,
+					primaryKey: streamData.primaryKey?.length > 0 ? streamData.primaryKey.map(x => [x]) : null
+				};
+			})
 		},
 		dataResidency: 'auto',
 		namespaceDefinition: 'destination',

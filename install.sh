@@ -151,36 +151,19 @@ fi
 # Define the chart version to use
 ABCTL_CHART_VERSION=
 
-get_airbyte_creds() {
-	# Process the output: remove color codes and use grep/awk to extract values
-	ABCTL_CREDENTIALS=$(abctl local credentials 2>/dev/null | sed -r 's/\x1B\[[0-9;]*[mK]//g')
-	# Extract password, client-id, and client-secret using grep and awk
-	export AIRBYTE_USERNAME=$(echo "$ABCTL_CREDENTIALS" | grep -i 'Email:' | awk '{print $2}')
-	export AIRBYTE_PASSWORD=$(echo "$ABCTL_CREDENTIALS" | grep -i 'Password:' | awk '{print $2}')
-	export AIRBYTE_CLIENT_ID=$(echo "$ABCTL_CREDENTIALS" | grep -i 'Client-Id:' | awk '{print $2}')
-	export AIRBYTE_CLIENT_SECRET=$(echo "$ABCTL_CREDENTIALS" | grep -i 'Client-Secret:' | awk '{print $2}')
-	# Output for verification
-	echo "Airbyte Email: $AIRBYTE_USERNAME"
-	echo "Airbyte Password: $AIRBYTE_PASSWORD"
-	echo "Airbyte Client ID: $AIRBYTE_CLIENT_ID"
-	echo "Airbyte Client Secret: $AIRBYTE_CLIENT_SECRET"
-}
+# Create values.yaml for disabling authentication
+cat > values.yaml << EOL
+global:
+  auth:
+    enabled: false
+EOL
 
-get_airbyte_creds
-
-# Check if the 'password' field is present
-if [[ -z "$AIRBYTE_PASSWORD" || "$AIRBYTE_PASSWORD" == "null" ]]; then
-	echo "'password' field is missing. Running 'abctl local install'..."
-	if [[ -z "$ABCTL_CHART_VERSION" || "$ABCTL_CHART_VERSION" == "" ]]; then
-		abctl local install
-	else
-		abctl local install --chart-version $ABCTL_CHART_VERSION
-	fi
+echo "=> Installing Airbyte with authentication disabled..."
+if [[ -z "$ABCTL_CHART_VERSION" || "$ABCTL_CHART_VERSION" == "" ]]; then
+    abctl local install --values ./values.yaml
 else
-	echo "'password' field found. Running 'abctl local status'..."
-	abctl local status
+    abctl local install --chart-version $ABCTL_CHART_VERSION --values ./values.yaml
 fi
-
 
 retry_curl() {
         local url=$1
@@ -193,8 +176,6 @@ retry_curl() {
 }
 
 retry_curl 'http://localhost:8000/api/v1/instance_configuration/setup' '{"email":"example@example.org","anonymousDataCollection":true,"securityCheck":"skipped","organizationName":"example-org","initialSetupComplete":true,"displaySetupWizard":false}'
-
-get_airbyte_creds
 
 echo "=> Starting agentcloud backend..."
 
