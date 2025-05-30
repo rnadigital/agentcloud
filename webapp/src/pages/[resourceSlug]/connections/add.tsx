@@ -49,7 +49,7 @@ export default function AddConnection() {
 	return (
 		<>
 			<Head>
-				<title>Register</title>
+				<title>Add Connection</title>
 			</Head>
 
 			<div className='flex flex-1 bg-white'>

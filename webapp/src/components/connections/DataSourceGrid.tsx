@@ -26,20 +26,13 @@ const DataSourceGrid = () => {
 		c => c.name === selectedConnector?.name
 	);
 
-	const findIndexToDisplayForm = (index: number) => {
-		if (index === -1) return null;
-		return Math.floor((index + 1) / 3) * 3 + 1;
-	};
-	const indexToDisplayForm = findIndexToDisplayForm(selectedConnectorIndex);
-
 	if (filteredConnectors.length === 0) {
 		return (
 			<div className='flex flex-wrap'>
 				{Array.from({ length: 6 }).map((_, index) => (
 					<div
 						key={index}
-						className='border-gray-200 border grid place-items-center h-44 w-1/3 p-4 bg-gray-50 animate-pulse'
-					>
+						className='border-gray-200 border grid place-items-center h-44 w-1/3 p-4 bg-gray-50 animate-pulse'>
 						<div className='w-full h-full bg-gray-200 border border-dashed border-gray-300 rounded-md flex justify-center items-center text-gray-500 flex-col text-sm'>
 							<div className='h-5 w-5 bg-gray-300 rounded-full mb-2' />
 							<div className='h-4 w-3/4 bg-gray-300 rounded mb-1' />
@@ -62,22 +55,20 @@ const DataSourceGrid = () => {
 			</div>
 
 			{filteredConnectors.map((connector, index) => (
-				<>
+				<React.Fragment key={connector.name}>
 					<button
-						key={connector.name}
 						className={cn(
 							'flex flex-col justify-center items-center border-gray-200 border  h-44 w-1/3 relative',
 							{ 'bg-primary-50 border-0': selectedConnectorIndex === index }
 						)}
-						onClick={() => setSelectedConnector(connector)}
-					>
+						onClick={() => setSelectedConnector(connector)}>
 						<img src={connector.icon} className='h-6 w-6 mb-2' />
 						<span>{connector.name}</span>
 					</button>
-					{indexToDisplayForm === index && (
+					{selectedConnectorIndex === index && (
 						<DataSourceCredentialsForm connector={selectedConnector} />
 					)}
-				</>
+				</React.Fragment>
 			))}
 		</div>
 	);
