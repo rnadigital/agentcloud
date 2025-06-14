@@ -53,7 +53,7 @@ export default function AddConnection() {
 			</Head>
 
 			<div className='flex flex-1 bg-white'>
-				<main className='py-14 px-28 w-full'>
+				<main className='py-14 px-4 sm:px-8 md:px-16 xl:px-28 w-full'>
 					<div className=''>
 						{currentDatasourceStep <= 2 && currentStep < 2 && (
 							<>
