@@ -4,7 +4,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import 'tippy.js/dist/tippy.css';
 import 'tippy.js/themes/material.css';
 
-import Layout from 'components/Layout2';
+import Layout from 'components/Layout';
 import { AccountWrapper } from 'context/account';
 import { ChatWrapper } from 'context/chat';
 import { DeveloperWrapper } from 'context/developer';

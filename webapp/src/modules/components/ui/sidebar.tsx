@@ -13,6 +13,7 @@ import {
 	TooltipProvider,
 	TooltipTrigger
 } from 'modules/components/ui/tooltip';
+import { useTheme } from 'next-themes';
 import * as React from 'react';
 import cn from 'utils/cn';
 
@@ -167,6 +168,7 @@ const Sidebar = React.forwardRef<
 		ref
 	) => {
 		const { isMobile, state, openMobile, setOpenMobile } = useSidebar();
+		const { theme } = useTheme();
 
 		if (collapsible === 'none') {
 			return (
@@ -188,7 +190,7 @@ const Sidebar = React.forwardRef<
 					<SheetContent
 						data-sidebar='sidebar'
 						data-mobile='true'
-						className='w-[--sidebar-width] bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden bg-gradient-sidebar	'
+						className='w-[--sidebar-width] bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden bg-gradient-sidebar'
 						style={
 							{
 								'--sidebar-width': SIDEBAR_WIDTH_MOBILE
@@ -208,7 +210,8 @@ const Sidebar = React.forwardRef<
 				data-state={state}
 				data-collapsible={state === 'collapsed' ? collapsible : ''}
 				data-variant={variant}
-				data-side={side}>
+				data-side={side}
+				data-theme={theme}>
 				{/* This is what handles the sidebar gap on desktop */}
 				<div
 					className={cn(
@@ -226,7 +229,6 @@ const Sidebar = React.forwardRef<
 						side === 'left'
 							? 'left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]'
 							: 'right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]',
-						// Adjust the padding for floating and inset variants.
 						variant === 'floating' || variant === 'inset'
 							? 'p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4)_+2px)]'
 							: 'group-data-[collapsible=icon]:w-[--sidebar-width-icon] group-data-[side=left]:border-r group-data-[side=right]:border-l',

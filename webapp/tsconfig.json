@@ -90,9 +90,6 @@
       "storage/*": [
         "lib/storage/*"
       ],
-      "secret/*": [
-        "lib/secret/*"
-      ],
       "modules/*": [
         "modules/*"
       ],
@@ -102,16 +99,25 @@
       "data/*": [
         "data/*"
       ]
-    }
+    },
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "strictNullChecks": true
   },
   "include": [
     "next-env.d.ts",
     "**/*.ts",
-    "**/*.tsx"
+    "**/*.tsx",
+    ".next/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
     "src/test"
   ],
-  "types": ["@types/jest"]
+  "types": [
+    "@types/jest"
+  ]
 }
