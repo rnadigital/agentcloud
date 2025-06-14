@@ -46,7 +46,7 @@ const DataSourceGrid = () => {
 
 	return (
 		<div className='flex flex-wrap relative'>
-			<div className='border-gray-200 border grid place-items-center h-44 w-1/3 p-4 bg-gray-50'>
+			<div className='border-gray-200 border grid place-items-center h-44 w-full md:w-1/2 lg:w-1/3 p-4 bg-gray-50'>
 				<div className='w-full h-full bg-white border border-dashed border-gray-200 rounded-md flex justify-center items-center text-gray-500 flex-col text-sm'>
 					<ArrowUpTrayIcon className='h-5 w-5' />
 					<span>Drag files to upload</span>
@@ -58,7 +58,7 @@ const DataSourceGrid = () => {
 				<React.Fragment key={connector.name}>
 					<button
 						className={cn(
-							'flex flex-col justify-center items-center border-gray-200 border  h-44 w-1/3 relative',
+							'flex flex-col justify-center items-center border-gray-200 border h-44 w-full md:w-1/2 lg:w-1/3 relative',
 							{ 'bg-primary-50 border-0': selectedConnectorIndex === index }
 						)}
 						onClick={() => setSelectedConnector(connector)}>
