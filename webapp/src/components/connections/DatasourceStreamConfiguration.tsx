@@ -24,8 +24,7 @@ const DatasourceStreamConfiguration = () => {
 				e.preventDefault();
 				setStep(2);
 			}}
-			className='border border-gray-200 px-4 pb-4'
-		>
+			className='border border-border bg-background px-4 pb-4'>
 			<StreamsList
 				streams={stagedDatasource.discoveredSchema.catalog?.streams}
 				streamProperties={stagedDatasource.streamProperties}
@@ -34,8 +33,7 @@ const DatasourceStreamConfiguration = () => {
 				<button
 					disabled={submitting}
 					type='submit'
-					className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-				>
+					className='rounded-md disabled:bg-muted bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'>
 					{submitting && <ButtonSpinner />}
 					Continue
 				</button>

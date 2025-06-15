@@ -79,7 +79,6 @@ const DataSourceDetails = () => {
 			[]
 		);
 		const firstStringField = fieldsArray?.find(
-			//Get the first field that is a string, ane usea heuristic to not pick ones named "date".
 			field => field.type === 'string' && !/date/i.test(field?.name || '')
 		);
 		return firstStringField?.name || fieldsArray?.[0]?.name || null;
@@ -133,13 +132,13 @@ const DataSourceDetails = () => {
 	}, [stagedDatasource]);
 
 	return (
-		<div className='text-gray-900 text-sm'>
-			<div className='border border-gray-300 p-4 flex flex-col gap-y-3 mt-6'>
+		<div className='text-foreground text-sm'>
+			<div className='border border-border bg-background p-4 flex flex-col gap-y-3 mt-6'>
 				<div>
 					<label
 						htmlFor='embeddingField'
-						className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
-						Field To Embed<span className='text-red-700'> *</span>
+						className='block text-sm font-medium leading-6 text-foreground'>
+						Field To Embed<span className='text-destructive'> *</span>
 					</label>
 					<div>
 						<select
@@ -150,7 +149,7 @@ const DataSourceDetails = () => {
 								setStore({ embeddingField: e.target.value });
 							}}
 							value={embeddingField}
-							className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'>
+							className='block w-full rounded-md border-0 py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-ring sm:text-sm sm:leading-6 bg-background'>
 							<optgroup label='Select field to embed' key='embeddingField_optgroup_0' disabled>
 								Select field to embed
 							</optgroup>
@@ -173,8 +172,8 @@ const DataSourceDetails = () => {
 
 				<div className='flex w-full items-center'>
 					<div className='w-1/2'>
-						<div>Chunk Strategy</div>
-						<div className='text-gray-500'>
+						<div className='text-foreground'>Chunk Strategy</div>
+						<div className='text-muted-foreground'>
 							Default region is set by the team creator, you select a different one
 						</div>
 					</div>
@@ -198,8 +197,8 @@ const DataSourceDetails = () => {
 
 				<div className='flex w-full items-center'>
 					<div className='w-1/2'>
-						<div>Retrieval Strategy</div>
-						<div className='text-gray-500'>
+						<div className='text-foreground'>Retrieval Strategy</div>
+						<div className='text-muted-foreground'>
 							Determines how to find and retrieve relevant data from the chunks.
 						</div>
 					</div>
@@ -225,7 +224,7 @@ const DataSourceDetails = () => {
 					<div className='mt-2'>
 						<label
 							htmlFor='toolDecayRate'
-							className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+							className='block text-sm font-medium leading-6 text-foreground'>
 							Decay Rate
 						</label>
 						<div>
@@ -239,9 +238,9 @@ const DataSourceDetails = () => {
 								step='0.01'
 								value={toolDecayRate}
 								onChange={e => setToolDecayRate(parseFloat(e.target.value))}
-								className='w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700'
+								className='w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer'
 							/>
-							<div className='flex justify-between text-xs text-gray-600'>
+							<div className='flex justify-between text-xs text-muted-foreground'>
 								<span>0</span>
 								<span>
 									<div className='w-full text-center mb-2'>{toolDecayRate}</div>
@@ -257,8 +256,8 @@ const DataSourceDetails = () => {
 
 				<div className='flex w-full items-center'>
 					<div className='w-1/2 self-start'>
-						<div>Top K Results</div>
-						<div className='text-gray-500'>
+						<div className='text-foreground'>Top K Results</div>
+						<div className='text-muted-foreground'>
 							Specify how many of the top results to return from your query.
 						</div>
 					</div>
@@ -274,7 +273,7 @@ const DataSourceDetails = () => {
 						/>
 
 						{k >= 10 && (
-							<div className='bg-orange-50 rounded-md p-4 text-sm text-orange-800'>
+							<div className='bg-destructive/10 rounded-md p-4 text-sm text-destructive'>
 								Selecting values greater 10 can slow queries and increase token costs due to the
 								larger data volume
 							</div>
@@ -296,7 +295,7 @@ const DataSourceDetails = () => {
 				<div className=''>
 					<label
 						htmlFor='overlap_all'
-						className='inline-flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+						className='inline-flex items-center text-sm font-medium leading-6 text-foreground'>
 						Enable row chunking
 						<span className='ml-2'>
 							<ToolTip
@@ -312,7 +311,7 @@ const DataSourceDetails = () => {
 						name='enableConnectorChunking'
 						checked={enableConnectorChunking}
 						onChange={e => setEnableConnectorChunking(e.target.checked)}
-						className='ml-2 rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:bg-slate-800 dark:ring-slate-600'
+						className='ml-2 rounded border-input text-primary shadow-sm focus:ring-primary bg-background'
 					/>
 				</div>
 
@@ -327,16 +326,16 @@ const DataSourceDetails = () => {
 				<div className='flex justify-end'>
 					<button
 						type='button'
-						className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+						className='rounded-md disabled:bg-muted bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 						onClick={moveToNextStep}>
 						Continue
 					</button>
 				</div>
 
-				<div className='flex bg-primary-50 items-center p-2 rounded-lg gap-2'>
-					<UserPlusIcon className='h-4 w-4 text-primary-500' />
-					<span className='text-xs text-primary-900'>Not sure how to configure this page?</span>
-					<button className='text-xs text-primary-500 ml-auto'> Invite a Developer!</button>
+				<div className='flex bg-primary/10 items-center p-2 rounded-lg gap-2'>
+					<UserPlusIcon className='h-4 w-4 text-primary' />
+					<span className='text-xs text-primary'>Not sure how to configure this page?</span>
+					<button className='text-xs text-primary ml-auto'> Invite a Developer!</button>
 				</div>
 			</div>
 		</div>

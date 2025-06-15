@@ -52,12 +52,12 @@ export default function AddConnection() {
 				<title>Add Connection</title>
 			</Head>
 
-			<div className='flex flex-1 bg-white'>
+			<div className='flex flex-1 bg-background'>
 				<main className='py-14 px-4 sm:px-8 md:px-16 xl:px-28 w-full'>
 					<div className=''>
 						{currentDatasourceStep <= 2 && currentStep < 2 && (
 							<>
-								<div className='text-2xl mb-4'>Select Data Source</div>
+								<div className='text-2xl mb-4 text-foreground'>Select Data Source</div>
 								<DataSourceConfigSteps />
 							</>
 						)}

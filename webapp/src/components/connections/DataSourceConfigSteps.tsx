@@ -29,14 +29,13 @@ const DataSourceConfigSteps = () => {
 							className={cn(
 								'p-1 rounded-full h-8 w-8 grid place-items-center',
 								stepIdx === currentDatasourceStep
-									? 'text-primary-500 bg-primary-50'
-									: 'text-gray-400 bg-gray-100'
-							)}
-						>
+									? 'text-primary bg-primary/10'
+									: 'text-muted-foreground bg-muted'
+							)}>
 							{step.icon}
 						</div>
-						<div className='ml-3'>{step.title}</div>
-						{stepIdx < steps.length - 1 && <div className='flex-1 border-b border-gray-300 mx-2' />}
+						<div className='ml-3 text-foreground'>{step.title}</div>
+						{stepIdx < steps.length - 1 && <div className='flex-1 border-b border-border mx-2' />}
 					</>
 				);
 			})}
