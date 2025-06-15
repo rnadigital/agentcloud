@@ -2,11 +2,16 @@
 
 import 'react-js-cron/dist/styles.css';
 
-import classNames from 'components/ClassNames';
 import { useAccountContext } from 'context/account';
-import { Cron } from 'react-js-cron';
 import { pricingMatrix } from 'struct/billing';
 import { DatasourceScheduleType } from 'struct/datasource';
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue
+} from 'modules/components/ui/select';
 
 const scheduleOptions = [
 	{ value: 'minute', label: 'Every Minute' },
@@ -35,25 +40,22 @@ export default function DatasourceScheduleForm({
 			<div className=''>
 				<label
 					htmlFor='scheduleType'
-					className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-2'
-				>
-					Schedule Type<span className='text-red-700'> *</span>
+					className='block text-sm font-medium leading-6 text-foreground mt-2'>
+					Schedule Type<span className='text-destructive'> *</span>
 				</label>
 				<div>
-					<select
-						required
-						name='scheduleType'
-						id='scheduleType'
-						onChange={e => setScheduleType(e.target.value)}
-						value={scheduleType}
-						className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-					>
-						<option value={DatasourceScheduleType.MANUAL}>Manual</option>
-						{/*<option value={DatasourceScheduleType.BASICSCHEDULE}>Basic Schedule</option>*/}
-						<option disabled={!cronProps?.allowedPeriods} value={DatasourceScheduleType.CRON}>
-							Scheduled
-						</option>
-					</select>
+					<Select value={scheduleType} onValueChange={setScheduleType} required>
+						<SelectTrigger>
+							<SelectValue placeholder='Select schedule type' />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value={DatasourceScheduleType.MANUAL}>Manual</SelectItem>
+							{/*<option value={DatasourceScheduleType.BASICSCHEDULE}>Basic Schedule</option>*/}
+							<SelectItem value={DatasourceScheduleType.CRON} disabled={!cronProps?.allowedPeriods}>
+								Scheduled
+							</SelectItem>
+						</SelectContent>
+					</Select>
 				</div>
 			</div>
 
@@ -61,30 +63,27 @@ export default function DatasourceScheduleForm({
 				<div className=''>
 					<label
 						htmlFor='timeUnit'
-						className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mt-2'
-					>
+						className='block text-sm font-medium leading-6 text-foreground mt-2'>
 						Frequency
 					</label>
 					<div>
-						<select
-							required
-							name='timeUnit'
-							id='timeUnit'
-							onChange={e => setTimeUnit(e.target.value)}
-							value={timeUnit}
-							className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-						>
-							{scheduleOptions.map(option => {
-								if (cronProps?.allowedPeriods?.includes(option.value)) {
-									return (
-										<option key={option.value} value={option.value}>
-											{option.label}
-										</option>
-									);
-								}
-								return null;
-							})}
-						</select>
+						<Select value={timeUnit} onValueChange={setTimeUnit} required>
+							<SelectTrigger>
+								<SelectValue placeholder='Select frequency' />
+							</SelectTrigger>
+							<SelectContent>
+								{scheduleOptions.map(option => {
+									if (cronProps?.allowedPeriods?.includes(option.value)) {
+										return (
+											<SelectItem key={option.value} value={option.value}>
+												{option.label}
+											</SelectItem>
+										);
+									}
+									return null;
+								})}
+							</SelectContent>
+						</Select>
 					</div>
 				</div>
 			)}
@@ -98,7 +97,7 @@ export default function DatasourceScheduleForm({
 					/>
 					<label
 						htmlFor='cronExpression'
-						className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
+						className='block text-sm font-medium leading-6 text-foreground'
 					>
 						Cron Expression
 					</label>
@@ -111,8 +110,10 @@ export default function DatasourceScheduleForm({
 							id='cronExpression'
 							onChange={e => setCronExpression(e.target.value)}
 							value={cronExpression}
-							className={classNames('block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white mb-4',
-								cronProps?.disabled === true ? 'disabled:bg-gray-200 cursor-not-allowed' : '')}
+							className={classNames(
+								'block w-full rounded-md border border-input bg-background py-1.5 text-foreground shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring sm:text-sm sm:leading-6 mb-4',
+								cronProps?.disabled === true ? 'disabled:bg-muted cursor-not-allowed' : ''
+							)}
 						/>
 					</div>
 				</div>
