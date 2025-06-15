@@ -15,6 +15,15 @@ import { DatasourceScheduleType, StreamConfig } from 'struct/datasource';
 import { Retriever } from 'struct/tool';
 import submittingReducer from 'utils/submittingreducer';
 import { useShallow } from 'zustand/react/shallow';
+import {
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectLabel,
+	SelectTrigger,
+	SelectValue
+} from 'modules/components/ui/select';
 
 interface DataSourceDetailsFormValues {
 	chunkStrategy: string;
@@ -141,32 +150,28 @@ const DataSourceDetails = () => {
 						Field To Embed<span className='text-destructive'> *</span>
 					</label>
 					<div>
-						<select
-							required
-							name='embeddingField'
-							id='embeddingField'
-							onChange={e => {
-								setStore({ embeddingField: e.target.value });
-							}}
+						<Select
 							value={embeddingField}
-							className='block w-full rounded-md border-0 py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-input placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-ring sm:text-sm sm:leading-6 bg-background'>
-							<optgroup label='Select field to embed' key='embeddingField_optgroup_0' disabled>
-								Select field to embed
-							</optgroup>
-							{Object.entries(streamState)
-								.filter((e: [string, StreamConfig]) => e[1].checkedChildren.length > 0)
-								.map((stream: [string, StreamConfig], ei: number) => {
-									return (
-										<optgroup label={stream[0]} key={`embeddingField_optgroup_${ei}`}>
+							onValueChange={value => setStore({ embeddingField: value })}
+							required>
+							<SelectTrigger>
+								<SelectValue placeholder='Select field to embed' />
+							</SelectTrigger>
+							<SelectContent>
+								{Object.entries(streamState)
+									.filter((e: [string, StreamConfig]) => e[1].checkedChildren.length > 0)
+									.map((stream: [string, StreamConfig], ei: number) => (
+										<SelectGroup key={`embeddingField_group_${ei}`}>
+											<SelectLabel>{stream[0]}</SelectLabel>
 											{stream[1].checkedChildren.map((sk, ski) => (
-												<option key={`embeddingField_option_${ski}`} value={sk}>
+												<SelectItem key={`embeddingField_item_${ski}`} value={sk}>
 													{sk}
-												</option>
+												</SelectItem>
 											))}
-										</optgroup>
-									);
-								})}
-						</select>
+										</SelectGroup>
+									))}
+							</SelectContent>
+						</Select>
 					</div>
 				</div>
 
