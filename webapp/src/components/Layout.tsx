@@ -411,8 +411,8 @@ export default withRouter(function Layout(props) {
 						<TrialNag />
 					</SidebarFooter>
 				</Sidebar>
-				<div className='grow w-full'>
-					<section className='min-h-14 border-b sticky top-0 bg-background flex gap-4 items-center justify-between p-4 z-50'>
+				<div className='grow w-full bg-background'>
+					<section className='min-h-14 border-b sticky top-0 flex gap-4 items-center justify-between p-4 z-50'>
 						<SidebarTrigger />
 						<div className='flex items-center gap-x-4 lg:gap-x-6'>
 							{/* Notification Bell */}

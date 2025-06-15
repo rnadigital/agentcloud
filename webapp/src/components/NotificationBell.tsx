@@ -38,7 +38,7 @@ export default function NotificationBell() {
 	}, [resourceSlug]);
 
 	return (
-		<Menu as='div' className='relative dark:text-white'>
+		<Menu as='div' className='relative text-foreground'>
 			<Menu.Button className='flex items-center'>
 				<span className='sr-only'>View notifications</span>
 				<BellIcon className='h-6 w-6' aria-hidden='true' />
@@ -55,8 +55,7 @@ export default function NotificationBell() {
 				enterTo='transform opacity-100 scale-100'
 				leave='transition ease-in duration-75'
 				leaveFrom='transform opacity-100 scale-100'
-				leaveTo='transform opacity-0 scale-95'
-			>
+				leaveTo='transform opacity-0 scale-95'>
 				<Menu.Items className='absolute right-0 z-10 mt-2.5 origin-top-right rounded-md bg-white dark:bg-slate-800 py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none max-h-[500px] overflow-y-auto overflow-x-hidden min-w-[290px] dark:text-white'>
 					{notificationContext?.length > 0 ? (
 						notificationContext

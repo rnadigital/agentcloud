@@ -31,11 +31,13 @@ export const ConnectionsTable = ({
 	}
 
 	return (
-		<Table className='min-w-full bg-white shadow border-2 mt-10 rounded-lg'>
+		<Table className='min-w-full bg-card shadow border-2 mt-10 rounded-lg'>
 			<TableHeader>
-				<TableRow className='bg-gray-100'>
+				<TableRow className='bg-muted'>
 					{columns.map(name => (
-						<TableCell className='font-semibold uppercase text-gray-500 p-5 text-xs' key={name}>
+						<TableCell
+							className='font-semibold uppercase text-muted-foreground p-5 text-xs'
+							key={name}>
 							{name}
 						</TableCell>
 					))}
@@ -45,12 +47,12 @@ export const ConnectionsTable = ({
 				{datasources.map((connection, index) => (
 					<TableRow
 						onClick={() => goToDatasourcePage(connection._id.toString())}
-						className='py-4 cursor-pointer text-foreground'
+						className='py-4 cursor-pointer text-foreground hover:bg-muted/50'
 						key={index}>
 						<TableCell className='p-5'>
 							<div>
 								<p className='font-semibold'>{connection.name}</p>
-								<span className='text-gray-500 text-xs'>
+								<span className='text-muted-foreground text-xs'>
 									{dayjs(connection.createdDate).format('MMM D, YYYY h:mm A')}
 								</span>
 							</div>
@@ -61,14 +63,14 @@ export const ConnectionsTable = ({
 							<div
 								className={`flex items-center gap-2 w-fit px-2 py-1 text-sm rounded ${
 									connection.status === DatasourceStatus.READY
-										? 'bg-green-100 text-green-700'
+										? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
 										: connection.status === DatasourceStatus.DRAFT
-											? 'bg-gray-100 text-gray-700'
+											? 'bg-muted text-muted-foreground'
 											: connection.status === DatasourceStatus.PROCESSING
-												? 'bg-yellow-100 text-yellow-700'
+												? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
 												: connection.status === DatasourceStatus.EMBEDDING
-													? 'bg-purple-100 text-purple-700'
-													: 'bg-red-100 text-red-700'
+													? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'
+													: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
 								}`}>
 								{connection.status === DatasourceStatus.READY ? (
 									<CircleCheck width={15} />
@@ -86,7 +88,7 @@ export const ConnectionsTable = ({
 						</TableCell>
 						<TableCell className='p-5 text-xs'>
 							<div className='flex items-center gap-2'>
-								<div className='flex items-center gap-2 bg-gray-100 px-2 py-1 rounded text-gray-500'>
+								<div className='flex items-center gap-2 bg-muted px-2 py-1 rounded text-muted-foreground'>
 									<Clock width={15} />
 									<p>
 										{connection.lastSyncedDate
@@ -94,7 +96,7 @@ export const ConnectionsTable = ({
 											: 'N/A'}
 									</p>
 								</div>
-								<button className='ml-auto flex items-center gap-2 px-2.5 py-0.5 text-white bg-[#4F46E5] rounded-md'>
+								<button className='ml-auto flex items-center gap-2 px-2.5 py-0.5 text-primary-foreground bg-primary hover:bg-primary/90 rounded-md'>
 									<RefreshCcw width={15} />
 									<p>Sync</p>
 								</button>
@@ -106,8 +108,7 @@ export const ConnectionsTable = ({
 							) : (
 								<Trash2
 									width={25}
-									className='border border-gray-200 rounded px-1 py-0.5'
-									color='#9CA3AF'
+									className='border border-border rounded px-1 py-0.5 text-muted-foreground hover:text-destructive'
 									onClick={e => {
 										e.stopPropagation();
 										deleteDatasource(connection._id.toString());

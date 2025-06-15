@@ -341,7 +341,7 @@ div.bg-gray-200.border.rounded-sm.flex.space-x-1.pl-1 {
 }
 @layer base {
 	:root {
-		--background: 0 0% 100%;
+		--background: 0 0% 98%;
 		--foreground: 0 0% 3.9%;
 		--card: 0 0% 100%;
 		--card-foreground: 0 0% 3.9%;
@@ -377,38 +377,38 @@ div.bg-gray-200.border.rounded-sm.flex.space-x-1.pl-1 {
 		--sidebar-ring: 217.2 91.2% 59.8%;
 	}
 	.dark {
-		--background: 0 0% 3.9%;
+		--background: 220 13% 18%;
 		--foreground: 0 0% 98%;
-		--card: 0 0% 3.9%;
+		--card: 220 13% 18%;
 		--card-foreground: 0 0% 98%;
-		--popover: 0 0% 3.9%;
+		--popover: 220 13% 18%;
 		--popover-foreground: 0 0% 98%;
 		--primary: 0 0% 98%;
 		--primary-foreground: 0 0% 9%;
-		--secondary: 0 0% 14.9%;
+		--secondary: 217 19% 27%;
 		--secondary-foreground: 0 0% 98%;
-		--muted: 0 0% 14.9%;
-		--muted-foreground: 0 0% 63.9%;
-		--accent: 0 0% 14.9%;
+		--muted: 217 19% 27%;
+		--muted-foreground: 215 20.2% 65.1%;
+		--accent: 217 19% 27%;
 		--accent-foreground: 0 0% 98%;
 		--destructive: 0 62.8% 30.6%;
 		--destructive-foreground: 0 0% 98%;
-		--border: 0 0% 14.9%;
-		--input: 0 0% 14.9%;
-		--ring: 0 0% 83.1%;
+		--border: 217 19% 27%;
+		--input: 217 19% 27%;
+		--ring: 215 20.2% 65.1%;
 		--chart-1: 220 70% 50%;
 		--chart-2: 160 60% 45%;
 		--chart-3: 30 80% 55%;
 		--chart-4: 280 65% 60%;
 		--chart-5: 340 75% 55%;
-		--sidebar-background1: #7b75ec;
-		--sidebar-background2: #5937b0;
-		--sidebar-foreground: 0 0%, 100%;
-		--sidebar-primary: 224.3 76.3% 48%;
-		--sidebar-primary-foreground: 0 0% 100%;
-		--sidebar-accent: 240 3.7% 15.9%;
-		--sidebar-accent-foreground: 240 4.8% 95.9%;
-		--sidebar-border: 240 3.7% 15.9%;
+		--sidebar-background1: 243 75% 59%;
+		--sidebar-background2: 274 51% 36%;
+		--sidebar-foreground: 0 0% 100%;
+		--sidebar-primary: 240 5.9% 10%;
+		--sidebar-primary-foreground: 0 0% 98%;
+		--sidebar-accent: 240 4.8% 95.9%;
+		--sidebar-accent-foreground: 240 5.9% 10%;
+		--sidebar-border: 220 13% 91%;
 		--sidebar-ring: 217.2 91.2% 59.8%;
 	}
 }
@@ -441,6 +441,18 @@ div.bg-gray-200.border.rounded-sm.flex.space-x-1.pl-1 {
 	background-color: rgba(255, 255, 255, 0.5);
   }
   
+  
+  
+
+.bg-gradient-sidebar {
+  background: linear-gradient(
+    to bottom,
+    hsl(var(--sidebar-background1)),
+    hsl(var(--sidebar-background2))
+  );
+}
+
+
   
   
 
