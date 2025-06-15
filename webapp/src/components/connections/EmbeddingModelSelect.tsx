@@ -178,7 +178,7 @@ const EmbeddingModelSelect = () => {
 				</SelectTrigger>
 				<SelectContent>
 					{existingModelOptions.map(option => (
-						<SelectItem key={option.value} value={option.value}>
+						<SelectItem key={option.value?.toString()} value={option.value?.toString() || ''}>
 							{option.label} ({option.model})
 						</SelectItem>
 					))}
