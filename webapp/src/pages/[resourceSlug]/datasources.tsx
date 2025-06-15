@@ -27,7 +27,7 @@ export default function Datasources(props) {
 	const filteredDatasources = datasources?.filter(x => !x.hidden);
 	const [open, setOpen] = useState(false);
 	const [spec, setSpec] = useState(null);
-	const [airbyteState, setAirbyteState] = useState(null);
+	const [airbyteState, setAirbyteState] = useState({ isEnabled: false });
 	const [airbyteLoading, setAirbyteLoading] = useState(false);
 
 	async function fetchDatasources(silent = false) {

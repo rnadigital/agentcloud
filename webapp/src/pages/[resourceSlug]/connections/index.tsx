@@ -115,7 +115,7 @@ const ConnectionsPage = props => {
 
 				<button
 					onClick={() => router.push(`/${resourceSlug}/connections/add`)}
-					className='flex items-center gap-2 bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-foreground py-2.5 px-4 rounded-lg'>
+					className='flex items-center gap-2 bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white py-2.5 px-4 rounded-lg hover:opacity-90'>
 					<CirclePlus width={10.5} />
 					<p className='font-semibold text-sm'>New Connection</p>
 				</button>
