@@ -36,6 +36,12 @@ interface LLMConfigurationFormValues {
 	modelId?: string;
 }
 
+interface TeamModel {
+	_id: string;
+	name: string;
+	model: string;
+}
+
 const EmbeddingModelSelect = () => {
 	const { teamModels, setStep, fetchTeamModels } = useDatasourceStore(
 		useShallow(state => ({
@@ -58,7 +64,7 @@ const EmbeddingModelSelect = () => {
 
 	const embeddingType = watch('embeddingType');
 	const embeddingModelList = [
-		{ label: null, value: null },
+		{ label: '', value: '' },
 		...((ModelList[embeddingType?.value] || [])
 			.filter(model => ModelEmbeddingLength[model])
 			.filter(m => {
@@ -111,18 +117,19 @@ const EmbeddingModelSelect = () => {
 
 	const [selectedTeamModel, setSelectedTeamModel] = useState('');
 
-	const existingModelOptions = teamModels
-		?.filter(model => ModelEmbeddingLength[model.model])
-		.map(model => ({
-			value: model._id,
-			label: model.name,
-			model: model.model
-		}));
+	const existingModelOptions =
+		teamModels
+			?.filter(model => ModelEmbeddingLength[model.model])
+			.map(model => ({
+				value: model._id,
+				label: model.name,
+				model: model.model
+			})) || [];
 
 	useEffect(() => {
 		if (selectedTeamModel) {
-			const selectedModel = teamModels.find(m => m._id.toString() === selectedTeamModel);
-			if (selectedModel) {
+			const selectedModel = teamModels?.find(m => m._id?.toString() === selectedTeamModel);
+			if (selectedModel?._id) {
 				setValue('modelId', selectedModel._id.toString());
 				setStep(2);
 			}
@@ -140,7 +147,7 @@ const EmbeddingModelSelect = () => {
 	useEffect(() => {
 		if (embeddingType && userSelectedEmbeddingType) {
 			resetField('embeddingModel', {
-				defaultValue: { label: null, value: null }
+				defaultValue: { label: '', value: '' }
 			});
 			setUserSelectedEmbeddingType(false);
 		}
@@ -154,14 +161,13 @@ const EmbeddingModelSelect = () => {
 
 	return (
 		<form
-			className='flex-1 border border-gray-300 p-4 flex flex-col gap-y-3 mt-6'
-			onSubmit={handleSubmit(addNewModel)}
-		>
-			<div className='text-sm flex gap-1 dark:text-white mb-4'>
+			className='flex-1 border border-border bg-background p-4 flex flex-col gap-y-3 mt-6'
+			onSubmit={handleSubmit(addNewModel)}>
+			<div className='text-sm flex gap-1 text-foreground mb-4'>
 				<span>Use Existing Model</span>
 				<ToolTip content='Select an existing embedding model from your team'>
 					<span className='cursor-pointer'>
-						<InformationCircleIcon className='h-4 w-4 text-gray-400' />
+						<InformationCircleIcon className='h-4 w-4 text-muted-foreground' />
 					</span>
 				</ToolTip>
 			</div>
@@ -171,8 +177,8 @@ const EmbeddingModelSelect = () => {
 					<SelectValue placeholder='Select an existing model' />
 				</SelectTrigger>
 				<SelectContent>
-					{existingModelOptions?.map(option => (
-						<SelectItem key={option.value.toString()} value={option.value.toString()}>
+					{existingModelOptions.map(option => (
+						<SelectItem key={option.value} value={option.value}>
 							{option.label} ({option.model})
 						</SelectItem>
 					))}
@@ -182,21 +188,19 @@ const EmbeddingModelSelect = () => {
 			<div className='my-4'>
 				<div className='relative'>
 					<div className='absolute inset-0 flex items-center'>
-						<span className='w-full border-t border-gray-300' />
+						<span className='w-full border-t border-border' />
 					</div>
 					<div className='relative flex justify-center text-sm'>
-						<span className='px-2 bg-white text-gray-500 dark:bg-gray-800'>
-							Or create new model
-						</span>
+						<span className='px-2 bg-background text-muted-foreground'>Or create new model</span>
 					</div>
 				</div>
 			</div>
 
-			<div className='text-sm flex gap-1 dark:text-white'>
+			<div className='text-sm flex gap-1 text-foreground'>
 				<span>Select Embedding</span>
 				<ToolTip content='Embedding models convert text or other data into numerical vectors for analysis and machine learning tasks. Use them for similarity searches, clustering, recommendation systems, and more. Embedding models are used to embed data and store it in a vector database for later RAG retrieval.'>
 					<span className='cursor-pointer'>
-						<InformationCircleIcon className='h-4 w-4 text-gray-400' />
+						<InformationCircleIcon className='h-4 w-4 text-muted-foreground' />
 					</span>
 				</ToolTip>
 			</div>
@@ -205,7 +209,7 @@ const EmbeddingModelSelect = () => {
 					<OnboardingSelect<LLMConfigurationFormValues>
 						options={modelOptions}
 						classNames={{
-							listboxButton: 'rounded-l-md bg-gray-100 dark:bg-gray-600',
+							listboxButton: 'rounded-l-md bg-muted',
 							listboxOptions: 'left-0'
 						}}
 						control={control}
@@ -217,7 +221,7 @@ const EmbeddingModelSelect = () => {
 					<OnboardingSelect<LLMConfigurationFormValues>
 						options={embeddingModelList}
 						classNames={{
-							listboxButton: 'rounded-r-md bg-gray-50 dark:bg-gray-700',
+							listboxButton: 'rounded-r-md bg-background',
 							listboxOptions: 'right-0'
 						}}
 						control={control}
@@ -247,8 +251,7 @@ const EmbeddingModelSelect = () => {
 			<div className='flex justify-end mt-4'>
 				<button
 					type='submit'
-					className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-				>
+					className='rounded-md disabled:bg-muted bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'>
 					Continue
 				</button>
 			</div>
