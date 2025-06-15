@@ -14,7 +14,7 @@ interface DatasourceStore {
 	connectors: Connector[];
 	searchInput: string;
 	currentStep: number;
-	currentDatasourceStep: number;
+	currentDatasourceStep: number | null;
 	chunkingConfig: Record<string, any>;
 	submitting: boolean;
 	error: string | null;
@@ -32,7 +32,7 @@ interface DatasourceStore {
 	initConnectors: (router: any) => Promise<void>;
 	setSearchInput: (input: string) => void;
 	setCurrentStep: (step: number) => void;
-	setCurrentDatasourceStep: (step: number) => void;
+	setCurrentDatasourceStep: (step: number | null) => void;
 	setStreamState: (streamState: Record<string, StreamState>) => void;
 	setChunkingConfig: (config: Record<string, any>) => void;
 	getSpecification: (sourceDefinitionId: string, posthog: any) => Promise<void>;
