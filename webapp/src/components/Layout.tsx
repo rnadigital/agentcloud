@@ -318,12 +318,12 @@ export default withRouter(function Layout(props) {
 					<SidebarHeader className='p-4 flex flex-col justify-center shadow-lg'>
 						<div className='flex gap-2 items-center'>
 							<Box />
-							<p className='font-medium'>Agent Cloud</p>
+							<p className='font-medium text-sidebar-foreground'>Agent Cloud</p>
 						</div>
 					</SidebarHeader>
 					<SidebarContent className='p-4'>
 						<div className='my-4 px-2'>
-							<p className='text-lg font-semibold text-white mb-2'>Team</p>
+							<p className='text-lg font-semibold text-sidebar-foreground mb-2'>Team</p>
 							<OrgSelector2 orgs={orgs} />
 						</div>
 
@@ -338,8 +338,10 @@ export default withRouter(function Layout(props) {
 												{link.icon ? link.icon : <img width={15} src={link.imgPath} />}
 												<p
 													className={cn(
-														'cursor-pointer hover:text-gray-300',
-														path?.endsWith(link.path) ? 'text-gray-100' : 'text-gray-300'
+														'cursor-pointer hover:text-sidebar-foreground/80',
+														path?.endsWith(link.path)
+															? 'text-sidebar-foreground'
+															: 'text-sidebar-foreground/70'
 													)}>
 													{link.name}
 												</p>
@@ -348,7 +350,7 @@ export default withRouter(function Layout(props) {
 									);
 								})}
 							</ul>
-							<div className='my-4 border-t border-gray-300 w-full'></div>
+							<div className='my-4 border-t border-sidebar-border w-full'></div>
 							<ul className='list-none p-0 flex flex-col'>
 								{teamNavigation.map(item => (
 									<Link
@@ -358,15 +360,17 @@ export default withRouter(function Layout(props) {
 										{item.icon}
 										<p
 											className={cn(
-												'cursor-pointer hover:text-gray-300',
-												path?.endsWith(item.href) ? 'text-gray-100' : 'text-gray-300'
+												'cursor-pointer hover:text-sidebar-foreground/80',
+												path?.endsWith(item.href)
+													? 'text-sidebar-foreground'
+													: 'text-sidebar-foreground/70'
 											)}>
 											{item.name}
 										</p>
 									</Link>
 								))}
 								<button
-									className='p-2.5 flex gap-2 items-center text-gray-300 hover:text-gray-100'
+									className='p-2.5 flex gap-2 items-center text-sidebar-foreground/70 hover:text-sidebar-foreground'
 									onClick={() => {
 										posthog.capture('logout', {
 											email: account?.email
@@ -383,27 +387,6 @@ export default withRouter(function Layout(props) {
 									<LogOut width={15} />
 									<p>Logout</p>
 								</button>
-								{/* <Link className='p-2.5 flex gap-2 items-center'>
-									<UsersRound width={15} />
-									<p>Team</p>
-								</Link> */}
-
-								{/* {teamNavigation.map(item => (
-									<li key={item.name}>
-										<Link suppressHydrationWarning href={`/${resourceSlug}${item.href}`}>
-											{item.icon}
-											{item.name}
-										</Link>
-									</li>
-								))} */}
-								{/* <Link className='p-2.5 flex gap-2 items-center'>
-									<Building width={15} />
-									<p>Organization</p>
-								</Link>
-								<Link className='p-2.5 flex gap-2 items-center'>
-									<LogOut width={15} />
-									<p>Logout</p>
-								</Link> */}
 							</ul>
 						</div>
 					</SidebarContent>
@@ -412,13 +395,11 @@ export default withRouter(function Layout(props) {
 					</SidebarFooter>
 				</Sidebar>
 				<div className='grow w-full bg-background'>
-					<section className='min-h-14 border-b sticky top-0 flex gap-4 items-center justify-between p-4 z-50'>
+					<section className='min-h-14 border-b border-border sticky top-0 flex gap-4 items-center justify-between p-4 z-50 bg-background'>
 						<SidebarTrigger />
 						<div className='flex items-center gap-x-4 lg:gap-x-6'>
-							{/* Notification Bell */}
 							<NotificationBell />
 
-							{/* Profile dropdown */}
 							{account && (
 								<Menu as='div' className='relative'>
 									<Menu.Button className='flex items-center'>
@@ -433,12 +414,12 @@ export default withRouter(function Layout(props) {
 										/>
 										<span className='hidden lg:flex lg:items-center ps-2'>
 											<span
-												className='text-sm font-semibold leading-6 text-gray-900 dark:text-white'
+												className='text-sm font-semibold leading-6 text-foreground'
 												aria-hidden='true'>
 												{account.name}
 											</span>
 											<ChevronDownIcon
-												className='ml-2 h-5 w-5 text-gray-400 dark:text-white'
+												className='ml-2 h-5 w-5 text-muted-foreground'
 												aria-hidden='true'
 											/>
 										</span>
@@ -451,11 +432,11 @@ export default withRouter(function Layout(props) {
 										leave='transition ease-in duration-75'
 										leaveFrom='transform opacity-100 scale-100'
 										leaveTo='transform opacity-0 scale-95'>
-										<Menu.Items className='absolute right-0 z-10 mt-2.5 w-64 origin-top-right rounded-md bg-white dark:bg-slate-800 py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none'>
+										<Menu.Items className='absolute right-0 z-10 mt-2.5 w-64 origin-top-right rounded-md bg-popover py-2 shadow-lg ring-1 ring-border focus:outline-none'>
 											{account && (
-												<div className='px-3 py-3 dark:text-white' key='accountdetails'>
-													<p className='text-sm dark:text-gray-50'>Signed in as</p>
-													<p className='truncate text-sm font-semibold text-gray-900 dark:text-white'>
+												<div className='px-3 py-3 text-foreground' key='accountdetails'>
+													<p className='text-sm text-muted-foreground'>Signed in as</p>
+													<p className='truncate text-sm font-semibold text-foreground'>
 														{account.email}
 													</p>
 												</div>
@@ -467,8 +448,8 @@ export default withRouter(function Layout(props) {
 															return (
 																<button
 																	className={cn(
-																		active ? 'bg-gray-50 dark:bg-slate-700' : '',
-																		'w-full text-left block px-3 py-1 text-sm leading-6 text-gray-900 dark:text-white'
+																		active ? 'bg-accent' : '',
+																		'w-full text-left block px-3 py-1 text-sm leading-6 text-foreground'
 																	)}
 																	onClick={() => {
 																		posthog.capture('logout', {
@@ -491,7 +472,7 @@ export default withRouter(function Layout(props) {
 															return (
 																<>
 																	<div className='flex items-center px-3 py-1.5'>
-																		<span className='text-sm text-left mr-3 dark:text-white'>
+																		<span className='text-sm text-left mr-3 text-foreground'>
 																			{item.name}
 																		</span>
 																		<Switch
@@ -501,48 +482,47 @@ export default withRouter(function Layout(props) {
 																			<span className='sr-only'>Use setting</span>
 																			<span
 																				aria-hidden='true'
-																				className='pointer-events-none absolute h-full w-full rounded-md bg-white dark:bg-slate-800'
+																				className='pointer-events-none absolute h-full w-full rounded-md bg-popover'
 																			/>
 																			<span
 																				aria-hidden='true'
-																				className='pointer-events-none absolute mx-auto h-5 w-10 rounded-full bg-gray-200 dark:bg-slate-700 transition-colors duration-200 ease-in-out group-data-[checked]:bg-indigo-600 dark:group-data-[checked]:bg-slate-500'
+																				className='pointer-events-none absolute mx-auto h-5 w-10 rounded-full bg-muted transition-colors duration-200 ease-in-out group-data-[checked]:bg-primary'
 																			/>
 																			<span
 																				aria-hidden='true'
-																				className='pointer-events-none absolute left-0 inline-block h-5 w-5 transform rounded-full border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-400 shadow ring-0 transition-transform duration-200 ease-in-out group-data-[checked]:translate-x-5'
+																				className='pointer-events-none absolute left-0 inline-block h-5 w-5 transform rounded-full border border-border bg-background shadow ring-0 transition-transform duration-200 ease-in-out group-data-[checked]:translate-x-5'
 																			/>
 																		</Switch>
 																	</div>
-																	<hr className='border-gray-200 dark:border-slate-700 mt-2' />
+																	<hr className='border-border mt-2' />
 																</>
 															);
 														}
-														//TODO: developer mode toggle
 														if (item.theme) {
 															return (
 																<div className='flex flex-col space-y-2 py-2'>
-																	<hr className='border-gray-200 dark:border-slate-700 mt-2 ' />
+																	<hr className='border-border mt-2' />
 
-																	<p className='text-xs font-semibold text-gray-900 dark:text-white mt-2 px-3'>
+																	<p className='text-xs font-semibold text-foreground mt-2 px-3'>
 																		Theme
 																	</p>
 																	<button
-																		className='w-full text-left px-3 py-1.5 text-sm hover:bg-gray-50 dark:hover:bg-slate-700 dark:text-white'
+																		className='w-full text-left px-3 py-1.5 text-sm hover:bg-accent text-foreground'
 																		onClick={() => toggleTheme('light')}>
 																		Light
 																	</button>
 																	<button
-																		className='w-full text-left px-3 py-1.5 text-sm hover:bg-gray-50 dark:hover:bg-slate-700 dark:text-white'
+																		className='w-full text-left px-3 py-1.5 text-sm hover:bg-accent text-foreground'
 																		onClick={() => toggleTheme('dark')}>
 																		Dark
 																	</button>
 																	<button
-																		className='w-full text-left px-3 py-1.5 text-sm hover:bg-gray-50 dark:hover:bg-slate-700 dark:text-white'
+																		className='w-full text-left px-3 py-1.5 text-sm hover:bg-accent text-foreground'
 																		onClick={() => toggleUseSystemTheme()}>
 																		System
 																	</button>
 
-																	<hr className='border-gray-200 dark:border-slate-700 mt-2 ' />
+																	<hr className='border-border mt-2' />
 																</div>
 															);
 														}
@@ -550,8 +530,8 @@ export default withRouter(function Layout(props) {
 															<a
 																href={item.href}
 																className={cn(
-																	active ? 'bg-gray-50 dark:bg-slate-700' : '',
-																	'block px-3 py-1 text-sm leading-6 text-gray-900 dark:text-white'
+																	active ? 'bg-accent' : '',
+																	'block px-3 py-1 text-sm leading-6 text-foreground'
 																)}>
 																{item.name}
 															</a>
