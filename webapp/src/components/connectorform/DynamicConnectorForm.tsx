@@ -20,12 +20,10 @@ const ISODatePattern2 = '^([0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}:[0-9]{2
 const DatePattern = '^[0-9]{2}-[0-9]{2}-[0-9]{4}$';
 const YYYYMMDDPattern = '^[0-9]{4}-[0-9]{2}-[0-9]{2}$';
 
-function findPatterns(obj: any): {
-	[key: string]: 'ISODatePattern' | 'ISODateSixPattern' | 'DatePattern' | 'YYYYMMDDPattern';
-} {
-	const foundPatterns: {
-		[key: string]: 'ISODatePattern' | 'ISODateSixPattern' | 'DatePattern' | 'YYYYMMDDPattern';
-	} = {};
+type DatePatternType = 'ISODatePattern' | 'ISODateSixPattern' | 'DatePattern' | 'YYYYMMDDPattern';
+
+function findPatterns(obj: any): Record<string, DatePatternType> {
+	const foundPatterns: Record<string, DatePatternType> = {};
 
 	function search(obj: any, parentKey: string = '') {
 		if (typeof obj !== 'object' || obj === null) {
@@ -69,9 +67,7 @@ function findPatterns(obj: any): {
 
 function updateDateStrings(
 	obj: any,
-	patterns: {
-		[key: string]: 'ISODatePattern' | 'ISODateSixPattern' | 'DatePattern' | 'YYYYMMDDPattern';
-	},
+	patterns: Record<string, DatePatternType>,
 	parentKey: string = ''
 ) {
 	Object.keys(obj).forEach(key => {
@@ -130,10 +126,9 @@ const DynamicConnectorForm = ({ schema, datasourcePost, error }: DynamicFormProp
 				</div>
 			)}
 			<button
-				className='bg-white w-fit flex p-4 items-center px-5 py-2 bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white rounded-md ml-auto'
+				className='w-fit flex p-4 items-center px-5 py-2 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-md ml-auto disabled:opacity-50 disabled:cursor-not-allowed'
 				type='submit'
-				disabled={submitting}
-			>
+				disabled={submitting}>
 				{submitting && <ButtonSpinner />}
 				{submitting ? 'Testing connection...' : 'Connect'}
 			</button>

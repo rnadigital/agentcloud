@@ -48,9 +48,9 @@ const AdditionalFields = () => {
 			{additionalFields.map((field, index) => (
 				<div key={index} className='flex gap-2 items-end'>
 					<div className='flex-1'>
-						<label className='text-sm'>Key</label>
+						<label className='text-sm text-foreground'>Key</label>
 						<input
-							className='mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6 px-2'
+							className='mt-2 block w-full rounded-md border border-input bg-background py-1.5 text-foreground shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring sm:text-sm sm:leading-6 px-2'
 							type='text'
 							placeholder='Key'
 							value={field.key}
@@ -59,9 +59,9 @@ const AdditionalFields = () => {
 					</div>
 
 					<div className='flex-1'>
-						<label className='text-sm'>Value</label>
+						<label className='text-sm text-foreground'>Value</label>
 						<input
-							className='mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6 px-2'
+							className='mt-2 block w-full rounded-md border border-input bg-background py-1.5 text-foreground shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring sm:text-sm sm:leading-6 px-2'
 							type='text'
 							placeholder='Value'
 							value={field.value}
@@ -70,20 +70,18 @@ const AdditionalFields = () => {
 					</div>
 
 					<button
-						className='border border-red-500 p-1 ml-auto mr-2 h-fit rounded-md text-red-500'
+						className='border border-destructive p-1 ml-auto mr-2 h-fit rounded-md text-destructive hover:bg-destructive/10 transition-colors'
 						type='button'
-						onClick={() => deleteField(index)}
-					>
+						onClick={() => deleteField(index)}>
 						Delete
 					</button>
 				</div>
 			))}
 
 			<button
-				className='border border-indigo-500 p-1  mr-auto mt-2 rounded-md text-indigo-500'
+				className='border border-primary p-1 mr-auto mt-2 rounded-md text-primary hover:bg-primary/10 transition-colors'
 				type='button'
-				onClick={addField}
-			>
+				onClick={addField}>
 				Add additional key value pairs
 			</button>
 		</div>

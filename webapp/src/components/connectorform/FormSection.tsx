@@ -23,13 +23,12 @@ const FormSection = ({ properties, name, requiredFields, level = 0 }: FormSectio
 
 	return (
 		<div
-			className={clsx({
-				'ml-4 border p-2': level === 1,
-				'ml-8 border p-2 ': level === 2,
-				'ml-12 border p-2': level >= 3
-			})}
-		>
-			<div className='font-semibold capitalize my-2 text-sm dark:text-slate-400'>{name}</div>
+			className={clsx('border border-border rounded-md', {
+				'ml-4 p-2': level === 1,
+				'ml-8 p-2': level === 2,
+				'ml-12 p-2': level >= 3
+			})}>
+			<div className='font-semibold capitalize my-2 text-sm text-foreground'>{name}</div>
 
 			{sortedEntries.map(([fieldName, fieldSchema]) => {
 				return (

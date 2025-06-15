@@ -9,8 +9,14 @@ import { useDatasourceStore } from 'store/datasource';
 import { Connector } from 'struct/connector';
 import { useShallow } from 'zustand/react/shallow';
 
+interface DataSourceCredentialsFormValues {
+	datasourceName: string;
+	datasourceDescription: string;
+	stagedDatasource?: any;
+}
+
 const DataSourceCredentialsForm = ({ connector }: { connector: Connector }) => {
-	const { watch, setValue, register } = useOnboardingFormContext();
+	const { watch, setValue, register } = useOnboardingFormContext<DataSourceCredentialsFormValues>();
 	const router = useRouter();
 	const posthog = usePostHog();
 
@@ -28,7 +34,7 @@ const DataSourceCredentialsForm = ({ connector }: { connector: Connector }) => {
 	const datasourceName = watch('datasourceName');
 	const datasourceDescription = watch('datasourceDescription');
 
-	const handleDatasourcePost = async (data?) => {
+	const handleDatasourcePost = async (data?: any) => {
 		await datasourcePost(data, connector, datasourceName, datasourceDescription, posthog, router);
 	};
 
@@ -45,19 +51,18 @@ const DataSourceCredentialsForm = ({ connector }: { connector: Connector }) => {
 	}, [stagedDatasource]);
 
 	return (
-		<div className='w-full bg-primary-50 p-6 txt-gray-900 dark:text-slate-400 flex flex-col gap-2'>
+		<div className='w-full bg-primary/10 p-6 text-foreground flex flex-col gap-2'>
 			<div className='font-semibold'>Connect {connector.name}</div>
 			<div>
-				<label htmlFor='name' className='block text-sm leading-6'>
-					Datasource Name<span className='text-red-700'> *</span>
+				<label htmlFor='datasourceName' className='block text-sm leading-6'>
+					Datasource Name<span className='text-destructive'> *</span>
 				</label>
 				<div>
 					<input
 						required
 						type='text'
-						name='name'
-						id='name'
-						className='block w-full rounded-md border-0 py-1.5 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600'
+						id='datasourceName'
+						className='block w-full rounded-md border border-input bg-background py-1.5 text-foreground shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring sm:text-sm sm:leading-6'
 						value={datasourceName}
 						{...register('datasourceName', {
 							required: 'Name is required'
@@ -66,16 +71,15 @@ const DataSourceCredentialsForm = ({ connector }: { connector: Connector }) => {
 				</div>
 			</div>
 			<div>
-				<label htmlFor='description' className='block text-sm leading-6'>
-					Description<span className='text-red-700'> *</span>
+				<label htmlFor='datasourceDescription' className='block text-sm leading-6'>
+					Description<span className='text-destructive'> *</span>
 				</label>
 				<div>
 					<input
 						required
 						type='text'
-						name='description'
-						id='description'
-						className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+						id='datasourceDescription'
+						className='block w-full rounded-md border border-input bg-background py-1.5 text-foreground shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring sm:text-sm sm:leading-6'
 						value={datasourceDescription}
 						{...register('datasourceDescription', {
 							required: 'Description is required'
@@ -89,7 +93,7 @@ const DataSourceCredentialsForm = ({ connector }: { connector: Connector }) => {
 						<DynamicConnectorForm
 							schema={spec.schema.connectionSpecification}
 							datasourcePost={handleDatasourcePost}
-							error={error}
+							error={error || undefined}
 						/>
 					</FormContext>
 				</>
