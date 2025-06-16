@@ -16,8 +16,9 @@ import {
 	stripeEnvs,
 	SubscriptionPlan,
 	SubscriptionPlanConfig,
-	subscriptionPlans
-} from 'struct/billing';
+	subscriptionPlans,
+	AccountStripeData
+} from 'lib/struct/billing';
 const log = debug('webapp:stripe');
 import toObjectId from 'misc/toobjectid';
 import SecretProviderFactory from 'secret/index';
@@ -115,7 +116,7 @@ export async function webhookHandler(req, res, next) {
 
 			log('Customer subscription update planItem %O', planItem);
 			//Note: null to not update them unless required
-			const update = {
+			const updateData: Partial<AccountStripeData> = {
 				...(planItem
 					? { stripePlan: productToPlanMap[planItem.price.product] }
 					: { stripePlan: SubscriptionPlan.FREE }),
@@ -125,66 +126,68 @@ export async function webhookHandler(req, res, next) {
 				},
 				stripeEndsAt: subscriptionUpdated?.current_period_end
 					? subscriptionUpdated?.current_period_end * 1000
-					: null,
+					: undefined,
 				stripeTrial: subscriptionUpdated?.status === 'trialing'
 			};
-			log('Customer subscription update 1 %O', update);
+			log('Customer subscription update 1 %O', updateData);
 			if (subscriptionUpdated['status'] === 'canceled') {
 				log(`${subscriptionUpdated.customer} canceled their subscription`);
-				update['stripeEndsAt'] = subscriptionUpdated.cancel_at * 1000;
-				update['stripeCancelled'] = true;
+				updateData.stripeEndsAt = subscriptionUpdated.cancel_at * 1000;
+				updateData.stripeCancelled = true;
 			} else if (subscriptionUpdated['cancel_at_period_end'] === true) {
 				log(`${subscriptionUpdated.customer} subscription will cancel at end of period`);
-				update['stripeEndsAt'] = subscriptionUpdated.cancel_at * 1000;
-				update['stripeCancelled'] = true;
+				updateData.stripeEndsAt = subscriptionUpdated.cancel_at * 1000;
+				updateData.stripeCancelled = true;
 			} else {
-				update['stripeEndsAt'] = subscriptionUpdated.current_period_end * 1000;
-				update['stripeCancelled'] = false;
+				updateData.stripeEndsAt = subscriptionUpdated.current_period_end * 1000;
+				updateData.stripeCancelled = false;
 			}
-			if (Date.now() >= update['stripeEndsAt'] && update['stripeCancelled'] === true) {
-				update['stripePlan'] = SubscriptionPlan.FREE;
+			if (Date.now() >= (updateData.stripeEndsAt || 0) && updateData.stripeCancelled === true) {
+				updateData.stripePlan = SubscriptionPlan.FREE;
 			}
-			log('Customer subscription update 2 %O', update);
+			log('Customer subscription update 2 %O', updateData);
 
 			// Get org by stripe customer ID
 			const org = await getOrgByStripeCustomerId(subscriptionUpdated.customer);
-			if (!org) {
-				log('No org found for stripe customer ID:', subscriptionUpdated.customer);
+			if (!org || !org._id) {
+				log('No org or org ID found for stripe customer ID:', subscriptionUpdated.customer);
 				return;
 			}
-			await updateOrgStripeCustomer(org._id, update);
+			await updateOrgStripeCustomer(org._id, updateData);
 			break;
 		}
 
 		case 'customer.subscription.deleted': {
 			const subscriptionDeleted = event.data.object;
 			const org = await getOrgByStripeCustomerId(subscriptionDeleted.customer);
-			if (!org) {
-				log('No org found for stripe customer ID:', subscriptionDeleted.customer);
+			if (!org || !org._id) {
+				log('No org or org ID found for stripe customer ID:', subscriptionDeleted.customer);
 				return;
 			}
-			await updateOrgStripeCustomer(org._id, {
+			const updateData: Partial<AccountStripeData> = {
 				stripePlan: SubscriptionPlan.FREE,
 				stripeAddons: { users: 0, storage: 0 },
 				stripeCancelled: true,
 				stripeTrial: false
-			});
+			};
+			await updateOrgStripeCustomer(org._id, updateData);
 			break;
 		}
 
 		case 'customer.subscription.paused': {
 			const subscriptionPaused = event.data.object;
 			const org = await getOrgByStripeCustomerId(subscriptionPaused.customer);
-			if (!org) {
-				log('No org found for stripe customer ID:', subscriptionPaused.customer);
+			if (!org || !org._id) {
+				log('No org or org ID found for stripe customer ID:', subscriptionPaused.customer);
 				return;
 			}
-			await updateOrgStripeCustomer(org._id, {
+			const updateData: Partial<AccountStripeData> = {
 				stripePlan: SubscriptionPlan.FREE,
 				stripeAddons: { users: 0, storage: 0 },
 				stripeCancelled: true,
 				stripeTrial: false
-			});
+			};
+			await updateOrgStripeCustomer(org._id, updateData);
 			break;
 		}
 
@@ -405,15 +408,14 @@ export async function confirmChangePlan(req, res, next) {
 		limit: 1
 	});
 
-	const foundPlan: SubscriptionPlanConfig = subscriptionPlans.find(plan => {
-		return plan.priceId === planPriceId;
-	});
+	const foundPlan = subscriptionPlans.find(plan => plan.priceId === planPriceId);
 	if (!foundPlan) {
 		return dynamicResponse(req, res, 400, { error: 'Could not find plan in pricing table' });
 	}
 
 	if (
 		(!Array.isArray(paymentMethods?.data) || paymentMethods.data.length === 0) &&
+		foundPlan.price &&
 		foundPlan.price > 0
 	) {
 		const checkoutSession = await StripeClient.get().checkout.sessions.create({
@@ -496,7 +498,7 @@ export async function createPortalLink(req, res, next) {
 
 export async function checkReady(req, res, next) {
 	const secretProvider = SecretProviderFactory.getSecretProvider();
-	const missingEnvs = [];
+	const missingEnvs: string[] = [];
 
 	await Promise.all(
 		stripeEnvs.map(async k => {

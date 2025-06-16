@@ -195,7 +195,8 @@ export async function testDatasourceApi(req, res, next) {
 		log('validate', validate);
 		const validated = validate(req.body.sourceConfig);
 		if (
-			validate?.errors?.filter(
+			validate.errors &&
+			validate.errors.filter(
 				p => p?.params?.pattern !== '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$'
 			)?.length > 0
 		) {
@@ -313,13 +314,13 @@ export async function testDatasourceApi(req, res, next) {
 		teamId: toObjectId(req.params.resourceSlug),
 		name: datasourceName,
 		description: datasourceDescription,
-		filename: null,
+		filename: undefined,
 		originalName: datasourceName,
 		sourceId: createdSource.sourceId,
-		connectionId: null, // no connection at this point, that comes after schema check and selecting streams
-		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
+		connectionId: '', // no connection at this point, that comes after schema check and selecting streams
+		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID || '',
 		sourceType,
-		workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID,
+		workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID || '',
 		lastSyncedDate: null,
 		discoveredSchema,
 		createdDate: new Date(),
@@ -472,7 +473,16 @@ export async function addDatasourceApi(req, res, next) {
 	// Update the datasource with the connection settings and sync date
 	await editDatasource(req.params.resourceSlug, datasourceId, {
 		connectionId: createdConnection.connectionId,
-		connectionSettings: connectionBody,
+		connectionSettings: {
+			...connectionBody,
+			destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID || '',
+			prefix: typeof connectionBody.prefix === 'string' ? connectionBody.prefix : null,
+			name: connectionBody.name || datasource._id.toString(),
+			sourceId: connectionBody.sourceId || datasource.sourceId,
+			status: connectionBody.status || 'active',
+			nonBreakingSchemaUpdatesBehavior: connectionBody.nonBreakingSchemaUpdatesBehavior || 'ignore',
+			configurations: connectionBody.configurations || { streams: [] }
+		},
 		modelId: toObjectId(modelId),
 		embeddingField,
 		streamConfig, //TODO: validation
@@ -490,7 +500,7 @@ export async function addDatasourceApi(req, res, next) {
 					overlap_all: overlap_all === 'true',
 					file_type
 				}
-			: null, //TODO: validation
+			: undefined, //TODO: validation
 		vectorDbId: toObjectId(vectorDbId),
 		byoVectorDb,
 		region,
@@ -528,7 +538,7 @@ export async function addDatasourceApi(req, res, next) {
 	//TODO: on any failures, revert the airbyte api calls like a transaction
 
 	/* TODO: fix this. for now we always set the metadata_field_info as copied from the datasource */
-	let metadata_field_info = [];
+	let metadata_field_info: any[] = [];
 	if (datasource) {
 		try {
 			metadata_field_info = getMetadataFieldInfo(datasource?.streamConfig);
@@ -547,7 +557,7 @@ export async function addDatasourceApi(req, res, next) {
 		description: datasourceDescription,
 		type: ToolType.RAG_TOOL,
 		datasourceId: toObjectId(datasourceId),
-		schema: null,
+		schema: undefined,
 		retriever_type: retriever || null,
 		retriever_config: { ...retriever_config, metadata_field_info }, //TODO: validation
 		data: {
@@ -559,7 +569,7 @@ export async function addDatasourceApi(req, res, next) {
 					id: foundIcon._id,
 					filename: foundIcon.filename
 				}
-			: null
+			: undefined
 	});
 	if (noRedirect) {
 		return dynamicResponse(req, res, 200, {
@@ -631,7 +641,16 @@ export async function updateDatasourceScheduleApi(req, res, next) {
 	// Update the datasource with the connection settings
 	await editDatasource(req.params.resourceSlug, datasourceId, {
 		connectionId: datasource.connectionId,
-		connectionSettings: connectionBody,
+		connectionSettings: {
+			...connectionBody,
+			destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID || '',
+			prefix: typeof connectionBody.prefix === 'string' ? connectionBody.prefix : null,
+			name: connectionBody.name || datasource._id.toString(),
+			sourceId: connectionBody.sourceId || datasource.sourceId,
+			status: connectionBody.status || 'active',
+			nonBreakingSchemaUpdatesBehavior: connectionBody.nonBreakingSchemaUpdatesBehavior || 'ignore',
+			configurations: connectionBody.configurations || { streams: [] }
+		},
 		timeUnit: timeUnit
 	});
 
@@ -674,7 +693,7 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 	//update the metadata map of tools if found
 	//TODO: move these fields to be stored on tools and fetch the schema on frontend with the tools datasource ID
 	//NOTE: combines for all streams, may cause conflicts, needs BIG discussion how to overhaul for multi-stream support
-	let metadataFieldInfo = [];
+	let metadataFieldInfo: { name: string; description: string; type: string }[] = [];
 	try {
 		metadataFieldInfo = getMetadataFieldInfo(streamConfig);
 	} catch (e) {
@@ -713,8 +732,7 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 	if (datasource?.connectionSettings?.schedule?.scheduleType === DatasourceScheduleType.CRON) {
 		connectionBody['schedule'] = {
 			scheduleType: DatasourceScheduleType.CRON,
-			//cronExpression: convertCronToQuartz(cronExpression)
-			cronExpression: convertUnitToCron(datasource.timeUnit)
+			cronExpression: convertUnitToCron(datasource.timeUnit || 'day')
 		};
 	} else {
 		connectionBody['schedule'] = {
@@ -756,7 +774,16 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 	// Update the datasource with the connection settings and sync date
 	await editDatasource(req.params.resourceSlug, datasourceId, {
 		connectionId: datasource.connectionId,
-		connectionSettings: connectionBody,
+		connectionSettings: {
+			...connectionBody,
+			destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID || '',
+			prefix: typeof connectionBody.prefix === 'string' ? connectionBody.prefix : null,
+			name: connectionBody.name || datasource._id.toString(),
+			sourceId: connectionBody.sourceId || datasource.sourceId,
+			status: connectionBody.status || 'active',
+			nonBreakingSchemaUpdatesBehavior: connectionBody.nonBreakingSchemaUpdatesBehavior || 'ignore',
+			configurations: connectionBody.configurations || { streams: [] }
+		},
 		streamConfig,
 		...(sync ? { recordCount: { total: 0 } } : {})
 	});
@@ -889,7 +916,9 @@ export async function deleteDatasourceApi(req, res, next) {
 	if (datasource.sourceType === 'file') {
 		try {
 			const storageProvider = StorageProviderFactory.getStorageProvider();
-			await storageProvider.deleteFile(datasource.filename);
+			if (datasource.filename) {
+				await storageProvider.deleteFile(datasource.filename);
+			}
 		} catch (err) {
 			//Ignoring when gcs file doesn't exist or was already deleted
 			if (!Array.isArray(err?.errors) || err.errors[0]?.reason !== 'notFound') {
@@ -1064,18 +1093,17 @@ export async function uploadFileApi(req, res, next) {
 		orgId: toObjectId(res.locals.matchingOrg.id),
 		teamId: toObjectId(req.params.resourceSlug),
 		name: name,
-		filename: filename,
 		description: datasourceDescription,
 		originalName: uploadedFile.name,
-		sourceId: null,
-		connectionId: null,
-		destinationId: null,
+		sourceId: '',
+		connectionId: '',
+		destinationId: '',
 		sourceType: 'file',
-		workspaceId: null,
-		lastSyncedDate: new Date(), //TODO: make this null and then get updated once file upload dataources have some webhook/completion feedback
+		workspaceId: '',
+		lastSyncedDate: new Date(),
 		modelId: toObjectId(modelId),
 		createdDate: new Date(),
-		embeddingField: 'document', //Note: always document for sourceType: file
+		embeddingField: 'document',
 		status: DatasourceStatus.EMBEDDING,
 		recordCount: {
 			total: 0
@@ -1134,7 +1162,7 @@ export async function uploadFileApi(req, res, next) {
 		description: datasourceDescription,
 		type: ToolType.RAG_TOOL,
 		datasourceId: toObjectId(newDatasourceId),
-		schema: null,
+		schema: undefined,
 		retriever_type: retriever || null,
 		retriever_config: retriever_config || {}, //TODO
 		data: {
@@ -1146,7 +1174,7 @@ export async function uploadFileApi(req, res, next) {
 					id: foundIcon._id,
 					filename: foundIcon.filename
 				}
-			: null
+			: undefined
 	});
 
 	return dynamicResponse(req, res, 302, {

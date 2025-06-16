@@ -54,10 +54,8 @@ export default async function createAccount({
 	emailVerified: boolean;
 	addedAccount: InsertResult;
 }> {
-	// Create mongo id or new account
 	const newAccountId = new ObjectId();
 
-	// Create default org and team for account
 	const addedOrg = await addOrg({
 		ownerId: newAccountId,
 		name: `${name}'s Org`,
@@ -68,6 +66,11 @@ export default async function createAccount({
 			[newAccountId.toString()]: new Binary(new Permission(OrgRoles.ORG_ADMIN.base64).array)
 		}
 	});
+
+	if (!addedOrg.insertedId) {
+		throw new Error('Failed to create organization');
+	}
+
 	const addedTeam = await addTeam({
 		ownerId: newAccountId,
 		name: `${name}'s Team`,
@@ -75,25 +78,25 @@ export default async function createAccount({
 		members: [newAccountId],
 		dateCreated: new Date(),
 		permissions: {
-			// [newAccountId.toString()]: new Binary(new Permission(Roles[roleTemplate].base64).array),
 			[newAccountId.toString()]: new Binary(new Permission(TeamRoles.TEAM_ADMIN.base64).array)
 		}
 	});
+
+	if (!addedTeam.insertedId) {
+		throw new Error('Failed to create team');
+	}
+
 	const orgId = addedOrg.insertedId;
 	const teamId = addedTeam.insertedId;
 
-	// Create account and verification token to be sent in email
 	const secretProvider = SecretProviderFactory.getSecretProvider();
 	const amazonKey = await secretProvider.getSecret(SecretKeys.AMAZON_ACCESS_ID);
-	//If there is no SES secret (email cant be sent) or this is an oauth login, don't require email verification.
 	let emailVerified = amazonKey == null || profileId != null;
 	const passwordHash = password ? await bcrypt.hash(password, 12) : null;
 	const oauth = provider ? { [provider]: { id: profileId } } : ({} as OAuthRecordType);
 
-	// get stripe secret
 	const STRIPE_ACCOUNT_SECRET = await secretProvider.getSecret(SecretKeys.STRIPE_ACCOUNT_SECRET);
 
-	// const oauth = provider ? { [provider as OAUTH_PROVIDER]: { id: profileId } } : {} as OAuthRecordType;
 	const [addedAccount, verificationToken] = await Promise.all([
 		addAccount({
 			_id: newAccountId,
@@ -114,8 +117,8 @@ export default async function createAccount({
 					]
 				}
 			],
-			currentOrg: toObjectId(invitingOrgId) || orgId,
-			currentTeam: toObjectId(invitingTeamId) || teamId,
+			currentOrg: invitingOrgId ? toObjectId(invitingOrgId) : orgId,
+			currentTeam: invitingTeamId ? toObjectId(invitingTeamId) : teamId,
 			emailVerified,
 			oauth,
 			permissions: new Binary(REGISTERED_USER.array),
@@ -124,7 +127,7 @@ export default async function createAccount({
 		}),
 		addVerification(newAccountId, VerificationTypes.VERIFY_EMAIL),
 		updateOrgStripeCustomer(orgId, {
-			stripeCustomerId: null,
+			stripeCustomerId: undefined,
 			stripePlan: process.env.SKIP_STRIPE ? SubscriptionPlan.ENTERPRISE : SubscriptionPlan.FREE,
 			stripeAddons: {
 				users: 0,
@@ -139,7 +142,6 @@ export default async function createAccount({
 		if (checkoutSessionId) {
 			emailVerified = false;
 			log('Account creation attempted with checkoutSession %s', checkoutSessionId);
-			//If passing a checkout session ID, try to fetch the customer ID and current sub details, and set it on the new account
 			foundCheckoutSession = await StripeClient.get().checkout.sessions.retrieve(checkoutSessionId);
 			const customerId = foundCheckoutSession?.customer as string;
 			const { planItem, addonUsersItem, addonStorageItem } =
@@ -155,12 +157,10 @@ export default async function createAccount({
 			});
 		}
 		if (!foundCheckoutSession) {
-			// Create Stripe customer
 			const stripeCustomer = await StripeClient.get().customers.create({
 				email,
 				name
 			});
-			// Subscribe customer to 'Pro' plan with a trial
 			const subscription = await StripeClient.get().subscriptions.create({
 				customer: stripeCustomer.id,
 				items: [{ price: process.env.STRIPE_PRO_PLAN_PRICE_ID }],
@@ -173,24 +173,25 @@ export default async function createAccount({
 			});
 			log('Subscription created for new user: %O', subscription);
 			await setOrgStripeCustomerId(orgId, stripeCustomer.id);
+			const proPlanPriceId = process.env.STRIPE_PRO_PLAN_PRICE_ID;
+			if (!proPlanPriceId) {
+				throw new Error('STRIPE_PRO_PLAN_PRICE_ID is not defined');
+			}
 			await updateOrgStripeCustomer(orgId, {
-				stripePlan: priceToPlanMap[process.env.STRIPE_PRO_PLAN_PRICE_ID],
+				stripePlan: priceToPlanMap[proPlanPriceId],
 				stripeEndsAt: subscription.current_period_end * 1000,
 				stripeTrial: true
 			});
 		}
 	}
 
-	//TODO: send a "welcome" email even if emailVerified is true/created from checkout session
-
-	// If SES key is present, send verification email else set emailVerified to true
 	if (!emailVerified) {
 		const emailBody = invite
 			? await render(
 					InviteEmail({
 						inviteURL: `${process.env.URL_APP}/verify?token=${verificationToken}&newpassword=true`,
 						name,
-						teamName
+						teamName: teamName || ''
 					})
 				)
 			: await render(
@@ -210,5 +211,5 @@ export default async function createAccount({
 		});
 	}
 
-	return { emailVerified, addedAccount }; // Can add more to return if necessary
+	return { emailVerified, addedAccount };
 }

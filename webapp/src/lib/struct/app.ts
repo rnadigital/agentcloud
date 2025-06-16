@@ -30,7 +30,7 @@ export type App = {
 	type: AppType;
 	author: string;
 	tags: string[];
-	icon: IconAttachment;
+	icon?: IconAttachment;
 	hidden?: boolean;
 	sharingConfig: SharingConfig;
 	chatAppConfig?: ChatAppConfig;

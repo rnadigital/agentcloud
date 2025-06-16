@@ -55,7 +55,7 @@ const DataSourceCredentialsForm = ({ connector }: { connector: Connector }) => {
 			<div className='font-semibold'>Connect {connector.name}</div>
 			<div>
 				<label htmlFor='datasourceName' className='block text-sm leading-6'>
-					Datasource Name<span className='text-destructive'> *</span>
+					Datasource Name a <span className='text-destructive'> *</span>
 				</label>
 				<div>
 					<input

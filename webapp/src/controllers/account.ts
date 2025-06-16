@@ -42,9 +42,10 @@ export async function welcomeData(req, res, _next) {
 
 	let teams = await getTeamsById(teamIDS); //array of all the teams associated with every org, array of team objects
 
-	const teamMembers = teams.reduce((acc, curr) => {
-		//note: deduplicating teammembers
-		acc[curr._id.toString()] = new Set(curr.members.map(x => x.toString())).size;
+	const teamMembers = teams.reduce<Record<string, number>>((acc, curr) => {
+		if (curr._id) {
+			acc[curr._id.toString()] = new Set(curr.members.map(x => x.toString())).size;
+		}
 		return acc;
 	}, {});
 
@@ -59,8 +60,10 @@ export async function welcomeData(req, res, _next) {
 export async function sharingData(req, res, next) {
 	const accounts = await getAccountsById(res.locals.matchingTeam.members);
 
-	const teamMembers = accounts.reduce((acc, curr) => {
-		acc.push(curr.email);
+	const teamMembers = accounts.reduce<string[]>((acc, curr) => {
+		if (curr.email) {
+			acc.push(curr.email);
+		}
 		return acc;
 	}, []);
 
@@ -259,7 +262,7 @@ export async function requestChangePassword(req, res) {
 	}
 
 	const foundAccount = await getAccountByEmail(email);
-	if (foundAccount) {
+	if (foundAccount && foundAccount._id) {
 		addVerification(foundAccount._id, VerificationTypes.CHANGE_PASSWORD).then(verificationToken => {
 			const emailBody = render(
 				PasswordResetEmail({

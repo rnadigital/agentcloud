@@ -2,7 +2,7 @@ import fs from 'node:fs';
 
 import semver from 'semver';
 
-let migrationVersions = [];
+let migrationVersions: string[] = [];
 
 // rather this than write a static index file
 fs.readdirSync(__dirname).forEach(file => {

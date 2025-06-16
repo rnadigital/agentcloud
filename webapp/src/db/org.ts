@@ -181,9 +181,11 @@ export function updateOrgStripeCustomer(
 	orgId: db.IdOrStr,
 	update: Partial<Org['stripe']>
 ): Promise<any> {
-	const updateObj = {};
-	for (const [key, value] of Object.entries(update)) {
-		updateObj[`stripe.${key}`] = value;
+	const updateObj: Record<string, any> = {};
+	if (update) {
+		for (const [key, value] of Object.entries(update)) {
+			updateObj[`stripe.${key}`] = value;
+		}
 	}
 	return OrgCollection().updateOne(
 		{

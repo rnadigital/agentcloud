@@ -15,6 +15,7 @@ import { App, AppType } from 'struct/app';
 import { SessionStatus } from 'struct/session';
 import { ShareLinkTypes } from 'struct/sharelink';
 import { SharingMode } from 'struct/sharing';
+import { ObjectId } from 'mongodb';
 const log = debug('webapp:controllers:sharelink');
 
 export async function addShareLinkApi(req, res, next) {
@@ -42,7 +43,7 @@ export async function addShareLinkApi(req, res, next) {
 		teamId: toObjectId(req.params.resourceSlug),
 		type,
 		payload: {
-			id: null //Note: later when creating a shareable object, this is updated
+			id: new ObjectId()
 		}
 	});
 
@@ -63,13 +64,22 @@ export async function handleRedirect(req, res, next) {
 	}
 
 	const appId = foundShareLink?.payload?.id;
-	const app: App = await getAppById(req.params.resourceSlug, appId);
+	if (!appId) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid share link' });
+	}
+	const app = await getAppById(req.params.resourceSlug, appId);
+	if (!app) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid app' });
+	}
 
 	let crewId;
 	let hasVariables = false;
 
-	if (app?.type === AppType.CREW) {
-		const crew = await getCrewById(req.params.resourceSlug, app?.crewId);
+	if (app.type === AppType.CREW) {
+		if (!app.crewId) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid crew app' });
+		}
+		const crew = await getCrewById(req.params.resourceSlug, app.crewId);
 		if (!crew) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
@@ -81,25 +91,32 @@ export async function handleRedirect(req, res, next) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
 
-		const agentVariableIds = agents.flatMap(a => a.variableIds.map(v => v.toString()));
+		const agentVariableIds = agents.flatMap(a => (a.variableIds || []).map(v => v.toString()));
 		hasVariables = agentVariableIds.some(v => kickOffVariablesIds.includes(v));
 
 		if (!hasVariables) {
 			const tasks = await Promise.all(
 				crew.tasks.map(t => getTaskById(req.params.resourceSlug, t.toString()))
 			);
-			const taskVariableIds = tasks.flatMap(t => t.variableIds.map(v => v.toString()));
+			const taskVariableIds = tasks.flatMap(t => (t.variableIds || []).map(v => v.toString()));
 			hasVariables = taskVariableIds.some(v => kickOffVariablesIds.includes(v));
 		}
 	} else {
-		const agent = await getAgentById(req.params.resourceSlug, app?.chatAppConfig?.agentId);
+		if (!app.chatAppConfig?.agentId) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid chat app' });
+		}
+		const agent = await getAgentById(req.params.resourceSlug, app.chatAppConfig.agentId);
 		if (!agent) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
-		hasVariables = agent.variableIds?.length > 0;
+		hasVariables = (agent.variableIds?.length || 0) > 0;
 	}
 
-	const canAccess = await checkCanAccessApp(app?._id?.toString(), false, res.locals.account);
+	if (!app._id) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid app' });
+	}
+
+	const canAccess = await checkCanAccessApp(app._id.toString(), false, res.locals.account);
 	if (!canAccess) {
 		return next();
 	}
@@ -112,18 +129,18 @@ export async function handleRedirect(req, res, next) {
 		lastUpdatedDate: new Date(),
 		tokensUsed: 0,
 		status: SessionStatus.STARTED,
-		appId: toObjectId(app?._id),
+		appId: toObjectId(app._id),
 		sharingConfig: {
 			permissions: app?.sharingConfig?.permissions,
 			mode: app?.sharingConfig?.mode as SharingMode
 		}
 	});
 
-	if (!hasVariables) {
+	if (!hasVariables && addedSession.insertedId) {
 		sessionTaskQueue.add(
 			'execute_rag',
 			{
-				type: app?.type,
+				type: app.type,
 				sessionId: addedSession.insertedId.toString()
 			},
 			{ removeOnComplete: true, removeOnFail: true }

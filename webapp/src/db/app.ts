@@ -38,7 +38,7 @@ export function AppCollection(): Collection<App> {
 	return db.db().collection<App>('apps'); // Changed collection to 'apps'
 }
 
-export function getAppById(teamId: db.IdOrStr, appId: db.IdOrStr): Promise<App> {
+export function getAppById(teamId: db.IdOrStr, appId: db.IdOrStr): Promise<App | null> {
 	const res = AppCollection()
 		.aggregate([
 			{
@@ -53,7 +53,7 @@ export function getAppById(teamId: db.IdOrStr, appId: db.IdOrStr): Promise<App> 
 	return res.then(docs => (docs.length > 0 ? docs[0] : null));
 }
 
-export function unsafeGetAppById(appId: db.IdOrStr): Promise<App> {
+export function unsafeGetAppById(appId: db.IdOrStr): Promise<App | null> {
 	const res = AppCollection()
 		.aggregate([
 			{
@@ -105,7 +105,7 @@ export async function updateAppGetOldApp(
 	teamId: db.IdOrStr,
 	appId: db.IdOrStr,
 	app: Partial<App>
-): Promise<App> {
+): Promise<App | null> {
 	return AppCollection().findOneAndUpdate(
 		{
 			_id: toObjectId(appId),
@@ -127,7 +127,7 @@ export function deleteAppById(teamId: db.IdOrStr, appId: db.IdOrStr): Promise<an
 	});
 }
 
-export function deleteAppByIdReturnApp(teamId: db.IdOrStr, appId: db.IdOrStr): Promise<App> {
+export function deleteAppByIdReturnApp(teamId: db.IdOrStr, appId: db.IdOrStr): Promise<App | null> {
 	return AppCollection().findOneAndDelete({
 		_id: toObjectId(appId),
 		teamId: toObjectId(teamId)

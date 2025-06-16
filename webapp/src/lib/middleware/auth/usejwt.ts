@@ -12,7 +12,7 @@ export type JWTData = {
 	email: string;
 };
 
-export function verifyJwt(token): Promise<JWTData> {
+export function verifyJwt(token): Promise<JWTData | null> {
 	return new Promise((res, rej) => {
 		jwt.verify(token, process.env.JWT_SECRET, async function (err, decoded) {
 			if (err != null) {
@@ -47,13 +47,13 @@ export default async function useJWT(req, res, next): Promise<void> {
 	}
 	if (token && token.length > 0) {
 		try {
-			const verifiedToken: JWTData = await verifyJwt(token);
+			const verifiedToken: JWTData | null = await verifyJwt(token);
 			if (verifiedToken != null) {
 				const account: Account = await getAccountById(verifiedToken.accountId);
 				const org: Org = await getOrgById(account.currentOrg);
 				if (account) {
 					res.locals.account = {
-						_id: account._id.toString(),
+						_id: account._id?.toString(),
 						name: account.name,
 						email: account.email,
 						orgs: account.orgs,

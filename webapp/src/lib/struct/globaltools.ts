@@ -140,9 +140,9 @@ The returned data includes essential details like the paper's title, authors, ab
 			builtin: true
 		},
 		requiredParameters: {
-			required: ['serper_api_key'],
+			required: ['api_key'],
 			properties: {
-				serper_api_key: { type: 'string', description: 'The search query to send to Google' }
+				api_key: { type: 'string', description: 'The API key for Serper' }
 			}
 		}
 	},
@@ -164,9 +164,9 @@ The returned data includes essential details like the paper's title, authors, ab
 			builtin: true
 		},
 		requiredParameters: {
-			required: ['firecrawl_api_key'],
+			required: ['api_key'],
 			properties: {
-				firecrawl_api_key: { type: 'string', description: 'The url of the website to parse' }
+				api_key: { type: 'string', description: 'The API key for Firecrawl' }
 			}
 		}
 	},
@@ -188,14 +188,16 @@ The returned data includes essential details like the paper's title, authors, ab
 			builtin: true
 		},
 		requiredParameters: {
-			required: ['apify_api_token'],
+			required: ['api_key'],
 			properties: {
-				apify_api_token: { type: 'string', description: 'The search query to send to Google' }
+				api_key: { type: 'string', description: 'The API key for Apify' }
 			}
 		}
 	}
-].map((t: Tool) => {
-	t.data.builtin = true;
+].map(t => {
+	if (t.data) {
+		t.data.builtin = true;
+	}
 	return t;
 });
 

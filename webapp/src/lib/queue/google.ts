@@ -25,7 +25,7 @@ class GooglePubSubProvider extends MessageQueueProvider {
 		const dataBuffer = Buffer.from(message);
 		try {
 			const messageId = await this.#pubsubClient
-				.topic(process.env.QUEUE_NAME)
+				.topic(process.env.QUEUE_NAME || '')
 				.publish(dataBuffer, metadata);
 			log(`Message ${messageId} sent successfully.`);
 		} catch (error) {

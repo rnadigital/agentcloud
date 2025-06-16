@@ -29,8 +29,8 @@ export async function uploadAssetApi(req, res) {
 		filename,
 		originalFilename: uploadedFile.name,
 		mimeType: uploadedFile.mimetype,
-		linkedCollection: null,
-		linkedToId: null,
+		linkedCollection: undefined,
+		linkedToId: undefined,
 		uploadedAt: new Date()
 	};
 

@@ -286,12 +286,12 @@ export async function addToolApi(req, res, next) {
 		data: toolData,
 		icon: attachedIconToTool
 			? {
-					id: attachedIconToTool._id,
+					id: attachedIconToTool._id || new ObjectId(),
 					filename: attachedIconToTool.filename,
 					linkedId: newToolId
 				}
-			: null,
-		state: linkedTool ? null : isFunctionTool ? ToolState.PENDING : ToolState.READY, //other tool types are always "ready" (for now)
+			: undefined,
+		state: linkedTool ? undefined : isFunctionTool ? ToolState.PENDING : ToolState.READY,
 		parameters,
 		requiredParameters: linkedTool?.requiredParameters,
 		functionId,
@@ -300,8 +300,18 @@ export async function addToolApi(req, res, next) {
 	});
 
 	if (!addedTool?.insertedId) {
-		return dynamicResponse(req, res, 400, { error: 'Error inserting tool into database' });
+		return dynamicResponse(req, res, 400, { error: 'Failed to create tool' });
 	}
+	const toolId = addedTool.insertedId;
+	const addedRevision = await addToolRevision({
+		orgId: toObjectId(res.locals.matchingOrg.id),
+		teamId: toObjectId(req.params.resourceSlug),
+		toolId,
+		content: {
+			data: toolData
+		},
+		date: new Date()
+	});
 
 	if (isFunctionTool) {
 		const functionProvider = FunctionProviderFactory.getFunctionProvider();
@@ -322,33 +332,20 @@ export async function addToolApi(req, res, next) {
 					functionProvider
 						.waitForFunctionToBeActive(functionId)
 						.then(async isActive => {
-							const addedRevision = await addToolRevision({
-								orgId: toObjectId(res.locals.matchingOrg.id),
-								teamId: toObjectId(req.params.resourceSlug),
-								toolId: addedTool?.insertedId,
-								content: {
-									//Note: any type, keeping it very loose for now
-									data: toolData
-								},
-								date: new Date()
-							});
-							log('addToolApi functionId %s isActive %O', functionId, isActive);
-							await new Promise(res => setTimeout(res, 30000));
 							const logs = await functionProvider.getFunctionLogs(functionId).catch(e => {
 								log(e);
 							});
-							log('functionId %s logs %O', functionId, logs);
 							const editedRes = await editToolUnsafe(
 								{
-									_id: toObjectId(addedTool?.insertedId),
+									_id: toObjectId(addedTool?.insertedId || ''),
 									teamId: toObjectId(req.params.resourceSlug),
 									functionId,
 									type: ToolType.FUNCTION_TOOL
 								},
 								{
-									revisionId: toObjectId(addedRevision?.insertedId),
+									revisionId: toObjectId(addedRevision?.insertedId || ''),
 									state: isActive ? ToolState.READY : ToolState.ERROR,
-									...(!isActive && logs ? { functionLogs: logs } : { functionLogs: null })
+									...(!isActive && logs ? { functionLogs: logs } : { functionLogs: undefined })
 								}
 							);
 							if (editedRes.modifiedCount === 0) {
@@ -365,7 +362,7 @@ export async function addToolApi(req, res, next) {
 								orgId: toObjectId(res.locals.matchingOrg.id),
 								teamId: toObjectId(req.params.resourceSlug),
 								target: {
-									id: addedTool?.insertedId.toString(),
+									id: addedTool?.insertedId?.toString() || '',
 									collection: CollectionName.Tools,
 									property: '_id',
 									objectId: true
@@ -486,13 +483,12 @@ export async function editToolApi(req, res, next) {
 	};
 
 	/* TODO: fix this. for now we always set the metadata_field_info as copied from the datasource */
-	let metadata_field_info = [];
+	let metadata_field_info: { name: string; description: string; type: string }[] = [];
 	if (foundDatasource) {
 		try {
 			metadata_field_info = getMetadataFieldInfo(foundDatasource?.streamConfig);
 		} catch (e) {
 			log(e);
-			//supress
 		}
 	}
 
@@ -502,7 +498,7 @@ export async function editToolApi(req, res, next) {
 		const newAttachment = await attachAssetToObject(iconId, req.params.toolId, collectionType);
 		if (newAttachment) {
 			attachedIconToTool = {
-				id: newAttachment._id,
+				id: newAttachment._id || new ObjectId(),
 				filename: newAttachment.filename,
 				linkedId: newAttachment.linkedToId
 			};
@@ -518,7 +514,7 @@ export async function editToolApi(req, res, next) {
 		retriever_type: retriever || null,
 		retriever_config: { ...retriever_config, metadata_field_info },
 		data: toolData,
-		icon: attachedIconToTool ? (iconId ? attachedIconToTool : null) : null,
+		icon: attachedIconToTool ? (iconId ? attachedIconToTool : undefined) : undefined,
 		parameters,
 		...(functionNeedsUpdate ? { state: ToolState.PENDING } : {}),
 		...(ragFilters && !isFunctionTool ? { ragFilters } : {})
@@ -533,6 +529,9 @@ export async function editToolApi(req, res, next) {
 		(type as ToolType) !== ToolType.FUNCTION_TOOL
 	) {
 		functionProvider = FunctionProviderFactory.getFunctionProvider();
+		if (!existingTool?.functionId) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid function ID' });
+		}
 		await functionProvider.deleteFunction(existingTool.functionId);
 	} else if (functionNeedsUpdate) {
 		!functionProvider && (functionProvider = FunctionProviderFactory.getFunctionProvider());
@@ -582,10 +581,10 @@ export async function editToolApi(req, res, next) {
 									type: ToolType.FUNCTION_TOOL // Note: filter to only function tool so if they change the TYPE while its deploying we discard and delete the function to prevent orphan
 								},
 								{
-									revisionId: toObjectId(addedRevision?.insertedId),
+									revisionId: toObjectId(addedRevision?.insertedId || ''),
 									state: isActive ? ToolState.READY : ToolState.ERROR,
 									...(isActive ? { functionId } : {}), //overwrite functionId to new ID if it was successful
-									...(!isActive && logs ? { functionLogs: logs } : { functionLogs: null })
+									...(!isActive && logs ? { functionLogs: logs } : { functionLogs: undefined })
 								}
 							);
 							if (editedRes.modifiedCount === 0) {
@@ -595,10 +594,10 @@ export async function editToolApi(req, res, next) {
 								return functionProvider.deleteFunction(functionId);
 							}
 							const notification = {
-								orgId: toObjectId(existingTool.orgId.toString()),
-								teamId: toObjectId(existingTool.teamId.toString()),
+								orgId: toObjectId(existingTool.orgId?.toString() || ''),
+								teamId: toObjectId(existingTool.teamId?.toString() || ''),
 								target: {
-									id: existingTool._id.toString(),
+									id: existingTool._id?.toString() || '',
 									collection: CollectionName.Tools,
 									property: '_id',
 									objectId: true
@@ -718,7 +717,7 @@ export async function applyToolRevisionApi(req, res, next) {
 								revisionId: toObjectId(revisionId),
 								state: isActive ? ToolState.READY : ToolState.ERROR,
 								...(isActive ? { functionId } : {}), //overwrite functionId to new ID if it was successful
-								...(!isActive && logs ? { functionLogs: logs } : { functionLogs: null })
+								...(!isActive && logs ? { functionLogs: logs } : { functionLogs: undefined })
 							}
 						);
 						if (editedRes.modifiedCount === 0) {
@@ -728,10 +727,10 @@ export async function applyToolRevisionApi(req, res, next) {
 							return functionProvider.deleteFunction(functionId);
 						}
 						const notification = {
-							orgId: toObjectId(existingTool.orgId.toString()),
-							teamId: toObjectId(existingTool.teamId.toString()),
+							orgId: toObjectId(existingTool.orgId?.toString() || ''),
+							teamId: toObjectId(existingTool.teamId?.toString() || ''),
 							target: {
-								id: existingTool._id.toString(),
+								id: existingTool._id?.toString() || '',
 								collection: CollectionName.Tools,
 								property: '_id',
 								objectId: true
@@ -814,7 +813,7 @@ export async function deleteToolApi(req, res, next) {
 		log('Deleting function tool with functionId: %s', existingTool.functionId);
 		const functionProvider = FunctionProviderFactory.getFunctionProvider();
 		try {
-			await functionProvider.deleteFunction(existingTool?.functionId);
+			await functionProvider.deleteFunction(existingTool?.functionId || '');
 			log('Successfully deleted function');
 		} catch (e) {
 			log('Error deleting function: %O', e);

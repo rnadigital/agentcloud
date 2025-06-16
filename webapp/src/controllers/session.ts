@@ -41,6 +41,7 @@ import { App, AppType } from 'struct/app';
 import { SessionStatus } from 'struct/session';
 import { Variable } from 'struct/variable';
 import { chainValidations } from 'utils/validationutils';
+import * as db from 'db/index';
 
 export async function sessionsData(req, res, _next) {
 	const before = req?.query?.before === 'null' ? null : req?.query?.before;
@@ -48,7 +49,7 @@ export async function sessionsData(req, res, _next) {
 	const apps = await getAppsByTeam(req.params.resourceSlug);
 
 	const sessionsWithApps = sessions.map(session => {
-		const app = apps.find(app => app._id.equals(session.appId));
+		const app = apps.find(app => app?._id?.equals(session.appId));
 		return { ...session, app };
 	});
 	return {
@@ -79,11 +80,23 @@ export type SessionDataReturnType = Awaited<ReturnType<typeof sessionData>>;
 
 export async function sessionData(req, res, _next) {
 	const session = await getSessionById(req.params.resourceSlug, req.params.sessionId);
-	const app = await getAppById(req.params.resourceSlug, session?.appId);
+	if (!session?.appId) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid session' });
+	}
+	const app = await getAppById(req.params.resourceSlug, session.appId);
+	if (!app) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid app' });
+	}
 	let avatarMap = {};
-	switch (app?.type) {
+	switch (app.type) {
 		case AppType.CREW:
-			const foundCrew = await getCrewById(req.params.resourceSlug, app?.crewId);
+			if (!app.crewId) {
+				return dynamicResponse(req, res, 400, { error: 'Invalid crew app' });
+			}
+			const foundCrew = await getCrewById(req.params.resourceSlug, app.crewId);
+			if (!foundCrew) {
+				return dynamicResponse(req, res, 400, { error: 'Crew not found' });
+			}
 
 			const taskPromises = foundCrew.tasks.map(t =>
 				getTaskById(req.params.resourceSlug, t.toString())
@@ -93,6 +106,7 @@ export async function sessionData(req, res, _next) {
 
 			const crewAppVariables: Variable[] = [];
 			for (const task of tasks) {
+				if (!task?.variableIds) continue;
 				const variablePromise = task.variableIds.map(v =>
 					getVariableById(req.params.resourceSlug, v)
 				);
@@ -113,7 +127,7 @@ export async function sessionData(req, res, _next) {
 
 			for (const agent of agents) {
 				if (agent?.variableIds) {
-					const variablePromise = agent?.variableIds.map(v =>
+					const variablePromise = agent.variableIds.map(v =>
 						getVariableById(req.params.resourceSlug, v)
 					);
 					const variables = await Promise.all(variablePromise);
@@ -124,7 +138,7 @@ export async function sessionData(req, res, _next) {
 				app.variables = crewAppVariables.map(v => ({
 					name: v.name,
 					defaultValue: v.defaultValue,
-					id: toObjectId(v._id)
+					id: toObjectId(v._id || '')
 				}));
 			}
 
@@ -132,7 +146,10 @@ export async function sessionData(req, res, _next) {
 			break;
 		case AppType.CHAT:
 		default:
-			const foundAgent = await getAgentById(req.params.resourceSlug, app?.chatAppConfig.agentId);
+			if (!app.chatAppConfig?.agentId) {
+				return dynamicResponse(req, res, 400, { error: 'Invalid chat app' });
+			}
+			const foundAgent = await getAgentById(req.params.resourceSlug, app.chatAppConfig.agentId);
 			if (foundAgent) {
 				avatarMap = { [foundAgent.name.toLowerCase()]: foundAgent?.icon?.filename };
 				const variablePromise = (foundAgent?.variableIds || []).map(v =>
@@ -142,7 +159,7 @@ export async function sessionData(req, res, _next) {
 				app.variables = chatAppVariables.map(v => ({
 					name: v.name,
 					defaultValue: v.defaultValue,
-					id: toObjectId(v._id)
+					id: toObjectId(v._id || '')
 				}));
 			}
 			break;
@@ -157,22 +174,40 @@ export async function sessionData(req, res, _next) {
 
 export async function publicSessionData(req, res, _next) {
 	const session = await unsafeGetSessionById(req.params.sessionId || req.query.sessionId);
-	const app = await unsafeGetAppById(session?.appId || req.params.appId);
+	if (!session?.appId) {
+		return null;
+	}
+	const app = await unsafeGetAppById(session.appId);
+	if (!app) {
+		return null;
+	}
 	let avatarMap = {};
-	switch (app?.type) {
+	switch (app.type) {
 		case AppType.CREW:
-			const foundCrew = await unsafeGetCrewById(app?.crewId);
+			if (!app.crewId) {
+				return null;
+			}
+			const foundCrew = await unsafeGetCrewById(app.crewId);
+			if (!foundCrew) {
+				return null;
+			}
 			avatarMap = await unsafeGetAgentNameMap(foundCrew?.agents);
 			break;
 		case AppType.CHAT:
 		default:
-			const foundAgent = await getAgentById(req.params.resourceSlug, app?.chatAppConfig.agentId);
+			if (!app.chatAppConfig?.agentId) {
+				return null;
+			}
+			const foundAgent = await getAgentById(req.params.resourceSlug, app.chatAppConfig.agentId);
 			if (foundAgent) {
 				avatarMap = { [foundAgent.name]: foundAgent?.icon?.filename };
 			}
 			break;
 	}
-	const canAccess = await checkCanAccessApp(app?._id?.toString(), false, res.locals.account);
+	if (!app._id) {
+		return null;
+	}
+	const canAccess = await checkCanAccessApp(app._id.toString(), false, res.locals.account);
 	if (!canAccess) {
 		return null;
 	}
@@ -238,7 +273,10 @@ export async function sessionMessagesData(req, res, _next) {
 
 export async function publicSessionMessagesData(req, res, _next) {
 	const session = await unsafeGetSessionById(req.params.sessionId);
-	const canAccess = await checkCanAccessApp(session?.appId?.toString(), false, res.locals.account);
+	if (!session?.appId) {
+		return null;
+	}
+	const canAccess = await checkCanAccessApp(session.appId.toString(), false, res.locals.account);
 	if (!canAccess) {
 		return null;
 	}
@@ -270,15 +308,23 @@ export async function sessionMessagesJson(req, res, next) {
 	}
 	const data = await sessionMessagesData(req, res, next);
 
-	//TODO: a cleaner way to do this, but it only works for Chat apps anyway. This is OK for now.
 	const sessionId = req.params.sessionId.toString();
 	const session = await unsafeGetSessionById(sessionId);
-	const app = await unsafeGetAppById(session?.appId);
+	if (!session?.appId) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid session' });
+	}
+	const app = await unsafeGetAppById(session.appId);
+	if (!app) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid app' });
+	}
 
 	if (app.type === AppType.CHAT) {
+		if (!app.chatAppConfig?.agentId) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid chat app' });
+		}
 		const agent = await getAgentById(req.params.resourceSlug, app.chatAppConfig.agentId);
 		if (agent?.variableIds) {
-			if (agent?.variableIds.length === 0) {
+			if (agent.variableIds.length === 0) {
 				log('activeSessionRooms in getsessionmessagesjson', activeSessionRooms);
 				if (!activeSessionRooms.includes(`_${sessionId}`)) {
 					log('Resuming session', sessionId);
@@ -346,19 +392,19 @@ export async function addSessionApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
-	const app: App = await getAppById(req.params.resourceSlug, appId);
-
-	//TODO: check if anonymous/public chat app and reject if sharing mode isnt public
-
+	const app = await getAppById(req.params.resourceSlug, appId);
 	if (!app) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
+		return dynamicResponse(req, res, 400, { error: 'Invalid app' });
 	}
 
 	let crewId;
 	let hasVariables = false;
 
-	if (app?.type === AppType.CREW) {
-		const crew = await getCrewById(req.params.resourceSlug, app?.crewId);
+	if (app.type === AppType.CREW) {
+		if (!app.crewId) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid crew app' });
+		}
+		const crew = await getCrewById(req.params.resourceSlug, app.crewId);
 		if (!crew) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
@@ -370,22 +416,29 @@ export async function addSessionApi(req, res, next) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
 
-		const agentVariableIds = agents.flatMap(a => a.variableIds.map(v => v.toString()));
+		const agentVariableIds = agents.flatMap(a => (a.variableIds || []).map(v => v.toString()));
 		hasVariables = agentVariableIds.some(v => kickOffVariablesIds.includes(v));
 
 		if (!hasVariables) {
 			const tasks = await Promise.all(
 				crew.tasks.map(t => getTaskById(req.params.resourceSlug, t.toString()))
 			);
-			const taskVariableIds = tasks.flatMap(t => t.variableIds.map(v => v.toString()));
+			const taskVariableIds = tasks.flatMap(t => (t.variableIds || []).map(v => v.toString()));
 			hasVariables = taskVariableIds.some(v => kickOffVariablesIds.includes(v));
 		}
 	} else {
-		const agent = await getAgentById(req.params.resourceSlug, app?.chatAppConfig?.agentId);
+		if (!app.chatAppConfig?.agentId) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid chat app' });
+		}
+		const agent = await getAgentById(req.params.resourceSlug, app.chatAppConfig.agentId);
 		if (!agent) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 		}
-		hasVariables = agent.variableIds?.length > 0;
+		hasVariables = (agent.variableIds?.length || 0) > 0;
+	}
+
+	if (!app._id) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid app' });
 	}
 
 	const addedSession = await addSession({
@@ -396,7 +449,7 @@ export async function addSessionApi(req, res, next) {
 		lastUpdatedDate: new Date(),
 		tokensUsed: 0,
 		status: SessionStatus.STARTED,
-		appId: toObjectId(app?._id),
+		appId: toObjectId(app._id),
 		sharingConfig: {
 			permissions: {},
 			mode: app?.sharingConfig?.mode
@@ -404,6 +457,9 @@ export async function addSessionApi(req, res, next) {
 	});
 
 	if (!skipRun && !hasVariables) {
+		if (!addedSession.insertedId) {
+			return dynamicResponse(req, res, 400, { error: 'Failed to create session' });
+		}
 		const newSessionId = addedSession.insertedId.toString();
 		activeSessionRooms.push(`_${newSessionId}`);
 		sessionTaskQueue.add(
@@ -445,17 +501,13 @@ export async function deleteSessionApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
-	//TODO: CLOSE MONGO CONNECTION IN AGENT_BACKEND IF IT ISN'T ALREADY CLOSED
-
 	const deletedSession = await deleteSessionById(req.params.resourceSlug, sessionId);
 	if (!deletedSession || deletedSession.deletedCount < 1) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 	client.set(`${sessionId}_stop`, '1');
 
-	return dynamicResponse(req, res, 200, {
-		/*redirect: `/${req.params.resourceSlug}/apps`*/
-	});
+	return dynamicResponse(req, res, 200, {});
 }
 
 /**
@@ -485,14 +537,15 @@ export async function cancelSessionApi(req, res, next) {
 	await setSessionStatus(req.params.resourceSlug, sessionId, SessionStatus.TERMINATED);
 	client.set(`${sessionId}_stop`, '1');
 
-	return dynamicResponse(req, res, 200, {
-		/*redirect: `/${req.params.resourceSlug}/apps`*/
-	});
+	return dynamicResponse(req, res, 200, {});
 }
 
 export async function editSessionApi(req, res, next) {
 	const session = await unsafeGetSessionById(req.body.sessionId);
-	const canAccess = await checkCanAccessApp(session?.appId?.toString(), false, res.locals.account);
+	if (!session?.appId) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid session' });
+	}
+	const canAccess = await checkCanAccessApp(session.appId.toString(), false, res.locals.account);
 	if (!canAccess) {
 		return dynamicResponse(req, res, 400, {
 			error: 'No permission'
@@ -501,20 +554,8 @@ export async function editSessionApi(req, res, next) {
 
 	let validationError = chainValidations(
 		req.body,
-		[
-			// { field: 'name', validation: { ofType: 'string' } },
-			// { field: 'status', validation: { ofType: 'string' } },
-			// { field: 'appId', validation: { ofType: 'string' } },
-			// { field: 'previewLabel', validation: { ofType: 'string' } },
-			// { field: 'sharingConfig', validation: { ofType: 'object' } },
-			{ field: 'variables', validation: { ofType: 'object' } }
-		],
+		[{ field: 'variables', validation: { ofType: 'object' } }],
 		{
-			name: 'Name',
-			status: 'Status',
-			appId: 'App ID',
-			previewLabel: 'Preview Label',
-			sharingConfig: 'Sharing Config',
 			variables: 'Variables'
 		}
 	);
@@ -526,10 +567,6 @@ export async function editSessionApi(req, res, next) {
 	const sessionId = req.params.sessionId;
 
 	const payload = {
-		// name: req.body?.name,
-		// status: req.body?.status,
-		// appId: req.body?.appId,
-		// sharingConfig: req.body?.sharingConfig,
 		variables: req.body?.variables
 	};
 
@@ -571,7 +608,7 @@ export async function sendMessage(req, res, next) {
 		}
 
 		const session = await unsafeGetSessionById(sessionId);
-		if (!session) {
+		if (!session?._id) {
 			return dynamicResponse(req, res, 400, { error: 'Session not found' });
 		}
 
@@ -623,7 +660,7 @@ export async function sendMessage(req, res, next) {
 			orgId: session.orgId,
 			teamId: session.teamId,
 			sessionId: session._id,
-			authorId: null,
+			authorId: undefined,
 			authorName: finalMessage.authorName,
 			ts: finalMessage.ts || messageTimestamp,
 			isFeedback: false,
@@ -633,21 +670,6 @@ export async function sendMessage(req, res, next) {
 		await upsertOrUpdateChatMessage(session._id, updatedMessage, chunk);
 
 		io.to(activeRoomSessionId).emit('message', messagePayload);
-
-		// // Persist the message in the database
-		// await upsertOrUpdateChatMessage(sessionId, {
-		// 	orgId: session.orgId,
-		// 	teamId: session.teamId,
-		// 	sessionId: session._id,
-		// 	authorId: res.locals?.account?._id || null, // API-triggered, no user ID
-		// 	authorName: res.locals?.account?.name || "External API",
-		// 	ts: Date.now(),
-		// 	message: messagePayload.message
-		// }, {
-		// 	ts: Date.now(),
-		// 	chunk: messagePayload.message,
-		// 	tokens: 0 // Update if tokenization is relevant
-		// });
 
 		return dynamicResponse(req, res, 200, {
 			message: 'Message sent successfully'
@@ -662,7 +684,10 @@ export async function sendMessage(req, res, next) {
 
 export async function startSession(req, res, next) {
 	const session = await unsafeGetSessionById(req.body.sessionId);
-	const canAccess = await checkCanAccessApp(session?.appId?.toString(), false, res.locals.account);
+	if (!session?.appId) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid session' });
+	}
+	const canAccess = await checkCanAccessApp(session.appId.toString(), false, res.locals.account);
 	if (!canAccess) {
 		return dynamicResponse(req, res, 400, {
 			error: 'No permission'

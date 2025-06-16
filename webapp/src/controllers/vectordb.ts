@@ -58,7 +58,7 @@ export async function vectorDbJson(req, res, next) {
 export async function vectorDbEditPage(app, req, res, next) {
 	const vectorDb = await getVectorDbById(req.params.vectorDbId);
 	res.locals.data = { vectorDb, account: res.locals.account };
-	return app.render(req, res, `/${req.params.resourceSlug}/vectorDb/${vectorDb._id}/edit`);
+	return app.render(req, res, `/${req.params.resourceSlug}/vectorDb/${vectorDb?._id}/edit`);
 }
 
 /**

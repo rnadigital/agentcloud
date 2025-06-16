@@ -103,13 +103,26 @@ function validateField(
 			) {
 				error = `${fieldDescription} is empty`;
 			}
-			if (validations.lengthMin > 0 && (item == null || item.length < validations.lengthMin)) {
+			if (
+				validations.lengthMin &&
+				validations.lengthMin > 0 &&
+				(item == null || item.length < validations.lengthMin)
+			) {
 				error = `${fieldDescription} is too short`;
 			}
-			if (validations.lengthMax > 0 && (item == null || item.length > validations.lengthMax)) {
+			if (
+				validations.lengthMax &&
+				validations.lengthMax > 0 &&
+				(item == null || item.length > validations.lengthMax)
+			) {
 				error = `${fieldDescription} is too long`;
 			}
-			if (validations.hasLength >= 0 && item?.length && item.length != validations.hasLength) {
+			if (
+				validations.hasLength &&
+				validations.hasLength >= 0 &&
+				item?.length &&
+				item.length != validations.hasLength
+			) {
 				error = `${fieldDescription} is not of the right length`;
 			}
 			if (
@@ -124,8 +137,8 @@ function validateField(
 				validations.inSet.size > 0 &&
 				(item == null ||
 					(Array.isArray(item)
-						? item.some(x => !validations.inSet.has(x))
-						: !validations.inSet.has(item)))
+						? item.some(x => !validations.inSet?.has(x))
+						: !validations.inSet?.has(item)))
 			) {
 				error = `${fieldDescription} is an invalid value`;
 			}
@@ -160,7 +173,7 @@ function validateField(
 				validations.regexMatchAll instanceof RegExp &&
 				(!Array.isArray(item) ||
 					item.length <= 0 ||
-					!item.every(x => validations.regexMatchAll.test(x)))
+					!item.every(x => validations.regexMatchAll?.test(x)))
 			) {
 				error = `${fieldDescription} does not match regular expression ${validations.regexMatchAll.toString()}`;
 			}
@@ -198,8 +211,7 @@ function validateField(
 			if (
 				validations.objectHasEitherKeys &&
 				item !== undefined &&
-				(item == null ||
-					!Object.keys(item).some(x => validations.objectHasEitherKeys.indexOf(x) > -1))
+				!Object.keys(item).some(x => validations.objectHasEitherKeys?.includes(x))
 			) {
 				error = `${fieldDescription} does not have any of the following keys: ${validations.objectHasEitherKeys.join(',')}`;
 			}

@@ -106,7 +106,7 @@ export function getAccountByEmail(email: string): Promise<Account> {
 export function getAccountByOAuthOrEmail(
 	oauthId: AccountOAuthId,
 	provider: OAUTH_PROVIDER,
-	email: string
+	email: string | null
 ): Promise<Account> {
 	let query: any = {
 		[`oauth.${provider}.id`]: oauthId

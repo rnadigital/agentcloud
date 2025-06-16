@@ -7,7 +7,7 @@ ROOT.setAll(Permission.allPermissions);
 
 // Used for role template name
 const ORG_OWNER = new Permission();
-ORG_OWNER.setAll(ORG_BITS);
+ORG_OWNER.setAll([...ORG_BITS]);
 
 const ORG_ADMIN = new Permission();
 ORG_ADMIN.setAll([
@@ -22,10 +22,10 @@ const ORG_MEMBER = new Permission();
 
 // Used for role template name
 const TEAM_OWNER = new Permission();
-TEAM_OWNER.setAll(ORG_BITS);
+TEAM_OWNER.setAll([...ORG_BITS]);
 
 const TEAM_ADMIN = new Permission();
-TEAM_ADMIN.setAll(TEAM_BITS);
+TEAM_ADMIN.setAll([...TEAM_BITS]);
 
 const TEAM_MEMBER = new Permission();
 TEAM_MEMBER.setAll([
@@ -58,7 +58,7 @@ TEAM_MEMBER.setAll([
 const NOT_LOGGED_IN = new Permission();
 export const REGISTERED_USER = new Permission();
 
-export const TeamRoles: any = Object.seal(
+export const TeamRoles = Object.seal(
 	Object.freeze(
 		Object.preventExtensions({
 			TEAM_MEMBER,
@@ -67,7 +67,7 @@ export const TeamRoles: any = Object.seal(
 	)
 );
 
-export const OrgRoles: any = Object.seal(
+export const OrgRoles = Object.seal(
 	Object.freeze(
 		Object.preventExtensions({
 			ORG_ADMIN,
@@ -76,16 +76,20 @@ export const OrgRoles: any = Object.seal(
 	)
 );
 
-export const roleNameMap = {
-	[ROOT.base64]: 'Root',
+type RoleNameMap = {
+	[key: string]: string;
+};
 
-	[ORG_ADMIN.base64]: 'Org Admin',
-	[TEAM_ADMIN.base64]: 'Team Admin',
-	[TEAM_MEMBER.base64]: 'Team Member',
+export const roleNameMap: RoleNameMap = {
+	[String(ROOT.base64)]: 'Root',
+
+	[String(ORG_ADMIN.base64)]: 'Org Admin',
+	[String(TEAM_ADMIN.base64)]: 'Team Admin',
+	[String(TEAM_MEMBER.base64)]: 'Team Member',
 
 	//Note: technical resaons
-	[REGISTERED_USER.base64]: 'Registered User',
-	[NOT_LOGGED_IN.base64]: 'Not Logged In'
+	[String(REGISTERED_USER.base64)]: 'Registered User',
+	[String(NOT_LOGGED_IN.base64)]: 'Not Logged In'
 };
 
 export type TeamRoleKey = keyof typeof TeamRoles;

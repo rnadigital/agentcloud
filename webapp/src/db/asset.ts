@@ -31,12 +31,12 @@ export async function attachAssetToObject(
 	assetId: db.IdOrStr,
 	linkedId: db.IdOrStr,
 	linkedCollection: CollectionName
-): Promise<Asset> {
+): Promise<Asset | null> {
 	return assetCollection().findOneAndUpdate(
 		{
 			_id: toObjectId(assetId),
-			linkedToId: null,
-			linkedCollection: null
+			linkedToId: undefined,
+			linkedCollection: undefined
 		},
 		{
 			$set: {

@@ -11,7 +11,7 @@ let _client: MongoClient | null = null;
 
 export async function connect() {
 	if (!_client) {
-		_client = new MongoClient(process.env.DB_URL, {
+		_client = new MongoClient(process.env.DB_URL || '', {
 			maxPoolSize: 10
 		});
 		log('connecting to mongodb');
@@ -22,7 +22,7 @@ export async function connect() {
 }
 
 export function client(): MongoClient {
-	return _client;
+	return _client as MongoClient;
 }
 
 export function db() {
@@ -31,7 +31,7 @@ export function db() {
 
 export async function connectMongooseDB() {
 	try {
-		await mongoose.connect(process.env.DB_URL);
+		await mongoose.connect(process.env.DB_URL || '');
 		log('Mongoose connected successfully');
 	} catch (error) {
 		log('Mongoose connection error:', error);

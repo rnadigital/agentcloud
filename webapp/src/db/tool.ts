@@ -28,7 +28,7 @@ export async function initGlobalTools() {
 
 	// Prepare the bulk operations for updating or inserting tools
 	const bulkOperations = GlobalTools.map(gt => {
-		const existingTool: Tool = existingToolsMap.get(gt.name);
+		const existingTool: Tool | undefined = existingToolsMap.get(gt.name);
 
 		// If the tool already exists, update it while keeping the _id
 		if (existingTool) {

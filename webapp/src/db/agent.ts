@@ -12,7 +12,7 @@ export function AgentCollection(): Collection<Agent> {
 	return db.db().collection<Agent>('agents');
 }
 
-export function getAgentById(teamId: db.IdOrStr, agentId: db.IdOrStr): Promise<Agent> {
+export function getAgentById(teamId: db.IdOrStr, agentId: db.IdOrStr): Promise<Agent | null> {
 	return AgentCollection().findOne({
 		_id: toObjectId(agentId),
 		teamId: toObjectId(teamId)
@@ -95,7 +95,7 @@ export async function updateAgentGetOldAgent(
 	teamId: db.IdOrStr,
 	agentId: db.IdOrStr,
 	agent: Partial<Agent>
-): Promise<Agent> {
+): Promise<Agent | null> {
 	return AgentCollection().findOneAndUpdate(
 		{
 			_id: toObjectId(agentId),
@@ -148,7 +148,7 @@ export function deleteAgentById(teamId: db.IdOrStr, agentId: db.IdOrStr): Promis
 export function deleteAgentByIdReturnAgent(
 	teamId: db.IdOrStr,
 	agentId: db.IdOrStr
-): Promise<Agent> {
+): Promise<Agent | null> {
 	return AgentCollection().findOneAndDelete({
 		_id: toObjectId(agentId),
 		teamId: toObjectId(teamId)

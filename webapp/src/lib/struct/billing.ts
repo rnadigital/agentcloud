@@ -131,7 +131,7 @@ export const priceToPlanMap: Record<string, SubscriptionPlan> = subscriptionPlan
 
 export const priceToProductMap: Record<string, string> = subscriptionPlans.reduce(
 	(acc, { priceId, productId }) => {
-		if (productId) {
+		if (priceId && productId) {
 			acc[priceId] = productId;
 		}
 		return acc;

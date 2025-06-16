@@ -97,9 +97,9 @@ export async function addKeyApi(req, res, next) {
 	}
 
 	//generate expiration date
-	let epxirationDate = new Date();
+	let epxirationDate: Date | undefined = new Date();
 	if (expirationDays === 'never') {
-		epxirationDate = null;
+		epxirationDate = undefined;
 	} else {
 		const numOfDays = parseInt(expirationDays);
 		epxirationDate.setDate(epxirationDate.getDate() + numOfDays);
@@ -109,7 +109,7 @@ export async function addKeyApi(req, res, next) {
 	const addedKey = await addKey({
 		name: name,
 		description: description,
-		expirationDate: epxirationDate,
+		expirationDate: epxirationDate || null,
 		ownerId: toObjectId(ownerId)
 	});
 
@@ -121,7 +121,7 @@ export async function addKeyApi(req, res, next) {
 	);
 
 	//add the token back into the key object
-	const updatedKey = await addTokenToKey(addedKey?.insertedId, keyToken);
+	const updatedKey = await addTokenToKey(addedKey?.insertedId?.toString() || '', keyToken);
 
 	return dynamicResponse(req, res, 302, {
 		keyId: addedKey.insertedId,
@@ -184,7 +184,7 @@ export async function incrementKeyApi(req, res, next) {
 		expireSeconds === null ? {} : { expiresIn: `${expireSeconds}s` }
 	);
 
-	await addTokenToKey(toObjectId(modifiedKey?._id), newToken);
+	await addTokenToKey(toObjectId(modifiedKey?._id?.toString() || ''), newToken);
 
 	return dynamicResponse(req, res, 302, {});
 }

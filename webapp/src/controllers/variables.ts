@@ -150,7 +150,10 @@ export async function deleteVariableApi(req, res, next) {
 		});
 	}
 
-	if (existingVariable.usedInAgents?.length > 0 || existingVariable.usedInTasks?.length > 0) {
+	if (
+		(existingVariable?.usedInAgents ?? []).length > 0 ||
+		(existingVariable?.usedInTasks ?? []).length > 0
+	) {
 		return dynamicResponse(req, res, 400, {
 			error:
 				'Variable is used in agents or tasks. Remove references first before deleting variable.'

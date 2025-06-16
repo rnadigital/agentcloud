@@ -7,6 +7,7 @@ import { Server } from 'socket.io';
 const log = debug('webapp:socket');
 import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
+import { ObjectId } from 'mongodb';
 dotenv.config({ path: '.env' });
 
 import checkSession from '@mw/auth/checksession';
@@ -31,7 +32,7 @@ import { SharingMode } from './lib/struct/sharing';
 export const io = new Server();
 
 //TODO: move this state into redis once we expand webapp beyond 1 pod
-export let activeSessionRooms = [];
+export let activeSessionRooms: string[] = [];
 export function updateActiveSessionRooms() {
 	activeSessionRooms = [...io.sockets.adapter.rooms]
 		.filter(re => !re[1].has(re[0]))
@@ -51,12 +52,13 @@ export function initSocket(rawHttpServer) {
 			socket.request['locals'] = {};
 		}
 		const backendToken = socket.request.headers['x-agent-backend-socket-token'] || '';
+		const agentBackendToken = process.env.AGENT_BACKEND_SOCKET_TOKEN || '';
 		log('socket.id %O backendToken %O', socket.id, backendToken);
 		socket.request['locals'].isAgentBackend =
-			backendToken.length === process.env.AGENT_BACKEND_SOCKET_TOKEN.length &&
+			backendToken.length === agentBackendToken.length &&
 			timingSafeEqual(
-				Buffer.from(socket.request.headers['x-agent-backend-socket-token'] as String),
-				Buffer.from(process.env.AGENT_BACKEND_SOCKET_TOKEN)
+				Buffer.from(socket.request.headers['x-agent-backend-socket-token'] as string),
+				Buffer.from(agentBackendToken)
 			);
 		socket.request['locals'].isSocket = true;
 		socket.request['locals'].socket = socket;
@@ -109,7 +111,7 @@ export function initSocket(rawHttpServer) {
 				socketRequest.locals.isAgentBackend ? room.substring(1) : room
 			);
 			const canJoinRoom = await checkCanAccessApp(
-				session?.appId?.toString(),
+				session?.appId?.toString() || '',
 				socketRequest.locals.isAgentBackend,
 				socketRequest.locals.account
 			);
@@ -136,10 +138,10 @@ export function initSocket(rawHttpServer) {
 			}
 			client.set(`${data.room}_stop`, '1');
 			await (socketRequest.locals.isAgentBackend === true
-				? unsafeSetSessionStatus(data.room, SessionStatus.TERMINATED)
+				? unsafeSetSessionStatus(session._id?.toString() || '', SessionStatus.TERMINATED)
 				: setSessionStatus(
 						socketRequest?.locals?.account?.currentTeam,
-						data.room,
+						session._id?.toString() || '',
 						SessionStatus.TERMINATED
 					));
 			return io.to(data.room).emit('terminate', true);
@@ -228,8 +230,12 @@ export function initSocket(rawHttpServer) {
 					newStatus
 				);
 				await (socketRequest.locals.isAgentBackend === true
-					? unsafeSetSessionStatus(session._id, newStatus)
-					: setSessionStatus(socketRequest?.locals?.account?.currentTeam, session._id, newStatus));
+					? unsafeSetSessionStatus(session._id?.toString() || '', newStatus)
+					: setSessionStatus(
+							socketRequest?.locals?.account?.currentTeam,
+							session._id?.toString() || '',
+							newStatus
+						));
 				io.to(data.room).emit('status', newStatus);
 			}
 			if (finalMessage.message && finalMessage.incoming === true) {

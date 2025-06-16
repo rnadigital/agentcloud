@@ -200,8 +200,8 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 				jobId
 			};
 			const notification = {
-				orgId: toObjectId(datasource.orgId.toString()),
-				teamId: toObjectId(datasource.teamId.toString()),
+				orgId: toObjectId(datasource.orgId?.toString() || ''),
+				teamId: toObjectId(datasource.teamId?.toString() || ''),
 				target: {
 					id: datasourceId,
 					collection: CollectionName.Notifications,
@@ -223,15 +223,19 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 			};
 			await Promise.all([
 				addNotification(notification),
-				setDatasourceLastSynced(datasource.teamId, datasourceId, new Date()),
+				setDatasourceLastSynced(datasource.teamId?.toString() || '', datasourceId, new Date()),
 				setDatasourceStatus(
-					datasource.teamId,
+					datasource.teamId?.toString() || '',
 					datasourceId,
 					noDataToSync ? DatasourceStatus.READY : DatasourceStatus.EMBEDDING
 				),
-				incrementDatasourceTotalRecordCount(datasource.teamId, datasourceId, recordsLoaded)
+				incrementDatasourceTotalRecordCount(
+					datasource.teamId?.toString() || '',
+					datasourceId,
+					recordsLoaded
+				)
 			]);
-			io.to(datasource.teamId.toString()).emit('notification', notification);
+			io.to(datasource.teamId?.toString() || '').emit('notification', notification);
 		}
 	} else {
 		warn(`No match found in sync-success webhook body: ${JSON.stringify(req.body)}`);
@@ -272,7 +276,7 @@ export async function handleProblemWebhook(req, res, next) {
 
 	if (datasourceId) {
 		const datasource = await unsafeGetDatasourceById(datasourceId);
-		const team = await getTeamById(datasource?.teamId);
+		const team = await getTeamById(datasource?.teamId?.toString() || '');
 		let logUrlPath = '';
 		try {
 			logUrlPath = new URL(logUrl).pathname;
@@ -313,8 +317,8 @@ export async function handleSuccessfulEmbeddingWebhook(req, res, next) {
 	const datasource = await unsafeGetDatasourceById(datasourceId);
 	if (datasource) {
 		const notification = {
-			orgId: toObjectId(datasource.orgId.toString()),
-			teamId: toObjectId(datasource.teamId.toString()),
+			orgId: toObjectId(datasource.orgId?.toString() || ''),
+			teamId: toObjectId(datasource.teamId?.toString() || ''),
 			target: {
 				id: datasourceId,
 				collection: CollectionName.Notifications,
@@ -333,9 +337,9 @@ export async function handleSuccessfulEmbeddingWebhook(req, res, next) {
 		};
 		await Promise.all([
 			addNotification(notification),
-			setDatasourceStatus(datasource.teamId, datasourceId, DatasourceStatus.READY)
+			setDatasourceStatus(datasource.teamId?.toString() || '', datasourceId, DatasourceStatus.READY)
 		]);
-		io.to(datasource.teamId.toString()).emit('notification', notification);
+		io.to(datasource.teamId?.toString() || '').emit('notification', notification);
 	}
 
 	return dynamicResponse(req, res, 200, {});
@@ -347,7 +351,7 @@ export async function checkAirbyteConnection(req, res, next) {
 	let isEnabled = process.env.NEXT_PUBLIC_IS_AIRBYTE_ENABLED === 'true';
 
 	if (status && !isEnabled) {
-		isEnabled = await airbyteSetup.init();
+		isEnabled = (await airbyteSetup.init()) || false;
 	}
 
 	if (!status) {

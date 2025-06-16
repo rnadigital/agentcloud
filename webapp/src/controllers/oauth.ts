@@ -116,7 +116,7 @@ export async function deserializeHandler(obj, done) {
 	const org: Org = await getOrgById(account.currentOrg);
 	if (account) {
 		const accountObj = {
-			_id: account._id.toString(),
+			_id: account._id?.toString(),
 			name: account.name,
 			email: account.email,
 			orgs: account.orgs,

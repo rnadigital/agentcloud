@@ -48,7 +48,7 @@ async function fetchDestinationList(workspaceId: string) {
 		{
 			method: 'GET',
 			headers: {
-				'Content-Type': 'application/json',
+				'Content-Type': 'application/json'
 				// Authorization: `Bearer ${await getAirbyteAuthToken()}`
 			}
 		}
@@ -57,12 +57,19 @@ async function fetchDestinationList(workspaceId: string) {
 }
 
 // Function to create a destination
-async function createDestination(workspaceId: string, provider: string) {
+async function createDestination(workspaceId: string, provider?: string) {
+	if (!provider) {
+		log(
+			'Invalid process.env.MESSAGE_QUEUE_PROVIDER env value:',
+			process.env.MESSAGE_QUEUE_PROVIDER
+		);
+		process.exit(1);
+	}
 	const destinationConfiguration = await getDestinationConfiguration(provider);
 	const response = await fetch(`${process.env.AIRBYTE_API_URL}/api/public/v1/destinations`, {
 		method: 'POST',
 		headers: {
-			'Content-Type': 'application/json',
+			'Content-Type': 'application/json'
 			// Authorization: `Bearer ${await getAirbyteAuthToken()}`
 		},
 		body: JSON.stringify({
@@ -99,7 +106,7 @@ export async function checkAirbyteStatus() {
 		const workspaces = await fetch(`${process.env.AIRBYTE_API_URL}/api/v1/workspaces`, {
 			method: 'GET',
 			headers: {
-				accept: 'application/json',
+				accept: 'application/json'
 				// authorization: `Bearer ${await getAirbyteAuthToken()}`
 			}
 		});
@@ -122,7 +129,7 @@ async function getDestinationConfiguration(provider: string) {
 			username: process.env.RABBITMQ_USERNAME || 'guest',
 			password: process.env.RABBITMQ_PASSWORD || 'guest',
 			exchange: 'agentcloud',
-			port: parseInt(process.env.RABBITMQ_PORT) || 5672,
+			port: parseInt(process.env.RABBITMQ_PORT || '5672'),
 			host,
 			ssl: false
 		};
@@ -241,7 +248,7 @@ export async function init() {
 		);
 		log('AIRBYTE_ADMIN_DESTINATION_ID', airbyteAdminDestination?.destinationId);
 
-		if (airbyteAdminDestination) {
+		if (airbyteAdminDestination && provider) {
 			const currentConfig = airbyteAdminDestination.connectionConfiguration;
 			const newConfig = await getDestinationConfiguration(provider);
 			const configMismatch = Object.keys(newConfig).some(key => {

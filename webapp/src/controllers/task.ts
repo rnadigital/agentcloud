@@ -103,11 +103,10 @@ export async function publicGetTaskJson(req, res, next) {
 	const { name, sessionId } = req?.query || {};
 	try {
 		const session = await unsafeGetSessionById(sessionId);
-		const canAccess = await checkCanAccessApp(
-			session?.appId?.toString(),
-			false,
-			res.locals.account
-		);
+		if (!session?.appId) {
+			return next();
+		}
+		const canAccess = await checkCanAccessApp(session.appId.toString(), false, res.locals.account);
 		if (!canAccess) {
 			return next();
 		}
@@ -286,7 +285,7 @@ export async function addTaskApi(req, res, next) {
 		description,
 		expectedOutput,
 		toolIds: toolIds.map(toObjectId),
-		agentId: agentId ? toObjectId(agentId) : null,
+		agentId: agentId ? toObjectId(agentId) : undefined,
 		context: context.map(toObjectId),
 		asyncExecution: asyncExecution === true,
 		requiresHumanInput: requiresHumanInput === true,
@@ -295,7 +294,7 @@ export async function addTaskApi(req, res, next) {
 		taskOutputFileName: formattedTaskOutputFileName,
 		icon: attachedIconToTask
 			? {
-					id: attachedIconToTask._id,
+					id: attachedIconToTask._id || new ObjectId(),
 					filename: attachedIconToTask.filename,
 					linkedId: newTaskId
 				}
@@ -312,7 +311,9 @@ export async function addTaskApi(req, res, next) {
 			const variable = await getVariableById(req.params.resourceSlug, id);
 			const updatedVariable = {
 				...variable,
-				usedInTasks: [...(variable.usedInTasks || []), addedTask.insertedId]
+				usedInTasks: [...(variable.usedInTasks || []), addedTask.insertedId].filter(
+					(id): id is ObjectId | string => id !== undefined
+				)
 			};
 			return updateVariable(req.params.resourceSlug, id, updatedVariable);
 		});
@@ -421,7 +422,7 @@ export async function editTaskApi(req, res, next) {
 
 	const task = await getTaskById(req.params.resourceSlug, req.params.taskId);
 	if (!task) {
-		return dynamicResponse(req, res, 400, { error: 'Invalid task ID, task does not exist' });
+		return dynamicResponse(req, res, 400, { error: 'Task not found' });
 	}
 
 	if (agentId) {
@@ -499,7 +500,7 @@ export async function editTaskApi(req, res, next) {
 		displayOnlyFinalOutput: displayOnlyFinalOutput === true,
 		storeTaskOutput: storeTaskOutput === true,
 		taskOutputFileName: formattedTaskOutputFileName,
-		agentId: agentId ? toObjectId(agentId) : null,
+		agentId: agentId ? toObjectId(agentId) : undefined,
 		formFields: formFieldsWithObjectIdVariables,
 		isStructuredOutput,
 		variableIds: (variableIds || []).map(toObjectId),
@@ -536,11 +537,17 @@ export async function deleteTaskApi(req, res, next) {
 	}
 
 	const task = await getTaskById(req.params.resourceSlug, taskId);
+	if (!task) {
+		return dynamicResponse(req, res, 400, { error: 'Task not found' });
+	}
 
-	const updateVariablePromises = task.variableIds.map(async (id: string) => {
+	const updateVariablePromises = (task.variableIds || []).map(async (id: string) => {
 		const variable = await getVariableById(req.params.resourceSlug, id);
-		const usedInTasks = variable?.usedInTasks.map(a => a.toString());
-		if (usedInTasks?.length > 0) {
+		if (!variable) {
+			return null;
+		}
+		const usedInTasks = (variable.usedInTasks || []).map(a => a.toString());
+		if (usedInTasks.length > 0) {
 			const newUsedInTasks = usedInTasks.filter(a => a !== taskId);
 			return updateVariable(req.params.resourceSlug, id, {
 				usedInTasks: newUsedInTasks.map(a => toObjectId(a))

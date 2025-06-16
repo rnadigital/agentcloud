@@ -98,7 +98,7 @@ export async function agentData(req, res, _next) {
 export async function agentEditPage(app, req, res, next) {
 	const data = await agentData(req, res, next);
 	res.locals.data = { ...data, account: res.locals.account };
-	return app.render(req, res, `/${req.params.resourceSlug}/agent/${data.agent._id}/edit`);
+	return app.render(req, res, `/${req.params.resourceSlug}/agent/${data.agent?._id}/edit`);
 }
 
 /**
@@ -231,14 +231,14 @@ export async function addAgentApi(req, res, next) {
 		maxRPM,
 		verbose: verbose === true,
 		allowDelegation: allowDelegation === true,
-		toolIds: foundTools.map(t => t._id),
+		toolIds: foundTools.map(t => t._id).filter(id => id !== undefined),
 		icon: attachedIconToAgent
 			? {
-					id: attachedIconToAgent._id,
+					id: attachedIconToAgent._id?.toString() || '',
 					filename: attachedIconToAgent.filename,
 					linkedId: newAgentId
 				}
-			: null,
+			: undefined,
 		variableIds: (variableIds || []).map(toObjectId),
 		dateCreated: new Date()
 	});
@@ -317,7 +317,12 @@ export async function editAgentApi(req, res, next) {
 	}
 
 	const agents = await getAgentsByTeam(req.params.resourceSlug);
-	if (agents.some(agent => agent.name === name && agent._id.toString() !== req.params.agentId)) {
+	if (
+		agents.some(
+			agent =>
+				agent.name === name && agent && agent._id && agent._id.toString() !== req.params.agentId
+		)
+	) {
 		return dynamicResponse(req, res, 400, { error: 'Duplicate agent name' });
 	}
 
@@ -375,7 +380,7 @@ export async function editAgentApi(req, res, next) {
 		const newAttachment = await attachAssetToObject(iconId, req.params.agentId, collectionType);
 		if (newAttachment) {
 			attachedIconToApp = {
-				id: newAttachment._id,
+				id: newAttachment._id?.toString() || '',
 				filename: newAttachment.filename,
 				linkedId: newAttachment.linkedToId
 			};
@@ -393,8 +398,8 @@ export async function editAgentApi(req, res, next) {
 		maxRPM,
 		verbose: verbose === true,
 		allowDelegation: allowDelegation === true,
-		toolIds: foundTools.map(t => t._id),
-		icon: iconId ? attachedIconToApp : null,
+		toolIds: foundTools.map(t => t._id).filter(id => id !== undefined),
+		icon: iconId ? attachedIconToApp : undefined,
 		variableIds: (variableIds || []).map(toObjectId)
 	});
 
@@ -430,10 +435,12 @@ export async function deleteAgentApi(req, res, next) {
 
 	const oldAgent = await deleteAgentByIdReturnAgent(req.params.resourceSlug, agentId);
 
-	if (oldAgent.variableIds?.length > 0) {
+	if (oldAgent?.variableIds && oldAgent.variableIds.length > 0) {
 		const updatePromises = oldAgent.variableIds.map(async (id: string) => {
 			const variable = await getVariableById(req.params.resourceSlug, id);
-			const usedInAgents = variable?.usedInAgents.map(a => a.toString());
+			const usedInAgents = variable?.usedInAgents
+				? variable.usedInAgents.map(a => a.toString())
+				: [];
 			if (usedInAgents?.length > 0) {
 				const newUsedInAgents = usedInAgents.filter(a => a !== agentId);
 				return updateVariable(req.params.resourceSlug, id, {

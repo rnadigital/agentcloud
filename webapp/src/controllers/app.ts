@@ -47,9 +47,11 @@ export async function appsData(req, res, _next) {
 			getAccountsById(res.locals.matchingTeam.members)
 		]);
 
-	const teamMemberemails = teamMembers.reduce((acc, curr) => {
+	const teamMemberemails = teamMembers.reduce<string[]>((acc, curr) => {
 		//get AccountsById gets the entire account object, which we don't need so we extract the emails from them
-		acc.push(curr.email);
+		if (curr.email) {
+			acc.push(curr.email);
+		}
 		return acc;
 	}, []);
 
@@ -79,9 +81,11 @@ export async function appData(req, res, _next) {
 			getVariablesByTeam(req.params.resourceSlug)
 		]);
 
-	const teamMemberemails = teamMembers.reduce((acc, curr) => {
+	const teamMemberemails = teamMembers.reduce<string[]>((acc, curr) => {
 		//get AccountsById gets the entire account object, which we don't need so we extract the emails from them
-		acc.push(curr.email);
+		if (curr.email) {
+			acc.push(curr.email);
+		}
 		return acc;
 	}, []);
 	return {
@@ -322,7 +326,7 @@ export async function addAppApi(req, res, next) {
 			process,
 			verbose,
 			fullOutput: fullOutput === true,
-			managerModelId: managerModelId ? toObjectId(managerModelId) : null
+			managerModelId: managerModelId ? toObjectId(managerModelId) : undefined
 		});
 	} else {
 		if (agentId) {
@@ -334,7 +338,7 @@ export async function addAppApi(req, res, next) {
 			if (!chatAgentModel) {
 				return dynamicResponse(req, res, 400, { error: 'Agent model invalid or missing' });
 			}
-			if (!ChatAppAllowedModels.has(chatAgentModel?.type)) {
+			if (!chatAgentModel?.type || !ChatAppAllowedModels.has(chatAgentModel?.type)) {
 				return dynamicResponse(req, res, 400, {
 					error:
 						'Only OpenAI, Azure OpenAI, Anthropic, Google, Groq and Ollama models are supported for chat apps.'
@@ -358,11 +362,11 @@ export async function addAppApi(req, res, next) {
 		author: res.locals.matchingTeam.name,
 		icon: attachedIconToApp
 			? {
-					id: attachedIconToApp._id,
+					id: attachedIconToApp._id || new ObjectId(),
 					filename: attachedIconToApp.filename,
 					linkedId: newAppId
 				}
-			: null,
+			: undefined,
 		type,
 		...((type as AppType) === AppType.CREW
 			? {
@@ -390,7 +394,7 @@ export async function addAppApi(req, res, next) {
 			teamId: toObjectId(req.params.resourceSlug),
 			shareId: shareLinkShareId,
 			payload: {
-				id: toObjectId(addedApp?.insertedId)
+				id: toObjectId(addedApp?.insertedId?.toString() || '')
 			}
 		});
 	}
@@ -552,7 +556,7 @@ export async function editAppApi(req, res, next) {
 	//TODO: refactor and make not mostly duplicated between add and edit APIs
 	// let chatAgent;
 	if (!isChatApp) {
-		await updateCrew(req.params.resourceSlug, app.crewId, {
+		await updateCrew(req.params.resourceSlug, app.crewId || '', {
 			orgId: res.locals.matchingOrg.id,
 			teamId: toObjectId(req.params.resourceSlug),
 			name,
@@ -561,7 +565,7 @@ export async function editAppApi(req, res, next) {
 			process,
 			verbose,
 			fullOutput: fullOutput === true,
-			managerModelId: managerModelId ? toObjectId(managerModelId) : null
+			managerModelId: managerModelId ? toObjectId(managerModelId) : undefined
 		});
 	} else {
 		if (agentId) {
@@ -573,7 +577,7 @@ export async function editAppApi(req, res, next) {
 			if (!chatAgentModel) {
 				return dynamicResponse(req, res, 400, { error: 'Agent model invalid or missing' });
 			}
-			if (!ChatAppAllowedModels.has(chatAgentModel?.type)) {
+			if (chatAgentModel?.type && !ChatAppAllowedModels.has(chatAgentModel?.type)) {
 				return dynamicResponse(req, res, 400, {
 					error:
 						'Only OpenAI, Azure OpenAI, Anthropic, Google, Groq and Ollama models are supported for chat apps.'
@@ -586,13 +590,17 @@ export async function editAppApi(req, res, next) {
 
 	const sharePermissions = await getSharePermissions(req, res);
 
-	let attachedIconToApp: IconAttachment = app?.icon;
+	let attachedIconToApp: IconAttachment = app?.icon || {
+		id: new ObjectId(),
+		filename: '',
+		linkedId: new ObjectId()
+	};
 	if (app?.icon?.id?.toString() !== iconId) {
 		const collectionType = CollectionName.Apps;
 		const newAttachment = await attachAssetToObject(iconId, req.params.appId, collectionType);
 		if (newAttachment) {
 			attachedIconToApp = {
-				id: newAttachment._id,
+				id: newAttachment._id || new ObjectId(),
 				filename: newAttachment.filename,
 				linkedId: newAttachment.linkedToId
 			};
@@ -603,7 +611,7 @@ export async function editAppApi(req, res, next) {
 		name,
 		description,
 		tags: (tags || []).map(tag => tag.trim()).filter(x => x),
-		icon: iconId ? attachedIconToApp : null,
+		icon: iconId ? attachedIconToApp : undefined,
 		...(app.type === AppType.CREW
 			? {
 					memory: memory === true,
@@ -692,7 +700,7 @@ export async function getSharePermissions(req, res) {
 				});
 				foundAccount = await getAccountByEmail(em);
 			}
-			sharePermissions[foundAccount?._id.toString()] = em; //TODO: not put emails here, but it will be less efficient on the frontend otherwise
+			sharePermissions[foundAccount?._id?.toString() || ''] = em; //TODO: not put emails here, but it will be less efficient on the frontend otherwise
 		})
 	);
 	return sharePermissions;

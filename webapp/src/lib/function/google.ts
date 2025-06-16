@@ -35,9 +35,9 @@ class GoogleFunctionProvider extends FunctionProvider {
 		await this.#storageProvider.init();
 		const { FunctionServiceClient } = require('@google-cloud/functions').v2;
 		this.#functionsClient = new FunctionServiceClient();
-		this.#projectId = process.env.PROJECT_ID;
-		this.#location = process.env.GOOGLE_FUNCTION_LOCATION;
-		this.#bucket = process.env.NEXT_PUBLIC_GCS_BUCKET_NAME_PRIVATE;
+		this.#projectId = process.env.PROJECT_ID || '';
+		this.#location = process.env.GOOGLE_FUNCTION_LOCATION || '';
+		this.#bucket = process.env.NEXT_PUBLIC_GCS_BUCKET_NAME_PRIVATE || '';
 		log('Google Function Provider initialized.');
 	}
 

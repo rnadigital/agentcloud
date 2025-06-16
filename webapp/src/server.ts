@@ -48,7 +48,6 @@ const log = debug('webapp:server');
 app
 	.prepare()
 	.then(async () => {
-		
 		await airbyteSetup.init();
 		await db.connect();
 		await db.connectMongooseDB();
@@ -94,15 +93,19 @@ app
 			});
 		});
 
-		rawHttpServer.listen(parseInt(process.env.EXPRESS_PORT), process.env.EXPRESS_HOST, () => {
-			if (typeof process.send === 'function') {
-				log('SENT READY SIGNAL TO PM2');
-				process.send('ready');
+		rawHttpServer.listen(
+			parseInt(process.env.EXPRESS_PORT || '3000'),
+			process.env.EXPRESS_HOST || 'localhost',
+			() => {
+				if (typeof process.send === 'function') {
+					log('SENT READY SIGNAL TO PM2');
+					process.send('ready');
+				}
+				log(
+					`Ready on http${dev ? '' : 's'}://${process.env.EXPRESS_HOST}:${process.env.EXPRESS_PORT}`
+				);
 			}
-			log(
-				`Ready on http${dev ? '' : 's'}://${process.env.EXPRESS_HOST}:${process.env.EXPRESS_PORT}`
-			);
-		});
+		);
 
 		//graceful stop handling
 		const gracefulStop = () => {

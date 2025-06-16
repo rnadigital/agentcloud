@@ -88,7 +88,7 @@ async function getAirbyteApi(type: AirbyteApiType) {
 const MAX_ITERATIONS = 100;
 //Utility function to get all airbyte jobs
 export async function fetchAllAirbyteJobs(options?: Partial<ListJobsBody>) {
-	const combinedJobList = [];
+	const combinedJobList: any[] = [];
 	const jobsApi = await getAirbyteApi(AirbyteApiType.JOBS);
 	const listJobsBody: ListJobsBody = {
 		jobType: 'sync',

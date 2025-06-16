@@ -105,6 +105,10 @@ export async function inviteTeamMemberApi(req, res) {
 	const invitingTeam = res.locals.matchingOrg.teams.find(
 		t => t.id.toString() === req.params.resourceSlug
 	);
+	if (!invitingTeam) {
+		return dynamicResponse(req, res, 400, { error: 'Invalid team' });
+	}
+
 	if (!foundAccount) {
 		const { addedAccount } = await createAccount({
 			email,
@@ -115,12 +119,21 @@ export async function inviteTeamMemberApi(req, res) {
 			invitingTeamId: invitingTeam.id,
 			invitingOrgId: res.locals.matchingOrg.id
 		});
+		if (!addedAccount?.insertedId) {
+			return dynamicResponse(req, res, 400, { error: 'Failed to create account' });
+		}
 		await addTeamMember(req.params.resourceSlug, addedAccount.insertedId, template);
 		foundAccount = await getAccountByEmail(email);
 	} else {
 		//account with that email was found
 		const foundTeam = await getTeamById(req.params.resourceSlug);
-		if (foundTeam.members.some(tmid => tmid.toString() === foundAccount._id.toString())) {
+		if (!foundTeam) {
+			return dynamicResponse(req, res, 400, { error: 'Team not found' });
+		}
+		if (!foundAccount?._id) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid account' });
+		}
+		if (foundTeam.members.some(tmid => tmid.toString() === foundAccount?._id?.toString())) {
 			return dynamicResponse(req, res, 409, { error: 'User is already on your team' });
 		}
 		await addTeamMember(req.params.resourceSlug, foundAccount._id, template);
@@ -132,12 +145,18 @@ export async function inviteTeamMemberApi(req, res) {
 		alreadyInOrg && alreadyInOrg.teams.find(t => t.id.toString() === invitingTeam.id.toString());
 	if (!alreadyInOrg) {
 		//if user isnt in org, add the new org to their account array with the invitingTeam already pushed
+		if (!foundAccount?._id) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid account' });
+		}
 		await pushAccountOrg(foundAccount._id, {
 			...res.locals.matchingOrg,
 			teams: [invitingTeam]
 		});
 	} else if (alreadyInOrg && !alreadyInTeam) {
 		//otherwise theyre already in the org, just push the single team to the matching org
+		if (!foundAccount?._id) {
+			return dynamicResponse(req, res, 400, { error: 'Invalid account' });
+		}
 		await pushAccountTeam(foundAccount._id, res.locals.matchingOrg.id, invitingTeam);
 	}
 	//member invited
@@ -211,6 +230,9 @@ export async function addTeamApi(req, res) {
 			)
 		}
 	});
+	if (!addedTeam?.insertedId) {
+		return dynamicResponse(req, res, 400, { error: 'Failed to create team' });
+	}
 	await addTeamMember(addedTeam.insertedId, res.locals.account._id);
 	await pushAccountTeam(res.locals.account._id, res.locals.matchingOrg.id, {
 		id: addedTeam.insertedId,

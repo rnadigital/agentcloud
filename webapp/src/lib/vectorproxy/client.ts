@@ -23,7 +23,7 @@ class VectorDBProxyClient {
 			//TODO: have vector-db-poxy return a boolean or something logical for actually just knowing if the collection exists or not
 			//createOptions are optional as an optimisation where the data is already in scope
 			const existingDatasource = await unsafeGetDatasourceById(collectionId);
-			if (!existingDatasource) {
+			if (!existingDatasource || !existingDatasource.teamId || !existingDatasource.modelId) {
 				throw new Error(`Datasource for datasourceId ${collectionId} for createCollection request`);
 			}
 			const existingModel = await getModelById(
@@ -41,7 +41,7 @@ class VectorDBProxyClient {
 				distance: Distance.Cosine, // As per the note: always cosine (for now)
 				region: createOptions?.region,
 				cloud: createOptions?.cloud,
-				index_name: createOptions.index_name
+				index_name: createOptions?.index_name
 			};
 		} else {
 			log('Collection %s already exists', collectionId);
