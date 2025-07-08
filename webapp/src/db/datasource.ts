@@ -54,10 +54,12 @@ export function getDatasourcesById(
 		.toArray();
 }
 
-export function getDatasourcesByVectorDbId(vectorDbId: db.IdOrStr) {
-	return DataSourceModel.find({
-		vectorDbId: toObjectId(vectorDbId)
-	}).populate<{ vectorDbId: VectorDbType }>('vectorDbId');
+export function getDatasourcesByVectorDbId(vectorDbId: db.IdOrStr): Promise<Datasource[]> {
+	return DatasourceCollection()
+		.find({
+			vectorDbId: toObjectId(vectorDbId)
+		})
+		.toArray();
 }
 
 export function getDatasourcesByTeam(teamId: db.IdOrStr): Promise<Datasource[]> {

@@ -16,7 +16,7 @@ module.exports = {
 			},
 		],
 	},
-	webpack(config) {
+	webpack(config, { isServer }) {
 		config.resolve.fallback = {
 			// if you miss it, all the other options in fallback, specified
 			// by next.js will be dropped.
@@ -26,7 +26,30 @@ module.exports = {
 			net: false,
 			child_process: false,
 			tls: false,
+			events: false,
+			stream: false,
+			crypto: false,
+			util: false,
+			url: false,
+			querystring: false,
+			http: false,
+			https: false,
+			zlib: false,
+			assert: false,
+			os: false,
+			buffer: false,
 		};
+
+		if (!isServer) {
+			config.externals = config.externals || [];
+			config.externals.push({
+				'@google-cloud/storage': '@google-cloud/storage',
+				'google-auth-library': 'google-auth-library',
+				'gcp-metadata': 'gcp-metadata',
+				'google-logging-utils': 'google-logging-utils',
+			});
+		}
+
 		return config;
 	},
 };
