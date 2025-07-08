@@ -90,8 +90,17 @@ class CrewAIBuilder:
             raise
 
     def build_models(self):
+        print("DEBUG: Building models...")
         for key, model in self.models_models.items():
-            self.crew_models[key] = language_model_factory(model)  # , credential)
+            print(f"  Processing model key: {key}")
+            print(f"  Model data: {model}")
+            print(f"  Model type: {model.type}")
+            
+            created_model = language_model_factory(model)
+            print(f"  Created model type: {type(created_model)}")
+            print(f"  Created model: {created_model}")
+            
+            self.crew_models[key] = created_model
 
     def build_tools_and_their_datasources(self):
         for key, tool in self.tools_models.items():
@@ -138,8 +147,38 @@ class CrewAIBuilder:
             self.crew_tools[key] = tool_instance
 
     def build_agents(self):
+        # Debug available models
+        print("DEBUG: Available models in crew_models:")
+        for model_key, model_obj in self.crew_models.items():
+            print(f"  Key: {model_key}, Type: {type(model_obj)}, Object: {model_obj}")
+        
         for key, agent in self.agents_models.items():
-            model_obj = match_key(self.crew_models, key, exact=True)
+            model_obj = match_key(self.crew_models, keyset(agent.modelId), exact=True)
+            
+            # Debug what model is being matched
+            print(f"DEBUG: Agent {agent.name} modelId: {agent.modelId}")
+            print(f"DEBUG: Model object type: {type(model_obj)}")
+            print(f"DEBUG: Model object: {model_obj}")
+            
+            # Check if model_obj is actually an embeddings object
+            if model_obj is not None and hasattr(model_obj, 'embed_query'):
+                print(f"ERROR: Agent {agent.name} got embeddings model instead of LLM")
+                # Try to find a language model in the available models
+                language_model = None
+                for model_key, model_candidate in self.crew_models.items():
+                    if hasattr(model_candidate, 'invoke') and not hasattr(model_candidate, 'embed_query'):
+                        print(f"Found language model: {type(model_candidate)}")
+                        language_model = model_candidate
+                        break
+                
+                if language_model is None:
+                    print(f"No language model found, creating default OpenAI model for agent {agent.name}")
+                    # Create a default language model
+                    from langchain_openai import ChatOpenAI
+                    language_model = ChatOpenAI(model="gpt-4")
+                
+                model_obj = language_model
+            
             agent_tools_objs = search_subordinate_keys(self.crew_tools, key)
             self.crew_agents[key] = Agent(
                 **agent.model_dump(

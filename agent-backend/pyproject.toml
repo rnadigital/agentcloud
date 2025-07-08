@@ -49,6 +49,9 @@ langchain-google-genai = "^1.0.10"
 motor = "^3.5.1"
 minio = "^7.2.8"
 
+[tool.flake8]
+max-line-length = 200
+ignore = ["E501"]
 
 [build-system]
 requires = ["poetry-core==1.6.1"]

@@ -14,6 +14,6 @@ class DefaultRetriever(BaseToolRetriever):
             embedding=embedding,
             vector_store=vector_store,
             k=tool.retriever_config.k,
-            rag_filters=tool.ragFilters
+            rag_filters=tool.ragFilters or {}
         )
         super().__init__()
