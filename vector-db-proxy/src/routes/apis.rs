@@ -65,10 +65,13 @@ pub async fn list_collections(Path(collection_name): Path<String>) -> Result<imp
     match get_datasource(&mongodb_connection, datasource_id.as_str()).await {
         Ok(option) => match option {
             Some(datasource) => {
-                let vector_database_client =
-                    check_byo_vector_database(datasource, &mongodb_connection)
-                        .await
-                        .unwrap_or(default_vector_db_client().await);
+                let vector_database_client = match check_byo_vector_database(datasource, &mongodb_connection).await {
+                    Some(client) => client,
+                    None => {
+                        println!("list_collections: falling back to default vector database client");
+                        default_vector_db_client().await
+                    }
+                };
                 let vector_database_client = vector_database_client.read().await;
                 let results = vector_database_client.get_list_of_collections().await?;
                 Ok(HttpResponse::Ok()
@@ -133,16 +136,24 @@ pub async fn check_collection_exists(
     //app_data: Data<Arc<RwLock<dyn VectorDatabase>>>,
     Path(collection_name): Path<String>, // Datasource ID
 ) -> Result<HttpResponse> {
+    println!("=== check_collection_exists endpoint called for collection: {} ===", collection_name);
     let collection_id = collection_name.clone();
     let mongodb_connection = start_mongo_connection().await?;
     let mut search_request = SearchRequest::new(SearchType::Collection, collection_id.clone());
     match get_datasource(&mongodb_connection, collection_id.as_str()).await {
         Ok(option) => match option {
             Some(datasource) => {
-                let vector_database_client =
-                    check_byo_vector_database(datasource.clone(), &mongodb_connection)
-                        .await
-                        .unwrap_or(default_vector_db_client().await);
+                println!("Found datasource for check_collection_exists: {:?}", datasource.id);
+                println!("Datasource vector_db_id: {:?}", datasource.vector_db_id);
+                println!("Datasource byo_vector_db: {:?}", datasource.byo_vector_db);
+                
+                let vector_database_client = match check_byo_vector_database(datasource.clone(), &mongodb_connection).await {
+                    Some(client) => client,
+                    None => {
+                        println!("check_collection_exists: falling back to default vector database client");
+                        default_vector_db_client().await
+                    }
+                };
                 let vector_database_client = vector_database_client.read().await;
                 search_request.byo_vector_db = datasource.byo_vector_db;
                 search_request.collection = datasource.collection_name.map_or(collection_id, |d| d);
@@ -247,15 +258,23 @@ pub async fn create_collection(
     //app_data: Data<Arc<RwLock<dyn VectorDatabase>>>,
     data: web::Json<CollectionCreate>,
 ) -> Result<HttpResponse> {
+    println!("=== create_collection endpoint called for collection: {} ===", data.collection_name);
     let collection_id = data.clone().collection_name;
     let mongodb_connection = start_mongo_connection().await?;
     match get_datasource(&mongodb_connection, collection_id.as_str()).await {
         Ok(option) => match option {
             Some(datasource) => {
-                let vector_database_client =
-                    check_byo_vector_database(datasource.clone(), &mongodb_connection)
-                        .await
-                        .unwrap_or(default_vector_db_client().await);
+                println!("Found datasource for create_collection: {:?}", datasource.id);
+                println!("Datasource vector_db_id: {:?}", datasource.vector_db_id);
+                println!("Datasource byo_vector_db: {:?}", datasource.byo_vector_db);
+                
+                let vector_database_client = match check_byo_vector_database(datasource.clone(), &mongodb_connection).await {
+                    Some(client) => client,
+                    None => {
+                        println!("create_collection: falling back to default vector database client");
+                        default_vector_db_client().await
+                    }
+                };
                 let vector_database_client = vector_database_client.read().await;
                 match vector_database_client.create_collection(data.clone()).await {
                     Ok(collection_result) => match collection_result {
@@ -554,10 +573,13 @@ pub async fn delete_collection(
     match get_datasource(&mongodb_connection, collection_id.as_str()).await {
         Ok(option) => match option {
             Some(datasource) => {
-                let vector_database_client =
-                    check_byo_vector_database(datasource.clone(), &mongodb_connection)
-                        .await
-                        .unwrap_or(default_vector_db_client().await);
+                let vector_database_client = match check_byo_vector_database(datasource.clone(), &mongodb_connection).await {
+                    Some(client) => client,
+                    None => {
+                        println!("delete_collection: falling back to default vector database client");
+                        default_vector_db_client().await
+                    }
+                };
                 let vector_database_client = vector_database_client.read().await;
                 let mut search_request = SearchRequest::new(SearchType::Collection, collection_id);
                 search_request.byo_vector_db = Some(true);
@@ -652,10 +674,13 @@ pub async fn get_collection_info(
     match get_datasource(&mongodb_connection, collection_id.as_str()).await {
         Ok(option) => match option {
             Some(datasource) => {
-                let vector_database_client =
-                    check_byo_vector_database(datasource.clone(), &mongodb_connection)
-                        .await
-                        .unwrap_or(default_vector_db_client().await);
+                let vector_database_client = match check_byo_vector_database(datasource.clone(), &mongodb_connection).await {
+                    Some(client) => client,
+                    None => {
+                        println!("get_collection_info: falling back to default vector database client");
+                        default_vector_db_client().await
+                    }
+                };
                 let vector_database_client = vector_database_client.read().await;
                 let mut search_request = SearchRequest::new(SearchType::Collection, collection_id);
                 search_request.byo_vector_db = Some(true);
@@ -743,10 +768,14 @@ pub async fn get_storage_size(Path(team_id): Path<String>) -> Result<impl Respon
     let list_of_team_datasources =
         get_team_datasources(&mongodb_connection, team_id.as_str()).await?;
     for datasource in list_of_team_datasources {
-        let vector_database_client =
-            check_byo_vector_database(datasource.clone(), &mongodb_connection)
-                .await
-                .unwrap_or(default_vector_db_client().await);
+        let vector_database_client = match check_byo_vector_database(datasource.clone(), &mongodb_connection).await {
+            Some(client) => client,
+            None => {
+                println!("get_storage_size: falling back to default vector database client for datasource: {}", datasource.id);
+                default_vector_db_client().await
+            }
+        };
+        
         let vector_database_client = vector_database_client.read().await;
         let model_result = get_model(&mongodb_connection, datasource.id.to_string().as_str()).await;
         match model_result {

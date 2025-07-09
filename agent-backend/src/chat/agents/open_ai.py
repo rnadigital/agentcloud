@@ -1,13 +1,13 @@
 import uuid
 
 from langchain_core.messages import HumanMessage, ToolMessage, AIMessage
-from langchain_core.messages import HumanMessage, AIMessage
 from langgraph.constants import END
 from langgraph.graph import StateGraph, MessagesState, START
 from langgraph.prebuilt import ToolNode
 
 from chat.agents.base import BaseChatAgent
-from chat.mongo_db_saver import AsyncMongoDBSaver
+
+# from chat.mongo_db_saver import AsyncMongoDBSaver
 from tools.global_tools import CustomHumanInput
 
 
@@ -27,20 +27,25 @@ class OpenAIChatAgent(BaseChatAgent):
 
         # If this is not handled, message flow will continuously loop between ToolMessage and AIMessage
         # and not exit the graph until recursion_limit is reached.
-        if ((isinstance(messages[-1], ToolMessage)
-             and messages[-1].name == 'human_input')
-                and (isinstance(response, AIMessage)
-                     and response.tool_calls
-                     and response.tool_calls[0]['name'] == 'human_input')):
-            response.content = response.tool_calls[0]['args']['text']
+        if (
+            isinstance(messages[-1], ToolMessage) and messages[-1].name == "human_input"
+        ) and (
+            isinstance(response, AIMessage)
+            and response.tool_calls
+            and response.tool_calls[0]["name"] == "human_input"
+        ):
+            response.content = response.tool_calls[0]["args"]["text"]
             response.tool_calls = []
             response.additional_kwargs = {}
 
             # also send to socket because content being appended as a tool arg prevents
             # it from being streamed until tool is invoked which is the case here.
-            self.send_to_socket(text=response.content, chunk_id=str(uuid.uuid4()),
-                                author_name=self.agent_name.capitalize(),
-                                display_type="bubble")
+            self.send_to_socket(
+                text=response.content,
+                chunk_id=str(uuid.uuid4()),
+                author_name=self.agent_name.capitalize(),
+                display_type="bubble",
+            )
 
         return {"messages": response}
 
@@ -48,13 +53,20 @@ class OpenAIChatAgent(BaseChatAgent):
         """
         Same as `call_model` except it appends a prompt to invoke the human input tool to message state
         """
-        messages = (state["messages"] +
-                    [HumanMessage(content="Use the human_input tool to ask the user what assistance they need")])
-        response = await self.chat_model.ainvoke(messages, config={**config, 'tags': ['no_stream']})
+        messages = state["messages"] + [
+            HumanMessage(
+                content="Use the human_input tool to ask the user what assistance they need"
+            )
+        ]
+        response = await self.chat_model.ainvoke(
+            messages, config={**config, "tags": ["no_stream"]}
+        )
         return {"messages": [response]}
 
     def build_graph(self):
-        human_input_tool = CustomHumanInput(self.socket, self.session_id, author_name=self.agent_name)
+        human_input_tool = CustomHumanInput(
+            self.socket, self.session_id, author_name=self.agent_name
+        )
 
         self.chat_model = self.chat_model.bind_tools(self.tools + [human_input_tool])
 
@@ -97,7 +109,7 @@ class OpenAIChatAgent(BaseChatAgent):
                 # If `tools`, then we call the tool node.
                 "tools": "tools",
                 "human_input": "human_input",
-                "human_input_invoker": "human_input_invoker"
+                "human_input_invoker": "human_input_invoker",
             },
         )
         graph.add_edge("human_input_invoker", "human_input")
@@ -111,11 +123,12 @@ class OpenAIChatAgent(BaseChatAgent):
                 "continue": "tools",
                 "human_input": "human_input",
                 # Otherwise we finish and go back to human input invoker. Always end with human_input_invoker
-                "end": END
+                "end": END,
             },
         )
 
         # Set up memory
-        memory = AsyncMongoDBSaver()
+        # memory = AsyncMongoDBSaver()
 
-        return graph.compile(checkpointer=memory)
+        # return graph.compile(checkpointer=memory)
+        return graph.compile()  # No checkpointer for testing

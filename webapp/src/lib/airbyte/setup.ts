@@ -4,7 +4,7 @@ import * as util from 'node:util';
 import debug from 'debug';
 import dotenv from 'dotenv';
 import fs from 'fs';
-import fetch from 'node-fetch'; // Ensure node-fetch is installed or use a compatible fetch API
+// import fetch from 'node-fetch'; // Ensure node-fetch is installed or use a compatible fetch API
 const lookup = util.promisify(dns.lookup);
 
 import * as process from 'node:process';
@@ -48,7 +48,7 @@ async function fetchDestinationList(workspaceId: string) {
 		{
 			method: 'GET',
 			headers: {
-				'Content-Type': 'application/json',
+				'Content-Type': 'application/json'
 				// Authorization: `Bearer ${await getAirbyteAuthToken()}`
 			}
 		}
@@ -62,7 +62,7 @@ async function createDestination(workspaceId: string, provider: string) {
 	const response = await fetch(`${process.env.AIRBYTE_API_URL}/api/public/v1/destinations`, {
 		method: 'POST',
 		headers: {
-			'Content-Type': 'application/json',
+			'Content-Type': 'application/json'
 			// Authorization: `Bearer ${await getAirbyteAuthToken()}`
 		},
 		body: JSON.stringify({
@@ -99,7 +99,7 @@ export async function checkAirbyteStatus() {
 		const workspaces = await fetch(`${process.env.AIRBYTE_API_URL}/api/v1/workspaces`, {
 			method: 'GET',
 			headers: {
-				accept: 'application/json',
+				accept: 'application/json'
 				// authorization: `Bearer ${await getAirbyteAuthToken()}`
 			}
 		});

@@ -112,9 +112,13 @@ async fn handle_embedding(
     let metadata = metadata.clone();
     let field_path = "recordCount.failure";
     let mongo = mongo_connection_clone.read().await;
-    let vector_database_client = check_byo_vector_database(datasource.clone(), &mongo)
-        .await
-        .unwrap_or(default_vector_db_client().await);
+    let vector_database_client = match check_byo_vector_database(datasource.clone(), &mongo).await {
+        Some(client) => client,
+        None => {
+            println!("processing_incoming_messages: falling back to default vector database client for datasource: {}", datasource.id);
+            default_vector_db_client().await
+        }
+    };
     let search_type = chunking_strategy
         .clone()
         .map_or(SearchType::default(), |_| SearchType::Collection);

@@ -77,6 +77,32 @@ class RagTool(GlobalBaseTool):
 
         vector_store = vectorstore_factory(embedding_model=embedding_model, collection_name=collection, tool=tool,  api_key=api_key, url=url, type=type, namespace=namespace, byoVectorDb=datasource.byoVectorDb)
 
+        # Check if llm is actually an embeddings object (which would cause the error)
+        if llm is not None and hasattr(llm, 'embed_query'):
+            print("WARNING: llm parameter is actually an embeddings object, falling back to raw retriever")
+            # Temporarily change the retriever type to raw
+            original_retriever_type = tool.retriever_type
+            tool.retriever_type = "raw"
+            result = RagTool(name=tool.name,
+                           description=tool.description,
+                           retriever=retriever_factory(tool, vector_store, embedding_model, None))
+            # Restore the original retriever type
+            tool.retriever_type = original_retriever_type
+            return result
+
+        # If llm is None and we're using self_query retriever, fall back to raw retriever
+        if llm is None and tool.retriever_type == "self_query":
+            print("WARNING: llm is None for self_query retriever, falling back to raw retriever")
+            # Temporarily change the retriever type to raw
+            original_retriever_type = tool.retriever_type
+            tool.retriever_type = "raw"
+            result = RagTool(name=tool.name,
+                           description=tool.description,
+                           retriever=retriever_factory(tool, vector_store, embedding_model, llm))
+            # Restore the original retriever type
+            tool.retriever_type = original_retriever_type
+            return result
+
         return RagTool(name=tool.name,
                        description=tool.description,
                        retriever=retriever_factory(tool, vector_store, embedding_model, llm))

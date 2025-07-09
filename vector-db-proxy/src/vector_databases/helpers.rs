@@ -104,22 +104,54 @@ pub async fn check_byo_vector_database(
     datasource: DataSources,
     mongo: &Database,
 ) -> Option<Arc<RwLock<dyn VectorDatabase>>> {
+    println!("=== check_byo_vector_database called for datasource: {} ===", datasource.id);
+    println!("Datasource vector_db_id: {:?}", datasource.vector_db_id);
+    println!("Datasource byo_vector_db: {:?}", datasource.byo_vector_db);
+    
     if let Some(vector_db_id) = datasource.vector_db_id {
         println!(
             "There's a BYO vector DB associated with the Datasource: {}",
             datasource.id
         );
         println!("Updating vector DB credentials with BYO creds...");
+        println!("Looking up vector_db_id: {}", vector_db_id);
+        
         if let Some(vector_db) = get_vector_db_details(&mongo, vector_db_id).await {
+            println!("Retrieved vector DB details from database: {:?}", vector_db);
+            
+            // Convert empty strings to None for proper validation
+            let url = vector_db.url.filter(|s| !s.trim().is_empty());
+            let api_key = vector_db.apiKey.filter(|s| !s.trim().is_empty());
+            
+            println!("Processed credentials - URL: {:?}, API Key: {:?}", url, api_key);
+            
+            // Check if we have valid credentials
+            if url.is_none() {
+                println!("BYO vector DB has invalid/empty URL, falling back to default vector DB");
+                return None;
+            }
+            
             let vector_db_config = VectorDbClient {
                 vector_db_type: vector_db.r#type,
-                url: vector_db.url,
-                api_key: vector_db.apiKey,
+                url,
+                api_key,
             };
-            println!("New credentials: {:?}", vector_db_config);
-            Some(vector_db_config.build_vector_db_client().await)
+            println!("Final vector DB config: {:?}", vector_db_config);
+            
+            match vector_db_config.build_vector_db_client().await {
+                Ok(client) => {
+                    println!("Successfully built BYO vector database client");
+                    Some(client)
+                }
+                Err(e) => {
+                    println!("ERROR: Failed to build BYO vector database client: {}", e);
+                    println!("Falling back to default vector database client");
+                    None
+                }
+            }
         } else {
-            println!("There was an error looking up vector DB config in database");
+            println!("ERROR: Failed to retrieve vector DB details from database for vector_db_id: {}", vector_db_id);
+            println!("This could mean the vector DB record doesn't exist in the database");
             None
         }
     } else {

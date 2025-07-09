@@ -420,6 +420,16 @@ export async function addDatasourceApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
+	// Backend validation for streamConfig
+	if (!streamConfig || typeof streamConfig !== 'object' || Object.keys(streamConfig).length === 0) {
+		return dynamicResponse(req, res, 400, { error: 'You must select at least one stream and one field before continuing.' });
+	}
+	for (const [streamName, config] of Object.entries(streamConfig)) {
+		if (!config || typeof config !== 'object' || !('syncMode' in config) || !('cursorField' in config) || !('primaryKey' in config)) {
+			return dynamicResponse(req, res, 400, { error: `Stream configuration for "${streamName}" is incomplete or malformed.` });
+		}
+	}
+
 	const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
 	const connectionBody = {
 		name: datasource._id.toString(),
@@ -427,9 +437,9 @@ export async function addDatasourceApi(req, res, next) {
 		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
 		configurations: {
 			streams: Object.entries(streamConfig).map((e: [string, StreamConfig]) => {
-				const streamData = e[1][1];
+				const streamData = e[1];
 				return {
-					name: e[1][0],
+					name: e[0],
 					syncMode: streamData.syncMode,
 					cursorField: streamData.cursorField?.length > 0 ? streamData.cursorField : null,
 					primaryKey: streamData.primaryKey?.length > 0 ? streamData.primaryKey.map(x => [x]) : null
@@ -671,6 +681,16 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
+	// Backend validation for streamConfig
+	if (!streamConfig || typeof streamConfig !== 'object' || Object.keys(streamConfig).length === 0) {
+		return dynamicResponse(req, res, 400, { error: 'You must select at least one stream and one field before continuing.' });
+	}
+	for (const [streamName, config] of Object.entries(streamConfig)) {
+		if (!config || typeof config !== 'object' || !('syncMode' in config) || !('cursorField' in config) || !('primaryKey' in config)) {
+			return dynamicResponse(req, res, 400, { error: `Stream configuration for "${streamName}" is incomplete or malformed.` });
+		}
+	}
+
 	//update the metadata map of tools if found
 	//TODO: move these fields to be stored on tools and fetch the schema on frontend with the tools datasource ID
 	//NOTE: combines for all streams, may cause conflicts, needs BIG discussion how to overhaul for multi-stream support
@@ -693,9 +713,9 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
 		configurations: {
 			streams: Object.entries(streamConfig).map((e: [string, StreamConfig]) => {
-				const streamData = e[1][1];
+				const streamData = e[1];
 				return {
-					name: e[1][0],
+					name: e[0],
 					syncMode: streamData.syncMode,
 					cursorField: streamData.cursorField?.length > 0 ? streamData.cursorField : null,
 					primaryKey: streamData.primaryKey?.length > 0 ? streamData.primaryKey.map(x => [x]) : null

@@ -112,8 +112,10 @@ const VectorDBSelection = () => {
 	const posthog = usePostHog();
 
 	const addDatasource = async (vectorDbId?: string) => {
-		const filteredStreamState = Object.entries(streamState).filter(
-			(e: [string, StreamConfig]) => e[1].checkedChildren.length > 0
+		const filteredStreamState = Object.fromEntries(
+			Object.entries(streamState).filter(
+				(e: [string, StreamConfig]) => e[1].checkedChildren.length > 0
+			)
 		);
 		const body = {
 			_csrf: csrf,
@@ -171,19 +173,26 @@ const VectorDBSelection = () => {
 	};
 
 	const onSubmit = async (data: any) => {
+		const filteredStreamState = Object.fromEntries(
+			Object.entries(streamState).filter(
+				(e: [string, StreamConfig]) => e[1].checkedChildren.length > 0
+			)
+		);
+		if (Object.keys(filteredStreamState).length === 0) {
+			toast.error('You must select at least one stream and one field before continuing.');
+			setLoading(false);
+			return;
+		}
 		setLoading(true);
 		if (data.byoVectorDb) {
 			await API.addVectorDb(
 				{ _csrf: csrf, resourceSlug, ...data, type: selectedDB },
 				async res => {
-					// callback?.({ label: data.name, value: res._id });
 					toast.success('VectorDb Added');
 					await addDatasource(res._id);
 					await API.markOnboarded({ _csrf: csrf }, null, null, router);
 					setLoading(false);
 					setStep(3);
-
-					// create datasource
 				},
 				res => {
 					toast.error(res);
