@@ -76,40 +76,38 @@ export default function LLMConfigurationForm() {
 
 	const { LLMType, embeddingType, LLMModel, embeddingModel } = watch();
 
-	const modelList =
-		[
-			{ label: null, value: null },
-			...ModelList[LLMType.value]
-				.filter(model => !ModelEmbeddingLength[model])
-				.filter(m => {
-					if (process.env.NEXT_PUBLIC_GCS_BUCKET_NAME === 'agentcloud-public') {
-						return !ModelEmbeddingLength[m] || ModelEmbeddingLength[m] === 1536;
-					}
-					return true;
-				})
-				.map(model => ({
-					label: model,
-					value: model,
-					...(model === 'gpt-4o-mini' ? { recommended: true } : {})
-				}))
-		] || [];
-	const embeddingModelList =
-		[
-			{ label: null, value: null },
-			...ModelList[embeddingType?.value]
-				.filter(model => ModelEmbeddingLength[model])
-				.filter(m => {
-					if (process.env.NEXT_PUBLIC_GCS_BUCKET_NAME === 'agentcloud-public') {
-						return !ModelEmbeddingLength[m] || ModelEmbeddingLength[m] === 1536;
-					}
-					return true;
-				})
-				.map(model => ({
-					label: model,
-					value: model,
-					...(model === 'text-embedding-3-small' ? { recommended: true } : {})
-				}))
-		] || [];
+	const modelList = [
+		{ label: null, value: null },
+		...ModelList[LLMType.value]
+			.filter(model => !ModelEmbeddingLength[model])
+			.filter(m => {
+				if (process.env.NEXT_PUBLIC_GCS_BUCKET_NAME === 'agentcloud-public') {
+					return !ModelEmbeddingLength[m] || ModelEmbeddingLength[m] === 1536;
+				}
+				return true;
+			})
+			.map(model => ({
+				label: model,
+				value: model,
+				...(model === 'gpt-4o-mini' ? { recommended: true } : {})
+			}))
+	];
+	const embeddingModelList = [
+		{ label: null, value: null },
+		...ModelList[embeddingType?.value]
+			.filter(model => ModelEmbeddingLength[model])
+			.filter(m => {
+				if (process.env.NEXT_PUBLIC_GCS_BUCKET_NAME === 'agentcloud-public') {
+					return !ModelEmbeddingLength[m] || ModelEmbeddingLength[m] === 1536;
+				}
+				return true;
+			})
+			.map(model => ({
+				label: model,
+				value: model,
+				...(model === 'text-embedding-3-small' ? { recommended: true } : {})
+			}))
+	];
 
 	const isOpenAISelectedLLMType = LLMType.value === ModelType.OPENAI;
 	const isOpenAISelectedEmbeddingType = embeddingType.value === ModelType.OPENAI;
@@ -356,8 +354,7 @@ export default function LLMConfigurationForm() {
 						className={cn(
 							'flex gap-2 bg-primary-50 dark:bg-gray-600 text-primary-800 text-xs mt-2 min-h-8 justify-start items-center rounded-md ml-1 p-1 dark:text-white',
 							{ 'bg-white dark:bg-gray-700': LLMModel?.value !== 'gpt-4o-mini' }
-						)}
-					>
+						)}>
 						{LLMModel?.value === 'gpt-4o-mini' && (
 							<>
 								<CheckBadgeIcon className='h-6 w-6' />
@@ -425,8 +422,7 @@ export default function LLMConfigurationForm() {
 						className={cn(
 							'flex gap-2 bg-primary-50 dark:bg-gray-600 text-primary-800 text-xs mt-2 min-h-8 justify-start items-center rounded-md ml-1 p-1 dark:text-white',
 							{ 'bg-white dark:bg-gray-700': embeddingModel?.value !== 'text-embedding-3-small' }
-						)}
-					>
+						)}>
 						{embeddingModel?.value === 'text-embedding-3-small' && (
 							<>
 								<CheckBadgeIcon className='h-6 w-6' />
@@ -501,15 +497,13 @@ export default function LLMConfigurationForm() {
 					type='button'
 					onClick={() => {
 						router.push(`/${resourceSlug}/app/add`);
-					}}
-				>
+					}}>
 					I&apos;ll do this later
 				</button>
 				<button
 					className='ml-auto w-[140px] h-[41px] disabled:bg-primary-200 bg-primary-500 text-white rounded-lg flex justify-center items-center text-sm'
 					type='submit'
-					disabled={!LLMModel?.value && !embeddingModel?.value}
-				>
+					disabled={!LLMModel?.value && !embeddingModel?.value}>
 					{submitting ? (
 						<ButtonSpinner className='mt-1 me-2' />
 					) : (
