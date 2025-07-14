@@ -3,11 +3,10 @@ import { DocumentDuplicateIcon, PencilIcon, TrashIcon } from '@heroicons/react/2
 import AgentAvatar from 'components/AgentAvatar';
 import DevBadge from 'components/DevBadge';
 import { useAccountContext } from 'context/account';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import Permissions from 'permissions/permissions';
 import { usePostHog } from 'posthog-js/react';
-import React, { useState } from 'react';
+import React from 'react';
 import { toast } from 'react-toastify';
 
 export default function AgentList({ agents, fetchAgents }) {
@@ -40,8 +39,7 @@ export default function AgentList({ agents, fetchAgents }) {
 			{agents.map(agent => (
 				<li
 					key={agent._id}
-					className='col-span-1 divide-y divide-gray-200 dark:divide-slate-600 rounded-lg bg-white shadow dark:bg-slate-800 dark:border dark:border-slate-600'
-				>
+					className='col-span-1 divide-y divide-gray-200 dark:divide-slate-600 rounded-lg bg-white shadow dark:bg-slate-800 dark:border dark:border-slate-600'>
 					<div className='flex w-full items-center justify-between space-x-6 p-6'>
 						<div className='flex-1 truncate'>
 							<div className='flex items-center space-x-3'>
@@ -64,8 +62,7 @@ export default function AgentList({ agents, fetchAgents }) {
 								<div className='flex w-0 flex-1'>
 									<a
 										href={`/${resourceSlug}/agent/${agent._id}/edit`}
-										className='relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900 dark:text-white'
-									>
+										className='relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900 dark:text-white'>
 										<PencilIcon
 											className='h-5 w-5 text-gray-400 dark:text-white'
 											aria-hidden='true'
@@ -78,8 +75,7 @@ export default function AgentList({ agents, fetchAgents }) {
 								<div className='flex w-0 flex-1'>
 									<a
 										href={`/${resourceSlug}/agent/add?agentId=${encodeURIComponent(agent._id)}`}
-										className='relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900 dark:text-white'
-									>
+										className='relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-bl-lg border border-transparent py-4 text-sm font-semibold text-gray-900 dark:text-white'>
 										<DocumentDuplicateIcon
 											className='h-5 w-5 text-gray-400 dark:text-white'
 											aria-hidden='true'
@@ -100,8 +96,7 @@ export default function AgentList({ agents, fetchAgents }) {
 											});
 											deleteAgent(agent._id);
 										}}
-										className='relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-red-600'
-									>
+										className='relative inline-flex w-0 flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-red-600'>
 										<TrashIcon className='h-5 w-5 text-red-600' aria-hidden='true' />
 										Delete
 									</button>

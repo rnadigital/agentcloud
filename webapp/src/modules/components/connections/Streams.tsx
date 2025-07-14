@@ -61,8 +61,7 @@ export function Streams() {
 				onClick={e => updateStreams(e)}
 				disabled={submitting['updateStreams'] || submitting['updateStreamssync']}
 				type='submit'
-				className='me-4 rounded-md disabled:bg-slate-400 bg-gray-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600'
-			>
+				className='me-4 rounded-md disabled:bg-slate-400 bg-gray-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600'>
 				{submitting['updateStreams'] && <ButtonSpinner />}
 				{submitting['updateStreams'] ? 'Saving...' : 'Save'}
 			</button>
@@ -72,8 +71,7 @@ export function Streams() {
 					submitting['updateStreamssync'] || submitting['updateStreams'] || !airbyteState?.isEnabled
 				}
 				type='submit'
-				className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-			>
+				className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'>
 				{submitting['updateStreamssync'] && <ButtonSpinner />}
 				{submitting['updateStreamssync'] ? 'Saving...' : 'Save and Sync'}
 			</button>
