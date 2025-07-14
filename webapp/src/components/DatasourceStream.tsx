@@ -348,20 +348,26 @@ export function StreamsList({
 }) {
 	return (
 		<div className='my-4'>
-			{streams?.map((stream, index) => {
-				const streamName = stream?.stream?.name;
-				const streamProperty = streamProperties?.find(sp => sp?.streamName === streamName);
-				const initialStreamState = streamState?.[streamName] || ({} as StreamConfig);
-				return (
-					<StreamRow
-						readonly={readonly}
-						key={index}
-						stream={stream}
-						streamProperty={streamProperty}
-						streamState={initialStreamState}
-					/>
-				);
-			})}
+			{streams
+				?.filter(stream => {
+					const streamName = stream?.stream?.name;
+					const initialStreamState = streamState?.[streamName] || ({} as StreamConfig);
+					return initialStreamState?.checkedChildren?.length > 0;
+				})
+				.map((stream, index) => {
+					const streamName = stream?.stream?.name;
+					const streamProperty = streamProperties?.find(sp => sp?.streamName === streamName);
+					const initialStreamState = streamState?.[streamName] || ({} as StreamConfig);
+					return (
+						<StreamRow
+							readonly={readonly}
+							key={index}
+							stream={stream}
+							streamProperty={streamProperty}
+							streamState={initialStreamState}
+						/>
+					);
+				})}
 		</div>
 	);
 }
