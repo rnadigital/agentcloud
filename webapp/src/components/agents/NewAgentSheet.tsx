@@ -37,13 +37,9 @@ import { Agent } from 'struct/agent';
 import { ModelEmbeddingLength, ModelType } from 'struct/model';
 import { ToolType } from 'struct/tool';
 
-// import { ToolsDialogContent } from './ToolsDialogContent';
-// import { MultiSelectComboBox } from '../MultiSelectComboBox/multi-select-combobox';
-
-export const NewAgentSheet = ({
+export const AgentSheet = ({
 	selectedAgentTools,
-	selectedAgent, // Add selectedAgent to props
-	setAgentDisplay,
+	selectedAgent,
 	openEditSheet,
 	setOpenEditSheet,
 	agentId,
@@ -51,8 +47,7 @@ export const NewAgentSheet = ({
 	callback
 }: {
 	selectedAgentTools?: any;
-	selectedAgent?: Agent; // Add type
-	setAgentDisplay?: (agent: AgentDataReturnType['agent']) => void;
+	selectedAgent?: Agent;
 	openEditSheet: boolean;
 	setOpenEditSheet: (open: boolean) => void;
 	agentId?: string;
@@ -63,42 +58,39 @@ export const NewAgentSheet = ({
 		await API.getTools({ resourceSlug }, dispatch, setError, router);
 	}
 
-	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [accountContext]: any = useAccountContext();
-	const { teamName } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
 	const [cloneState, setCloneState] = useState<AgentDataReturnType>(null);
 	const [error, setError] = useState();
-	const [loading, setLoading] = useState(true);
 	const [state, dispatch] = useState<AgentsDataReturnType>();
 
 	const { models, tools, variables } = state || {};
 
-	//TODO: fix any types
 	const { csrf } = accountContext as any;
 	const [modalOpen, setModalOpen]: any = useState<string>();
 	const [callbackKey, setCallbackKey] = useState(null);
-	const [allowDelegation, setAllowDelegation] = useState(cloneState?.agent?.allowDelegation);
-	const [verbose, setVerbose] = useState(cloneState?.agent?.verbose);
-	const [icon, setIcon] = useState(cloneState?.agent?.icon);
+	const [allowDelegation, setAllowDelegation] = useState(
+		selectedAgent?.allowDelegation || cloneState?.agent?.allowDelegation
+	);
+	const [verbose, setVerbose] = useState(selectedAgent?.verbose || cloneState?.agent?.verbose);
+	const [icon, setIcon] = useState(selectedAgent?.icon || cloneState?.agent?.icon);
 	const [agentState, setAgent] = useState<Partial<AgentDataReturnType['agent']>>(
 		selectedAgent || cloneState?.agent || {}
 	);
-	const name = agentState?.name;
 	const modelId = agentState?.modelId;
 	const functionModelId = agentState?.functionModelId;
 
-	const [backstory, setBackstory] = useState<string>(selectedAgent?.backstory || '');
-	const [goal, setGoal] = useState<string>(selectedAgent?.goal || '');
-	const [role, setRole] = useState<string>(selectedAgent?.role || '');
+	const [backstory, setBackstory] = useState<string>(
+		selectedAgent?.backstory || cloneState?.agent?.backstory || ''
+	);
+	const [goal, setGoal] = useState<string>(selectedAgent?.goal || cloneState?.agent?.goal || '');
+	const [role, setRole] = useState<string>(selectedAgent?.role || cloneState?.agent?.role || '');
 
 	const [currentInput, setCurrentInput] = useState<string>();
 
 	const [backstorySelectedVariables, setBackstorySelectedVariables] = useState<string[]>([]);
-
 	const [goalSelectedVariables, setGoalSelectedVariables] = useState<string[]>([]);
-
 	const [roleSelectedVariables, setRoleSelectedVariables] = useState<string[]>([]);
 
 	const backstoryVariableOptions = variables?.map(v => ({
@@ -107,7 +99,6 @@ export const NewAgentSheet = ({
 	}));
 
 	const goalVariableOptions = variables?.map(v => ({ label: v.name, value: v._id.toString() }));
-
 	const roleVariableOptions = variables?.map(v => ({ label: v.name, value: v._id.toString() }));
 
 	const autocompleteBackstory = useAutocompleteDropdown({
@@ -152,10 +143,9 @@ export const NewAgentSheet = ({
 			return acc;
 		}
 
-		// Format tool value correctly as an object with label and value
 		const toolVal = {
 			label: foundTool.name,
-			value: foundTool._id.toString() // Ensure value is string
+			value: foundTool._id.toString()
 		};
 
 		if ((foundTool?.type as ToolType) !== ToolType.RAG_TOOL) {
@@ -172,7 +162,9 @@ export const NewAgentSheet = ({
 		setBackstory(cloneState?.agent?.backstory);
 		setGoal(cloneState?.agent?.goal);
 		setRole(cloneState?.agent?.role);
-		//if there's an icon and editing is false then we need to create a new icon
+		setAllowDelegation(cloneState?.agent?.allowDelegation);
+		setVerbose(cloneState?.agent?.verbose);
+
 		const { initialTools, initialDatasources } = (cloneState?.agent?.toolIds || []).reduce(
 			getInitialTools,
 			{
@@ -199,6 +191,7 @@ export const NewAgentSheet = ({
 			initialDatasources: []
 		}
 	);
+
 	const [toolState, setToolState] = useState(() => {
 		if (selectedAgentTools) {
 			const formattedTools = selectedAgentTools
@@ -211,6 +204,7 @@ export const NewAgentSheet = ({
 		}
 		return initialTools.length > 0 ? initialTools : null;
 	});
+
 	const [datasourceState, setDatasourceState] = useState(() => {
 		if (selectedAgentTools) {
 			const formattedDatasources = selectedAgentTools
@@ -222,7 +216,8 @@ export const NewAgentSheet = ({
 			return formattedDatasources.length > 0 ? formattedDatasources : null;
 		}
 		return initialDatasources.length > 0 ? initialDatasources : null;
-	}); //Note: still technically tools, just only RAG tools
+	});
+
 	useEffect(() => {
 		if (models && models.length > 0 && !modelId) {
 			setAgent({
@@ -249,7 +244,6 @@ export const NewAgentSheet = ({
 			setAllowDelegation(selectedAgent.allowDelegation);
 			setVerbose(selectedAgent.verbose);
 
-			// Set initial tools and datasources from selectedAgentTools
 			if (selectedAgentTools) {
 				const { initialTools, initialDatasources } = selectedAgentTools.reduce(
 					(acc, tool) => {
@@ -272,6 +266,8 @@ export const NewAgentSheet = ({
 	async function agentPost(e) {
 		e.preventDefault();
 		e.stopPropagation();
+		console.log('toolState', toolState);
+		console.log('datasourceState', datasourceState);
 
 		const body: any = {
 			_csrf: csrf,
@@ -284,7 +280,7 @@ export const NewAgentSheet = ({
 			role: e.target.role.value,
 			goal: e.target.goal.value,
 			backstory: e.target.backstory.value,
-			toolIds: [...(toolState || []), ...(datasourceState || [])],
+			toolIds: [...(toolState || []), ...(datasourceState.map(d => d.value) || [])],
 			iconId: icon?.id,
 			variableIds:
 				Array.from(
@@ -296,6 +292,14 @@ export const NewAgentSheet = ({
 				) || [],
 			cloning: cloneState?.agent && editing
 		};
+
+		posthog.capture(editing ? 'updateAgent' : 'createAgent', {
+			name: e.target.name.value,
+			tools: (toolState || []).length,
+			datasources: (datasourceState || []).length,
+			modelId,
+			functionModelId
+		});
 
 		if (editing) {
 			await API.editAgent(
@@ -312,61 +316,17 @@ export const NewAgentSheet = ({
 				null
 			);
 		} else {
-			posthog.capture(editing ? 'updateAgent' : 'createAgent', {
-				name: e.target.name.value,
-				tools: (toolState || []).length,
-				datasources: (datasourceState || []).length,
-				modelId,
-				functionModelId
-			});
-			const body: any = {
-				_csrf: csrf,
-				resourceSlug,
-				name: e.target.name.value,
-				modelId,
-				functionModelId,
-				allowDelegation: allowDelegation === true,
-				verbose: verbose === true,
-				role: e.target.role.value,
-				goal: e.target.goal.value,
-				backstory: e.target.backstory.value,
-				toolIds: [...(toolState || []), ...(datasourceState || [])],
-				iconId: icon?.id,
-				variableIds:
-					Array.from(
-						new Set([
-							...roleSelectedVariables,
-							...goalSelectedVariables,
-							...backstorySelectedVariables
-						])
-					) || [],
-				cloning: cloneState?.agent && !editing
-			};
-			if (editing) {
-				await API.editAgent(
-					agentState._id,
-					body,
-					() => {
-						toast.success('Agent Updated');
-					},
-					res => {
-						toast.error(res);
-					},
-					null
-				);
-			} else {
-				const addedAgent: any = await API.addAgent(
-					body,
-					() => {
-						toast.success('Added new agent');
-					},
-					res => {
-						toast.error(res);
-					},
-					null
-				);
-				callback && addedAgent && callback(addedAgent._id, body);
-			}
+			const addedAgent: any = await API.addAgent(
+				body,
+				() => {
+					toast.success('Added new agent');
+				},
+				res => {
+					toast.error(res);
+				},
+				null
+			);
+			callback && addedAgent && callback(addedAgent._id, body);
 		}
 	}
 
@@ -381,11 +341,13 @@ export const NewAgentSheet = ({
 		});
 		setCallbackKey(null);
 	};
+
 	async function createDatasourceCallback(createdDatasource) {
 		(await fetchAgentFormData) && fetchAgentFormData();
 		setDatasourceState({ label: createdDatasource.name, value: createdDatasource.datasourceId });
 		setModalOpen(false);
 	}
+
 	const toolCallback = async (addedToolId, body) => {
 		await fetchAgentFormData();
 		await fetchToolFormData();
@@ -393,7 +355,7 @@ export const NewAgentSheet = ({
 
 		const newTool = {
 			label: body.name,
-			value: addedToolId.toString() // Ensure value is string
+			value: addedToolId.toString()
 		};
 
 		setToolState(prevTools => {
@@ -438,7 +400,6 @@ export const NewAgentSheet = ({
 						ModelType.GROQ,
 						ModelType.OPENAI,
 						ModelType.OLLAMA,
-						// ModelType.COHERE,
 						ModelType.ANTHROPIC,
 						ModelType.GOOGLE_VERTEX,
 						ModelType.GOOGLE_AI
@@ -514,7 +475,7 @@ export const NewAgentSheet = ({
 	return (
 		<Sheet open={openEditSheet} onOpenChange={setOpenEditSheet}>
 			{modal}
-			<SheetTrigger className='font-medium border-0'>
+			<SheetTrigger className='font-medium border-0 w-full mt-4'>
 				<div className='w-full flex flex-col items-center justify-center bg-gray-100 p-6 rounded-lg'>
 					<div className='flex items-center justify-center mb-4'>
 						<div className='bg-background w-12 h-12 flex items-center justify-center rounded-full'>
@@ -524,7 +485,7 @@ export const NewAgentSheet = ({
 					<div className='flex flex-col items-center gap-2'>
 						<p className='font-medium'>+ Create Agent</p>
 						<p className='text-gray-500 text-center w-3/5'>
-							Think of it as a virtual helper that manages important chats and replies in your app.
+							Think of it as a virtual helper that manages important chats and replies in your app
 						</p>
 					</div>
 				</div>
@@ -534,34 +495,15 @@ export const NewAgentSheet = ({
 					<SheetTitle>
 						<div className='flex items-center gap-2'>
 							<BookText width={15} />
-							<p className='font-medium text-gray-900 text-sm'>New Agent</p>
+							<p className='font-medium text-gray-900 text-sm'>
+								{editing ? 'Edit Agent' : 'New Agent'}
+							</p>
 						</div>
 					</SheetTitle>
 					<SheetDescription className='border-t border-gray-200 py-3 px-1'>
 						<form onSubmit={agentPost}>
 							<section className='pb-3 flex flex-col gap-4'>
 								<div className='flex justify-between gap-2'>
-									{/* <div className='flex flex-col gap-2'>
-									<label htmlFor='image-upload' className='cursor-pointer'>
-										<div className='w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-300 hover:border-[#4F46E5] transition-colors'>
-											<img
-												id='preview-image'
-												src='/apps/camera-placeholder.png'
-												alt='Preview'
-												className='w-full h-full object-cover rounded-full'
-											/>
-										</div>
-									</label>
-									<input
-										id='image-upload'
-										type='file'
-										accept='image/*'
-										className='hidden'
-										onChange={e => showPreview(e)}
-									/>
-
-								</div> */}
-
 									<AvatarUploader
 										existingAvatar={icon}
 										callback={iconCallback}
@@ -621,20 +563,17 @@ export const NewAgentSheet = ({
 										<div className='flex items-center gap-2'>
 											<p
 												className='text-gray-900 py-1 px-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors'
-												onClick={() => setRole('Technical Support')}
-											>
+												onClick={() => setRole('Technical Support')}>
 												Technical Support
 											</p>
 											<p
 												className='text-gray-900 py-1 px-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors'
-												onClick={() => setRole('Code Helper')}
-											>
+												onClick={() => setRole('Code Helper')}>
 												Code Helper
 											</p>
 											<p
 												className='text-gray-900 py-1 px-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors'
-												onClick={() => setRole('API Integrator')}
-											>
+												onClick={() => setRole('API Integrator')}>
 												API Integrator
 											</p>
 										</div>
@@ -714,8 +653,7 @@ export const NewAgentSheet = ({
 															...oldAgent,
 															modelId: model._id
 														}))
-													}
-												>
+													}>
 													{model.name}
 												</DropdownMenuItem>
 											))}
@@ -735,34 +673,6 @@ export const NewAgentSheet = ({
 									</div>
 
 									<div className='flex flex-col gap-4 text-xs'>
-										{/* <ToolsDialogContent
-											isDialogOpen={isDialogOpen}
-											setIsDialogOpen={setIsDialogOpen}
-											toolValue={toolValue}
-											setToolValue={setToolValue}
-											tools={
-												tools
-													?.filter(t => (t?.type as ToolType) !== ToolType.RAG_TOOL)
-													.map(t => ({
-														label: t.name,
-														value: t._id
-													})) || []
-											}
-									/>
-										<MultiSelectWithDialog
-											options={
-												tools
-													?.filter(t => (t?.type as ToolType) === ToolType.RAG_TOOL)
-													.map(t => ({
-														label: t.name,
-														value: t._id.toString()
-													})) || []
-											}
-											onValueChange={setDatasourceState}
-											defaultValue={datasourceState}
-											placeholder='Data Sources'
-											maxCount={3}
-										/> */}
 										<MultiSelect
 											className='bg-white mt-4'
 											placeholder={
@@ -780,14 +690,12 @@ export const NewAgentSheet = ({
 													value: t._id.toString()
 												}))}
 											onValueChange={values => {
-												// Ensure values are in the correct format
 												const formattedValues = Array.isArray(values) ? values : [];
 												setToolState(formattedValues);
 											}}
 											value={toolState || []}
 										/>
 
-										{/* Tool selection */}
 										<MultiSelect
 											className='bg-white'
 											placeholder={
@@ -805,7 +713,6 @@ export const NewAgentSheet = ({
 													value: t._id.toString()
 												}))}
 											onValueChange={values => {
-												// Ensure values are in the correct format
 												const formattedValues = Array.isArray(values) ? values : [];
 												setDatasourceState(formattedValues);
 											}}
@@ -817,15 +724,13 @@ export const NewAgentSheet = ({
 							<section className='border-t border-gray-200 pt-4 flex justify-between sticky bottom-0 bg-white text-sm'>
 								<Button
 									onClick={() => setOpenEditSheet(false)}
-									className='text-foreground hover:bg-transparent hover:text-foreground p-0 border border-gray-200 py-2.5 px-5 bg-white'
-								>
+									className='text-foreground hover:bg-transparent hover:text-foreground p-0 border border-gray-200 py-2.5 px-5 bg-white'>
 									Cancel
 								</Button>
 								<Button
 									type='submit'
-									className='bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white font-medium text-sm py-2'
-								>
-									Save
+									className='bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white font-medium text-sm py-2'>
+									{editing ? 'Update' : 'Save'}
 								</Button>
 							</section>
 						</form>
