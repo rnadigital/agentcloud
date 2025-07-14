@@ -44,7 +44,8 @@ export const AgentSheet = ({
 	setOpenEditSheet,
 	agentId,
 	editing,
-	callback
+	callback,
+	agentsExist
 }: {
 	selectedAgentTools?: any;
 	selectedAgent?: Agent;
@@ -53,6 +54,7 @@ export const AgentSheet = ({
 	agentId?: string;
 	editing?: boolean;
 	callback?: (addedAgentId: string, body: any) => void;
+	agentsExist?: boolean;
 }) => {
 	async function fetchToolFormData() {
 		await API.getTools({ resourceSlug }, dispatch, setError, router);
@@ -266,8 +268,6 @@ export const AgentSheet = ({
 	async function agentPost(e) {
 		e.preventDefault();
 		e.stopPropagation();
-		console.log('toolState', toolState);
-		console.log('datasourceState', datasourceState);
 
 		const body: any = {
 			_csrf: csrf,
@@ -307,6 +307,7 @@ export const AgentSheet = ({
 				body,
 				() => {
 					toast.success('Agent Updated');
+					window.location.reload();
 					setOpenEditSheet(false);
 					callback && callback(agentState._id.toString(), body);
 				},
@@ -475,21 +476,24 @@ export const AgentSheet = ({
 	return (
 		<Sheet open={openEditSheet} onOpenChange={setOpenEditSheet}>
 			{modal}
-			<SheetTrigger className='font-medium border-0 w-full mt-4'>
-				<div className='w-full flex flex-col items-center justify-center bg-gray-100 p-6 rounded-lg'>
-					<div className='flex items-center justify-center mb-4'>
-						<div className='bg-background w-12 h-12 flex items-center justify-center rounded-full'>
-							<CircleUserRound />
+			{!agentsExist && (
+				<SheetTrigger className='font-medium border-0 w-full mt-4'>
+					<div className='w-full flex flex-col items-center justify-center bg-gray-100 p-6 rounded-lg'>
+						<div className='flex items-center justify-center mb-4'>
+							<div className='bg-background w-12 h-12 flex items-center justify-center rounded-full'>
+								<CircleUserRound />
+							</div>
+						</div>
+						<div className='flex flex-col items-center gap-2'>
+							<p className='font-medium'>+ Create Agent</p>
+							<p className='text-gray-500 text-center w-3/5'>
+								Think of it as a virtual helper that manages important chats and replies in your app
+							</p>
 						</div>
 					</div>
-					<div className='flex flex-col items-center gap-2'>
-						<p className='font-medium'>+ Create Agent</p>
-						<p className='text-gray-500 text-center w-3/5'>
-							Think of it as a virtual helper that manages important chats and replies in your app
-						</p>
-					</div>
-				</div>
-			</SheetTrigger>
+				</SheetTrigger>
+			)}
+
 			<SheetContent className='text-foreground sm:max-w-[576px] overflow-y-auto'>
 				<SheetHeader>
 					<SheetTitle>

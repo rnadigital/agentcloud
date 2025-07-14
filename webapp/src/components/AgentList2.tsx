@@ -207,10 +207,10 @@ export default function AgentList2({ agents, fetchAgents }) {
 					/>
 				) : (
 					<section className='gap-4 grid grid-cols-1 lg:grid-cols-4 md:grid-cols-3'>
-						{agentsToDisplay.map(agent => {
+						{agentsToDisplay.map((agent, index) => {
 							return (
 								<Card
-									key={agent.id}
+									key={index}
 									className='rounded-2xl gap-[21px] flex flex-col border-0 shadow-none lg:border lg:border-gray-200 max-h-80 overflow-auto'>
 									<CardHeader>
 										<CardTitle>
@@ -310,28 +310,34 @@ export default function AgentList2({ agents, fetchAgents }) {
 				)}
 			</main>
 
-			<AgentSheet
-				openEditSheet={openNewAgentSheet}
-				setOpenEditSheet={setOpenNewAgentSheet}
-				callback={async () => {
-					await fetchAgents();
-					setOpenNewAgentSheet(false);
-				}}
-			/>
-
-			{selectedAgent && (
+			{(openNewAgentSheet || openEditSheet) && (
 				<AgentSheet
+					agentsExist={agents.length > 0}
 					selectedAgent={selectedAgent}
 					selectedAgentTools={selectedAgentTools}
-					openEditSheet={openEditSheet}
-					setOpenEditSheet={setOpenEditSheet}
-					editing={true}
-					agentId={selectedAgent._id}
+					openEditSheet={openNewAgentSheet || openEditSheet}
+					setOpenEditSheet={open => {
+						if (selectedAgent) {
+							setOpenEditSheet(open);
+							if (!open) {
+								setSelectedAgent(null);
+								setSelectedAgentTools([]);
+							}
+						} else {
+							setOpenNewAgentSheet(open);
+						}
+					}}
+					editing={!!selectedAgent}
+					agentId={selectedAgent?._id}
 					callback={async (agentId, body) => {
 						await fetchAgents();
-						setOpenEditSheet(false);
-						setSelectedAgent(null);
-						setSelectedAgentTools([]);
+						if (selectedAgent) {
+							setOpenEditSheet(false);
+							setSelectedAgent(null);
+							setSelectedAgentTools([]);
+						} else {
+							setOpenNewAgentSheet(false);
+						}
 					}}
 				/>
 			)}
