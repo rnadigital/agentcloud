@@ -3,7 +3,7 @@ import { Agent } from 'struct/agent';
 import { MagnifyingGlassIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Tool, ToolType } from 'struct/tool';
 import { Model } from 'db/model';
-import { NewAgentSheet } from 'components/agents/NewAgentSheet';
+import { AgentSheet } from 'components/agents/NewAgentSheet';
 
 type AgentsState = {
 	label: string;
@@ -62,7 +62,7 @@ const AgentSelection = ({
 
 	return (
 		<div className='p-6 bg-gray-50'>
-			<NewAgentSheet
+			<AgentSheet
 				openEditSheet={openEditSheet}
 				setOpenEditSheet={setOpenEditSheet}
 				callback={createAgentCallback}
@@ -111,8 +111,7 @@ const AgentSelection = ({
 								</div>
 								<button
 									onClick={e => handleAgentRemove(e, agentItem.value)}
-									className='text-gray-400 hover:text-gray-600'
-								>
+									className='text-gray-400 hover:text-gray-600'>
 									<XMarkIcon className='w-5 h-5' />
 								</button>
 							</div>
@@ -124,8 +123,7 @@ const AgentSelection = ({
 				<div>
 					<button
 						onClick={() => setShowAgentSelect(true)}
-						className='text-blue-600 hover:text-blue-700 flex items-center gap-2'
-					>
+						className='text-blue-600 hover:text-blue-700 flex items-center gap-2'>
 						<PlusIcon className='w-5 h-5' />
 						Add Agent
 					</button>
@@ -137,8 +135,7 @@ const AgentSelection = ({
 									<button
 										key={agent._id as string}
 										onClick={() => handleAgentSelect(agent)}
-										className='text-gray-600 hover:text-blue-600'
-									>
+										className='text-gray-600 hover:text-blue-600'>
 										{agent.name}
 									</button>
 								))}
@@ -156,15 +153,13 @@ const AgentSelection = ({
 								onClick={e => {
 									e.preventDefault();
 									setOpenEditSheet(true);
-								}}
-							>
+								}}>
 								<PlusIcon className='w-5 h-5' />
 								New Agent
 							</button>
 							<button
 								onClick={() => setShowAgentSelect(false)}
-								className='text-gray-400 hover:text-gray-600'
-							>
+								className='text-gray-400 hover:text-gray-600'>
 								<XMarkIcon className='w-5 h-5' />
 							</button>
 						</div>
@@ -191,8 +186,7 @@ const AgentSelection = ({
 								<div
 									key={agent._id as string}
 									className='border rounded-lg p-4 cursor-pointer hover:border-blue-500 flex flex-col'
-									onClick={() => handleAgentSelect(agent)}
-								>
+									onClick={() => handleAgentSelect(agent)}>
 									<img src='/apps/identicon.png' className='w-12 h-12 rounded-full mb-2' />
 									<h4 className='font-semibold'>{agent.name}</h4>
 									<p className='text-gray-600 text-sm'>{agent.role}</p>
