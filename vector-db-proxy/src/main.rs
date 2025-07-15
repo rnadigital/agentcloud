@@ -69,19 +69,11 @@ async fn main() -> std::io::Result<()> {
     let host = global_data.host.clone();
     let port = global_data.port.clone();
 
-    // This is to allow the use of multiple vector databases
-    //let vector_database_client: Arc<RwLock<dyn VectorDatabase>> =
-    //    build_vector_db_client(vector_db, Some(vector_db_url), Some(vector_db_api_key)).await;
-
     let mongo_connection = start_mongo_connection().await.unwrap();
     // Create Arcs to allow sending across threads
     let app_mongo_client = Arc::new(RwLock::new(mongo_connection));
 
     // Clones for senders
-    //let vector_database_for_streaming: Arc<RwLock<dyn VectorDatabase>> =
-    //    vector_database_client.clone();
-    // Assuming
-    // qdrant_client implements VectorDatabase
     let mongo_client_for_streaming = Arc::clone(&app_mongo_client);
 
     // Clones of the receiver and sender so that they can be sent to the right threads
@@ -98,7 +90,6 @@ async fn main() -> std::io::Result<()> {
         let _ = connection
             .consume(
                 connection.clone(),
-                //vector_database_for_streaming,
                 mongo_client_for_streaming,
                 sender_clone,
             )
@@ -113,7 +104,6 @@ async fn main() -> std::io::Result<()> {
     let mut handles = vec![];
     for _ in 0..(number_of_workers * 10) {
         // let receiver_clone = receiver.clone();
-        //let vector_database_client_clone = Arc::clone(&vector_database_client);
         let mongo_client_clone = Arc::clone(&app_mongo_client);
         let receiver = r.clone();
         let handle = thread::spawn(move || {
@@ -132,7 +122,6 @@ async fn main() -> std::io::Result<()> {
         let server = HttpServer::new(move || {
             App::new()
                 .wrap(Logger::default())
-                //.app_data(Data::new(Arc::clone(&vector_database_client)))
                 .configure(init)
         })
         .bind(format!("{}:{}", host, port))?

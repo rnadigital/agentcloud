@@ -269,13 +269,10 @@ pub async fn embed_bulk_insert_unstructured_response(
                 }
             }
 
-            let vector_database_client = match check_byo_vector_database(datasource.clone(), &mongo_connection).await {
-                Some(client) => client,
-                None => {
-                    println!("embeddings/utils: falling back to default vector database client for datasource: {}", datasource.id);
-                    default_vector_db_client().await
-                }
-            };
+           let vector_database_client =
+                check_byo_vector_database(datasource.clone(), &mongo_connection)
+                    .await
+                    .unwrap_or(default_vector_db_client().await);
 
             let vector_database = Arc::clone(&vector_database_client);
             let vector_database_client = vector_database.read().await;

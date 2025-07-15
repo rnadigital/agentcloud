@@ -84,15 +84,11 @@ pub struct VectorDbClient {
     pub api_key: Option<String>,
 }
 pub async fn default_vector_db_client() -> Arc<RwLock<dyn VectorDatabase>> {
-    println!("Building default vector database client from global environment variables");
     let global_data = GLOBAL_DATA.read().await;
     let vector_db = global_data.vector_database.clone();
     let vector_db_type = VectorDatabaseType::from(vector_db);
     let vector_db_url = global_data.vector_database_url.clone();
     let vector_db_api_key = global_data.vector_database_api_key.clone();
-
-    println!("Global env vars - DB type: {}, URL: {}, API Key: [{}]", 
-             vector_db_type, vector_db_url, if vector_db_api_key.is_empty() { "EMPTY" } else { "SET" });
 
     let vector_db_config = VectorDbClient {
         vector_db_type,
@@ -100,17 +96,11 @@ pub async fn default_vector_db_client() -> Arc<RwLock<dyn VectorDatabase>> {
         api_key: Some(vector_db_api_key),
     };
 
-    match vector_db_config.build_vector_db_client().await {
-        Ok(client) => client,
-        Err(e) => {
-            println!("ERROR: Failed to build default vector database client: {}", e);
-            panic!("Failed to build default vector database client: {}", e);
-        }
-    }
+    vector_db_config.build_vector_db_client().await
 }
 
 impl VectorDbClient {
-    pub async fn build_vector_db_client(&self) -> Result<Arc<RwLock<dyn VectorDatabase>>, VectorDatabaseError> {
+    pub async fn build_vector_db_client(&self) -> Arc<RwLock<dyn VectorDatabase>> {
         println!("The incoming credentials are: {:?}", self);
         println!("Building NEW {} vector client", self.vector_db_type);
         let vector_database_client: Arc<RwLock<dyn VectorDatabase>> = match self
@@ -120,33 +110,26 @@ impl VectorDbClient {
         {
             "qdrant" => {
                 println!("Using Qdrant Vector Database");
-                match qdrant::client::build_qdrant_client(self.url.clone(), self.api_key.clone()).await {
-                    Ok(client) => Arc::new(RwLock::new(client)),
-                    Err(e) => {
-                        println!("ERROR: Failed to build Qdrant client: {}", e);
-                        return Err(VectorDatabaseError::Other(format!("Failed to build Qdrant client: {}", e)));
-                    }
-                }
+                Arc::new(RwLock::new(
+                    qdrant::client::build_qdrant_client(self.url.clone(), self.api_key.clone())
+                        .await
+                        .unwrap(),
+                ))
             }
             "pinecone" => {
                 println!("Using Pinecone Vector Database");
-                match pinecone::client::build_pinecone_client(self.url.clone(), self.api_key.clone()).await {
-                    Ok(client) => Arc::new(RwLock::new(client)),
-                    Err(e) => {
-                        println!("ERROR: Failed to build Pinecone client: {}", e);
-                        return Err(VectorDatabaseError::Other(format!("Failed to build Pinecone client: {}", e)));
-                    }
-                }
+                Arc::new(RwLock::new(
+                    pinecone::client::build_pinecone_client(self.url.clone(), self.api_key.clone())
+                        .await
+                        .unwrap(),
+                ))
             }
-            _ => {
-                let error_msg = format!(
-                    "No valid vector database was chosen. Expected one of `qdrant` or `pinecone`. Got `{}`",
-                    self.vector_db_type
-                );
-                println!("ERROR: {}", error_msg);
-                return Err(VectorDatabaseError::Other(error_msg));
-            }
+            _ => panic!(
+                "No valid vector database was chosen. Expected one of `qdrant` or `pinecone`.\
+             Got `{}`",
+                self.vector_db_type
+            ),
         };
-        Ok(vector_database_client)
+        vector_database_client
     }
 }
