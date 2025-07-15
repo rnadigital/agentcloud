@@ -101,15 +101,15 @@ pub async fn default_vector_db_client() -> Arc<RwLock<dyn VectorDatabase>> {
 
 impl VectorDbClient {
     pub async fn build_vector_db_client(&self) -> Arc<RwLock<dyn VectorDatabase>> {
-        println!("The incoming credentials are: {:?}", self);
-        println!("Building NEW {} vector client", self.vector_db_type);
+        log::debug!("The incoming credentials are: {:?}", self);
+        log::debug!("Building NEW {} vector client", self.vector_db_type);
         let vector_database_client: Arc<RwLock<dyn VectorDatabase>> = match self
             .vector_db_type
             .to_string()
             .as_str()
         {
             "qdrant" => {
-                println!("Using Qdrant Vector Database");
+                log::info!("Using Qdrant Vector Database");
                 Arc::new(RwLock::new(
                     qdrant::client::build_qdrant_client(self.url.clone(), self.api_key.clone())
                         .await
@@ -117,7 +117,7 @@ impl VectorDbClient {
                 ))
             }
             "pinecone" => {
-                println!("Using Pinecone Vector Database");
+                log::info!("Using Pinecone Vector Database");
                 Arc::new(RwLock::new(
                     pinecone::client::build_pinecone_client(self.url.clone(), self.api_key.clone())
                         .await

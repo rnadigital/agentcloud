@@ -10,7 +10,6 @@ pub async fn start_mongo_connection() -> Result<Database, CustomMongoError> {
     let client = match Client::with_options(client_options) {
         Ok(c) => c,
         Err(e) => {
-            println!("Failed to create client: {}", e);
             log::error!("Failed to create client: {}", e);
             return Err(CustomMongoError::InternalError(anyhow!(e)));
         }

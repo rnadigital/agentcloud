@@ -24,7 +24,7 @@ pub async fn get_message_queue(
     let global_data = GLOBAL_DATA.read().await;
     match message_queue_provider {
         MessageQueueProvider::RABBITMQ => {
-            println!("Using RabbitMQ as the streaming Queue!");
+            log::info!("Using RabbitMQ as the streaming Queue!");
             let rabbitmq_connection = RabbitConnect {
                 host: global_data.rabbitmq_host.clone(),
                 port: global_data.rabbitmq_port,
@@ -34,7 +34,7 @@ pub async fn get_message_queue(
             rabbitmq_connection.connect().await.unwrap()
         }
         MessageQueueProvider::PUBSUB => {
-            println!("Using PubSub as the streaming Queue!");
+            log::info!("Using PubSub as the streaming Queue!");
             let pubsub_connection = PubSubConnect {
                 topic: global_data.rabbitmq_stream.clone(),
                 subscription: global_data.rabbitmq_stream.clone(),
@@ -58,7 +58,7 @@ pub async fn process_message(
 ) {
     let mongodb_connection = mongo_client.read().await;
     let global_data = GLOBAL_DATA.read().await.clone();
-    println!("Datasource ID: {}", datasource_id);
+    log::debug!("Datasource ID: {}", datasource_id);
     match get_datasource(&mongodb_connection, datasource_id).await {
         Ok(datasource) => {
             if let Some(ds) = datasource {

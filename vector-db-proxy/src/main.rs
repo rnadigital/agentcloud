@@ -88,17 +88,13 @@ async fn main() -> std::io::Result<()> {
     // Thread to read messages from message queue and pass them to channel for processing
     let subscribe_to_message_stream = tokio::spawn(async move {
         let _ = connection
-            .consume(
-                connection.clone(),
-                mongo_client_for_streaming,
-                sender_clone,
-            )
+            .consume(connection.clone(), mongo_client_for_streaming, sender_clone)
             .await;
     });
     // Figure out how many threads are available on the machine and the percentage of those that the user would like to use when syncing data
     let number_of_workers =
         (global_data.number_of_threads * global_data.thread_percentage_utilisation) as i32;
-    println!("{} threads available for work", number_of_workers);
+    log::info!("{} threads available for work", number_of_workers);
     // Thread for receiving messages in channel and processing them across workers
     // Spawn multiple threads to process messages
     let mut handles = vec![];
@@ -119,13 +115,9 @@ async fn main() -> std::io::Result<()> {
     env_logger::Builder::from_env(Env::default().default_filter_or(logging_level)).init();
     let web_task = tokio::spawn(async move {
         log::info!("Running on http://{}:{}", host.clone(), port.clone());
-        let server = HttpServer::new(move || {
-            App::new()
-                .wrap(Logger::default())
-                .configure(init)
-        })
-        .bind(format!("{}:{}", host, port))?
-        .run();
+        let server = HttpServer::new(move || App::new().wrap(Logger::default()).configure(init))
+            .bind(format!("{}:{}", host, port))?
+            .run();
 
         server.await.context("server error!")
     });

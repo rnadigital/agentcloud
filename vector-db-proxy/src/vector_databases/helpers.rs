@@ -105,25 +105,25 @@ pub async fn check_byo_vector_database(
     mongo: &Database,
 ) -> Option<Arc<RwLock<dyn VectorDatabase>>> {
     if let Some(vector_db_id) = datasource.vector_db_id {
-        println!(
+        log::debug!(
             "There's a BYO vector DB associated with the Datasource: {}",
             datasource.id
         );
-        println!("Updating vector DB credentials with BYO creds...");
+        log::debug!("Updating vector DB credentials with BYO creds...");
         if let Some(vector_db) = get_vector_db_details(&mongo, vector_db_id).await {
             let vector_db_config = VectorDbClient {
                 vector_db_type: vector_db.r#type,
                 url: vector_db.url,
                 api_key: vector_db.apiKey,
             };
-            println!("New credentials: {:?}", vector_db_config);
+            log::debug!("New credentials: {:?}", vector_db_config);
             Some(vector_db_config.build_vector_db_client().await)
         } else {
-            println!("There was an error looking up vector DB config in database");
+            log::error!("There was an error looking up vector DB config in database");
             None
         }
     } else {
-        println!(
+        log::warn!(
             "There was no vector DB ID associated with the datasource: {}",
             datasource.id
         );

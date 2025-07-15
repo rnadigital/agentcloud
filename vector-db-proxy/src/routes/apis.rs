@@ -66,15 +66,9 @@ pub async fn list_collections(Path(collection_name): Path<String>) -> Result<imp
         Ok(option) => match option {
             Some(datasource) => {
                 let vector_database_client =
-                    match check_byo_vector_database(datasource, &mongodb_connection).await {
-                        Some(client) => client,
-                        None => {
-                            println!(
-                                "list_collections: falling back to default vector database client"
-                            );
-                            default_vector_db_client().await
-                        }
-                    };
+                    check_byo_vector_database(datasource, &mongodb_connection)
+                        .await
+                        .unwrap_or(default_vector_db_client().await);
                 let vector_database_client = vector_database_client.read().await;
                 let results = vector_database_client.get_list_of_collections().await?;
                 Ok(HttpResponse::Ok()
@@ -768,7 +762,6 @@ pub async fn get_storage_size(Path(team_id): Path<String>) -> Result<impl Respon
                     .get_storage_size(search_request, embedding_model.embeddingLength as usize)
                     .await
                 {
-                    // println!("collection_storage_info: {:?}", collection_storage_info);
                     collection_size_response.total_points +=
                         collection_storage_info.points_count.unwrap();
                     collection_size_response.total_size += collection_storage_info.size.unwrap();
@@ -781,9 +774,10 @@ pub async fn get_storage_size(Path(team_id): Path<String>) -> Result<impl Respon
                 continue;
             }
             Err(e) => {
-                println!(
+                log::error!(
                     "Error retrieving model for datasource {}: {:?}",
-                    datasource.id, e
+                    datasource.id,
+                    e
                 );
                 continue;
             }

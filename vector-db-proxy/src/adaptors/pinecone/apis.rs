@@ -64,7 +64,7 @@ impl VectorDatabase for PineconeClient {
         &self,
         collection_create: CollectionCreate,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
-        println!("Creating collection: {:?}", collection_create);
+        log::debug!("Creating collection: {:?}", collection_create);
 
         let index_name = collection_create
             .index_name
@@ -77,13 +77,13 @@ impl VectorDatabase for PineconeClient {
                     .unwrap_or_default()
                     .to_string()
             });
-        println!("Index name: {}", index_name);
+        log::debug!("Index name: {}", index_name);
 
         match get_index_model(&self, index_name.clone()).await {
             Ok(_) => Ok(VectorDatabaseStatus::Ok),
             Err(e) => match e {
                 VectorDatabaseError::NotFound(_) => {
-                    println!("creating db");
+                    log::info!("creating index...{}", index_name);
                     match self
                         .create_serverless_index(
                             index_name.as_str(),
@@ -157,14 +157,14 @@ impl VectorDatabase for PineconeClient {
             .to_string();
         match get_index_model(&self, index_name).await {
             Ok(index_model) => {
-                println!("Sending to Pinecone index: {:?}", index_model);
+                log::debug!("Sending to Pinecone index: {:?}", index_model);
                 let index = self.index(index_model.host.as_str()).await.unwrap();
                 match search_request.search_type {
                     SearchType::ChunkedRow => {
                         match &self.delete_point(search_request.clone()).await {
                             Ok(_) => match upsert(index, &[vector], &namespace.into()).await {
                                 Ok(_) => {
-                                    println!("Upsert Successful");
+                                    log::debug!("Upsert Successful");
                                     Ok(VectorDatabaseStatus::Ok)
                                 }
                                 Err(e) => {
@@ -180,11 +180,11 @@ impl VectorDatabase for PineconeClient {
                     }
                     _ => match upsert(index, &[vector], &namespace.into()).await {
                         Ok(_) => {
-                            println!("Upsert Successful");
+                            log::debug!("Upsert Successful");
                             Ok(VectorDatabaseStatus::Ok)
                         }
                         Err(e) => {
-                            println!(
+                            log::error!(
                                 "An error occurred while attempting to upsert. Error: {}",
                                 e.clone()
                             );
@@ -274,8 +274,8 @@ impl VectorDatabase for PineconeClient {
                         })
                         .collect();
 
-                    println!("Ids to delete {:?}", indices);
-                    //println!("namespace to delete from {:?}", &namespace.clone());
+                    log::debug!("Ids to delete {:?}", indices);
+                    //log::debug!("namespace to delete from {:?}", &namespace.clone());
                     for idx in indices.unwrap() {
                         // Use the collected ids directly in the delete_by_id method
                         let mut fields = BTreeMap::new();
@@ -301,8 +301,8 @@ impl VectorDatabase for PineconeClient {
                             let ids: Vec<&str> =
                                 points.matches.iter().map(|j| j.id.as_str()).collect();
                             match index.delete_by_id(&ids, &namespace.clone().into()).await {
-                                Ok(_) => println!("Point deleted successfully"),
-                                Err(e) => println!(
+                                Ok(_) => log::debug!("Point deleted successfully"),
+                                Err(e) => log::error!(
                                     "An error occurred while attempting to delete \
                                 point. Error: {}",
                                     e
@@ -425,7 +425,7 @@ impl VectorDatabase for PineconeClient {
 
     async fn display_config(&self) {
         let list_of_index = &self.list_indexes().await.unwrap();
-        println!(
+        log::debug!(
             "Pinecone Host: {}",
             list_of_index.clone().indexes.unwrap()[0].host
         );

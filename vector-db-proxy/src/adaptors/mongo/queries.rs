@@ -36,7 +36,6 @@ pub async fn get_model(db: &Database, datasource_id: &str) -> Result<Option<Mode
         .await
     {
         Ok(Some(datasource)) => {
-            //println!("Datasource retrieved from Mongo: {}", datasource._id);
             // If datasource is found, attempt to find the related model.
             match models_collection
                 .find_one(doc! {"_id": datasource.model_id}, None)
@@ -218,12 +217,15 @@ pub async fn get_vector_db_details(db: &Database, vector_db_id: ObjectId) -> Opt
             if let Some(db) = vector_db {
                 Some(db)
             } else {
-                println!("Returned None....");
+                log::debug!("Returned None....");
                 None
             }
         }
         Err(e) => {
-            println!("There was an error: {}", e);
+            log::error!(
+                "There was an error when fetching vector DB details from mongo: {}",
+                e
+            );
             None
         }
     }

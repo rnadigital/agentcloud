@@ -147,7 +147,7 @@ impl VectorDatabase for QdrantClient {
         search_request: SearchRequest,
         point: Point,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
-        println!("Qdrant URI: {:?}", &self.cfg.uri);
+        log::debug!("Qdrant URI: {:?}", &self.cfg.uri);
         let collection_id = search_request.clone().collection;
         let mut backoff: exponential::ExponentialBackoff<SystemClock> =
             exponential::ExponentialBackoff::<SystemClock> {
@@ -488,6 +488,6 @@ impl VectorDatabase for QdrantClient {
     }
 
     async fn display_config(&self) {
-        println!("Qdrant Host: {}", &self.cfg.uri)
+        log::debug!("Qdrant Host: {}", &self.cfg.uri)
     }
 }
