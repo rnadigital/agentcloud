@@ -167,9 +167,15 @@ impl VectorDatabase for PineconeClient {
                                     println!("Upsert Successful");
                                     Ok(VectorDatabaseStatus::Ok)
                                 }
-                                Err(e) => Err(e),
+                                Err(e) => {
+                                    log::error!("Upsert failed due to error: {}", e);
+                                    Err(e)
+                                }
                             },
-                            Err(e) => Err(e.to_owned()),
+                            Err(e) => {
+                                log::error!("Upsert failed due to error: {}", e);
+                                Err(e.to_owned())
+                            }
                         }
                     }
                     _ => match upsert(index, &[vector], &namespace.into()).await {
@@ -182,6 +188,7 @@ impl VectorDatabase for PineconeClient {
                                 "An error occurred while attempting to upsert. Error: {}",
                                 e.clone()
                             );
+                            log::error!("Upsert failed due to error: {}", e);
                             Err(e)
                         }
                     },
@@ -308,7 +315,10 @@ impl VectorDatabase for PineconeClient {
             }
             return match upsert(index, &vectors, &namespace.into()).await {
                 Ok(_) => Ok(VectorDatabaseStatus::Ok),
-                Err(e) => Err(e),
+                Err(e) => {
+                    log::error!("Upsert failed due to error: {}", e);
+                    Err(e)
+                }
             };
         };
         Err(VectorDatabaseError::NotFound(

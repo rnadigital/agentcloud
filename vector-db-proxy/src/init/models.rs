@@ -65,7 +65,7 @@ impl GlobalData {
                 .map(|t| t.get() as f64)
                 .unwrap_or(12.0),
             use_gpu: dotenv::var("USE_GPU").unwrap_or("false".to_string()),
-            logging_level: dotenv::var("LOGGING_LEVEL").unwrap_or("debug".to_string()),
+            logging_level: dotenv::var("LOGGING_LEVEL").unwrap_or("info".to_string()),
             message_queue_provider: dotenv::var("MESSAGE_QUEUE_PROVIDER")
                 .unwrap_or("rabbitmq".to_string()),
             unstructuredio_url: dotenv::var("UNSTRUCTURED_API_URL")
