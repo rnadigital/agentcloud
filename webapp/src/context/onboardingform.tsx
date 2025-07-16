@@ -1,9 +1,44 @@
 import { FieldValue, FieldValues, FormProvider, useForm } from 'react-hook-form';
+import { useFormPersistence } from 'hooks/useFormPersistence';
 
-const OnboardingFormContext = ({ children }: { children: React.ReactNode }) => {
+interface OnboardingFormContextProps {
+	children: React.ReactNode;
+	formId?: string;
+	enablePersistence?: boolean;
+}
+
+const OnboardingFormContext = ({
+	children,
+	formId,
+	enablePersistence = true
+}: OnboardingFormContextProps) => {
 	const methods = useForm();
 
-	return <FormProvider {...methods}>{children}</FormProvider>;
+	return (
+		<FormProvider {...methods}>
+			<OnboardingFormPersistenceWrapper formId={formId} enablePersistence={enablePersistence}>
+				{children}
+			</OnboardingFormPersistenceWrapper>
+		</FormProvider>
+	);
+};
+
+const OnboardingFormPersistenceWrapper = ({
+	children,
+	formId,
+	enablePersistence
+}: {
+	children: React.ReactNode;
+	formId?: string;
+	enablePersistence?: boolean;
+}) => {
+	useFormPersistence({
+		formId: formId || 'onboarding_form',
+		enableAutoSave: enablePersistence,
+		enableAutoRestore: enablePersistence
+	});
+
+	return <>{children}</>;
 };
 
 export default OnboardingFormContext;
@@ -11,10 +46,9 @@ export default OnboardingFormContext;
 import { useFormContext } from 'react-hook-form';
 
 export const useOnboardingFormContext = <TFieldValues extends FieldValues>() => {
-	// Updated to extend Record
 	const context = useFormContext<TFieldValues>();
 	if (!context) {
-		// ... existing code ...
+		throw new Error('useOnboardingFormContext must be used within a FormProvider');
 	}
 	return context;
 };

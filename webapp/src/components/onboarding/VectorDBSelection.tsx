@@ -23,6 +23,7 @@ import { StreamConfig } from 'struct/datasource';
 import { VectorDb } from 'struct/vectordb';
 import { Cloud, CloudRegionMap, Region } from 'struct/vectorproxy';
 import SelectClassNames from 'styles/SelectClassNames';
+import { useDatasourceStore } from 'store/datasource';
 
 const options = [
 	{
@@ -149,6 +150,19 @@ const VectorDBSelection = ({
 					syncSchedule: scheduleType
 				});
 				toast.success('Added datasource');
+				// Clear stream configuration after successful datasource creation
+				const {
+					clearAllStreamConfig,
+					clearDatasourceDetails,
+					clearSelectedModelId,
+					clearEmbeddingModelFormData,
+					clearSelectedVectorDb
+				} = useDatasourceStore.getState();
+				clearAllStreamConfig();
+				clearDatasourceDetails();
+				clearSelectedModelId();
+				clearEmbeddingModelFormData();
+				clearSelectedVectorDb();
 			},
 			res => {
 				posthog.capture('createDatasource', {

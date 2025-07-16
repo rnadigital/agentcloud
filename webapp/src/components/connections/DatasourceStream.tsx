@@ -28,26 +28,40 @@ export function StreamRow({
 	streamState: StreamConfig;
 }) {
 	const setStreamState = useDatasourceStore(state => state.setStreamState);
+	const { saveStreamConfig, loadStreamConfig } = useDatasourceStore();
 
-	const [isExpanded, setIsExpanded] = useState(streamState?.checkedChildren != null && !readonly);
 	const streamName = stream?.stream?.name || stream?.name;
+	const savedConfig = loadStreamConfig(streamName);
+
+	const [isExpanded, setIsExpanded] = useState(
+		savedConfig?.isExpanded !== undefined
+			? savedConfig.isExpanded
+			: streamState?.checkedChildren != null && !readonly
+	);
 
 	const { defaultCursorField, sourceDefinedPrimaryKey, sourceDefinedCursorField } =
 		streamProperty || {};
 	const containsNestedFields =
 		sourceDefinedPrimaryKey?.length > 1 || defaultCursorField?.length > 1;
-	const [cursorField, setCursorField] = useState(streamState?.cursorField || defaultCursorField); //Note: is an array for nested fields which we dont yet fully support
+
+	// Load saved configuration or use defaults
+	const [cursorField, setCursorField] = useState(
+		savedConfig?.cursorField || streamState?.cursorField || defaultCursorField
+	);
 	const [primaryKey, setPrimaryKey] = useState(
-		streamState?.primaryKey || sourceDefinedPrimaryKey?.flat() || []
+		savedConfig?.primaryKey || streamState?.primaryKey || sourceDefinedPrimaryKey?.flat() || []
 	);
 	const initialSyncMode =
 		streamProperty?.syncModes.find(m => m?.includes('incremental')) || streamProperty?.syncModes[0];
-	const [syncMode, setSyncMode] = useState(streamState?.syncMode || initialSyncMode);
+	const [syncMode, setSyncMode] = useState(
+		savedConfig?.syncMode || streamState?.syncMode || initialSyncMode
+	);
 	const canSelectCursors = syncMode && syncMode !== 'full_refresh_overwrite';
 	const canSelectPrimaryKey = sourceDefinedCursorField === false && canSelectCursors;
 
 	//descriptions map
 	const initialDescriptionsMap =
+		savedConfig?.descriptionsMap ||
 		streamState?.descriptionsMap ||
 		Object.entries(stream?.stream?.jsonSchema?.properties || {}).reduce(
 			(acc: FieldDescriptionMap, curr: [string, any]) => {
@@ -69,9 +83,11 @@ export function StreamRow({
 	);
 
 	//checked fields
+	const initialCheckedChildren = savedConfig?.checkedChildren || streamState.checkedChildren || [];
+
 	const [checkedChildren, setCheckedChildren] = useReducer(
 		handleCheckedChild,
-		streamState.checkedChildren || []
+		initialCheckedChildren
 	);
 
 	function handleCheckedChild(state, action) {
@@ -84,17 +100,24 @@ export function StreamRow({
 		return state.concat([action.name]);
 	}
 
+	// Save configuration to store whenever it changes
 	useEffect(() => {
+		const config = {
+			checkedChildren,
+			primaryKey,
+			syncMode,
+			cursorField,
+			descriptionsMap,
+			isExpanded
+		};
+
+		saveStreamConfig(streamName, config);
+
+		// Also update the stream state for backward compatibility
 		setStreamState({
-			[streamName]: {
-				checkedChildren,
-				primaryKey,
-				syncMode,
-				cursorField,
-				descriptionsMap
-			}
+			[streamName]: config
 		});
-	}, [checkedChildren, primaryKey, syncMode, cursorField, descriptionsMap]);
+	}, [checkedChildren, primaryKey, syncMode, cursorField, descriptionsMap, isExpanded, streamName]);
 
 	return (
 		<div className='border-b dark:text-gray-50'>
@@ -103,7 +126,7 @@ export function StreamRow({
 					<div className='me-4'>
 						<label className='switch'>
 							<input
-								onClick={() => {
+								onChange={() => {
 									checkedChildren?.length === 0 && setIsExpanded(true);
 									setCheckedChildren({
 										array:
@@ -273,7 +296,6 @@ export function StreamRow({
 													name={key}
 													data-parent={streamName}
 													disabled={readonly || (cursorField.includes(key) && canSelectCursors)} //Disable unchecking the field if it's the cursor field
-													defaultChecked={streamState?.checkedChildren?.includes(key)}
 													checked={checkedChildren.includes(key)}
 												/>
 												<span className='slider round'></span>
@@ -298,7 +320,6 @@ export function StreamRow({
 													name={`${streamName}_cursor`}
 													data-parent={streamName}
 													disabled={sourceDefinedCursorField || readonly || !canSelectCursors}
-													defaultChecked={streamState?.checkedChildren?.includes(key)}
 													checked={cursorField.includes(key)}
 													required={isExpanded && cursorField?.length === 0}
 												/>
@@ -318,7 +339,7 @@ export function StreamRow({
 												type='text'
 												name={key}
 												disabled={readonly}
-												defaultValue={descriptionsMap[key]?.description || ''}
+												value={descriptionsMap[key]?.description || ''}
 												className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 												placeholder='Enter description'
 											/>
@@ -354,7 +375,7 @@ export function StreamsList({
 				return (
 					<StreamRow
 						readonly={readonly}
-						key={index}
+						key={`${streamName}-${index}`}
 						stream={stream}
 						streamProperty={streamProperty}
 						streamState={initialStreamState}

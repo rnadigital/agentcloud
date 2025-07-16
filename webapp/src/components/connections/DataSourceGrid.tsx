@@ -8,14 +8,15 @@ import { useShallow } from 'zustand/react/shallow';
 import DataSourceCredentialsForm from './DataSourceCredentialsForm';
 
 const DataSourceGrid = () => {
-	const [selectedConnector, setSelectedConnector] = useState<Connector>();
-
-	const { connectors, searchInput } = useDatasourceStore(
+	const { connectors, searchInput, selectedConnector, setSelectedConnector } = useDatasourceStore(
 		useShallow(state => ({
 			connectors: state.connectors,
-			searchInput: state.searchInput
+			searchInput: state.searchInput,
+			selectedConnector: state.selectedConnector,
+			setSelectedConnector: state.setSelectedConnector
 		}))
 	);
+
 	const filteredConnectors: Connector[] = useMemo(() => {
 		return Array.from(new Set(connectors.map(connector => connector.name.toLowerCase())))
 			.map(name => connectors.find(connector => connector.name.toLowerCase() === name))

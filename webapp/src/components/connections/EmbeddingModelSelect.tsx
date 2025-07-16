@@ -37,11 +37,29 @@ interface LLMConfigurationFormValues {
 }
 
 const EmbeddingModelSelect = () => {
-	const { teamModels, setStep, fetchTeamModels } = useDatasourceStore(
+	const {
+		teamModels,
+		setStep,
+		fetchTeamModels,
+		setCurrentDatasourceStep,
+		selectedModelId,
+		setSelectedModelId,
+		clearSelectedModelId,
+		saveEmbeddingModelFormData,
+		loadEmbeddingModelFormData,
+		clearEmbeddingModelFormData
+	} = useDatasourceStore(
 		useShallow(state => ({
 			teamModels: state.teamModels,
 			setStep: state.setCurrentStep,
-			fetchTeamModels: state.fetchTeamModels
+			fetchTeamModels: state.fetchTeamModels,
+			setCurrentDatasourceStep: state.setCurrentDatasourceStep,
+			selectedModelId: state.selectedModelId,
+			setSelectedModelId: state.setSelectedModelId,
+			clearSelectedModelId: state.clearSelectedModelId,
+			saveEmbeddingModelFormData: state.saveEmbeddingModelFormData,
+			loadEmbeddingModelFormData: state.loadEmbeddingModelFormData,
+			clearEmbeddingModelFormData: state.clearEmbeddingModelFormData
 		}))
 	);
 
@@ -90,7 +108,18 @@ const EmbeddingModelSelect = () => {
 		setUserSelectedEmbeddingType(true);
 	};
 
+	const goBackDatasourceStep = () => {
+		setCurrentDatasourceStep(2);
+		setStep(0);
+	};
+
 	const addNewModel = async (data: LLMConfigurationFormValues) => {
+		if (selectedModelId) {
+			setValue('modelId', selectedModelId);
+			setStep(2);
+			return;
+		}
+
 		const embeddingBody = {
 			_csrf: csrf,
 			resourceSlug,
@@ -109,8 +138,6 @@ const EmbeddingModelSelect = () => {
 		setStep(2);
 	};
 
-	const [selectedTeamModel, setSelectedTeamModel] = useState('');
-
 	const existingModelOptions = teamModels
 		?.filter(model => ModelEmbeddingLength[model.model])
 		.map(model => ({
@@ -120,14 +147,13 @@ const EmbeddingModelSelect = () => {
 		}));
 
 	useEffect(() => {
-		if (selectedTeamModel) {
-			const selectedModel = teamModels.find(m => m._id.toString() === selectedTeamModel);
+		if (selectedModelId) {
+			const selectedModel = teamModels.find(m => m._id.toString() === selectedModelId);
 			if (selectedModel) {
 				setValue('modelId', selectedModel._id.toString());
-				setStep(2);
 			}
 		}
-	}, [selectedTeamModel]);
+	}, [selectedModelId, teamModels, setValue]);
 
 	useEffect(() => {
 		setValue('embeddingModel', {
@@ -152,11 +178,59 @@ const EmbeddingModelSelect = () => {
 		}
 	}, [router, resourceSlug]);
 
+	useEffect(() => {
+		if (selectedModelId && teamModels.length > 0) {
+			const selectedModel = teamModels.find(m => m._id.toString() === selectedModelId);
+			if (selectedModel) {
+				setValue('modelId', selectedModel._id.toString());
+			}
+		}
+	}, [selectedModelId, teamModels, setValue]);
+
+	// Save form data when it changes
+	useEffect(() => {
+		const subscription = watch(data => {
+			if (data && Object.keys(data).length > 0) {
+				const formData = {
+					embeddingType:
+						data.embeddingType && data.embeddingType.label && data.embeddingType.value
+							? { label: data.embeddingType.label, value: data.embeddingType.value }
+							: undefined,
+					embeddingModel:
+						data.embeddingModel && data.embeddingModel.label && data.embeddingModel.value
+							? { label: data.embeddingModel.label, value: data.embeddingModel.value }
+							: undefined,
+					embeddedModelConfig: data.embeddedModelConfig
+				};
+				saveEmbeddingModelFormData(formData);
+			}
+		});
+
+		return () => subscription.unsubscribe();
+	}, [watch, saveEmbeddingModelFormData]);
+
+	// Restore form data on mount
+	useEffect(() => {
+		const savedFormData = loadEmbeddingModelFormData();
+		if (savedFormData) {
+			if (savedFormData.embeddingType) {
+				setValue('embeddingType', savedFormData.embeddingType);
+			}
+			if (savedFormData.embeddingModel) {
+				setValue('embeddingModel', savedFormData.embeddingModel);
+			}
+			if (savedFormData.embeddedModelConfig) {
+				Object.entries(savedFormData.embeddedModelConfig).forEach(([key, value]) => {
+					setValue(`embeddedModelConfig.${key}` as keyof LLMConfigurationFormValues, value);
+				});
+			}
+		}
+	}, [loadEmbeddingModelFormData, setValue]);
+
 	return (
 		<form
 			className='flex-1 border border-gray-300 p-4 flex flex-col gap-y-3 mt-6'
-			onSubmit={handleSubmit(addNewModel)}
-		>
+			onSubmit={handleSubmit(addNewModel)}>
 			<div className='text-sm flex gap-1 dark:text-white mb-4'>
 				<span>Use Existing Model</span>
 				<ToolTip content='Select an existing embedding model from your team'>
@@ -166,7 +240,7 @@ const EmbeddingModelSelect = () => {
 				</ToolTip>
 			</div>
 
-			<Select value={selectedTeamModel} onValueChange={setSelectedTeamModel}>
+			<Select value={selectedModelId || ''} onValueChange={setSelectedModelId}>
 				<SelectTrigger className='w-full'>
 					<SelectValue placeholder='Select an existing model' />
 				</SelectTrigger>
@@ -192,41 +266,46 @@ const EmbeddingModelSelect = () => {
 				</div>
 			</div>
 
-			<div className='text-sm flex gap-1 dark:text-white'>
-				<span>Select Embedding</span>
-				<ToolTip content='Embedding models convert text or other data into numerical vectors for analysis and machine learning tasks. Use them for similarity searches, clustering, recommendation systems, and more. Embedding models are used to embed data and store it in a vector database for later RAG retrieval.'>
-					<span className='cursor-pointer'>
-						<InformationCircleIcon className='h-4 w-4 text-gray-400' />
-					</span>
-				</ToolTip>
-			</div>
-			<div className='flex'>
-				<div className='w-1/2 sm:w-2/5'>
-					<OnboardingSelect<LLMConfigurationFormValues>
-						options={modelOptions}
-						classNames={{
-							listboxButton: 'rounded-l-md bg-gray-100 dark:bg-gray-600',
-							listboxOptions: 'left-0'
-						}}
-						control={control}
-						name='embeddingType'
-						callback={handleSetUserSelectedEmbeddingType}
-					/>
-				</div>
-				<div className='w-1/2 sm:flex-1'>
-					<OnboardingSelect<LLMConfigurationFormValues>
-						options={embeddingModelList}
-						classNames={{
-							listboxButton: 'rounded-r-md bg-gray-50 dark:bg-gray-700',
-							listboxOptions: 'right-0'
-						}}
-						control={control}
-						name='embeddingModel'
-					/>
-				</div>
-			</div>
+			{!selectedModelId && (
+				<>
+					<div className='text-sm flex gap-1 dark:text-white'>
+						<span>Select Embedding</span>
+						<ToolTip content='Embedding models convert text or other data into numerical vectors for analysis and machine learning tasks. Use them for similarity searches, clustering, recommendation systems, and more. Embedding models are used to embed data and store it in a vector database for later RAG retrieval.'>
+							<span className='cursor-pointer'>
+								<InformationCircleIcon className='h-4 w-4 text-gray-400' />
+							</span>
+						</ToolTip>
+					</div>
+					<div className='flex'>
+						<div className='w-1/2 sm:w-2/5'>
+							<OnboardingSelect<LLMConfigurationFormValues>
+								options={modelOptions}
+								classNames={{
+									listboxButton: 'rounded-l-md bg-gray-100 dark:bg-gray-600',
+									listboxOptions: 'left-0'
+								}}
+								control={control}
+								name='embeddingType'
+								callback={handleSetUserSelectedEmbeddingType}
+							/>
+						</div>
+						<div className='w-1/2 sm:flex-1'>
+							<OnboardingSelect<LLMConfigurationFormValues>
+								options={embeddingModelList}
+								classNames={{
+									listboxButton: 'rounded-r-md bg-gray-50 dark:bg-gray-700',
+									listboxOptions: 'right-0'
+								}}
+								control={control}
+								name='embeddingModel'
+							/>
+						</div>
+					</div>
+				</>
+			)}
 			<div className='mt-2'>
-				{EmbeddingModelRequiredFields &&
+				{!selectedModelId &&
+					EmbeddingModelRequiredFields &&
 					EmbeddingModelRequiredFields.length > 0 &&
 					EmbeddingModelRequiredFields.map(field => (
 						<div key={field.name}>
@@ -244,11 +323,16 @@ const EmbeddingModelSelect = () => {
 					))}
 			</div>
 
-			<div className='flex justify-end mt-4'>
+			<div className='flex justify-between mt-4'>
+				<button
+					type='button'
+					className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+					onClick={goBackDatasourceStep}>
+					Back
+				</button>
 				<button
 					type='submit'
-					className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-				>
+					className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'>
 					Continue
 				</button>
 			</div>

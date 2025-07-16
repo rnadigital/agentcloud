@@ -27,6 +27,39 @@ interface DatasourceStore {
 	embeddingField: string;
 	teamModels: ModelsJsonData['models'];
 	vectorDbs: VectorDbDocument[];
+	// Form persistence
+	formData: Record<string, any>;
+	oneOfSelections: Record<string, any>;
+	// Connector selection
+	selectedConnector?: Connector;
+	// Stream configuration persistence
+	streamConfigData: Record<string, any>;
+	// Datasource details persistence
+	datasourceDetails: {
+		chunkStrategy: string;
+		retrievalStrategy: string;
+		k: number;
+		scheduleType: string;
+		timeUnit: string;
+		units: string;
+		cronExpression: string;
+		enableConnectorChunking: boolean;
+		toolDecayRate: number;
+	};
+	// Selected model persistence
+	selectedModelId?: string;
+	// Embedding model form persistence
+	embeddingModelFormData?: {
+		embeddingType?: { label: string; value: string };
+		embeddingModel?: { label: string; value: string };
+		embeddedModelConfig?: Record<string, string>;
+	};
+	// Vector DB selection persistence
+	selectedVectorDb?: {
+		selectedDB?: string;
+		selectedExistingDb?: string;
+		byoVectorDb?: boolean;
+	};
 	// Actions
 	setStore: (data: Partial<DatasourceStore>) => void;
 	initConnectors: (router: any) => Promise<void>;
@@ -46,6 +79,40 @@ interface DatasourceStore {
 	) => Promise<void>;
 	fetchTeamModels: (router: any) => Promise<void>;
 	fetchVectorDbs: (router: any) => Promise<void>;
+	// Form persistence actions
+	saveFormData: (formId: string, data: any) => void;
+	loadFormData: (formId: string) => any;
+	clearFormData: (formId?: string) => void;
+	saveOneOfSelection: (fieldName: string, selection: any) => void;
+	loadOneOfSelection: (fieldName: string) => any;
+	clearOneOfSelection: (fieldName?: string) => void;
+	// Enhanced form persistence methods
+	restoreFormData: (formId: string, methods: any) => boolean;
+	hasSavedData: (formId: string) => boolean;
+	clearAllFormData: () => void;
+	// Connector selection actions
+	setSelectedConnector: (connector?: Connector) => void;
+	clearSelectedConnector: () => void;
+	// Stream configuration persistence actions
+	saveStreamConfig: (streamName: string, config: any) => void;
+	loadStreamConfig: (streamName: string) => any;
+	clearStreamConfig: (streamName?: string) => void;
+	clearAllStreamConfig: () => void;
+	// Datasource details persistence actions
+	saveDatasourceDetails: (details: Partial<DatasourceStore['datasourceDetails']>) => void;
+	loadDatasourceDetails: () => DatasourceStore['datasourceDetails'];
+	clearDatasourceDetails: () => void;
+	// Selected model persistence actions
+	setSelectedModelId: (modelId?: string) => void;
+	clearSelectedModelId: () => void;
+	// Embedding model form persistence actions
+	saveEmbeddingModelFormData: (data: DatasourceStore['embeddingModelFormData']) => void;
+	loadEmbeddingModelFormData: () => DatasourceStore['embeddingModelFormData'];
+	clearEmbeddingModelFormData: () => void;
+	// Vector DB selection persistence actions
+	saveSelectedVectorDb: (data: DatasourceStore['selectedVectorDb']) => void;
+	loadSelectedVectorDb: () => DatasourceStore['selectedVectorDb'];
+	clearSelectedVectorDb: () => void;
 }
 
 export const useDatasourceStore = create<DatasourceStore>((set, get) => ({
@@ -65,6 +132,25 @@ export const useDatasourceStore = create<DatasourceStore>((set, get) => ({
 	embeddingField: '',
 	teamModels: [],
 	vectorDbs: [],
+	// Form persistence
+	formData: {},
+	oneOfSelections: {},
+	// Connector selection
+	selectedConnector: undefined,
+	// Stream configuration persistence
+	streamConfigData: {},
+	// Datasource details persistence
+	datasourceDetails: {
+		chunkStrategy: 'none',
+		retrievalStrategy: 'none',
+		k: 0,
+		scheduleType: 'manual',
+		timeUnit: 'minute',
+		units: '1',
+		cronExpression: '',
+		enableConnectorChunking: false,
+		toolDecayRate: 0.7
+	},
 	// Actions
 	setStore: data => set(state => ({ ...state, ...data })),
 
@@ -79,7 +165,26 @@ export const useDatasourceStore = create<DatasourceStore>((set, get) => ({
 					if (!connectorsJson?.length) {
 						throw new Error('Failed to fetch connector list, please ensure Airbyte is running.');
 					}
-					set(state => ({ ...state, connectors: connectorsJson }));
+					set(state => ({
+						...state,
+						connectors: connectorsJson,
+						selectedConnector: undefined,
+						selectedModelId: undefined,
+						embeddingModelFormData: undefined,
+						selectedVectorDb: undefined,
+						streamConfigData: {},
+						datasourceDetails: {
+							chunkStrategy: 'none',
+							retrievalStrategy: 'none',
+							k: 0,
+							scheduleType: 'manual',
+							timeUnit: 'minute',
+							units: '1',
+							cronExpression: '',
+							enableConnectorChunking: false,
+							toolDecayRate: 0.7
+						}
+					}));
 				},
 				err => {
 					set(state => ({
@@ -212,5 +317,212 @@ export const useDatasourceStore = create<DatasourceStore>((set, get) => ({
 			toast.error,
 			router
 		);
+	},
+
+	// Form persistence actions
+	saveFormData: (formId, data) => {
+		set(state => ({
+			...state,
+			formData: {
+				...state.formData,
+				[formId]: data
+			}
+		}));
+	},
+
+	loadFormData: formId => {
+		const { formData } = get();
+		return formData[formId] || null;
+	},
+
+	clearFormData: formId => {
+		if (formId) {
+			set(state => {
+				const newFormData = { ...state.formData };
+				delete newFormData[formId];
+				return { ...state, formData: newFormData };
+			});
+		} else {
+			set(state => ({ ...state, formData: {} }));
+		}
+	},
+
+	saveOneOfSelection: (fieldName, selection) => {
+		set(state => ({
+			...state,
+			oneOfSelections: {
+				...state.oneOfSelections,
+				[fieldName]: selection
+			}
+		}));
+	},
+
+	loadOneOfSelection: fieldName => {
+		const { oneOfSelections } = get();
+		return oneOfSelections[fieldName] || null;
+	},
+
+	clearOneOfSelection: fieldName => {
+		if (fieldName) {
+			set(state => {
+				const newOneOfSelections = { ...state.oneOfSelections };
+				delete newOneOfSelections[fieldName];
+				return { ...state, oneOfSelections: newOneOfSelections };
+			});
+		} else {
+			set(state => ({ ...state, oneOfSelections: {} }));
+		}
+	},
+
+	clearAllFormData: () => {
+		set(state => ({
+			...state,
+			searchInput: '',
+			currentStep: 0,
+			currentDatasourceStep: 0,
+			streamState: {},
+			chunkingConfig: defaultChunkingOptions,
+			submitting: false,
+			error: null,
+			spec: null,
+			loading: false,
+			embeddingField: '',
+			formData: {},
+			oneOfSelections: {},
+			selectedConnector: undefined,
+			streamConfigData: {},
+			selectedModelId: undefined,
+			embeddingModelFormData: undefined,
+			selectedVectorDb: undefined,
+			datasourceDetails: {
+				chunkStrategy: 'none',
+				retrievalStrategy: 'none',
+				k: 0,
+				scheduleType: 'manual',
+				timeUnit: 'minute',
+				units: '1',
+				cronExpression: '',
+				enableConnectorChunking: false,
+				toolDecayRate: 0.7
+			}
+		}));
+	},
+
+	// Enhanced form persistence methods
+	restoreFormData: (formId, methods) => {
+		const savedData = get().loadFormData(formId);
+		if (savedData && methods && Object.keys(savedData).length > 0) {
+			try {
+				methods.reset(savedData);
+				return true;
+			} catch (error) {
+				console.warn('Failed to restore form data:', error);
+				return false;
+			}
+		}
+		return false;
+	},
+
+	hasSavedData: formId => {
+		const savedData = get().loadFormData(formId);
+		return savedData !== null && Object.keys(savedData).length > 0;
+	},
+
+	// Connector selection actions
+	setSelectedConnector: (connector?: Connector) => {
+		set(state => ({ ...state, selectedConnector: connector }));
+	},
+	clearSelectedConnector: () => {
+		set(state => ({ ...state, selectedConnector: undefined }));
+	},
+
+	// Stream configuration persistence actions
+	saveStreamConfig: (streamName, config) => {
+		set(state => ({
+			...state,
+			streamConfigData: {
+				...state.streamConfigData,
+				[streamName]: config
+			}
+		}));
+	},
+	loadStreamConfig: streamName => {
+		const { streamConfigData } = get();
+		const config = streamConfigData[streamName] || null;
+		return config;
+	},
+	clearStreamConfig: streamName => {
+		if (streamName) {
+			set(state => {
+				const newStreamConfigData = { ...state.streamConfigData };
+				delete newStreamConfigData[streamName];
+				return { ...state, streamConfigData: newStreamConfigData };
+			});
+		} else {
+			set(state => ({ ...state, streamConfigData: {} }));
+		}
+	},
+	clearAllStreamConfig: () => {
+		set(state => ({ ...state, streamConfigData: {} }));
+	},
+
+	// Datasource details persistence actions
+	saveDatasourceDetails: details => {
+		set(state => ({
+			...state,
+			datasourceDetails: {
+				...state.datasourceDetails,
+				...details
+			}
+		}));
+	},
+	loadDatasourceDetails: () => {
+		return get().datasourceDetails;
+	},
+	clearDatasourceDetails: () => {
+		set(state => ({
+			...state,
+			datasourceDetails: {
+				chunkStrategy: 'none',
+				retrievalStrategy: 'none',
+				k: 0,
+				scheduleType: 'manual',
+				timeUnit: 'minute',
+				units: '1',
+				cronExpression: '',
+				enableConnectorChunking: false,
+				toolDecayRate: 0.7
+			}
+		}));
+	},
+
+	// Selected model persistence actions
+	setSelectedModelId: (modelId?: string) => {
+		set(state => ({ ...state, selectedModelId: modelId }));
+	},
+	clearSelectedModelId: () => {
+		set(state => ({ ...state, selectedModelId: undefined }));
+	},
+
+	// Embedding model form persistence actions
+	saveEmbeddingModelFormData: data => {
+		set(state => ({ ...state, embeddingModelFormData: data }));
+	},
+	loadEmbeddingModelFormData: () => {
+		return get().embeddingModelFormData || null;
+	},
+	clearEmbeddingModelFormData: () => {
+		set(state => ({ ...state, embeddingModelFormData: undefined }));
+	},
+
+	// Vector DB selection persistence actions
+	saveSelectedVectorDb: data => {
+		set(state => ({ ...state, selectedVectorDb: data }));
+	},
+	loadSelectedVectorDb: () => {
+		return get().selectedVectorDb || null;
+	},
+	clearSelectedVectorDb: () => {
+		set(state => ({ ...state, selectedVectorDb: undefined }));
 	}
 }));

@@ -64,7 +64,7 @@ export default function AddConnection() {
 					</div>
 
 					<section className='mt-6 flex flex-col h-full'>
-						<OnboardingFormContext>
+						<OnboardingFormContext formId='connection_onboarding' enablePersistence={true}>
 							{currentDatasourceStep === 0 && (
 								<>
 									<DataSourceSearch />

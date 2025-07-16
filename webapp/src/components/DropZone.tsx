@@ -99,7 +99,6 @@ export default function DropZone({
 	);
 
 	const onDropRejected = useCallback(fileRejections => {
-		console.log(fileRejections);
 		if (fileRejections[0]?.errors?.[0]?.code === 'file-too-large') {
 			if ([SubscriptionPlan.ENTERPRISE].includes(stripePlan)) {
 				return toast.error(`Maximum file size exceeded (${formatSize(maxSize)}).`);
@@ -161,16 +160,14 @@ export default function DropZone({
 					files.map((acceptedFile, ai) => (
 						<li
 							key={`acceptedFile_${ai}`}
-							className='text-white bg-green-600 border-green-700 border rounded p-3 my-3'
-						>
+							className='text-white bg-green-600 border-green-700 border rounded p-3 my-3'>
 							{acceptedFile.name} ({formatSize(parseInt(acceptedFile.size))})
 							<button
 								type='button'
 								onClick={() => {
 									setFiles(null);
 								}}
-								className='float-right rounded-md disabled:bg-slate-400 bg-red-600 ms-2 p-1 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 mt-0'
-							>
+								className='float-right rounded-md disabled:bg-slate-400 bg-red-600 ms-2 p-1 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 mt-0'>
 								<TrashIcon className='h-4 w-4' />
 							</button>
 						</li>
@@ -191,8 +188,7 @@ export default function DropZone({
 						//TODO: more checks
 					}
 					type='submit'
-					className='w-full rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-				>
+					className='w-full rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'>
 					{loading && <ButtonSpinner />}
 					Upload
 				</button>
@@ -204,8 +200,7 @@ export default function DropZone({
 		<label
 			{...getRootProps({ className: 'dropzone' })}
 			htmlFor='file'
-			className='block text-center border-2 border-dashed p-4 rounded mb-4 bg-white dark:bg-slate-800 dark:text-white dark:border-slate-700'
-		>
+			className='block text-center border-2 border-dashed p-4 rounded mb-4 bg-white dark:bg-slate-800 dark:text-white dark:border-slate-700'>
 			<input id='file' {...getInputProps({ className: 'w-full h-full' })} />
 			{!isDragActive && 'Click here or drop a file to upload'}
 			{isDragActive && "Drop it like it's hot!"}
@@ -247,8 +242,7 @@ export default function DropZone({
 							if (!modalOpen) {
 								setFiles(null);
 							}
-						}}
-					>
+						}}>
 						<Transition.Child
 							as={Fragment}
 							enter='ease-out duration-300'
@@ -256,8 +250,7 @@ export default function DropZone({
 							enterTo='opacity-100'
 							leave='ease-in duration-200'
 							leaveFrom='opacity-100'
-							leaveTo='opacity-0'
-						>
+							leaveTo='opacity-0'>
 							<div className='fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity' />
 						</Transition.Child>
 
@@ -270,15 +263,13 @@ export default function DropZone({
 									enterTo='opacity-100 translate-y-0 sm:scale-100'
 									leave='ease-in duration-200'
 									leaveFrom='opacity-100 translate-y-0 sm:scale-100'
-									leaveTo='opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95'
-								>
+									leaveTo='opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95'>
 									<Dialog.Panel className='relative transform overflow-hidden rounded-lg bg-white px-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6 dark:bg-slate-800'>
 										<div>
 											<div className='text-center'>
 												<Dialog.Title
 													as='h3'
-													className='font-semibold text-gray-900 dark:text-white'
-												>
+													className='font-semibold text-gray-900 dark:text-white'>
 													Upload File
 												</Dialog.Title>
 											</div>
