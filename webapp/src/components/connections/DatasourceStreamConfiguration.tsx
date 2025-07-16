@@ -24,18 +24,23 @@ const DatasourceStreamConfiguration = () => {
 				e.preventDefault();
 				setStep(2);
 			}}
-			className='border border-gray-200 px-4 pb-4'
-		>
+			className='border border-gray-200 px-4 pb-4'>
 			<StreamsList
 				streams={stagedDatasource.discoveredSchema.catalog?.streams}
 				streamProperties={stagedDatasource.streamProperties}
 			/>
-			<div className='flex justify-end'>
+			<div className='flex justify-between'>
+				<button
+					onClick={() => setStep(0)}
+					disabled={submitting}
+					type='button'
+					className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'>
+					Back
+				</button>
 				<button
 					disabled={submitting}
 					type='submit'
-					className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-				>
+					className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'>
 					{submitting && <ButtonSpinner />}
 					Continue
 				</button>

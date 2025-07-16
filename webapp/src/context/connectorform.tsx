@@ -1,7 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
+import { useFormPersistence } from 'hooks/useFormPersistence';
 
-const FormContext = ({ children, schema }: { children: React.ReactNode; schema?: any }) => {
+interface FormContextProps {
+	children: React.ReactNode;
+	schema?: any;
+	formId?: string;
+	enablePersistence?: boolean;
+}
+
+const FormContext = ({ children, schema, formId, enablePersistence = true }: FormContextProps) => {
 	const methods = useForm();
 
 	useEffect(() => {
@@ -10,7 +18,31 @@ const FormContext = ({ children, schema }: { children: React.ReactNode; schema?:
 		}
 	}, [schema]);
 
-	return <FormProvider {...methods}>{children}</FormProvider>;
+	return (
+		<FormProvider {...methods}>
+			<FormPersistenceWrapper formId={formId} enablePersistence={enablePersistence}>
+				{children}
+			</FormPersistenceWrapper>
+		</FormProvider>
+	);
+};
+
+const FormPersistenceWrapper = ({
+	children,
+	formId,
+	enablePersistence
+}: {
+	children: React.ReactNode;
+	formId?: string;
+	enablePersistence?: boolean;
+}) => {
+	useFormPersistence({
+		formId: formId || 'connector_form',
+		enableAutoSave: enablePersistence,
+		enableAutoRestore: enablePersistence
+	});
+
+	return <>{children}</>;
 };
 
 export default FormContext;

@@ -27,6 +27,11 @@ interface DatasourceStore {
 	embeddingField: string;
 	teamModels: ModelsJsonData['models'];
 	vectorDbs: VectorDbDocument[];
+	// Form persistence
+	formData: Record<string, any>;
+	oneOfSelections: Record<string, any>;
+	// Connector selection
+	selectedConnector?: Connector;
 	// Actions
 	setStore: (data: Partial<DatasourceStore>) => void;
 	initConnectors: (router: any) => Promise<void>;
@@ -46,6 +51,19 @@ interface DatasourceStore {
 	) => Promise<void>;
 	fetchTeamModels: (router: any) => Promise<void>;
 	fetchVectorDbs: (router: any) => Promise<void>;
+	// Form persistence actions
+	saveFormData: (formId: string, data: any) => void;
+	loadFormData: (formId: string) => any;
+	clearFormData: (formId?: string) => void;
+	saveOneOfSelection: (fieldName: string, selection: any) => void;
+	loadOneOfSelection: (fieldName: string) => any;
+	clearOneOfSelection: (fieldName?: string) => void;
+	// Enhanced form persistence methods
+	restoreFormData: (formId: string, methods: any) => boolean;
+	hasSavedData: (formId: string) => boolean;
+	// Connector selection actions
+	setSelectedConnector: (connector?: Connector) => void;
+	clearSelectedConnector: () => void;
 }
 
 export const useDatasourceStore = create<DatasourceStore>((set, get) => ({
@@ -65,6 +83,11 @@ export const useDatasourceStore = create<DatasourceStore>((set, get) => ({
 	embeddingField: '',
 	teamModels: [],
 	vectorDbs: [],
+	// Form persistence
+	formData: {},
+	oneOfSelections: {},
+	// Connector selection
+	selectedConnector: undefined,
 	// Actions
 	setStore: data => set(state => ({ ...state, ...data })),
 
@@ -79,7 +102,11 @@ export const useDatasourceStore = create<DatasourceStore>((set, get) => ({
 					if (!connectorsJson?.length) {
 						throw new Error('Failed to fetch connector list, please ensure Airbyte is running.');
 					}
-					set(state => ({ ...state, connectors: connectorsJson }));
+					set(state => ({
+						...state,
+						connectors: connectorsJson,
+						selectedConnector: undefined
+					}));
 				},
 				err => {
 					set(state => ({
@@ -212,5 +239,88 @@ export const useDatasourceStore = create<DatasourceStore>((set, get) => ({
 			toast.error,
 			router
 		);
+	},
+
+	// Form persistence actions
+	saveFormData: (formId, data) => {
+		set(state => ({
+			...state,
+			formData: {
+				...state.formData,
+				[formId]: data
+			}
+		}));
+	},
+
+	loadFormData: formId => {
+		const { formData } = get();
+		return formData[formId] || null;
+	},
+
+	clearFormData: formId => {
+		if (formId) {
+			set(state => {
+				const newFormData = { ...state.formData };
+				delete newFormData[formId];
+				return { ...state, formData: newFormData };
+			});
+		} else {
+			set(state => ({ ...state, formData: {} }));
+		}
+	},
+
+	saveOneOfSelection: (fieldName, selection) => {
+		set(state => ({
+			...state,
+			oneOfSelections: {
+				...state.oneOfSelections,
+				[fieldName]: selection
+			}
+		}));
+	},
+
+	loadOneOfSelection: fieldName => {
+		const { oneOfSelections } = get();
+		return oneOfSelections[fieldName] || null;
+	},
+
+	clearOneOfSelection: fieldName => {
+		if (fieldName) {
+			set(state => {
+				const newOneOfSelections = { ...state.oneOfSelections };
+				delete newOneOfSelections[fieldName];
+				return { ...state, oneOfSelections: newOneOfSelections };
+			});
+		} else {
+			set(state => ({ ...state, oneOfSelections: {} }));
+		}
+	},
+
+	// Enhanced form persistence methods
+	restoreFormData: (formId, methods) => {
+		const savedData = get().loadFormData(formId);
+		if (savedData && methods && Object.keys(savedData).length > 0) {
+			try {
+				methods.reset(savedData);
+				return true;
+			} catch (error) {
+				console.warn('Failed to restore form data:', error);
+				return false;
+			}
+		}
+		return false;
+	},
+
+	hasSavedData: formId => {
+		const savedData = get().loadFormData(formId);
+		return savedData !== null && Object.keys(savedData).length > 0;
+	},
+
+	// Connector selection actions
+	setSelectedConnector: (connector?: Connector) => {
+		set(state => ({ ...state, selectedConnector: connector }));
+	},
+	clearSelectedConnector: () => {
+		set(state => ({ ...state, selectedConnector: undefined }));
 	}
 }));

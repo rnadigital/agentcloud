@@ -155,8 +155,7 @@ const EmbeddingModelSelect = () => {
 	return (
 		<form
 			className='flex-1 border border-gray-300 p-4 flex flex-col gap-y-3 mt-6'
-			onSubmit={handleSubmit(addNewModel)}
-		>
+			onSubmit={handleSubmit(addNewModel)}>
 			<div className='text-sm flex gap-1 dark:text-white mb-4'>
 				<span>Use Existing Model</span>
 				<ToolTip content='Select an existing embedding model from your team'>
@@ -247,8 +246,7 @@ const EmbeddingModelSelect = () => {
 			<div className='flex justify-end mt-4'>
 				<button
 					type='submit'
-					className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-				>
+					className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'>
 					Continue
 				</button>
 			</div>

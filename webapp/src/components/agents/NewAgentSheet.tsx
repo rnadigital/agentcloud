@@ -307,8 +307,16 @@ export const AgentSheet = ({
 				body,
 				() => {
 					toast.success('Agent Updated');
-					window.location.reload();
 					setOpenEditSheet(false);
+					// Reset all form state
+					setToolState(null);
+					setDatasourceState(null);
+					setBackstory('');
+					setGoal('');
+					setRole('');
+					setIcon(null);
+					setAllowDelegation(false);
+					setVerbose(false);
 					callback && callback(agentState._id.toString(), body);
 				},
 				res => {
@@ -321,13 +329,23 @@ export const AgentSheet = ({
 				body,
 				() => {
 					toast.success('Added new agent');
+					setOpenEditSheet(false);
+					// Reset all form state
+					setToolState(null);
+					setDatasourceState(null);
+					setBackstory('');
+					setGoal('');
+					setRole('');
+					setIcon(null);
+					setAllowDelegation(false);
+					setVerbose(false);
+					callback && addedAgent && callback(addedAgent._id, body);
 				},
 				res => {
 					toast.error(res);
 				},
 				null
 			);
-			callback && addedAgent && callback(addedAgent._id, body);
 		}
 	}
 
@@ -474,7 +492,22 @@ export const AgentSheet = ({
 	}
 
 	return (
-		<Sheet open={openEditSheet} onOpenChange={setOpenEditSheet}>
+		<Sheet
+			open={openEditSheet}
+			onOpenChange={open => {
+				setOpenEditSheet(open);
+				// Reset form state when sheet closes
+				if (!open) {
+					setToolState(null);
+					setDatasourceState(null);
+					setBackstory('');
+					setGoal('');
+					setRole('');
+					setIcon(null);
+					setAllowDelegation(false);
+					setVerbose(false);
+				}
+			}}>
 			{modal}
 			{!agentsExist && (
 				<SheetTrigger className='font-medium border-0 w-full mt-4'>
