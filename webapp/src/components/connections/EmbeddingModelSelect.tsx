@@ -37,11 +37,29 @@ interface LLMConfigurationFormValues {
 }
 
 const EmbeddingModelSelect = () => {
-	const { teamModels, setStep, fetchTeamModels } = useDatasourceStore(
+	const {
+		teamModels,
+		setStep,
+		fetchTeamModels,
+		setCurrentDatasourceStep,
+		selectedModelId,
+		setSelectedModelId,
+		clearSelectedModelId,
+		saveEmbeddingModelFormData,
+		loadEmbeddingModelFormData,
+		clearEmbeddingModelFormData
+	} = useDatasourceStore(
 		useShallow(state => ({
 			teamModels: state.teamModels,
 			setStep: state.setCurrentStep,
-			fetchTeamModels: state.fetchTeamModels
+			fetchTeamModels: state.fetchTeamModels,
+			setCurrentDatasourceStep: state.setCurrentDatasourceStep,
+			selectedModelId: state.selectedModelId,
+			setSelectedModelId: state.setSelectedModelId,
+			clearSelectedModelId: state.clearSelectedModelId,
+			saveEmbeddingModelFormData: state.saveEmbeddingModelFormData,
+			loadEmbeddingModelFormData: state.loadEmbeddingModelFormData,
+			clearEmbeddingModelFormData: state.clearEmbeddingModelFormData
 		}))
 	);
 
@@ -90,6 +108,11 @@ const EmbeddingModelSelect = () => {
 		setUserSelectedEmbeddingType(true);
 	};
 
+	const goBackDatasourceStep = () => {
+		setCurrentDatasourceStep(2);
+		setStep(0);
+	};
+
 	const addNewModel = async (data: LLMConfigurationFormValues) => {
 		const embeddingBody = {
 			_csrf: csrf,
@@ -109,8 +132,6 @@ const EmbeddingModelSelect = () => {
 		setStep(2);
 	};
 
-	const [selectedTeamModel, setSelectedTeamModel] = useState('');
-
 	const existingModelOptions = teamModels
 		?.filter(model => ModelEmbeddingLength[model.model])
 		.map(model => ({
@@ -120,14 +141,13 @@ const EmbeddingModelSelect = () => {
 		}));
 
 	useEffect(() => {
-		if (selectedTeamModel) {
-			const selectedModel = teamModels.find(m => m._id.toString() === selectedTeamModel);
+		if (selectedModelId) {
+			const selectedModel = teamModels.find(m => m._id.toString() === selectedModelId);
 			if (selectedModel) {
 				setValue('modelId', selectedModel._id.toString());
-				setStep(2);
 			}
 		}
-	}, [selectedTeamModel]);
+	}, [selectedModelId, teamModels, setValue]);
 
 	useEffect(() => {
 		setValue('embeddingModel', {
@@ -152,6 +172,55 @@ const EmbeddingModelSelect = () => {
 		}
 	}, [router, resourceSlug]);
 
+	useEffect(() => {
+		if (selectedModelId && teamModels.length > 0) {
+			const selectedModel = teamModels.find(m => m._id.toString() === selectedModelId);
+			if (selectedModel) {
+				setValue('modelId', selectedModel._id.toString());
+			}
+		}
+	}, [selectedModelId, teamModels, setValue]);
+
+	// Save form data when it changes
+	useEffect(() => {
+		const subscription = watch(data => {
+			if (data && Object.keys(data).length > 0) {
+				const formData = {
+					embeddingType:
+						data.embeddingType && data.embeddingType.label && data.embeddingType.value
+							? { label: data.embeddingType.label, value: data.embeddingType.value }
+							: undefined,
+					embeddingModel:
+						data.embeddingModel && data.embeddingModel.label && data.embeddingModel.value
+							? { label: data.embeddingModel.label, value: data.embeddingModel.value }
+							: undefined,
+					embeddedModelConfig: data.embeddedModelConfig
+				};
+				saveEmbeddingModelFormData(formData);
+			}
+		});
+
+		return () => subscription.unsubscribe();
+	}, [watch, saveEmbeddingModelFormData]);
+
+	// Restore form data on mount
+	useEffect(() => {
+		const savedFormData = loadEmbeddingModelFormData();
+		if (savedFormData) {
+			if (savedFormData.embeddingType) {
+				setValue('embeddingType', savedFormData.embeddingType);
+			}
+			if (savedFormData.embeddingModel) {
+				setValue('embeddingModel', savedFormData.embeddingModel);
+			}
+			if (savedFormData.embeddedModelConfig) {
+				Object.entries(savedFormData.embeddedModelConfig).forEach(([key, value]) => {
+					setValue(`embeddedModelConfig.${key}` as keyof LLMConfigurationFormValues, value);
+				});
+			}
+		}
+	}, [loadEmbeddingModelFormData, setValue]);
+
 	return (
 		<form
 			className='flex-1 border border-gray-300 p-4 flex flex-col gap-y-3 mt-6'
@@ -165,7 +234,7 @@ const EmbeddingModelSelect = () => {
 				</ToolTip>
 			</div>
 
-			<Select value={selectedTeamModel} onValueChange={setSelectedTeamModel}>
+			<Select value={selectedModelId || ''} onValueChange={setSelectedModelId}>
 				<SelectTrigger className='w-full'>
 					<SelectValue placeholder='Select an existing model' />
 				</SelectTrigger>
@@ -243,7 +312,13 @@ const EmbeddingModelSelect = () => {
 					))}
 			</div>
 
-			<div className='flex justify-end mt-4'>
+			<div className='flex justify-between mt-4'>
+				<button
+					type='button'
+					className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+					onClick={goBackDatasourceStep}>
+					Back
+				</button>
 				<button
 					type='submit'
 					className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'>

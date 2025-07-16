@@ -34,6 +34,26 @@ interface DatasourceStore {
 	selectedConnector?: Connector;
 	// Stream configuration persistence
 	streamConfigData: Record<string, any>;
+	// Datasource details persistence
+	datasourceDetails: {
+		chunkStrategy: string;
+		retrievalStrategy: string;
+		k: number;
+		scheduleType: string;
+		timeUnit: string;
+		units: string;
+		cronExpression: string;
+		enableConnectorChunking: boolean;
+		toolDecayRate: number;
+	};
+	// Selected model persistence
+	selectedModelId?: string;
+	// Embedding model form persistence
+	embeddingModelFormData?: {
+		embeddingType?: { label: string; value: string };
+		embeddingModel?: { label: string; value: string };
+		embeddedModelConfig?: Record<string, string>;
+	};
 	// Actions
 	setStore: (data: Partial<DatasourceStore>) => void;
 	initConnectors: (router: any) => Promise<void>;
@@ -71,6 +91,17 @@ interface DatasourceStore {
 	loadStreamConfig: (streamName: string) => any;
 	clearStreamConfig: (streamName?: string) => void;
 	clearAllStreamConfig: () => void;
+	// Datasource details persistence actions
+	saveDatasourceDetails: (details: Partial<DatasourceStore['datasourceDetails']>) => void;
+	loadDatasourceDetails: () => DatasourceStore['datasourceDetails'];
+	clearDatasourceDetails: () => void;
+	// Selected model persistence actions
+	setSelectedModelId: (modelId?: string) => void;
+	clearSelectedModelId: () => void;
+	// Embedding model form persistence actions
+	saveEmbeddingModelFormData: (data: DatasourceStore['embeddingModelFormData']) => void;
+	loadEmbeddingModelFormData: () => DatasourceStore['embeddingModelFormData'];
+	clearEmbeddingModelFormData: () => void;
 }
 
 export const useDatasourceStore = create<DatasourceStore>((set, get) => ({
@@ -97,6 +128,18 @@ export const useDatasourceStore = create<DatasourceStore>((set, get) => ({
 	selectedConnector: undefined,
 	// Stream configuration persistence
 	streamConfigData: {},
+	// Datasource details persistence
+	datasourceDetails: {
+		chunkStrategy: 'none',
+		retrievalStrategy: 'none',
+		k: 0,
+		scheduleType: 'manual',
+		timeUnit: 'minutes',
+		units: '1',
+		cronExpression: '',
+		enableConnectorChunking: false,
+		toolDecayRate: 0.7
+	},
 	// Actions
 	setStore: data => set(state => ({ ...state, ...data })),
 
@@ -115,7 +158,20 @@ export const useDatasourceStore = create<DatasourceStore>((set, get) => ({
 						...state,
 						connectors: connectorsJson,
 						selectedConnector: undefined,
-						streamConfigData: {}
+						selectedModelId: undefined,
+						embeddingModelFormData: undefined,
+						streamConfigData: {},
+						datasourceDetails: {
+							chunkStrategy: 'none',
+							retrievalStrategy: 'none',
+							k: 0,
+							scheduleType: 'manual',
+							timeUnit: 'minutes',
+							units: '1',
+							cronExpression: '',
+							enableConnectorChunking: false,
+							toolDecayRate: 0.7
+						}
 					}));
 				},
 				err => {
@@ -311,7 +367,20 @@ export const useDatasourceStore = create<DatasourceStore>((set, get) => ({
 			...state,
 			formData: {},
 			oneOfSelections: {},
-			streamConfigData: {}
+			streamConfigData: {},
+			selectedModelId: undefined,
+			embeddingModelFormData: undefined,
+			datasourceDetails: {
+				chunkStrategy: 'none',
+				retrievalStrategy: 'none',
+				k: 0,
+				scheduleType: 'manual',
+				timeUnit: 'minutes',
+				units: '1',
+				cronExpression: '',
+				enableConnectorChunking: false,
+				toolDecayRate: 0.7
+			}
 		}));
 	},
 
@@ -374,5 +443,54 @@ export const useDatasourceStore = create<DatasourceStore>((set, get) => ({
 	clearAllStreamConfig: () => {
 		console.log(`[Store] Clearing all stream config data`);
 		set(state => ({ ...state, streamConfigData: {} }));
+	},
+
+	// Datasource details persistence actions
+	saveDatasourceDetails: details => {
+		set(state => ({
+			...state,
+			datasourceDetails: {
+				...state.datasourceDetails,
+				...details
+			}
+		}));
+	},
+	loadDatasourceDetails: () => {
+		return get().datasourceDetails;
+	},
+	clearDatasourceDetails: () => {
+		set(state => ({
+			...state,
+			datasourceDetails: {
+				chunkStrategy: 'none',
+				retrievalStrategy: 'none',
+				k: 0,
+				scheduleType: 'manual',
+				timeUnit: 'minutes',
+				units: '1',
+				cronExpression: '',
+				enableConnectorChunking: false,
+				toolDecayRate: 0.7
+			}
+		}));
+	},
+
+	// Selected model persistence actions
+	setSelectedModelId: (modelId?: string) => {
+		set(state => ({ ...state, selectedModelId: modelId }));
+	},
+	clearSelectedModelId: () => {
+		set(state => ({ ...state, selectedModelId: undefined }));
+	},
+
+	// Embedding model form persistence actions
+	saveEmbeddingModelFormData: data => {
+		set(state => ({ ...state, embeddingModelFormData: data }));
+	},
+	loadEmbeddingModelFormData: () => {
+		return get().embeddingModelFormData || null;
+	},
+	clearEmbeddingModelFormData: () => {
+		set(state => ({ ...state, embeddingModelFormData: undefined }));
 	}
 }));

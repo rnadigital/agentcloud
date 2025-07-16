@@ -111,6 +111,10 @@ const VectorDBSelection = () => {
 
 	const posthog = usePostHog();
 
+	const goBackDatasourceStep = () => {
+		setStep(1);
+	};
+
 	const addDatasource = async (vectorDbId?: string) => {
 		const filteredStreamState = Object.fromEntries(
 			Object.entries(streamState).filter(
@@ -157,8 +161,16 @@ const VectorDBSelection = () => {
 				});
 				toast.success('Added datasource');
 				// Clear stream configuration after successful datasource creation
-				const { clearAllStreamConfig } = useDatasourceStore.getState();
+				const {
+					clearAllStreamConfig,
+					clearDatasourceDetails,
+					clearSelectedModelId,
+					clearEmbeddingModelFormData
+				} = useDatasourceStore.getState();
 				clearAllStreamConfig();
+				clearDatasourceDetails();
+				clearSelectedModelId();
+				clearEmbeddingModelFormData();
 			},
 			res => {
 				posthog.capture('createDatasource', {
@@ -321,7 +333,13 @@ const VectorDBSelection = () => {
 				</div>
 			)}
 
-			<div className='flex justify-end mt-4 ml-auto'>
+			<div className='flex justify-between mt-4 ml-auto'>
+				<button
+					type='button'
+					className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+					onClick={goBackDatasourceStep}>
+					Back
+				</button>
 				<button
 					type='submit'
 					className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 flex items-center justify-center'>

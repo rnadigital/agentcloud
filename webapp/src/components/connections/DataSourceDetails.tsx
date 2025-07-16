@@ -41,6 +41,7 @@ const DataSourceDetails = () => {
 	const timeUnit = watch('timeUnit');
 	const toolDecayRate = watch('toolDecayRate');
 	const retrievalStrategy = watch('retrievalStrategy');
+	const chunkStrategy = watch('chunkStrategy');
 
 	const {
 		setCurrentDatasourceStep,
@@ -50,7 +51,10 @@ const DataSourceDetails = () => {
 		setCurrentStep: setStep,
 		stagedDatasource,
 		embeddingField,
-		setStore
+		setStore,
+		saveDatasourceDetails,
+		loadDatasourceDetails,
+		clearDatasourceDetails
 	} = useDatasourceStore(
 		useShallow(state => ({
 			setCurrentDatasourceStep: state.setCurrentDatasourceStep,
@@ -60,7 +64,10 @@ const DataSourceDetails = () => {
 			setCurrentStep: state.setCurrentStep,
 			stagedDatasource: state.stagedDatasource,
 			embeddingField: state.embeddingField,
-			setStore: state.setStore
+			setStore: state.setStore,
+			saveDatasourceDetails: state.saveDatasourceDetails,
+			loadDatasourceDetails: state.loadDatasourceDetails,
+			clearDatasourceDetails: state.clearDatasourceDetails
 		}))
 	);
 
@@ -86,48 +93,89 @@ const DataSourceDetails = () => {
 	};
 
 	const moveToNextStep = () => {
+		// Save current form data to store
+		saveDatasourceDetails({
+			chunkStrategy,
+			retrievalStrategy,
+			k,
+			scheduleType,
+			timeUnit,
+			units,
+			cronExpression,
+			enableConnectorChunking,
+			toolDecayRate
+		});
 		setCurrentDatasourceStep(null);
 		setStep(1);
 	};
 
 	const goBackDatasourceStep = () => {
+		// Save current form data to store
+		saveDatasourceDetails({
+			chunkStrategy,
+			retrievalStrategy,
+			k,
+			scheduleType,
+			timeUnit,
+			units,
+			cronExpression,
+			enableConnectorChunking,
+			toolDecayRate
+		});
 		setCurrentDatasourceStep(1);
 		setStep(0);
 	};
 
 	const setScheduleType = (value: string) => {
 		setValue('scheduleType', value);
+		saveDatasourceDetails({ scheduleType: value });
 	};
 	const setTimeUnit = (value: string) => {
 		setValue('timeUnit', value);
+		saveDatasourceDetails({ timeUnit: value });
 	};
 	const setUnits = (value: string) => {
 		setValue('units', value);
+		saveDatasourceDetails({ units: value });
 	};
 	const setCronExpression = (value: string) => {
 		setValue('cronExpression', value);
+		saveDatasourceDetails({ cronExpression: value });
 	};
 	const setEnableConnectorChunking = (value: boolean) => {
 		setValue('enableConnectorChunking', value);
+		saveDatasourceDetails({ enableConnectorChunking: value });
 	};
 	const setToolDecayRate = (value: number) => {
 		setValue('toolDecayRate', value);
+		saveDatasourceDetails({ toolDecayRate: value });
 	};
 
-	// const [chunkingConfig, setChunkingConfig] = useReducer(submittingReducer, {
-	// 	...defaultChunkingOptions
-	// });
-	//
-
+	// Load saved data on mount
 	useEffect(() => {
-		setValue('scheduleType', DatasourceScheduleType.MANUAL);
-		setValue('cronExpression', '0 12 * * *');
-		setValue('retrievalStrategy', Retriever.SELF_QUERY);
-		setValue('toolDecayRate', 0.5);
-		setValue('timeUnit', 'day');
-		setValue('enableConnectorChunking', false);
-		setValue('units', '');
-		setValue('chunkStrategy', 'semantic');
+		const savedDetails = loadDatasourceDetails();
+		if (savedDetails) {
+			setValue('scheduleType', savedDetails.scheduleType || DatasourceScheduleType.MANUAL);
+			setValue('cronExpression', savedDetails.cronExpression || '0 12 * * *');
+			setValue('retrievalStrategy', savedDetails.retrievalStrategy || Retriever.SELF_QUERY);
+			setValue('toolDecayRate', savedDetails.toolDecayRate || 0.5);
+			setValue('timeUnit', savedDetails.timeUnit || 'day');
+			setValue('enableConnectorChunking', savedDetails.enableConnectorChunking || false);
+			setValue('units', savedDetails.units || '');
+			setValue('chunkStrategy', savedDetails.chunkStrategy || 'semantic');
+			setValue('k', savedDetails.k || 5);
+		} else {
+			// Set defaults if no saved data
+			setValue('scheduleType', DatasourceScheduleType.MANUAL);
+			setValue('cronExpression', '0 12 * * *');
+			setValue('retrievalStrategy', Retriever.SELF_QUERY);
+			setValue('toolDecayRate', 0.5);
+			setValue('timeUnit', 'day');
+			setValue('enableConnectorChunking', false);
+			setValue('units', '');
+			setValue('chunkStrategy', 'semantic');
+			setValue('k', 5);
+		}
 	}, []);
 
 	useEffect(() => {

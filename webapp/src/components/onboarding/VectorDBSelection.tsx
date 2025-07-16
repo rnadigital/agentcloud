@@ -151,8 +151,16 @@ const VectorDBSelection = ({
 				});
 				toast.success('Added datasource');
 				// Clear stream configuration after successful datasource creation
-				const { clearAllStreamConfig } = useDatasourceStore.getState();
+				const {
+					clearAllStreamConfig,
+					clearDatasourceDetails,
+					clearSelectedModelId,
+					clearEmbeddingModelFormData
+				} = useDatasourceStore.getState();
 				clearAllStreamConfig();
+				clearDatasourceDetails();
+				clearSelectedModelId();
+				clearEmbeddingModelFormData();
 			},
 			res => {
 				posthog.capture('createDatasource', {
