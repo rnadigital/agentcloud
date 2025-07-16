@@ -17,11 +17,16 @@ const DatasourceStreamConfiguration = () => {
 	const stagedDatasource = useDatasourceStore(state => state.stagedDatasource);
 	const setStep = useDatasourceStore(state => state.setCurrentDatasourceStep);
 	const submitting = useDatasourceStore(state => state.submitting);
+	const clearAllStreamConfig = useDatasourceStore(state => state.clearAllStreamConfig);
+
+	console.log(`[DatasourceStreamConfiguration] Rendering with stagedDatasource:`, stagedDatasource);
 
 	return (
 		<form
 			onSubmit={(e: any) => {
 				e.preventDefault();
+				console.log(`[DatasourceStreamConfiguration] Moving to next step`);
+				// Don't clear stream config when moving to next step - let it persist
 				setStep(2);
 			}}
 			className='border border-gray-200 px-4 pb-4'>

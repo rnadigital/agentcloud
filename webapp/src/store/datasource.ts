@@ -32,6 +32,8 @@ interface DatasourceStore {
 	oneOfSelections: Record<string, any>;
 	// Connector selection
 	selectedConnector?: Connector;
+	// Stream configuration persistence
+	streamConfigData: Record<string, any>;
 	// Actions
 	setStore: (data: Partial<DatasourceStore>) => void;
 	initConnectors: (router: any) => Promise<void>;
@@ -64,6 +66,11 @@ interface DatasourceStore {
 	// Connector selection actions
 	setSelectedConnector: (connector?: Connector) => void;
 	clearSelectedConnector: () => void;
+	// Stream configuration persistence actions
+	saveStreamConfig: (streamName: string, config: any) => void;
+	loadStreamConfig: (streamName: string) => any;
+	clearStreamConfig: (streamName?: string) => void;
+	clearAllStreamConfig: () => void;
 }
 
 export const useDatasourceStore = create<DatasourceStore>((set, get) => ({
@@ -88,6 +95,8 @@ export const useDatasourceStore = create<DatasourceStore>((set, get) => ({
 	oneOfSelections: {},
 	// Connector selection
 	selectedConnector: undefined,
+	// Stream configuration persistence
+	streamConfigData: {},
 	// Actions
 	setStore: data => set(state => ({ ...state, ...data })),
 
@@ -105,7 +114,8 @@ export const useDatasourceStore = create<DatasourceStore>((set, get) => ({
 					set(state => ({
 						...state,
 						connectors: connectorsJson,
-						selectedConnector: undefined
+						selectedConnector: undefined,
+						streamConfigData: {}
 					}));
 				},
 				err => {
@@ -296,6 +306,15 @@ export const useDatasourceStore = create<DatasourceStore>((set, get) => ({
 		}
 	},
 
+	clearAllFormData: () => {
+		set(state => ({
+			...state,
+			formData: {},
+			oneOfSelections: {},
+			streamConfigData: {}
+		}));
+	},
+
 	// Enhanced form persistence methods
 	restoreFormData: (formId, methods) => {
 		const savedData = get().loadFormData(formId);
@@ -322,5 +341,38 @@ export const useDatasourceStore = create<DatasourceStore>((set, get) => ({
 	},
 	clearSelectedConnector: () => {
 		set(state => ({ ...state, selectedConnector: undefined }));
+	},
+
+	// Stream configuration persistence actions
+	saveStreamConfig: (streamName, config) => {
+		console.log(`[Store] Saving stream config for ${streamName}:`, config);
+		set(state => ({
+			...state,
+			streamConfigData: {
+				...state.streamConfigData,
+				[streamName]: config
+			}
+		}));
+	},
+	loadStreamConfig: streamName => {
+		const { streamConfigData } = get();
+		const config = streamConfigData[streamName] || null;
+		console.log(`[Store] Loading stream config for ${streamName}:`, config);
+		return config;
+	},
+	clearStreamConfig: streamName => {
+		if (streamName) {
+			set(state => {
+				const newStreamConfigData = { ...state.streamConfigData };
+				delete newStreamConfigData[streamName];
+				return { ...state, streamConfigData: newStreamConfigData };
+			});
+		} else {
+			set(state => ({ ...state, streamConfigData: {} }));
+		}
+	},
+	clearAllStreamConfig: () => {
+		console.log(`[Store] Clearing all stream config data`);
+		set(state => ({ ...state, streamConfigData: {} }));
 	}
 }));

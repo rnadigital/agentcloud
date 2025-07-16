@@ -156,6 +156,9 @@ const VectorDBSelection = () => {
 					syncSchedule: scheduleType
 				});
 				toast.success('Added datasource');
+				// Clear stream configuration after successful datasource creation
+				const { clearAllStreamConfig } = useDatasourceStore.getState();
+				clearAllStreamConfig();
 			},
 			res => {
 				posthog.capture('createDatasource', {
