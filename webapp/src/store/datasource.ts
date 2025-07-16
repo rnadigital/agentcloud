@@ -54,6 +54,12 @@ interface DatasourceStore {
 		embeddingModel?: { label: string; value: string };
 		embeddedModelConfig?: Record<string, string>;
 	};
+	// Vector DB selection persistence
+	selectedVectorDb?: {
+		selectedDB?: string;
+		selectedExistingDb?: string;
+		byoVectorDb?: boolean;
+	};
 	// Actions
 	setStore: (data: Partial<DatasourceStore>) => void;
 	initConnectors: (router: any) => Promise<void>;
@@ -102,6 +108,10 @@ interface DatasourceStore {
 	saveEmbeddingModelFormData: (data: DatasourceStore['embeddingModelFormData']) => void;
 	loadEmbeddingModelFormData: () => DatasourceStore['embeddingModelFormData'];
 	clearEmbeddingModelFormData: () => void;
+	// Vector DB selection persistence actions
+	saveSelectedVectorDb: (data: DatasourceStore['selectedVectorDb']) => void;
+	loadSelectedVectorDb: () => DatasourceStore['selectedVectorDb'];
+	clearSelectedVectorDb: () => void;
 }
 
 export const useDatasourceStore = create<DatasourceStore>((set, get) => ({
@@ -134,7 +144,7 @@ export const useDatasourceStore = create<DatasourceStore>((set, get) => ({
 		retrievalStrategy: 'none',
 		k: 0,
 		scheduleType: 'manual',
-		timeUnit: 'minutes',
+		timeUnit: 'minute',
 		units: '1',
 		cronExpression: '',
 		enableConnectorChunking: false,
@@ -160,13 +170,14 @@ export const useDatasourceStore = create<DatasourceStore>((set, get) => ({
 						selectedConnector: undefined,
 						selectedModelId: undefined,
 						embeddingModelFormData: undefined,
+						selectedVectorDb: undefined,
 						streamConfigData: {},
 						datasourceDetails: {
 							chunkStrategy: 'none',
 							retrievalStrategy: 'none',
 							k: 0,
 							scheduleType: 'manual',
-							timeUnit: 'minutes',
+							timeUnit: 'minute',
 							units: '1',
 							cronExpression: '',
 							enableConnectorChunking: false,
@@ -370,12 +381,13 @@ export const useDatasourceStore = create<DatasourceStore>((set, get) => ({
 			streamConfigData: {},
 			selectedModelId: undefined,
 			embeddingModelFormData: undefined,
+			selectedVectorDb: undefined,
 			datasourceDetails: {
 				chunkStrategy: 'none',
 				retrievalStrategy: 'none',
 				k: 0,
 				scheduleType: 'manual',
-				timeUnit: 'minutes',
+				timeUnit: 'minute',
 				units: '1',
 				cronExpression: '',
 				enableConnectorChunking: false,
@@ -466,7 +478,7 @@ export const useDatasourceStore = create<DatasourceStore>((set, get) => ({
 				retrievalStrategy: 'none',
 				k: 0,
 				scheduleType: 'manual',
-				timeUnit: 'minutes',
+				timeUnit: 'minute',
 				units: '1',
 				cronExpression: '',
 				enableConnectorChunking: false,
@@ -492,5 +504,16 @@ export const useDatasourceStore = create<DatasourceStore>((set, get) => ({
 	},
 	clearEmbeddingModelFormData: () => {
 		set(state => ({ ...state, embeddingModelFormData: undefined }));
+	},
+
+	// Vector DB selection persistence actions
+	saveSelectedVectorDb: data => {
+		set(state => ({ ...state, selectedVectorDb: data }));
+	},
+	loadSelectedVectorDb: () => {
+		return get().selectedVectorDb || null;
+	},
+	clearSelectedVectorDb: () => {
+		set(state => ({ ...state, selectedVectorDb: undefined }));
 	}
 }));

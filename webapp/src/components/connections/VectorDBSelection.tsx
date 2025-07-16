@@ -79,6 +79,9 @@ const VectorDBSelection = () => {
 	const embeddingField = useDatasourceStore(state => state.embeddingField);
 	const fetchVectorDbs = useDatasourceStore(state => state.fetchVectorDbs);
 	const vectorDbs = useDatasourceStore(state => state.vectorDbs);
+	const saveSelectedVectorDb = useDatasourceStore(state => state.saveSelectedVectorDb);
+	const loadSelectedVectorDb = useDatasourceStore(state => state.loadSelectedVectorDb);
+	const clearSelectedVectorDb = useDatasourceStore(state => state.clearSelectedVectorDb);
 
 	const datasourceId = stagedDatasource?.datasourceId;
 
@@ -165,12 +168,14 @@ const VectorDBSelection = () => {
 					clearAllStreamConfig,
 					clearDatasourceDetails,
 					clearSelectedModelId,
-					clearEmbeddingModelFormData
+					clearEmbeddingModelFormData,
+					clearSelectedVectorDb
 				} = useDatasourceStore.getState();
 				clearAllStreamConfig();
 				clearDatasourceDetails();
 				clearSelectedModelId();
 				clearEmbeddingModelFormData();
+				clearSelectedVectorDb();
 			},
 			res => {
 				posthog.capture('createDatasource', {
@@ -199,7 +204,7 @@ const VectorDBSelection = () => {
 			return;
 		}
 		setLoading(true);
-		if (data.byoVectorDb) {
+		if (data.byoVectorDb && selectedDB) {
 			await API.addVectorDb(
 				{ _csrf: csrf, resourceSlug, ...data, type: selectedDB },
 				async res => {
@@ -236,6 +241,33 @@ const VectorDBSelection = () => {
 		}
 	}, [router, resourceSlug]);
 
+	// Save vector DB selection when it changes
+	useEffect(() => {
+		if (selectedDB !== undefined || selectedExistingDb !== undefined) {
+			saveSelectedVectorDb({
+				selectedDB,
+				selectedExistingDb,
+				byoVectorDb: selectedExistingDb ? true : watch('byoVectorDb')
+			});
+		}
+	}, [selectedDB, selectedExistingDb, watch, saveSelectedVectorDb]);
+
+	// Restore vector DB selection on mount
+	useEffect(() => {
+		const savedVectorDb = loadSelectedVectorDb();
+		if (savedVectorDb) {
+			if (savedVectorDb.selectedDB !== undefined) {
+				setSelectedDB(savedVectorDb.selectedDB);
+			}
+			if (savedVectorDb.selectedExistingDb !== undefined) {
+				setSelectedExistingDb(savedVectorDb.selectedExistingDb);
+			}
+			if (savedVectorDb.byoVectorDb !== undefined) {
+				setValue('byoVectorDb', savedVectorDb.byoVectorDb);
+			}
+		}
+	}, [loadSelectedVectorDb, setValue]);
+
 	return (
 		<form className='flex flex-wrap' onSubmit={handleSubmit(onSubmit)}>
 			<div className='w-full mb-6 flex flex-col'>
@@ -249,7 +281,7 @@ const VectorDBSelection = () => {
 							setSelectedDB(null);
 						} else {
 							setSelectedExistingDb(value);
-							setValue('byoVectorDb', false);
+							setValue('byoVectorDb', true);
 							setSelectedDB(null);
 						}
 					}}>
@@ -265,7 +297,9 @@ const VectorDBSelection = () => {
 						))}
 					</SelectContent>
 				</Select>
-				<div className='text-sm text-gray-500 mt-2'>Or create a new vector database below</div>
+				{!selectedExistingDb && (
+					<div className='text-sm text-gray-500 mt-2'>Or create a new vector database below</div>
+				)}
 			</div>
 
 			{!selectedExistingDb &&
@@ -312,7 +346,7 @@ const VectorDBSelection = () => {
 			)}
 			{selectedDB === 'agent-cloud' && <AgentCloudFields control={control} cloud={cloud} />}
 
-			{!selectedDB && (
+			{!selectedDB && !selectedExistingDb && (
 				<div className='border-gray-200 border flex justify-center items-center h-44 w-full px-4'>
 					<div className='flex flex-col'>
 						<span className='font-semibold'> Don&apos;t see your preferred vector DB here?</span>
@@ -333,7 +367,7 @@ const VectorDBSelection = () => {
 				</div>
 			)}
 
-			<div className='flex justify-between mt-4 ml-auto'>
+			<div className='flex justify-between mt-4 ml-auto w-full'>
 				<button
 					type='button'
 					className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'

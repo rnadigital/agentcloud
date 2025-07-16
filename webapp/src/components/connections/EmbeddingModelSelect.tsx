@@ -114,6 +114,12 @@ const EmbeddingModelSelect = () => {
 	};
 
 	const addNewModel = async (data: LLMConfigurationFormValues) => {
+		if (selectedModelId) {
+			setValue('modelId', selectedModelId);
+			setStep(2);
+			return;
+		}
+
 		const embeddingBody = {
 			_csrf: csrf,
 			resourceSlug,
@@ -260,41 +266,46 @@ const EmbeddingModelSelect = () => {
 				</div>
 			</div>
 
-			<div className='text-sm flex gap-1 dark:text-white'>
-				<span>Select Embedding</span>
-				<ToolTip content='Embedding models convert text or other data into numerical vectors for analysis and machine learning tasks. Use them for similarity searches, clustering, recommendation systems, and more. Embedding models are used to embed data and store it in a vector database for later RAG retrieval.'>
-					<span className='cursor-pointer'>
-						<InformationCircleIcon className='h-4 w-4 text-gray-400' />
-					</span>
-				</ToolTip>
-			</div>
-			<div className='flex'>
-				<div className='w-1/2 sm:w-2/5'>
-					<OnboardingSelect<LLMConfigurationFormValues>
-						options={modelOptions}
-						classNames={{
-							listboxButton: 'rounded-l-md bg-gray-100 dark:bg-gray-600',
-							listboxOptions: 'left-0'
-						}}
-						control={control}
-						name='embeddingType'
-						callback={handleSetUserSelectedEmbeddingType}
-					/>
-				</div>
-				<div className='w-1/2 sm:flex-1'>
-					<OnboardingSelect<LLMConfigurationFormValues>
-						options={embeddingModelList}
-						classNames={{
-							listboxButton: 'rounded-r-md bg-gray-50 dark:bg-gray-700',
-							listboxOptions: 'right-0'
-						}}
-						control={control}
-						name='embeddingModel'
-					/>
-				</div>
-			</div>
+			{!selectedModelId && (
+				<>
+					<div className='text-sm flex gap-1 dark:text-white'>
+						<span>Select Embedding</span>
+						<ToolTip content='Embedding models convert text or other data into numerical vectors for analysis and machine learning tasks. Use them for similarity searches, clustering, recommendation systems, and more. Embedding models are used to embed data and store it in a vector database for later RAG retrieval.'>
+							<span className='cursor-pointer'>
+								<InformationCircleIcon className='h-4 w-4 text-gray-400' />
+							</span>
+						</ToolTip>
+					</div>
+					<div className='flex'>
+						<div className='w-1/2 sm:w-2/5'>
+							<OnboardingSelect<LLMConfigurationFormValues>
+								options={modelOptions}
+								classNames={{
+									listboxButton: 'rounded-l-md bg-gray-100 dark:bg-gray-600',
+									listboxOptions: 'left-0'
+								}}
+								control={control}
+								name='embeddingType'
+								callback={handleSetUserSelectedEmbeddingType}
+							/>
+						</div>
+						<div className='w-1/2 sm:flex-1'>
+							<OnboardingSelect<LLMConfigurationFormValues>
+								options={embeddingModelList}
+								classNames={{
+									listboxButton: 'rounded-r-md bg-gray-50 dark:bg-gray-700',
+									listboxOptions: 'right-0'
+								}}
+								control={control}
+								name='embeddingModel'
+							/>
+						</div>
+					</div>
+				</>
+			)}
 			<div className='mt-2'>
-				{EmbeddingModelRequiredFields &&
+				{!selectedModelId &&
+					EmbeddingModelRequiredFields &&
 					EmbeddingModelRequiredFields.length > 0 &&
 					EmbeddingModelRequiredFields.map(field => (
 						<div key={field.name}>

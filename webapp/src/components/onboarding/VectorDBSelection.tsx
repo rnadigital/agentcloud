@@ -155,12 +155,14 @@ const VectorDBSelection = ({
 					clearAllStreamConfig,
 					clearDatasourceDetails,
 					clearSelectedModelId,
-					clearEmbeddingModelFormData
+					clearEmbeddingModelFormData,
+					clearSelectedVectorDb
 				} = useDatasourceStore.getState();
 				clearAllStreamConfig();
 				clearDatasourceDetails();
 				clearSelectedModelId();
 				clearEmbeddingModelFormData();
+				clearSelectedVectorDb();
 			},
 			res => {
 				posthog.capture('createDatasource', {

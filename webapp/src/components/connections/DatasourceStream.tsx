@@ -33,13 +33,6 @@ export function StreamRow({
 	const streamName = stream?.stream?.name || stream?.name;
 	const savedConfig = loadStreamConfig(streamName);
 
-	console.log(`[StreamRow] ${streamName}:`, {
-		savedConfig,
-		streamState,
-		hasSavedConfig: !!savedConfig,
-		savedCheckedChildren: savedConfig?.checkedChildren
-	});
-
 	const [isExpanded, setIsExpanded] = useState(
 		savedConfig?.isExpanded !== undefined
 			? savedConfig.isExpanded
@@ -91,7 +84,6 @@ export function StreamRow({
 
 	//checked fields
 	const initialCheckedChildren = savedConfig?.checkedChildren || streamState.checkedChildren || [];
-	console.log(`[StreamRow] ${streamName} initialCheckedChildren:`, initialCheckedChildren);
 
 	const [checkedChildren, setCheckedChildren] = useReducer(
 		handleCheckedChild,

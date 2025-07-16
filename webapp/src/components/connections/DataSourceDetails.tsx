@@ -239,10 +239,10 @@ const DataSourceDetails = () => {
 								required: 'Chunking strategyis required'
 							}}
 							options={[
-								{ label: 'Semantic', value: 'semantic' },
-								{ label: 'Syntactic', value: 'syntactic' },
-								{ label: 'Statistical', value: 'statistical' },
-								{ label: 'Rule-based', value: 'rule_based' }
+								{ label: 'Semantic', value: 'semantic' }
+								// { label: 'Syntactic', value: 'syntactic' },
+								// { label: 'Statistical', value: 'statistical' },
+								// { label: 'Rule-based', value: 'rule_based' }
 							]}
 							placeholder='Select a chunking strategy...'
 						/>
