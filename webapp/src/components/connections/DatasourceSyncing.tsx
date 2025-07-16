@@ -2,8 +2,8 @@ import * as API from '@api';
 import dataSyncAnimation from 'animations/dataSyncLoaderAnimation.json';
 import { useOnboardingFormContext } from 'context/onboardingform';
 import dynamic from 'next/dynamic';
-import { useRouter } from 'next/router'; // Ensure this import is present
-import { useEffect } from 'react'; // Ensure these imports are present
+import { useRouter } from 'next/router';
+import { useEffect } from 'react';
 import { useDatasourceStore } from 'store/datasource';
 import { DatasourceStatus } from 'struct/datasource';
 
@@ -16,12 +16,14 @@ const DatasourceSyncing = () => {
 	const { resourceSlug } = router.query;
 
 	const stagedDatasource = useDatasourceStore(state => state.stagedDatasource);
+	const clearAllFormData = useDatasourceStore(state => state.clearAllFormData);
+	const setStore = useDatasourceStore(state => state.setStore);
 
 	const datasourceId = stagedDatasource?.datasourceId;
 
 	useEffect(() => {
-		fetchDatasource(); // Call fetchDatasource on component mount
-	}, []); // Added dependency array
+		fetchDatasource();
+	}, []);
 
 	async function fetchDatasource() {
 		if (datasourceId) {
@@ -33,6 +35,20 @@ const DatasourceSyncing = () => {
 				res => {
 					const datasource = res?.datasource;
 					if (datasource?.status === DatasourceStatus.READY) {
+						clearAllFormData();
+						setStore({
+							currentStep: 0,
+							currentDatasourceStep: 0,
+							stagedDatasource: undefined,
+							selectedConnector: undefined,
+							selectedModelId: undefined,
+							embeddingModelFormData: undefined,
+							selectedVectorDb: undefined,
+							streamConfigData: {},
+							error: null,
+							submitting: false,
+							loading: false
+						});
 						router.push(`/${resourceSlug}/connections`);
 					}
 				},

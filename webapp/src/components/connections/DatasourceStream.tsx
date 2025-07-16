@@ -111,7 +111,6 @@ export function StreamRow({
 			isExpanded
 		};
 
-		console.log(`[StreamRow] ${streamName} saving config:`, config);
 		saveStreamConfig(streamName, config);
 
 		// Also update the stream state for backward compatibility

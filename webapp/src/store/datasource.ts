@@ -89,6 +89,7 @@ interface DatasourceStore {
 	// Enhanced form persistence methods
 	restoreFormData: (formId: string, methods: any) => boolean;
 	hasSavedData: (formId: string) => boolean;
+	clearAllFormData: () => void;
 	// Connector selection actions
 	setSelectedConnector: (connector?: Connector) => void;
 	clearSelectedConnector: () => void;
@@ -376,8 +377,19 @@ export const useDatasourceStore = create<DatasourceStore>((set, get) => ({
 	clearAllFormData: () => {
 		set(state => ({
 			...state,
+			searchInput: '',
+			currentStep: 0,
+			currentDatasourceStep: 0,
+			streamState: {},
+			chunkingConfig: defaultChunkingOptions,
+			submitting: false,
+			error: null,
+			spec: null,
+			loading: false,
+			embeddingField: '',
 			formData: {},
 			oneOfSelections: {},
+			selectedConnector: undefined,
 			streamConfigData: {},
 			selectedModelId: undefined,
 			embeddingModelFormData: undefined,
@@ -426,7 +438,6 @@ export const useDatasourceStore = create<DatasourceStore>((set, get) => ({
 
 	// Stream configuration persistence actions
 	saveStreamConfig: (streamName, config) => {
-		console.log(`[Store] Saving stream config for ${streamName}:`, config);
 		set(state => ({
 			...state,
 			streamConfigData: {
@@ -438,7 +449,6 @@ export const useDatasourceStore = create<DatasourceStore>((set, get) => ({
 	loadStreamConfig: streamName => {
 		const { streamConfigData } = get();
 		const config = streamConfigData[streamName] || null;
-		console.log(`[Store] Loading stream config for ${streamName}:`, config);
 		return config;
 	},
 	clearStreamConfig: streamName => {
@@ -453,7 +463,6 @@ export const useDatasourceStore = create<DatasourceStore>((set, get) => ({
 		}
 	},
 	clearAllStreamConfig: () => {
-		console.log(`[Store] Clearing all stream config data`);
 		set(state => ({ ...state, streamConfigData: {} }));
 	},
 
