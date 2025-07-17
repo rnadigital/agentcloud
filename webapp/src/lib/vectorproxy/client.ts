@@ -62,6 +62,7 @@ class VectorDBProxyClient {
 	// Method to check collection exists
 	static async checkCollectionExists(collectionId: IdOrStr): Promise<VectorResponseBody> {
 		log('checkCollectionExists %s', collectionId);
+		log('process.env.VECTOR_APP_URL', process.env.VECTOR_APP_URL);
 		return fetch(
 			`${process.env.VECTOR_APP_URL}/api/v1/check-collection-exists/${collectionId}`
 		).then(res => {
