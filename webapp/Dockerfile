@@ -59,6 +59,7 @@ COPY --from=builder /app ./
 
 # Display the environment variables to verify
 RUN echo "NEXT_PUBLIC_POSTHOG_KEY: ${NEXT_PUBLIC_POSTHOG_KEY}"
+RUN echo "NEXT_PUBLIC_STORAGE_PROVIDER: ${NEXT_PUBLIC_STORAGE_PROVIDER}"
 
 # Expose the port the app runs on
 EXPOSE 3000
