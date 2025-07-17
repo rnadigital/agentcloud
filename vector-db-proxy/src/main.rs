@@ -99,14 +99,10 @@ async fn main() -> std::io::Result<()> {
     // Spawn multiple threads to process messages
     let mut handles = vec![];
     for _ in 0..(number_of_workers * 10) {
-        // let receiver_clone = receiver.clone();
         let mongo_client_clone = Arc::clone(&app_mongo_client);
         let receiver = r.clone();
-        let handle = thread::spawn(move || {
-            let rt = tokio::runtime::Runtime::new().unwrap();
-            rt.block_on(async {
-                process_incoming_messages(receiver, mongo_client_clone).await;
-            });
+        let handle = thread::spawn(async move || {
+            process_incoming_messages(receiver, mongo_client_clone).await;
         });
         handles.push(handle);
     }

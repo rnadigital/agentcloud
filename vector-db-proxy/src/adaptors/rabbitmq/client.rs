@@ -7,7 +7,6 @@ use amqprs::{
     connection::{Connection, OpenConnectionArguments},
 };
 use lazy_static::lazy_static;
-use log::log;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
@@ -22,7 +21,7 @@ pub(crate) async fn connect_rabbitmq(connection_details: &RabbitConnect) -> Conn
             &connection_details.username,
             &connection_details.password,
         )
-        .heartbeat(10) // Set heartbeat interval to 10 seconds
+        .heartbeat(40) // Set heartbeat interval to 10 seconds
         .virtual_host("/"),
     )
     .await;
@@ -43,7 +42,7 @@ pub(crate) async fn connect_rabbitmq(connection_details: &RabbitConnect) -> Conn
                 &connection_details.username,
                 &connection_details.password,
             )
-            .heartbeat(10), // Set heartbeat interval to 10 seconds
+            .heartbeat(40), // Set heartbeat interval to 10 seconds
         )
         .await;
     }

@@ -32,7 +32,7 @@ futures-util = "0.3.28"
 async-openai = "0.23.4"
 backoff = { version = "0.4.0", features = ["tokio"] }
 amqp_serde = "0.4.0"
-amqprs = "1.5.1"
+amqprs = "2.1.2"
 google-cloud-storage = "0.20.0"
 google-cloud-auth = "0.16.0"
 bson = "2.9.0"

@@ -17,9 +17,17 @@ class RabbitMQProvider extends MessageQueueProvider {
 
 	async init() {
 		try {
-			this.#connection = await connect(
-				`amqp://${process.env.RABBITMQ_USERNAME}:${process.env.RABBITMQ_PASSWORD}@${process.env.AIRBYTE_RABBITMQ_HOST}:${process.env.RABBITMQ_PORT}`
-			);
+			// this.#connection = await connect(
+			// 	`amqp://${process.env.RABBITMQ_USERNAME}:${process.env.RABBITMQ_PASSWORD}@${process.env.AIRBYTE_RABBITMQ_HOST}:${process.env.RABBITMQ_PORT}`
+			// );
+			this.#connection = await connect({
+				protocol: 'amqp',
+				hostname: process.env.AIRBYTE_RABBITMQ_HOST,
+				port: parseInt(process.env.RABBITMQ_PORT),
+				username: process.env.RABBITMQ_USERNAME,
+				password: process.env.RABBITMQ_PASSWORD,
+				frameMax: 131072 // 128KB (well above 8192)
+			});
 			this.#channel = await this.#connection.createChannel();
 			await this.#channel.assertExchange(process.env.QUEUE_NAME, 'direct', { durable: true });
 			log('RabbitMQ connection and channel established.');
