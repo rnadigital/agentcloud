@@ -48,7 +48,7 @@ Welcome to `agentcloud`. This project comprises three main components:
 2. **Webapp**: A UI built using next.js, tailwind, and an express custom server.
 3. **Vector Proxy:** A Rust application which communicates with Qdrant vector Database
 
-## Getting Started
+## Getting Started.
 
 To run this project locally, follow these steps:
 
