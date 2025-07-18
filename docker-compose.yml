@@ -4,10 +4,10 @@ services:
 
   unstructured-api:
     ports:
-      - 9500:9500
+        - 9500:9500
     container_name: unstructured-api
     environment:
-      - PORT=9500
+        - PORT=9500
     image: localhost:5000/unstructured-api
 
   docker_rabbitmq:
@@ -62,7 +62,6 @@ services:
       - docker_redis
     environment:
       - GOOGLE_APPLICATION_CREDENTIALS=/app/keyfile.json
-      - RABBITMQ_HOST=${AIRBYTE_RABBITMQ_HOST}
       - RABBITMQ_PORT=5672
       - QUEUE_NAME=streaming
       - RABBITMQ_EXCHANGE=agentcloud
@@ -242,7 +241,19 @@ services:
     environment:
       - QDRANT__LOG_LEVEL=DEBUG
     volumes:
-      - qdrant_data:/qdrant_data
+      - qdrant_data:/qdrant_data 
+
+  # minio:
+  #   image: minio/minio
+  #   container_name: minio
+  #   ports:
+  #     - "9000:9000"
+  #   environment:
+  #     MINIO_ROOT_USER: "minioadmin"
+  #     MINIO_ROOT_PASSWORD: "minioadmin"
+  #   volumes:
+  #     - minio_data:/data
+  #   command: server /data
 
 volumes:
   mongodb_data_container:
