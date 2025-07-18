@@ -5,6 +5,7 @@ import InputField from 'components/form/InputField';
 import SelectField from 'components/form/SelectField';
 import InfoAlert from 'components/InfoAlert';
 import ToolTip from 'components/shared/ToolTip';
+import { useAccountContext } from 'context/account';
 import { useOnboardingFormContext } from 'context/onboardingform';
 import { AU, BR, CA, EU, FlagComponent, JP, SG, US } from 'country-flag-icons/react/3x2';
 import { defaultChunkingOptions } from 'misc/defaultchunkingoptions';
@@ -15,6 +16,7 @@ import { DatasourceScheduleType, StreamConfig } from 'struct/datasource';
 import { Retriever } from 'struct/tool';
 import submittingReducer from 'utils/submittingreducer';
 import { useShallow } from 'zustand/react/shallow';
+import { pricingMatrix } from 'struct/billing';
 
 interface DataSourceDetailsFormValues {
 	chunkStrategy: string;
@@ -32,6 +34,10 @@ interface DataSourceDetailsFormValues {
 
 const DataSourceDetails = () => {
 	const { control, watch, setValue } = useOnboardingFormContext<DataSourceDetailsFormValues>();
+	const [accountContext]: any = useAccountContext();
+	const { account } = accountContext as any;
+	const { stripePlan } = account?.stripe || {};
+	const cronProps = pricingMatrix[stripePlan]?.cronProps;
 
 	const k = watch('k');
 	const scheduleType = watch('scheduleType');
@@ -70,6 +76,13 @@ const DataSourceDetails = () => {
 			clearDatasourceDetails: state.clearDatasourceDetails
 		}))
 	);
+
+	const getValidDefaultTimeUnit = () => {
+		if (!cronProps?.allowedPeriods || cronProps.allowedPeriods.length === 0) {
+			return 'day';
+		}
+		return cronProps.allowedPeriods[0];
+	};
 
 	const getInitialEmbeddingField = () => {
 		const fieldsArray = stagedDatasource?.discoveredSchema?.catalog?.streams.reduce(
@@ -154,12 +167,19 @@ const DataSourceDetails = () => {
 	// Load saved data on mount
 	useEffect(() => {
 		const savedDetails = loadDatasourceDetails();
+		const validDefaultTimeUnit = getValidDefaultTimeUnit();
+
 		if (savedDetails) {
+			// Check if saved timeUnit is valid for current plan
+			const isValidTimeUnit =
+				!cronProps?.allowedPeriods || cronProps.allowedPeriods.includes(savedDetails.timeUnit);
+			const timeUnitToUse = isValidTimeUnit ? savedDetails.timeUnit : validDefaultTimeUnit;
+
 			setValue('scheduleType', savedDetails.scheduleType || DatasourceScheduleType.MANUAL);
 			setValue('cronExpression', savedDetails.cronExpression || '0 12 * * *');
 			setValue('retrievalStrategy', savedDetails.retrievalStrategy || Retriever.SELF_QUERY);
 			setValue('toolDecayRate', savedDetails.toolDecayRate || 0.5);
-			setValue('timeUnit', savedDetails.timeUnit || 'day');
+			setValue('timeUnit', timeUnitToUse);
 			setValue('enableConnectorChunking', savedDetails.enableConnectorChunking || false);
 			setValue('units', savedDetails.units || '');
 			setValue('chunkStrategy', savedDetails.chunkStrategy || 'semantic');
@@ -170,13 +190,13 @@ const DataSourceDetails = () => {
 			setValue('cronExpression', '0 12 * * *');
 			setValue('retrievalStrategy', Retriever.SELF_QUERY);
 			setValue('toolDecayRate', 0.5);
-			setValue('timeUnit', 'day');
+			setValue('timeUnit', validDefaultTimeUnit);
 			setValue('enableConnectorChunking', false);
 			setValue('units', '');
 			setValue('chunkStrategy', 'semantic');
 			setValue('k', 5);
 		}
-	}, []);
+	}, [cronProps]);
 
 	useEffect(() => {
 		if (!embeddingField) {
