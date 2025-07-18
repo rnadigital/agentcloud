@@ -5,6 +5,7 @@ import InputField from 'components/form/InputField';
 import SelectField from 'components/form/SelectField';
 import InfoAlert from 'components/InfoAlert';
 import ToolTip from 'components/shared/ToolTip';
+import { useAccountContext } from 'context/account';
 import { useOnboardingFormContext } from 'context/onboardingform';
 import { AU, BR, CA, EU, FlagComponent, JP, SG, US } from 'country-flag-icons/react/3x2';
 import { defaultChunkingOptions } from 'misc/defaultchunkingoptions';
@@ -12,6 +13,7 @@ import React, { useEffect, useReducer, useState } from 'react';
 import { DatasourceScheduleType, StreamConfig } from 'struct/datasource';
 import { Retriever } from 'struct/tool';
 import submittingReducer from 'utils/submittingreducer';
+import { pricingMatrix } from 'struct/billing';
 
 interface DataSourceDetailsFormValues {
 	chunkStrategy: string;
@@ -41,6 +43,10 @@ const DataSourceDetails = ({
 	setChunkingConfig: Function;
 }) => {
 	const { control, watch, setValue } = useOnboardingFormContext<DataSourceDetailsFormValues>();
+	const [accountContext]: any = useAccountContext();
+	const { account } = accountContext as any;
+	const { stripePlan } = account?.stripe || {};
+	const cronProps = pricingMatrix[stripePlan]?.cronProps;
 
 	const k = watch('k');
 	const embeddingField = watch('embeddingField');
@@ -53,6 +59,13 @@ const DataSourceDetails = ({
 	const retrievalStrategy = watch('retrievalStrategy');
 
 	const stagedDatasource = watch('stagedDatasource');
+
+	const getValidDefaultTimeUnit = () => {
+		if (!cronProps?.allowedPeriods || cronProps.allowedPeriods.length === 0) {
+			return 'day';
+		}
+		return cronProps.allowedPeriods[0];
+	};
 
 	const getInitialEmbeddingField = () => {
 		const fieldsArray = stagedDatasource?.discoveredSchema?.catalog?.streams.reduce(
@@ -105,15 +118,16 @@ const DataSourceDetails = ({
 	//
 
 	useEffect(() => {
+		const validDefaultTimeUnit = getValidDefaultTimeUnit();
 		setValue('scheduleType', DatasourceScheduleType.MANUAL);
 		setValue('cronExpression', '0 12 * * *');
 		setValue('retrievalStrategy', Retriever.SELF_QUERY);
 		setValue('toolDecayRate', 0.5);
-		setValue('timeUnit', 'day');
+		setValue('timeUnit', validDefaultTimeUnit);
 		setValue('enableConnectorChunking', false);
 		setValue('units', '');
 		setValue('chunkStrategy', 'semantic');
-	}, []);
+	}, [cronProps]);
 
 	useEffect(() => {
 		if (!embeddingField) {
