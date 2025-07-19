@@ -105,7 +105,7 @@ export const AgentCreatedDisplay = React.memo(
 								</div>
 								<div className='flex items-center gap-2 text-gray-500 text-xs bg-gray-100 p-1 w-fit rounded-sm'>
 									<Cpu width={15} />
-									<p>{selectedAgentModel.name}</p>
+									<p>{selectedAgentModel?.name || 'Loading...'}</p>
 								</div>
 							</div>
 							<CollapsibleTrigger className='border border-gray-200 p-2 rounded-lg h-fit'>

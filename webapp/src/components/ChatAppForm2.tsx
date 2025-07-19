@@ -83,10 +83,6 @@ export default function Apps({
 	const [openEditSheet, setOpenEditSheet] = useState<boolean>(false);
 	const [isEditing, setIsEditing] = useState<boolean>(false);
 	const [editingStarterId, setEditingStarterId] = useState<number | null>(null);
-	const [conversationStarters, setConversationStarters] = useState([
-		{ id: 1, text: 'Help me brainstorm some ideas' },
-		{ id: 2, text: 'What can you help me with?' }
-	]);
 	const [pendingAgentId, setPendingAgentId] = useState<string>();
 	const [run, setRun] = useState(false);
 	const [outsideOrg, setOutsideOrg] = useState(false);
@@ -130,7 +126,23 @@ export default function Apps({
 	const [shareLinkShareId, setShareLinkShareId] = useState(editing ? app?.shareLinkShareId : null);
 	const [appName, setAppName] = useState(app?.name || 'Untitled Chat App');
 	const [description, setDescription] = useState(app?.description || '');
-	const [maxMessages, setMaxMessages] = useState(app?.chatAppConfig.maxMessages || 30);
+	const [maxMessages, setMaxMessages] = useState(app?.chatAppConfig?.maxMessages || 30);
+
+	// Initialize conversation starters from app data or use defaults
+	const [conversationStarters, setConversationStarters] = useState(() => {
+		if (editing && app?.chatAppConfig?.conversationStarters) {
+			const starters = app.chatAppConfig.conversationStarters.map((text, index) => ({
+				id: index + 1,
+				text
+			}));
+			return starters;
+		}
+		const defaults = [
+			{ id: 1, text: 'Help me brainstorm some ideas' },
+			{ id: 2, text: 'What can you help me with?' }
+		];
+		return defaults;
+	});
 
 	const initialEmails = whiteListSharingChoices
 		? whiteListSharingChoices.map(email => ({ label: email, value: email }))
@@ -291,6 +303,38 @@ export default function Apps({
 		}
 	}, [pendingAgentId, agentChoices]);
 
+	// Initialize selectedAgent from app data when editing
+	useEffect(() => {
+		if (
+			editing &&
+			app?.chatAppConfig?.agentId &&
+			agentChoices &&
+			!selectedAgent &&
+			!pendingAgentId
+		) {
+			const existingAgent = agentChoices.find(a => a._id === app.chatAppConfig.agentId);
+			if (existingAgent) {
+				setSelectedAgent(existingAgent);
+			}
+		}
+	}, [editing, app?.chatAppConfig?.agentId, agentChoices, selectedAgent, pendingAgentId]);
+
+	// Additional effect to handle agentChoices loading after component mount
+	useEffect(() => {
+		if (
+			editing &&
+			app?.chatAppConfig?.agentId &&
+			agentChoices?.length > 0 &&
+			!selectedAgent &&
+			!pendingAgentId
+		) {
+			const existingAgent = agentChoices.find(a => a._id === app.chatAppConfig.agentId);
+			if (existingAgent) {
+				setSelectedAgent(existingAgent);
+			}
+		}
+	}, [agentChoices, editing, app?.chatAppConfig?.agentId, selectedAgent, pendingAgentId]);
+
 	const handleAgentUpdate = async (updatedAgent: Agent) => {
 		try {
 			setIsAgentUpdating(true);
@@ -355,8 +399,7 @@ export default function Apps({
 				<div className='flex border border-gray-200 rounded-lg'>
 					<form
 						className='flex flex-col justify-between border border-gray-200 rounded-l-lg w-full minh-[790px]'
-						onSubmit={appPost}
-					>
+						onSubmit={appPost}>
 						<article className='flex flex-col p-5 gap-6'>
 							<div className='flex items-center gap-3 h-24'>
 								<img className='rounded-3xl' src='/apps/identicon.png' />
@@ -388,8 +431,7 @@ export default function Apps({
 														setAppName('');
 													}
 												}}
-												className='hover:text-[#4F46E5] transition-colors'
-											>
+												className='hover:text-[#4F46E5] transition-colors'>
 												<Pencil width={20} />
 											</button>
 										</div>
@@ -407,7 +449,7 @@ export default function Apps({
 									/>
 								</div>
 							</div>
-							{selectedAgent && (
+							{selectedAgent && selectedAgentModel && (
 								<AgentCreatedDisplay
 									selectedAgent={selectedAgent}
 									openEditSheet={openEditSheet}
@@ -419,6 +461,9 @@ export default function Apps({
 									isUpdating={isAgentUpdating}
 									onChangeAgent={() => setSelectedAgent(null)} // Add this prop
 								/>
+							)}
+							{selectedAgent && !selectedAgentModel && (
+								<div className='text-gray-500 text-sm'>Loading agent details...</div>
 							)}
 							{!selectedAgent && agentChoices?.length > 0 && (
 								<AgentSelectDisplay
@@ -465,8 +510,7 @@ export default function Apps({
 									<div key={starter.id} className='flex items-center gap-2'>
 										<div
 											className='bg-gray-50 px-4 py-3 w-full border border-gray-300 rounded-lg'
-											onClick={() => setEditingStarterId(starter.id)}
-										>
+											onClick={() => setEditingStarterId(starter.id)}>
 											{editingStarterId === starter.id ? (
 												<input
 													type='text'
@@ -503,8 +547,7 @@ export default function Apps({
 								))}
 								<p
 									className='text-[#4F46E5] cursor-pointer self-end hover:text-[#3730a3]'
-									onClick={handleAddStarter}
-								>
+									onClick={handleAddStarter}>
 									+ Add
 								</p>
 							</div>
@@ -538,8 +581,7 @@ export default function Apps({
 							<div className='sm:col-span-'>
 								<label
 									htmlFor='maxMessages'
-									className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-								>
+									className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 									Max Messages
 								</label>
 								<input
@@ -559,15 +601,13 @@ export default function Apps({
 							<Button
 								type='button'
 								variant='ghost'
-								className='bg-transparent text-foreground hover:bg-transparent hover:text-foreground p-0 border-0 shadow-none outline-none'
-							>
+								className='bg-transparent text-foreground hover:bg-transparent hover:text-foreground p-0 border-0 shadow-none outline-none'>
 								Cancel
 							</Button>
 							<Button
 								onClick={() => setRun(false)}
 								variant='ghost'
-								className='ml-auto bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white font-medium text-sm py-2 hover:text-white'
-							>
+								className='ml-auto bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white font-medium text-sm py-2 hover:text-white'>
 								Save
 							</Button>
 							<Button
@@ -576,8 +616,7 @@ export default function Apps({
 									setRun(true);
 								}}
 								variant='ghost'
-								className='ml-2 bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white font-medium text-sm py-2 hover:text-white'
-							>
+								className='ml-2 bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white font-medium text-sm py-2 hover:text-white'>
 								Save & Launch
 							</Button>
 						</article>

@@ -131,7 +131,6 @@ const EditAppSheet = ({
 			mode: selectedApp?.sharingConfig?.mode || SharingMode.TEAM,
 			permissions: selectedApp?.sharingConfig?.permissions || {}
 		},
-		conversationStarters: ['Help me brainstorm some ideas', 'What can you help me with?'],
 		description: selectedApp?.description || '',
 		name: selectedApp?.name || 'Untitled Chat App',
 		type: selectedApp?.type || AppType.CHAT
@@ -228,10 +227,13 @@ export default function Apps(props) {
 				API.getAgents({ resourceSlug, _csrf: csrf }, null, setError, router)
 			]);
 
+			// Filter out embedding models - we only want chat/completion models
+			const chatModels = (modelsRes?.models || []).filter(model => model.modelType !== 'embedding');
+
 			// Ensure we're setting arrays even if the response is null/undefined
 			setToolChoices(toolsRes?.data || []);
-			setModelChoices(modelsRes?.data || []);
-			setAgentChoices(agentsRes?.data || []);
+			setModelChoices(chatModels);
+			setAgentChoices(agentsRes?.agents || []);
 		} catch (error) {
 			console.error('Error loading data:', error);
 			toast.error('Error loading data');
@@ -315,12 +317,14 @@ export default function Apps(props) {
 	}, []);
 
 	// Add handler for opening edit sheet
-	const handleOpenEditSheet = (app: App) => {
+	const handleOpenEditSheet = async (app: App) => {
 		setSelectedApp(app);
 		setOpenEditSheet(true);
 		// Ensure body pointer events are reset when opening
 		document.body.style.pointerEvents = 'auto';
 		document.body.style.cursor = 'auto';
+		// Fetch fresh data when opening edit sheet
+		await fetchFormData();
 	};
 
 	if (loading || (!apps && !props.apps)) {
