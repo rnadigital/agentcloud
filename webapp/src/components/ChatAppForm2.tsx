@@ -254,6 +254,51 @@ export default function Apps({
 
 	async function appPost(e) {
 		e.preventDefault();
+
+		// Update agent tools if there are changes
+		if (selectedAgent && (agentToolState.length > 0 || agentDatasourceState.length > 0)) {
+			try {
+				// Combine tools and datasources into toolIds
+				const allToolIds = [
+					...(agentToolState || []).map(tool => tool.value),
+					...(agentDatasourceState || []).map(datasource => datasource.value)
+				];
+
+				const agentBody = {
+					_csrf: csrf,
+					resourceSlug,
+					name: selectedAgent.name,
+					modelId: selectedAgent.modelId,
+					functionModelId: selectedAgent.functionModelId,
+					allowDelegation: selectedAgent.allowDelegation,
+					verbose: selectedAgent.verbose,
+					role: selectedAgent.role,
+					goal: selectedAgent.goal,
+					backstory: selectedAgent.backstory,
+					toolIds: allToolIds,
+					iconId: selectedAgent.icon?.id,
+					variableIds: selectedAgent.variableIds || []
+				};
+
+				await API.editAgent(
+					selectedAgent._id,
+					agentBody,
+					() => {
+						// Agent updated successfully, continue with app save
+					},
+					error => {
+						toast.error(error || 'Error updating agent tools');
+						return; // Don't continue with app save if agent update fails
+					},
+					null
+				);
+			} catch (error) {
+				console.error('Error updating agent tools:', error);
+				toast.error('Error updating agent tools');
+				return; // Don't continue with app save if agent update fails
+			}
+		}
+
 		const body = {
 			_csrf: csrf,
 			resourceSlug,
@@ -456,54 +501,6 @@ export default function Apps({
 		}
 	};
 
-	const updateAgentTools = async () => {
-		if (!selectedAgent || isAgentUpdating) return;
-
-		try {
-			setIsAgentUpdating(true);
-
-			// Combine tools and datasources into toolIds
-			const allToolIds = [
-				...(agentToolState || []).map(tool => tool.value),
-				...(agentDatasourceState || []).map(datasource => datasource.value)
-			];
-
-			const body = {
-				_csrf: csrf,
-				resourceSlug,
-				name: selectedAgent.name,
-				modelId: selectedAgent.modelId,
-				functionModelId: selectedAgent.functionModelId,
-				allowDelegation: selectedAgent.allowDelegation,
-				verbose: selectedAgent.verbose,
-				role: selectedAgent.role,
-				goal: selectedAgent.goal,
-				backstory: selectedAgent.backstory,
-				toolIds: allToolIds,
-				iconId: selectedAgent.icon?.id,
-				variableIds: selectedAgent.variableIds || []
-			};
-
-			await API.editAgent(
-				selectedAgent._id,
-				body,
-				() => {
-					toast.success('Agent tools updated');
-					refreshAgentData();
-				},
-				error => {
-					toast.error(error || 'Error updating agent tools');
-				},
-				null
-			);
-		} catch (error) {
-			console.error('Error updating agent tools:', error);
-			toast.error('Error updating agent tools');
-		} finally {
-			setIsAgentUpdating(false);
-		}
-	};
-
 	return (
 		<main className='text-foreground flex flex-col gap-2'>
 			<div className='flex gap-2 mb-2 text-sm'>
@@ -594,12 +591,6 @@ export default function Apps({
 										<h4 className='text-sm text-foreground font-medium'>
 											Agent Tools & Connections
 										</h4>
-										<Button
-											onClick={updateAgentTools}
-											disabled={isAgentUpdating}
-											className='bg-background text-foreground text-xs font-medium hover:bg-background'>
-											{isAgentUpdating ? 'Saving...' : 'Save Changes'}
-										</Button>
 									</div>
 									<p className='text-sm text-gray-600'>
 										Equip your agent with essential tools and data to perform tasks effectively.
