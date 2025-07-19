@@ -98,13 +98,6 @@ export default function Apps({
 	const selectedAgentModel = modelChoices.find(model => model._id === selectedAgent?.modelId);
 	const selectedAgentTools = toolChoices.filter(tool => selectedAgent?.toolIds?.includes(tool._id));
 
-	// Debug logging
-	console.log('selectedAgent:', selectedAgent);
-	console.log('selectedAgentTools:', selectedAgentTools);
-	console.log('agentToolState:', agentToolState);
-	console.log('agentDatasourceState:', agentDatasourceState);
-	console.log('toolChoices:', toolChoices);
-
 	const posthog = usePostHog();
 
 	const handleStarterEdit = (id: number, newText: string) => {
@@ -614,15 +607,16 @@ export default function Apps({
 												?.length || 0}
 										</div>
 										<MultiSelect
-											className='bg-white mt-4'
+											className='bg-white'
 											placeholder={
 												<div className='flex items-center gap-2'>
-													<Database className='h-4 w-4' />
+													<Layout className='h-4 w-4' />
 													<p>Tools</p>
 												</div>
 											}
 											newCallback={() => setModalOpen('tool')}
 											newLabel='New Tool'
+											modalPopover={true}
 											options={
 												toolChoices
 													?.filter(t => (t?.type as ToolType) !== ToolType.RAG_TOOL)
@@ -654,6 +648,7 @@ export default function Apps({
 											}
 											newCallback={() => setModalOpen('datasource')}
 											newLabel='New Connection'
+											modalPopover={true}
 											options={
 												toolChoices
 													?.filter(t => (t?.type as ToolType) === ToolType.RAG_TOOL)

@@ -151,13 +151,15 @@ const EditAppSheet = ({
 			}}>
 			<SheetContent
 				size='xl'
-				className='w-full overflow-auto'
-				// Add pointer-events override for sheet content
-				style={{ pointerEvents: 'auto' }}>
+				className='w-full overflow-visible'
+				style={{
+					pointerEvents: 'auto',
+					overflow: 'visible'
+				}}>
 				<SheetHeader>
 					<SheetTitle>Edit App</SheetTitle>
 				</SheetHeader>
-				<div className='mt-4'>
+				<div className='mt-4 overflow-auto max-h-[80vh]'>
 					<ChatAppForm2
 						fetchFormData={fetchFormData}
 						app={enrichedApp}
@@ -226,10 +228,6 @@ export default function Apps(props) {
 				API.getModels({ resourceSlug, _csrf: csrf }, null, setError, router),
 				API.getAgents({ resourceSlug, _csrf: csrf }, null, setError, router)
 			]);
-
-			console.log('toolsRes:', toolsRes);
-			console.log('toolsRes.data:', toolsRes?.data);
-			console.log('toolsRes.tools:', toolsRes?.tools);
 
 			// Filter out embedding models - we only want chat/completion models
 			const chatModels = (modelsRes?.models || []).filter(model => model.modelType !== 'embedding');
