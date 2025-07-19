@@ -184,14 +184,28 @@ export default function Apps(props) {
 	const [openEditSheet, setOpenEditSheet] = useState<boolean>(false);
 	const [filteredApps, setFilteredApps] = useState<App[]>([]);
 	const [searchTerm, setSearchTerm] = useState<string>();
+	const [loading, setLoading] = useState<boolean>(false);
 
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
 	const { teamName, csrf } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
-	const [state, dispatch] = useState<AppsDataReturnType>(props);
+	const [state, dispatch] = useState<AppsDataReturnType>();
 	const [error, setError] = useState();
-	const { apps } = state;
+
+	// Create completely separate state for apps to prevent interference
+	const [appsData, setAppsData] = useState<App[]>(null);
+	const apps = appsData || state?.apps;
+
+	// Create a separate dispatch function that only updates apps-related state
+	const appsDispatch = newAppsData => {
+		// Update our isolated apps state
+		if (newAppsData?.apps) {
+			setAppsData(newAppsData.apps);
+		}
+		// Also update the main state for other data
+		dispatch(newAppsData);
+	};
 
 	const [selectedAgentId, setSelectedAgentId] = useState<string>(null);
 	const [selectedApp, setSelectedApp] = useState<App>(null);
@@ -208,9 +222,9 @@ export default function Apps(props) {
 		try {
 			// Add your API calls here to fetch tools, models, and agents
 			const [toolsRes, modelsRes, agentsRes] = await Promise.all([
-				API.getTools({ resourceSlug, _csrf: csrf }, dispatch, setError, router),
-				API.getModels({ resourceSlug, _csrf: csrf }, dispatch, setError, router),
-				API.getAgents({ resourceSlug, _csrf: csrf }, dispatch, setError, router)
+				API.getTools({ resourceSlug, _csrf: csrf }, null, setError, router),
+				API.getModels({ resourceSlug, _csrf: csrf }, null, setError, router),
+				API.getAgents({ resourceSlug, _csrf: csrf }, null, setError, router)
 			]);
 
 			// Ensure we're setting arrays even if the response is null/undefined
@@ -218,7 +232,7 @@ export default function Apps(props) {
 			setModelChoices(modelsRes?.data || []);
 			setAgentChoices(agentsRes?.data || []);
 		} catch (error) {
-			console.error('Error fetching form data:', error);
+			console.error('Error loading data:', error);
 			toast.error('Error loading data');
 			// Set empty arrays on error to prevent undefined errors
 			setToolChoices([]);
@@ -226,11 +240,6 @@ export default function Apps(props) {
 			setAgentChoices([]);
 		}
 	};
-
-	// Add useEffect to fetch data on mount
-	useEffect(() => {
-		fetchFormData();
-	}, [resourceSlug]);
 
 	async function startSession(appId: ObjectId) {
 		await API.addSession(
@@ -246,7 +255,14 @@ export default function Apps(props) {
 	}
 
 	async function fetchApps() {
-		await API.getApps({ resourceSlug }, dispatch, setError, router);
+		setLoading(true);
+		try {
+			await API.getApps({ resourceSlug }, appsDispatch, setError, router);
+		} catch (error) {
+			console.error('Error fetching apps:', error);
+		} finally {
+			setLoading(false);
+		}
 	}
 
 	async function deleteApp(appId) {
@@ -271,9 +287,14 @@ export default function Apps(props) {
 		);
 	}
 
+	// Add useEffect to fetch data on mount
 	useEffect(() => {
 		fetchApps();
 		refreshAccountContext();
+	}, [resourceSlug]);
+
+	useEffect(() => {
+		fetchFormData();
 	}, [resourceSlug]);
 
 	useEffect(() => {
@@ -301,7 +322,7 @@ export default function Apps(props) {
 		document.body.style.cursor = 'auto';
 	};
 
-	if (!apps) {
+	if (loading || (!apps && !props.apps)) {
 		return <Spinner />;
 	}
 
