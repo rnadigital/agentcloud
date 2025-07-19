@@ -1,4 +1,5 @@
 import * as API from '@api';
+import React from 'react';
 
 import { AgentCreatedDisplay } from 'components/apps/AgentCreatedDisplay';
 import { AgentSelectDisplay } from 'components/apps/AgentSelectDisplay';
@@ -92,11 +93,15 @@ export default function Apps({
 	const [isAgentUpdating, setIsAgentUpdating] = useState(false);
 
 	// Add state for editing agent tools and connections
-	const [agentToolState, setAgentToolState] = useState<any[]>([]);
-	const [agentDatasourceState, setAgentDatasourceState] = useState<any[]>([]);
+	const [agentToolState, setAgentToolState] = useState<string[]>([]);
+	const [agentDatasourceState, setAgentDatasourceState] = useState<string[]>([]);
+	const [initializedAgentId, setInitializedAgentId] = useState<any>(null);
 
 	const selectedAgentModel = modelChoices.find(model => model._id === selectedAgent?.modelId);
-	const selectedAgentTools = toolChoices.filter(tool => selectedAgent?.toolIds?.includes(tool._id));
+	const selectedAgentTools = React.useMemo(
+		() => toolChoices.filter(tool => selectedAgent?.toolIds?.includes(tool._id)),
+		[toolChoices, selectedAgent?.toolIds]
+	);
 
 	const posthog = usePostHog();
 
@@ -169,10 +174,7 @@ export default function Apps({
 		if (fetchFormData) {
 			await fetchFormData();
 		}
-		setAgentDatasourceState(prev => [
-			...prev,
-			{ label: createdDatasource.name, value: createdDatasource.datasourceId }
-		]);
+		setAgentDatasourceState(prev => [...prev, createdDatasource.datasourceId]);
 		setModalOpen(false);
 	}
 
@@ -182,14 +184,9 @@ export default function Apps({
 		}
 		setModalOpen(false);
 
-		const newTool = {
-			label: body.name,
-			value: addedToolId.toString()
-		};
-
 		setAgentToolState(prevTools => {
 			const existingTools = Array.isArray(prevTools) ? prevTools : [];
-			return [...existingTools, newTool];
+			return [...existingTools, addedToolId.toString()];
 		});
 	};
 
@@ -259,10 +256,7 @@ export default function Apps({
 		if (selectedAgent && (agentToolState.length > 0 || agentDatasourceState.length > 0)) {
 			try {
 				// Combine tools and datasources into toolIds
-				const allToolIds = [
-					...(agentToolState || []).map(tool => tool.value),
-					...(agentDatasourceState || []).map(datasource => datasource.value)
-				];
+				const allToolIds = [...(agentToolState || []), ...(agentDatasourceState || [])];
 
 				const agentBody = {
 					_csrf: csrf,
@@ -466,28 +460,24 @@ export default function Apps({
 
 	// Initialize agent tool states when selected agent changes
 	useEffect(() => {
-		if (selectedAgent && selectedAgentTools) {
+		if (selectedAgent && selectedAgentTools && selectedAgent._id !== initializedAgentId) {
 			const tools = selectedAgentTools
 				.filter(tool => tool.type !== ToolType.RAG_TOOL)
-				.map(tool => ({
-					label: tool.name,
-					value: tool._id.toString()
-				}));
+				.map(tool => tool._id.toString());
 			setAgentToolState(tools);
 
 			const datasources = selectedAgentTools
 				.filter(tool => tool.type === ToolType.RAG_TOOL)
-				.map(tool => ({
-					label: tool.name,
-					value: tool._id.toString()
-				}));
+				.map(tool => tool._id.toString());
 			setAgentDatasourceState(datasources);
-		} else {
+			setInitializedAgentId(selectedAgent._id);
+		} else if (!selectedAgent) {
 			// Reset states when no agent is selected
 			setAgentToolState([]);
 			setAgentDatasourceState([]);
+			setInitializedAgentId(null);
 		}
-	}, [selectedAgent, selectedAgentTools]);
+	}, [selectedAgent?._id, selectedAgentTools, initializedAgentId]);
 
 	const refreshAgentData = async () => {
 		if (isAgentUpdating) return;
@@ -658,7 +648,9 @@ export default function Apps({
 													})) || []
 											}
 											onValueChange={values => {
+												console.log('Connections onValueChange called with:', values);
 												const formattedValues = Array.isArray(values) ? values : [];
+												console.log('Setting agentDatasourceState to:', formattedValues);
 												setAgentDatasourceState(formattedValues);
 											}}
 											value={agentDatasourceState || []}
