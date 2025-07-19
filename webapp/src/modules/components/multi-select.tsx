@@ -297,7 +297,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 						position: 'fixed'
 					}}>
 					<Command className='z-[9999]'>
-						<CommandInput placeholder='Search...' onKeyDown={handleInputKeyDown} />
+						{/* <CommandInput placeholder='Search...' onKeyDown={handleInputKeyDown} /> */}
 						<CommandList
 							className='max-h-[150px] overflow-y-auto'
 							style={{ overflowY: 'auto' }}
