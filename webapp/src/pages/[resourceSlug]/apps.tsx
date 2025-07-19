@@ -227,11 +227,15 @@ export default function Apps(props) {
 				API.getAgents({ resourceSlug, _csrf: csrf }, null, setError, router)
 			]);
 
+			console.log('toolsRes:', toolsRes);
+			console.log('toolsRes.data:', toolsRes?.data);
+			console.log('toolsRes.tools:', toolsRes?.tools);
+
 			// Filter out embedding models - we only want chat/completion models
 			const chatModels = (modelsRes?.models || []).filter(model => model.modelType !== 'embedding');
 
 			// Ensure we're setting arrays even if the response is null/undefined
-			setToolChoices(toolsRes?.data || []);
+			setToolChoices(toolsRes?.tools || toolsRes?.data || []);
 			setModelChoices(chatModels);
 			setAgentChoices(agentsRes?.agents || []);
 		} catch (error) {

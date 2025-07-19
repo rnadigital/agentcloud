@@ -98,6 +98,13 @@ export default function Apps({
 	const selectedAgentModel = modelChoices.find(model => model._id === selectedAgent?.modelId);
 	const selectedAgentTools = toolChoices.filter(tool => selectedAgent?.toolIds?.includes(tool._id));
 
+	// Debug logging
+	console.log('selectedAgent:', selectedAgent);
+	console.log('selectedAgentTools:', selectedAgentTools);
+	console.log('agentToolState:', agentToolState);
+	console.log('agentDatasourceState:', agentDatasourceState);
+	console.log('toolChoices:', toolChoices);
+
 	const posthog = usePostHog();
 
 	const handleStarterEdit = (id: number, newText: string) => {
@@ -482,6 +489,10 @@ export default function Apps({
 					value: tool._id.toString()
 				}));
 			setAgentDatasourceState(datasources);
+		} else {
+			// Reset states when no agent is selected
+			setAgentToolState([]);
+			setAgentDatasourceState([]);
 		}
 	}, [selectedAgent, selectedAgentTools]);
 
@@ -597,6 +608,11 @@ export default function Apps({
 									</p>
 
 									<div className='flex flex-col gap-4 text-xs'>
+										<div className='text-xs text-gray-500 mb-2'>
+											Selected Tools: {agentToolState?.length || 0} | Available Tools:{' '}
+											{toolChoices?.filter(t => (t?.type as ToolType) !== ToolType.RAG_TOOL)
+												?.length || 0}
+										</div>
 										<MultiSelect
 											className='bg-white mt-4'
 											placeholder={
@@ -607,12 +623,14 @@ export default function Apps({
 											}
 											newCallback={() => setModalOpen('tool')}
 											newLabel='New Tool'
-											options={toolChoices
-												?.filter(t => (t?.type as ToolType) !== ToolType.RAG_TOOL)
-												.map(t => ({
-													label: t.name,
-													value: t._id.toString()
-												}))}
+											options={
+												toolChoices
+													?.filter(t => (t?.type as ToolType) !== ToolType.RAG_TOOL)
+													.map(t => ({
+														label: t.name,
+														value: t._id.toString()
+													})) || []
+											}
 											onValueChange={values => {
 												const formattedValues = Array.isArray(values) ? values : [];
 												setAgentToolState(formattedValues);
@@ -620,6 +638,12 @@ export default function Apps({
 											value={agentToolState || []}
 										/>
 
+										<div className='text-xs text-gray-500 mb-2'>
+											Selected Connections: {agentDatasourceState?.length || 0} | Available
+											Connections:{' '}
+											{toolChoices?.filter(t => (t?.type as ToolType) === ToolType.RAG_TOOL)
+												?.length || 0}
+										</div>
 										<MultiSelect
 											className='bg-white'
 											placeholder={
@@ -630,12 +654,14 @@ export default function Apps({
 											}
 											newCallback={() => setModalOpen('datasource')}
 											newLabel='New Connection'
-											options={toolChoices
-												?.filter(t => (t?.type as ToolType) === ToolType.RAG_TOOL)
-												.map(t => ({
-													label: t.name,
-													value: t._id.toString()
-												}))}
+											options={
+												toolChoices
+													?.filter(t => (t?.type as ToolType) === ToolType.RAG_TOOL)
+													.map(t => ({
+														label: t.name,
+														value: t._id.toString()
+													})) || []
+											}
 											onValueChange={values => {
 												const formattedValues = Array.isArray(values) ? values : [];
 												setAgentDatasourceState(formattedValues);
