@@ -41,7 +41,13 @@ import { App, AppType } from 'struct/app';
 import { SharingMode } from 'struct/sharing';
 import { toast } from 'react-toastify';
 import ChatAppForm2 from 'components/ChatAppForm2';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from 'modules/components/ui/sheet';
+import {
+	Sheet,
+	SheetContent,
+	SheetHeader,
+	SheetTitle,
+	SheetDescription
+} from 'modules/components/ui/sheet';
 import { Model } from 'db/model';
 import { Agent } from 'struct/agent';
 
@@ -158,6 +164,7 @@ const EditAppSheet = ({
 				}}>
 				<SheetHeader>
 					<SheetTitle>Edit App</SheetTitle>
+					<SheetDescription>Modify your app settings and configuration.</SheetDescription>
 				</SheetHeader>
 				<div className='mt-4 overflow-auto max-h-[80vh]'>
 					<ChatAppForm2
@@ -395,7 +402,13 @@ export default function Apps(props) {
 															{app.type === 'chat' ? (
 																<ChatBubbleLeftRightIcon width={20} className='text-gray-800' />
 															) : (
-																<Image src='/process.svg' width={15} height={15} alt='user' />
+																<Image
+																	src='/process.svg'
+																	width={15}
+																	height={15}
+																	alt='user'
+																	unoptimized
+																/>
 															)}
 														</div>
 													</div>
