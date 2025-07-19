@@ -531,7 +531,7 @@ export const CreateAgentSheet = ({
 					</div>
 				</div>
 			</SheetTrigger>
-			<SheetContent className='text-foreground sm:max-w-[576px] overflow-y-auto'>
+			<SheetContent size='md' className='text-foreground overflow-y-auto'>
 				<SheetHeader>
 					<SheetTitle>
 						<div className='flex items-center gap-2'>

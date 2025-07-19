@@ -151,7 +151,8 @@ const EditAppSheet = ({
 				setOpen(open);
 			}}>
 			<SheetContent
-				className='w-full overflow-auto max-w-3xl'
+				size='xl'
+				className='w-full overflow-auto'
 				// Add pointer-events override for sheet content
 				style={{ pointerEvents: 'auto' }}>
 				<SheetHeader>
