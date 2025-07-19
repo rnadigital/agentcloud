@@ -40,6 +40,7 @@ import CreateModelModal from './CreateModelModal';
 import CreateToolModal from './modal/CreateToolModal';
 import SharingModeSelect from './SharingModeSelect';
 import CreateVariableModal from './variables/CreateVariableModal';
+import { Database } from 'lucide-react';
 
 const chatAppTaglines = [
 	'Build single agent chat bots (like GPTS)',
@@ -89,6 +90,10 @@ export default function Apps({
 	const [modalOpen, setModalOpen]: any = useState(false);
 
 	const [isAgentUpdating, setIsAgentUpdating] = useState(false);
+
+	// Add state for editing agent tools and connections
+	const [agentToolState, setAgentToolState] = useState<any[]>([]);
+	const [agentDatasourceState, setAgentDatasourceState] = useState<any[]>([]);
 
 	const selectedAgentModel = modelChoices.find(model => model._id === selectedAgent?.modelId);
 	const selectedAgentTools = toolChoices.filter(tool => selectedAgent?.toolIds?.includes(tool._id));
@@ -160,6 +165,34 @@ export default function Apps({
 		setModalOpen(false);
 	}
 
+	async function createDatasourceCallback(createdDatasource) {
+		if (fetchFormData) {
+			await fetchFormData();
+		}
+		setAgentDatasourceState(prev => [
+			...prev,
+			{ label: createdDatasource.name, value: createdDatasource.datasourceId }
+		]);
+		setModalOpen(false);
+	}
+
+	const toolCallback = async (addedToolId, body) => {
+		if (fetchFormData) {
+			await fetchFormData();
+		}
+		setModalOpen(false);
+
+		const newTool = {
+			label: body.name,
+			value: addedToolId.toString()
+		};
+
+		setAgentToolState(prevTools => {
+			const existingTools = Array.isArray(prevTools) ? prevTools : [];
+			return [...existingTools, newTool];
+		});
+	};
+
 	let modal;
 	switch (modalOpen) {
 		case 'whitelist':
@@ -192,6 +225,25 @@ export default function Apps({
 					message={
 						"You are sharing this app with people outside your team. After confirming pressing 'save' will save the app."
 					}
+				/>
+			);
+			break;
+		case 'datasource':
+			modal = (
+				<CreateDatasourceModal
+					open={modalOpen !== false}
+					setOpen={setModalOpen}
+					callback={createDatasourceCallback}
+					initialStep={0}
+				/>
+			);
+			break;
+		case 'tool':
+			modal = (
+				<CreateToolModal
+					open={modalOpen !== false}
+					setOpen={setModalOpen}
+					callback={toolCallback}
 				/>
 			);
 			break;
@@ -367,6 +419,27 @@ export default function Apps({
 		}
 	}, [agentChoices]);
 
+	// Initialize agent tool states when selected agent changes
+	useEffect(() => {
+		if (selectedAgent && selectedAgentTools) {
+			const tools = selectedAgentTools
+				.filter(tool => tool.type !== ToolType.RAG_TOOL)
+				.map(tool => ({
+					label: tool.name,
+					value: tool._id.toString()
+				}));
+			setAgentToolState(tools);
+
+			const datasources = selectedAgentTools
+				.filter(tool => tool.type === ToolType.RAG_TOOL)
+				.map(tool => ({
+					label: tool.name,
+					value: tool._id.toString()
+				}));
+			setAgentDatasourceState(datasources);
+		}
+	}, [selectedAgent, selectedAgentTools]);
+
 	const refreshAgentData = async () => {
 		if (isAgentUpdating) return;
 
@@ -380,6 +453,54 @@ export default function Apps({
 			}
 		} catch (error) {
 			console.error('Error refreshing agent data:', error);
+		}
+	};
+
+	const updateAgentTools = async () => {
+		if (!selectedAgent || isAgentUpdating) return;
+
+		try {
+			setIsAgentUpdating(true);
+
+			// Combine tools and datasources into toolIds
+			const allToolIds = [
+				...(agentToolState || []).map(tool => tool.value),
+				...(agentDatasourceState || []).map(datasource => datasource.value)
+			];
+
+			const body = {
+				_csrf: csrf,
+				resourceSlug,
+				name: selectedAgent.name,
+				modelId: selectedAgent.modelId,
+				functionModelId: selectedAgent.functionModelId,
+				allowDelegation: selectedAgent.allowDelegation,
+				verbose: selectedAgent.verbose,
+				role: selectedAgent.role,
+				goal: selectedAgent.goal,
+				backstory: selectedAgent.backstory,
+				toolIds: allToolIds,
+				iconId: selectedAgent.icon?.id,
+				variableIds: selectedAgent.variableIds || []
+			};
+
+			await API.editAgent(
+				selectedAgent._id,
+				body,
+				() => {
+					toast.success('Agent tools updated');
+					refreshAgentData();
+				},
+				error => {
+					toast.error(error || 'Error updating agent tools');
+				},
+				null
+			);
+		} catch (error) {
+			console.error('Error updating agent tools:', error);
+			toast.error('Error updating agent tools');
+		} finally {
+			setIsAgentUpdating(false);
 		}
 	};
 
@@ -464,6 +585,74 @@ export default function Apps({
 							)}
 							{selectedAgent && !selectedAgentModel && (
 								<div className='text-gray-500 text-sm'>Loading agent details...</div>
+							)}
+
+							{/* Agent Tools and Connections Editor */}
+							{selectedAgent && selectedAgentModel && (
+								<div className='bg-gray-100 p-6 rounded-lg flex flex-col gap-2'>
+									<div className='flex items-center justify-between'>
+										<h4 className='text-sm text-foreground font-medium'>
+											Agent Tools & Connections
+										</h4>
+										<Button
+											onClick={updateAgentTools}
+											disabled={isAgentUpdating}
+											className='bg-background text-foreground text-xs font-medium hover:bg-background'>
+											{isAgentUpdating ? 'Saving...' : 'Save Changes'}
+										</Button>
+									</div>
+									<p className='text-sm text-gray-600'>
+										Equip your agent with essential tools and data to perform tasks effectively.
+									</p>
+
+									<div className='flex flex-col gap-4 text-xs'>
+										<MultiSelect
+											className='bg-white mt-4'
+											placeholder={
+												<div className='flex items-center gap-2'>
+													<Database className='h-4 w-4' />
+													<p>Tools</p>
+												</div>
+											}
+											newCallback={() => setModalOpen('tool')}
+											newLabel='New Tool'
+											options={toolChoices
+												?.filter(t => (t?.type as ToolType) !== ToolType.RAG_TOOL)
+												.map(t => ({
+													label: t.name,
+													value: t._id.toString()
+												}))}
+											onValueChange={values => {
+												const formattedValues = Array.isArray(values) ? values : [];
+												setAgentToolState(formattedValues);
+											}}
+											value={agentToolState || []}
+										/>
+
+										<MultiSelect
+											className='bg-white'
+											placeholder={
+												<div className='flex items-center gap-2'>
+													<Database className='h-4 w-4' />
+													<p>Connections</p>
+												</div>
+											}
+											newCallback={() => setModalOpen('datasource')}
+											newLabel='New Connection'
+											options={toolChoices
+												?.filter(t => (t?.type as ToolType) === ToolType.RAG_TOOL)
+												.map(t => ({
+													label: t.name,
+													value: t._id.toString()
+												}))}
+											onValueChange={values => {
+												const formattedValues = Array.isArray(values) ? values : [];
+												setAgentDatasourceState(formattedValues);
+											}}
+											value={agentDatasourceState || []}
+										/>
+									</div>
+								</div>
 							)}
 							{!selectedAgent && agentChoices?.length > 0 && (
 								<AgentSelectDisplay
@@ -621,25 +810,9 @@ export default function Apps({
 							</Button>
 						</article>
 					</form>
-
-					<section className='border border-gray-200 rounded-r-lg w-96 flex flex-col justify-between hidden md:flex'>
-						<article className='flex flex-col justify-center items-center h-full'>
-							<p className='text-gray-500 text-center'>
-								Preview will update as you add your agent’s details
-							</p>
-						</article>
-
-						<article className='flex items-center gap-3 px-3 py-3 border-t border-gray-200'>
-							<input
-								className='bg-gray-50 border border-gray-300 px-4 py-2 rounded-lg text-gray-500 text-sm w-full'
-								type='text'
-								placeholder='Write your message here...'
-							/>
-							<SendHorizonal color='#4F46E5' />
-						</article>
-					</section>
 				</div>
 			)}
+			{modal}
 		</main>
 	);
 }

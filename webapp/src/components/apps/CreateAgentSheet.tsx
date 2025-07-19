@@ -516,21 +516,6 @@ export const CreateAgentSheet = ({
 	return (
 		<Sheet open={openEditSheet} onOpenChange={setOpenEditSheet}>
 			{modal}
-			<SheetTrigger className='font-medium border-0'>
-				<div className='w-full flex flex-col items-center justify-center bg-gray-100 p-6 rounded-lg'>
-					<div className='flex items-center justify-center mb-4'>
-						<div className='bg-background w-12 h-12 flex items-center justify-center rounded-full'>
-							<CircleUserRound />
-						</div>
-					</div>
-					<div className='flex flex-col items-center gap-2'>
-						<p className='font-medium'>+ Create Agent</p>
-						<p className='text-gray-500 text-center w-3/5'>
-							Think of it as a virtual helper that manages important chats and replies in your app.
-						</p>
-					</div>
-				</div>
-			</SheetTrigger>
 			<SheetContent size='md' className='text-foreground overflow-y-auto'>
 				<SheetHeader>
 					<SheetTitle>

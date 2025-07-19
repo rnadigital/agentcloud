@@ -132,41 +132,6 @@ export const AgentCreatedDisplay = React.memo(
 										<p>{selectedAgent.backstory}</p>
 									</div>
 								</div>
-								<div className='flex gap-6 flex-col lg:flex-row'>
-									<div className='flex flex-col gap-2 px-4 py-2 border border-gray-300 w-full rounded-lg'>
-										<div className='flex items-center gap-2'>
-											<Wrench width={15} color='#9CA3AF' />
-											<p className='text-sm'>Tools</p>
-										</div>
-										<div className='flex flex-col gap-2'>
-											{tools.map(tool => (
-												<div
-													key={tool._id.toString()}
-													className='flex items-center gap-2 bg-gray-100 p-1 rounded'>
-													<Wrench width={15} color='#9CA3AF' />
-													<p className='line-clamp-1 text-sm'>{tool.name}</p>
-												</div>
-											))}
-										</div>
-									</div>
-
-									<div className='flex flex-col gap-2 px-4 py-2 border border-gray-300 w-full rounded-lg'>
-										<div className='flex items-center gap-2'>
-											<Wrench width={15} color='#9CA3AF' />
-											<p className='text-sm'>Data Sources</p>
-										</div>
-										<div className='flex flex-col gap-2'>
-											{datasources.map(datasource => (
-												<div
-													className='flex items-center gap-2 bg-gray-100 p-1 rounded'
-													key={datasource._id.toString()}>
-													<File width={15} color='#2F2A89' />
-													<p className='line-clamp-1 text-sm'>{datasource.name}</p>
-												</div>
-											))}
-										</div>
-									</div>
-								</div>
 							</div>
 						</CollapsibleContent>
 					</div>
