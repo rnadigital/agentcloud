@@ -1052,7 +1052,14 @@ export async function ApiCall(
 		return;
 	}
 	if (contentType.startsWith('application/json;')) {
-		response = await response.json();
+		try {
+			response = await response.json();
+		} catch (e) {
+			errorCallback && errorCallback('An error occurred parsing response');
+			NProgress.done(true);
+			return;
+		}
+		
 		if (response.token) {
 			localStorage.setItem('_jwt', response.token);
 		}

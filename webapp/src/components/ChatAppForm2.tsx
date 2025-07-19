@@ -1,4 +1,5 @@
 import * as API from '@api';
+import React from 'react';
 
 import { AgentCreatedDisplay } from 'components/apps/AgentCreatedDisplay';
 import { AgentSelectDisplay } from 'components/apps/AgentSelectDisplay';
@@ -40,6 +41,7 @@ import CreateModelModal from './CreateModelModal';
 import CreateToolModal from './modal/CreateToolModal';
 import SharingModeSelect from './SharingModeSelect';
 import CreateVariableModal from './variables/CreateVariableModal';
+import { Database } from 'lucide-react';
 
 const chatAppTaglines = [
 	'Build single agent chat bots (like GPTS)',
@@ -83,10 +85,6 @@ export default function Apps({
 	const [openEditSheet, setOpenEditSheet] = useState<boolean>(false);
 	const [isEditing, setIsEditing] = useState<boolean>(false);
 	const [editingStarterId, setEditingStarterId] = useState<number | null>(null);
-	const [conversationStarters, setConversationStarters] = useState([
-		{ id: 1, text: 'Help me brainstorm some ideas' },
-		{ id: 2, text: 'What can you help me with?' }
-	]);
 	const [pendingAgentId, setPendingAgentId] = useState<string>();
 	const [run, setRun] = useState(false);
 	const [outsideOrg, setOutsideOrg] = useState(false);
@@ -94,8 +92,16 @@ export default function Apps({
 
 	const [isAgentUpdating, setIsAgentUpdating] = useState(false);
 
+	// Add state for editing agent tools and connections
+	const [agentToolState, setAgentToolState] = useState<string[]>([]);
+	const [agentDatasourceState, setAgentDatasourceState] = useState<string[]>([]);
+	const [initializedAgentId, setInitializedAgentId] = useState<any>(null);
+
 	const selectedAgentModel = modelChoices.find(model => model._id === selectedAgent?.modelId);
-	const selectedAgentTools = toolChoices.filter(tool => selectedAgent?.toolIds?.includes(tool._id));
+	const selectedAgentTools = React.useMemo(
+		() => toolChoices.filter(tool => selectedAgent?.toolIds?.includes(tool._id)),
+		[toolChoices, selectedAgent?.toolIds]
+	);
 
 	const posthog = usePostHog();
 
@@ -130,7 +136,23 @@ export default function Apps({
 	const [shareLinkShareId, setShareLinkShareId] = useState(editing ? app?.shareLinkShareId : null);
 	const [appName, setAppName] = useState(app?.name || 'Untitled Chat App');
 	const [description, setDescription] = useState(app?.description || '');
-	const [maxMessages, setMaxMessages] = useState(app?.chatAppConfig.maxMessages || 30);
+	const [maxMessages, setMaxMessages] = useState(app?.chatAppConfig?.maxMessages || 30);
+
+	// Initialize conversation starters from app data or use defaults
+	const [conversationStarters, setConversationStarters] = useState(() => {
+		if (editing && app?.chatAppConfig?.conversationStarters) {
+			const starters = app.chatAppConfig.conversationStarters.map((text, index) => ({
+				id: index + 1,
+				text
+			}));
+			return starters;
+		}
+		const defaults = [
+			{ id: 1, text: 'Help me brainstorm some ideas' },
+			{ id: 2, text: 'What can you help me with?' }
+		];
+		return defaults;
+	});
 
 	const initialEmails = whiteListSharingChoices
 		? whiteListSharingChoices.map(email => ({ label: email, value: email }))
@@ -147,6 +169,26 @@ export default function Apps({
 		setOutsideOrg(true);
 		setModalOpen(false);
 	}
+
+	async function createDatasourceCallback(createdDatasource) {
+		if (fetchFormData) {
+			await fetchFormData();
+		}
+		setAgentDatasourceState(prev => [...prev, createdDatasource.datasourceId]);
+		setModalOpen(false);
+	}
+
+	const toolCallback = async (addedToolId, body) => {
+		if (fetchFormData) {
+			await fetchFormData();
+		}
+		setModalOpen(false);
+
+		setAgentToolState(prevTools => {
+			const existingTools = Array.isArray(prevTools) ? prevTools : [];
+			return [...existingTools, addedToolId.toString()];
+		});
+	};
 
 	let modal;
 	switch (modalOpen) {
@@ -183,6 +225,25 @@ export default function Apps({
 				/>
 			);
 			break;
+		case 'datasource':
+			modal = (
+				<CreateDatasourceModal
+					open={modalOpen !== false}
+					setOpen={setModalOpen}
+					callback={createDatasourceCallback}
+					initialStep={0}
+				/>
+			);
+			break;
+		case 'tool':
+			modal = (
+				<CreateToolModal
+					open={modalOpen !== false}
+					setOpen={setModalOpen}
+					callback={toolCallback}
+				/>
+			);
+			break;
 		default:
 			modal = null;
 			break;
@@ -190,6 +251,48 @@ export default function Apps({
 
 	async function appPost(e) {
 		e.preventDefault();
+
+		// Update agent tools if there are changes
+		if (selectedAgent && (agentToolState.length > 0 || agentDatasourceState.length > 0)) {
+			try {
+				// Combine tools and datasources into toolIds
+				const allToolIds = [...(agentToolState || []), ...(agentDatasourceState || [])];
+
+				const agentBody = {
+					_csrf: csrf,
+					resourceSlug,
+					name: selectedAgent.name,
+					modelId: selectedAgent.modelId,
+					functionModelId: selectedAgent.functionModelId,
+					allowDelegation: selectedAgent.allowDelegation,
+					verbose: selectedAgent.verbose,
+					role: selectedAgent.role,
+					goal: selectedAgent.goal,
+					backstory: selectedAgent.backstory,
+					toolIds: allToolIds,
+					iconId: selectedAgent.icon?.id,
+					variableIds: selectedAgent.variableIds || []
+				};
+
+				await API.editAgent(
+					selectedAgent._id,
+					agentBody,
+					() => {
+						// Agent updated successfully, continue with app save
+					},
+					error => {
+						toast.error(error || 'Error updating agent tools');
+						return; // Don't continue with app save if agent update fails
+					},
+					null
+				);
+			} catch (error) {
+				console.error('Error updating agent tools:', error);
+				toast.error('Error updating agent tools');
+				return; // Don't continue with app save if agent update fails
+			}
+		}
+
 		const body = {
 			_csrf: csrf,
 			resourceSlug,
@@ -291,6 +394,38 @@ export default function Apps({
 		}
 	}, [pendingAgentId, agentChoices]);
 
+	// Initialize selectedAgent from app data when editing
+	useEffect(() => {
+		if (
+			editing &&
+			app?.chatAppConfig?.agentId &&
+			agentChoices &&
+			!selectedAgent &&
+			!pendingAgentId
+		) {
+			const existingAgent = agentChoices.find(a => a._id === app.chatAppConfig.agentId);
+			if (existingAgent) {
+				setSelectedAgent(existingAgent);
+			}
+		}
+	}, [editing, app?.chatAppConfig?.agentId, agentChoices, selectedAgent, pendingAgentId]);
+
+	// Additional effect to handle agentChoices loading after component mount
+	useEffect(() => {
+		if (
+			editing &&
+			app?.chatAppConfig?.agentId &&
+			agentChoices?.length > 0 &&
+			!selectedAgent &&
+			!pendingAgentId
+		) {
+			const existingAgent = agentChoices.find(a => a._id === app.chatAppConfig.agentId);
+			if (existingAgent) {
+				setSelectedAgent(existingAgent);
+			}
+		}
+	}, [agentChoices, editing, app?.chatAppConfig?.agentId, selectedAgent, pendingAgentId]);
+
 	const handleAgentUpdate = async (updatedAgent: Agent) => {
 		try {
 			setIsAgentUpdating(true);
@@ -322,6 +457,27 @@ export default function Apps({
 			}
 		}
 	}, [agentChoices]);
+
+	// Initialize agent tool states when selected agent changes
+	useEffect(() => {
+		if (selectedAgent && selectedAgentTools && selectedAgent._id !== initializedAgentId) {
+			const tools = selectedAgentTools
+				.filter(tool => tool.type !== ToolType.RAG_TOOL)
+				.map(tool => tool._id.toString());
+			setAgentToolState(tools);
+
+			const datasources = selectedAgentTools
+				.filter(tool => tool.type === ToolType.RAG_TOOL)
+				.map(tool => tool._id.toString());
+			setAgentDatasourceState(datasources);
+			setInitializedAgentId(selectedAgent._id);
+		} else if (!selectedAgent) {
+			// Reset states when no agent is selected
+			setAgentToolState([]);
+			setAgentDatasourceState([]);
+			setInitializedAgentId(null);
+		}
+	}, [selectedAgent?._id, selectedAgentTools, initializedAgentId]);
 
 	const refreshAgentData = async () => {
 		if (isAgentUpdating) return;
@@ -355,8 +511,7 @@ export default function Apps({
 				<div className='flex border border-gray-200 rounded-lg'>
 					<form
 						className='flex flex-col justify-between border border-gray-200 rounded-l-lg w-full minh-[790px]'
-						onSubmit={appPost}
-					>
+						onSubmit={appPost}>
 						<article className='flex flex-col p-5 gap-6'>
 							<div className='flex items-center gap-3 h-24'>
 								<img className='rounded-3xl' src='/apps/identicon.png' />
@@ -388,8 +543,7 @@ export default function Apps({
 														setAppName('');
 													}
 												}}
-												className='hover:text-[#4F46E5] transition-colors'
-											>
+												className='hover:text-[#4F46E5] transition-colors'>
 												<Pencil width={20} />
 											</button>
 										</div>
@@ -407,7 +561,7 @@ export default function Apps({
 									/>
 								</div>
 							</div>
-							{selectedAgent && (
+							{selectedAgent && selectedAgentModel && (
 								<AgentCreatedDisplay
 									selectedAgent={selectedAgent}
 									openEditSheet={openEditSheet}
@@ -419,6 +573,90 @@ export default function Apps({
 									isUpdating={isAgentUpdating}
 									onChangeAgent={() => setSelectedAgent(null)} // Add this prop
 								/>
+							)}
+							{selectedAgent && !selectedAgentModel && (
+								<div className='text-gray-500 text-sm'>Loading agent details...</div>
+							)}
+
+							{/* Agent Tools and Connections Editor */}
+							{selectedAgent && selectedAgentModel && (
+								<div className='bg-gray-100 p-6 rounded-lg flex flex-col gap-2'>
+									<div className='flex items-center justify-between'>
+										<h4 className='text-sm text-foreground font-medium'>
+											Agent Tools & Connections
+										</h4>
+									</div>
+									<p className='text-sm text-gray-600'>
+										Equip your agent with essential tools and data to perform tasks effectively.
+									</p>
+
+									<div className='flex flex-col gap-4 text-xs'>
+										<div className='text-xs text-gray-500 mb-2'>
+											Selected Tools: {agentToolState?.length || 0} | Available Tools:{' '}
+											{toolChoices?.filter(t => (t?.type as ToolType) !== ToolType.RAG_TOOL)
+												?.length || 0}
+										</div>
+										<MultiSelect
+											className='bg-white'
+											placeholder={
+												<div className='flex items-center gap-2'>
+													<Layout className='h-4 w-4' />
+													<p>Tools</p>
+												</div>
+											}
+											newCallback={() => setModalOpen('tool')}
+											newLabel='New Tool'
+											modalPopover={true}
+											options={
+												toolChoices
+													?.filter(t => (t?.type as ToolType) !== ToolType.RAG_TOOL)
+													.map(t => ({
+														label: t.name,
+														value: t._id.toString()
+													})) || []
+											}
+											onValueChange={values => {
+												const formattedValues = Array.isArray(values) ? values : [];
+												setAgentToolState(formattedValues);
+											}}
+											value={agentToolState || []}
+										/>
+
+										<div className='text-xs text-gray-500 mb-2'>
+											Selected Connections: {agentDatasourceState?.length || 0} | Available
+											Connections:{' '}
+											{toolChoices?.filter(t => (t?.type as ToolType) === ToolType.RAG_TOOL)
+												?.length || 0}
+										</div>
+										<MultiSelect
+											className='bg-white'
+											placeholder={
+												<div className='flex items-center gap-2'>
+													<Database className='h-4 w-4' />
+													<p>Connections</p>
+												</div>
+											}
+											newCallback={() => setModalOpen('datasource')}
+											newLabel='New Connection'
+											modalPopover={true}
+											options={
+												toolChoices
+													?.filter(t => (t?.type as ToolType) === ToolType.RAG_TOOL)
+													.map(t => ({
+														label: t.name,
+														value: t._id.toString()
+													})) || []
+											}
+											onValueChange={values => {
+												console.log('Connections onValueChange called with:', values);
+												const formattedValues = Array.isArray(values) ? values : [];
+												console.log('Setting agentDatasourceState to:', formattedValues);
+												setAgentDatasourceState(formattedValues);
+											}}
+											value={agentDatasourceState || []}
+										/>
+									</div>
+								</div>
 							)}
 							{!selectedAgent && agentChoices?.length > 0 && (
 								<AgentSelectDisplay
@@ -465,8 +703,7 @@ export default function Apps({
 									<div key={starter.id} className='flex items-center gap-2'>
 										<div
 											className='bg-gray-50 px-4 py-3 w-full border border-gray-300 rounded-lg'
-											onClick={() => setEditingStarterId(starter.id)}
-										>
+											onClick={() => setEditingStarterId(starter.id)}>
 											{editingStarterId === starter.id ? (
 												<input
 													type='text'
@@ -503,8 +740,7 @@ export default function Apps({
 								))}
 								<p
 									className='text-[#4F46E5] cursor-pointer self-end hover:text-[#3730a3]'
-									onClick={handleAddStarter}
-								>
+									onClick={handleAddStarter}>
 									+ Add
 								</p>
 							</div>
@@ -538,8 +774,7 @@ export default function Apps({
 							<div className='sm:col-span-'>
 								<label
 									htmlFor='maxMessages'
-									className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-								>
+									className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 									Max Messages
 								</label>
 								<input
@@ -559,15 +794,13 @@ export default function Apps({
 							<Button
 								type='button'
 								variant='ghost'
-								className='bg-transparent text-foreground hover:bg-transparent hover:text-foreground p-0 border-0 shadow-none outline-none'
-							>
+								className='bg-transparent text-foreground hover:bg-transparent hover:text-foreground p-0 border-0 shadow-none outline-none'>
 								Cancel
 							</Button>
 							<Button
 								onClick={() => setRun(false)}
 								variant='ghost'
-								className='ml-auto bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white font-medium text-sm py-2 hover:text-white'
-							>
+								className='ml-auto bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white font-medium text-sm py-2 hover:text-white'>
 								Save
 							</Button>
 							<Button
@@ -576,31 +809,14 @@ export default function Apps({
 									setRun(true);
 								}}
 								variant='ghost'
-								className='ml-2 bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white font-medium text-sm py-2 hover:text-white'
-							>
+								className='ml-2 bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white font-medium text-sm py-2 hover:text-white'>
 								Save & Launch
 							</Button>
 						</article>
 					</form>
-
-					<section className='border border-gray-200 rounded-r-lg w-96 flex flex-col justify-between hidden md:flex'>
-						<article className='flex flex-col justify-center items-center h-full'>
-							<p className='text-gray-500 text-center'>
-								Preview will update as you add your agent’s details
-							</p>
-						</article>
-
-						<article className='flex items-center gap-3 px-3 py-3 border-t border-gray-200'>
-							<input
-								className='bg-gray-50 border border-gray-300 px-4 py-2 rounded-lg text-gray-500 text-sm w-full'
-								type='text'
-								placeholder='Write your message here...'
-							/>
-							<SendHorizonal color='#4F46E5' />
-						</article>
-					</section>
 				</div>
 			)}
+			{modal}
 		</main>
 	);
 }

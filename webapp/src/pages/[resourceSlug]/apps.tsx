@@ -41,9 +41,17 @@ import { App, AppType } from 'struct/app';
 import { SharingMode } from 'struct/sharing';
 import { toast } from 'react-toastify';
 import ChatAppForm2 from 'components/ChatAppForm2';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from 'modules/components/ui/sheet';
+import {
+	Sheet,
+	SheetContent,
+	SheetHeader,
+	SheetTitle,
+	SheetDescription
+} from 'modules/components/ui/sheet';
 import { Model } from 'db/model';
 import { Agent } from 'struct/agent';
+import EditChatAppSheet from 'components/apps/EditAppSheet';
+import EditCrewAppSheet from 'components/apps/EditCrewAppSheet';
 
 const DeleteDialog = ({
 	openDeleteDialog,
@@ -100,83 +108,6 @@ const DeleteDialog = ({
 	);
 };
 
-const EditAppSheet = ({
-	open,
-	setOpen,
-	selectedApp,
-	onAppUpdate,
-	toolChoices,
-	modelChoices,
-	agentChoices,
-	fetchFormData // Add this prop
-}: {
-	open: boolean;
-	setOpen: (open: boolean) => void;
-	selectedApp: App;
-	onAppUpdate: () => void;
-	toolChoices: any[];
-	modelChoices: any[];
-	agentChoices: any[];
-	fetchFormData: () => Promise<void>; // Add this type
-}) => {
-	// Add default values for missing properties
-	const enrichedApp = {
-		...selectedApp,
-		chatAppConfig: {
-			...selectedApp?.chatAppConfig,
-			maxMessages: selectedApp?.chatAppConfig?.maxMessages || 30
-		},
-		sharingConfig: {
-			...selectedApp?.sharingConfig,
-			mode: selectedApp?.sharingConfig?.mode || SharingMode.TEAM,
-			permissions: selectedApp?.sharingConfig?.permissions || {}
-		},
-		conversationStarters: ['Help me brainstorm some ideas', 'What can you help me with?'],
-		description: selectedApp?.description || '',
-		name: selectedApp?.name || 'Untitled Chat App',
-		type: selectedApp?.type || AppType.CHAT
-	};
-
-	return (
-		<Sheet
-			open={open}
-			onOpenChange={open => {
-				if (!open) {
-					// Force a slight delay before resetting pointer events
-					setTimeout(() => {
-						document.body.style.pointerEvents = 'auto';
-						document.body.style.cursor = 'auto';
-					}, 100);
-				}
-				setOpen(open);
-			}}>
-			<SheetContent
-				className='w-full overflow-auto max-w-3xl'
-				// Add pointer-events override for sheet content
-				style={{ pointerEvents: 'auto' }}>
-				<SheetHeader>
-					<SheetTitle>Edit App</SheetTitle>
-				</SheetHeader>
-				<div className='mt-4'>
-					<ChatAppForm2
-						fetchFormData={fetchFormData}
-						app={enrichedApp}
-						editing={true}
-						callback={() => {
-							setOpen(false);
-							onAppUpdate();
-						}}
-						toolChoices={toolChoices} // Pass these from parent if available
-						modelChoices={modelChoices} // Pass these from parent if available
-						agentChoices={agentChoices} // Pass these from parent if available
-						whiteListSharingChoices={Object.values(enrichedApp.sharingConfig.permissions || {})}
-					/>
-				</div>
-			</SheetContent>
-		</Sheet>
-	);
-};
-
 export default function Apps(props) {
 	const { agents } = useAgentStore();
 	const [openDeleteDialog, setOpenDeleteDialog] = useState<boolean>(false);
@@ -184,14 +115,28 @@ export default function Apps(props) {
 	const [openEditSheet, setOpenEditSheet] = useState<boolean>(false);
 	const [filteredApps, setFilteredApps] = useState<App[]>([]);
 	const [searchTerm, setSearchTerm] = useState<string>();
+	const [loading, setLoading] = useState<boolean>(false);
 
 	const [accountContext, refreshAccountContext]: any = useAccountContext();
 	const { teamName, csrf } = accountContext as any;
 	const router = useRouter();
 	const { resourceSlug } = router.query;
-	const [state, dispatch] = useState<AppsDataReturnType>(props);
+	const [state, dispatch] = useState<AppsDataReturnType>();
 	const [error, setError] = useState();
-	const { apps } = state;
+
+	// Create completely separate state for apps to prevent interference
+	const [appsData, setAppsData] = useState<App[]>(null);
+	const apps = appsData || state?.apps;
+
+	// Create a separate dispatch function that only updates apps-related state
+	const appsDispatch = newAppsData => {
+		// Update our isolated apps state
+		if (newAppsData?.apps) {
+			setAppsData(newAppsData.apps);
+		}
+		// Also update the main state for other data
+		dispatch(newAppsData);
+	};
 
 	const [selectedAgentId, setSelectedAgentId] = useState<string>(null);
 	const [selectedApp, setSelectedApp] = useState<App>(null);
@@ -202,35 +147,41 @@ export default function Apps(props) {
 	const [toolChoices, setToolChoices] = useState<any[]>([]);
 	const [modelChoices, setModelChoices] = useState<Model[]>([]);
 	const [agentChoices, setAgentChoices] = useState<Agent[]>([]);
+	const [taskChoices, setTaskChoices] = useState<any[]>([]);
+	const [variableChoices, setVariableChoices] = useState<any[]>([]);
 
 	// Add function to fetch all required data
 	const fetchFormData = async () => {
 		try {
-			// Add your API calls here to fetch tools, models, and agents
-			const [toolsRes, modelsRes, agentsRes] = await Promise.all([
-				API.getTools({ resourceSlug, _csrf: csrf }, dispatch, setError, router),
-				API.getModels({ resourceSlug, _csrf: csrf }, dispatch, setError, router),
-				API.getAgents({ resourceSlug, _csrf: csrf }, dispatch, setError, router)
+			// Add your API calls here to fetch tools, models, agents, tasks, and variables
+			const [toolsRes, modelsRes, agentsRes, tasksRes, variablesRes] = await Promise.all([
+				API.getTools({ resourceSlug, _csrf: csrf }, null, setError, router),
+				API.getModels({ resourceSlug, _csrf: csrf }, null, setError, router),
+				API.getAgents({ resourceSlug, _csrf: csrf }, null, setError, router),
+				API.getTasks({ resourceSlug, _csrf: csrf }, null, setError, router),
+				API.getVariables({ resourceSlug, _csrf: csrf }, null, setError, router)
 			]);
 
+			// Filter out embedding models - we only want chat/completion models
+			const chatModels = (modelsRes?.models || []).filter(model => model.modelType !== 'embedding');
+
 			// Ensure we're setting arrays even if the response is null/undefined
-			setToolChoices(toolsRes?.data || []);
-			setModelChoices(modelsRes?.data || []);
-			setAgentChoices(agentsRes?.data || []);
+			setToolChoices(toolsRes?.tools || toolsRes?.data || []);
+			setModelChoices(chatModels);
+			setAgentChoices(agentsRes?.agents || []);
+			setTaskChoices(tasksRes?.tasks || []);
+			setVariableChoices(variablesRes?.variables || []);
 		} catch (error) {
-			console.error('Error fetching form data:', error);
+			console.error('Error loading data:', error);
 			toast.error('Error loading data');
 			// Set empty arrays on error to prevent undefined errors
 			setToolChoices([]);
 			setModelChoices([]);
 			setAgentChoices([]);
+			setTaskChoices([]);
+			setVariableChoices([]);
 		}
 	};
-
-	// Add useEffect to fetch data on mount
-	useEffect(() => {
-		fetchFormData();
-	}, [resourceSlug]);
 
 	async function startSession(appId: ObjectId) {
 		await API.addSession(
@@ -246,7 +197,14 @@ export default function Apps(props) {
 	}
 
 	async function fetchApps() {
-		await API.getApps({ resourceSlug }, dispatch, setError, router);
+		setLoading(true);
+		try {
+			await API.getApps({ resourceSlug }, appsDispatch, setError, router);
+		} catch (error) {
+			console.error('Error fetching apps:', error);
+		} finally {
+			setLoading(false);
+		}
 	}
 
 	async function deleteApp(appId) {
@@ -271,9 +229,14 @@ export default function Apps(props) {
 		);
 	}
 
+	// Add useEffect to fetch data on mount
 	useEffect(() => {
 		fetchApps();
 		refreshAccountContext();
+	}, [resourceSlug]);
+
+	useEffect(() => {
+		fetchFormData();
 	}, [resourceSlug]);
 
 	useEffect(() => {
@@ -293,15 +256,17 @@ export default function Apps(props) {
 	}, []);
 
 	// Add handler for opening edit sheet
-	const handleOpenEditSheet = (app: App) => {
+	const handleOpenEditSheet = async (app: App) => {
 		setSelectedApp(app);
 		setOpenEditSheet(true);
 		// Ensure body pointer events are reset when opening
 		document.body.style.pointerEvents = 'auto';
 		document.body.style.cursor = 'auto';
+		// Fetch fresh data when opening edit sheet
+		await fetchFormData();
 	};
 
-	if (!apps) {
+	if (loading || (!apps && !props.apps)) {
 		return <Spinner />;
 	}
 
@@ -312,16 +277,32 @@ export default function Apps(props) {
 				setOpenDeleteDialog={setOpenDeleteDialog}
 				onDelete={() => deleteApp(selectedAgentId)}
 			/>
-			<EditAppSheet
-				open={openEditSheet}
-				setOpen={setOpenEditSheet}
-				selectedApp={selectedApp}
-				onAppUpdate={fetchApps}
-				toolChoices={toolChoices}
-				modelChoices={modelChoices}
-				agentChoices={agentChoices}
-				fetchFormData={fetchFormData} // Add this prop
-			/>
+			{selectedApp?.type === 'crew' ? (
+				<EditCrewAppSheet
+					open={openEditSheet}
+					setOpen={setOpenEditSheet}
+					selectedApp={selectedApp}
+					onAppUpdate={fetchApps}
+					toolChoices={toolChoices}
+					modelChoices={modelChoices}
+					agentChoices={agentChoices}
+					taskChoices={taskChoices}
+					variableChoices={variableChoices}
+					fetchFormData={fetchFormData}
+				/>
+			) : (
+				<EditChatAppSheet
+					open={openEditSheet}
+					setOpen={setOpenEditSheet}
+					selectedApp={selectedApp}
+					onAppUpdate={fetchApps}
+					toolChoices={toolChoices}
+					modelChoices={modelChoices}
+					agentChoices={agentChoices}
+					fetchFormData={fetchFormData}
+				/>
+			)}
+
 			<main className='text-foreground flex flex-col gap-2'>
 				<section className='flex items-center justify-between mb-4'>
 					<h4 className='text-gray-900 font-semibold text-2xl'>Apps</h4>
@@ -367,7 +348,13 @@ export default function Apps(props) {
 															{app.type === 'chat' ? (
 																<ChatBubbleLeftRightIcon width={20} className='text-gray-800' />
 															) : (
-																<Image src='/process.svg' width={15} height={15} alt='user' />
+																<Image
+																	src='/process.svg'
+																	width={15}
+																	height={15}
+																	alt='user'
+																	unoptimized
+																/>
 															)}
 														</div>
 													</div>

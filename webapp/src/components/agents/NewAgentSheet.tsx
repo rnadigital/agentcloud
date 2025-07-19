@@ -527,7 +527,7 @@ export const AgentSheet = ({
 				</SheetTrigger>
 			)}
 
-			<SheetContent className='text-foreground sm:max-w-[576px] overflow-y-auto'>
+			<SheetContent size='md' className='text-foreground overflow-y-auto'>
 				<SheetHeader>
 					<SheetTitle>
 						<div className='flex items-center gap-2'>
@@ -567,6 +567,66 @@ export const AgentSheet = ({
 										defaultValue={selectedAgent?.name || ''}
 										name='name'
 									/>
+								</div>
+
+								<div className='bg-gray-100 p-4 rounded-lg flex flex-col gap-2'>
+									<div>
+										<h4 className='text-sm text-foreground font-medium'>
+											Help Your Agent Work Smarter
+										</h4>
+										<p className='text-sm text-gray-600'>
+											Equip your agent with essential tools and data to perform tasks effectively.
+											The right setup ensures accurate results and informed decisions.
+										</p>
+									</div>
+
+									<div className='flex flex-col gap-4 text-xs'>
+										<MultiSelect
+											className='bg-white mt-4'
+											placeholder={
+												<div className='flex items-center gap-2'>
+													<Database className='h-4 w-4' />
+													<p>Tools</p>
+												</div>
+											}
+											newCallback={() => setModalOpen('tool')}
+											newLabel='New Tool'
+											options={tools
+												?.filter(t => (t?.type as ToolType) !== ToolType.RAG_TOOL)
+												.map(t => ({
+													label: t.name,
+													value: t._id.toString()
+												}))}
+											onValueChange={values => {
+												const formattedValues = Array.isArray(values) ? values : [];
+												setToolState(formattedValues);
+											}}
+											value={toolState || []}
+										/>
+
+										<MultiSelect
+											className='bg-white'
+											placeholder={
+												<div className='flex items-center gap-2'>
+													<Database className='h-4 w-4' />
+													<p>Connections</p>
+												</div>
+											}
+											newCallback={() => setModalOpen('datasource')}
+											newLabel='New Connection'
+											options={tools
+												?.filter(t => (t?.type as ToolType) === ToolType.RAG_TOOL)
+												.map(t => ({
+													label: t.name,
+													value: t._id.toString()
+												}))}
+											onValueChange={values => {
+												const formattedValues = Array.isArray(values) ? values : [];
+												setDatasourceState(formattedValues);
+											}}
+											value={datasourceState || []}
+										/>
+									</div>
 								</div>
 
 								<div className='grid w-full items-center gap-1.5 relative'>
@@ -697,67 +757,8 @@ export const AgentSheet = ({
 										</DropdownMenuContent>
 									</DropdownMenu>
 								</div>
-
-								<div className='bg-gray-100 p-4 rounded-lg flex flex-col gap-2'>
-									<div>
-										<h4 className='text-sm text-foreground font-medium'>
-											Help Your Agent Work Smarter
-										</h4>
-										<p className='text-sm text-gray-600'>
-											Equip your agent with essential tools and data to perform tasks effectively.
-											The right setup ensures accurate results and informed decisions.
-										</p>
-									</div>
-
-									<div className='flex flex-col gap-4 text-xs'>
-										<MultiSelect
-											className='bg-white mt-4'
-											placeholder={
-												<div className='flex items-center gap-2'>
-													<Database className='h-4 w-4' />
-													<p>Tools</p>
-												</div>
-											}
-											newCallback={() => setModalOpen('tool')}
-											newLabel='New Tool'
-											options={tools
-												?.filter(t => (t?.type as ToolType) !== ToolType.RAG_TOOL)
-												.map(t => ({
-													label: t.name,
-													value: t._id.toString()
-												}))}
-											onValueChange={values => {
-												const formattedValues = Array.isArray(values) ? values : [];
-												setToolState(formattedValues);
-											}}
-											value={toolState || []}
-										/>
-
-										<MultiSelect
-											className='bg-white'
-											placeholder={
-												<div className='flex items-center gap-2'>
-													<Database className='h-4 w-4' />
-													<p>Connections</p>
-												</div>
-											}
-											newCallback={() => setModalOpen('datasource')}
-											newLabel='New Connection'
-											options={tools
-												?.filter(t => (t?.type as ToolType) === ToolType.RAG_TOOL)
-												.map(t => ({
-													label: t.name,
-													value: t._id.toString()
-												}))}
-											onValueChange={values => {
-												const formattedValues = Array.isArray(values) ? values : [];
-												setDatasourceState(formattedValues);
-											}}
-											value={datasourceState || []}
-										/>
-									</div>
-								</div>
 							</section>
+
 							<section className='border-t border-gray-200 pt-4 flex justify-between sticky bottom-0 bg-white text-sm'>
 								<Button
 									onClick={() => setOpenEditSheet(false)}
