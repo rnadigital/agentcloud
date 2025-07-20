@@ -1,19 +1,11 @@
 from .code_execution_tool import CodeExecutionTool
 
 import logging
-import os
-import pathlib
 import re
-import string
-import subprocess
-import sys
-import time
 import inspect
 import json
 
-from concurrent.futures import ThreadPoolExecutor, TimeoutError
-from hashlib import md5
-from typing import Callable, Dict, List, Optional, Tuple, Union, Any
+from typing import Dict, Any
 
 from io import BytesIO
 
@@ -30,10 +22,11 @@ def remove_triple_quotes(text):
     # Substitute found patterns with an empty string
     return re.sub(pattern, "", text)
 
+
 class CodeExecutionUsingDockerNotebookTool(CodeExecutionTool):
 
     def _run(self, args_str: Dict):
-        
+
         args = json.loads(args_str)
         self.execute_function_in_docker(self.function_name, self.code, args)
 
@@ -148,9 +141,7 @@ class CodeExecutionUsingDockerNotebookTool(CodeExecutionTool):
             image_list = (
                 ["python:3"]
                 if use_docker is True
-                else [use_docker]
-                if isinstance(use_docker, str)
-                else use_docker
+                else [use_docker] if isinstance(use_docker, str) else use_docker
             )
 
             # Setup Docker image
@@ -190,7 +181,11 @@ class CodeExecutionUsingDockerNotebookTool(CodeExecutionTool):
             print(f"Function Execution finished with exit code: {exit_code}")
 
             # Retrieve the logs (output)
-            logs = container.logs().decode("utf-8").rstrip()
+            try:
+                logs = container.logs().decode("utf-8").rstrip()
+            except UnicodeDecodeError:
+                # Fallback to replace problematic characters
+                logs = container.logs().decode("utf-8", errors="replace").rstrip()
 
             # Cleanup
             container.remove()

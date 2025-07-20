@@ -46,13 +46,12 @@ class RedisClass(RedisConnection):
 
         """
         try:
-            self.redis_client.hset(hash_key, key, json.dumps(data))
+            self.redis_client.hset(hash_key, key, json.dumps(data, ensure_ascii=False))
             return True
         except Exception as err:
             logging.exception(err.args[0])
             logging.exception(traceback.format_exc())
             return False
-
 
     def get(self, key: str) -> str:
         """
@@ -67,13 +66,14 @@ class RedisClass(RedisConnection):
         try:
             value = self.redis_client.get(key)
             if value is not None:
-                return value.decode('utf-8')
+                return value.decode("utf-8")
             else:
                 return None
         except Exception as err:
             logging.exception(err.args[0])
             logging.exception(traceback.format_exc())
             return None
+
 
 if __name__ == "__main__":
     print(f"Running {__name__}")

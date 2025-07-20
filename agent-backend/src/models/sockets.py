@@ -45,4 +45,5 @@ class SocketMessage(BaseModel):
         # Convert the model to a dictionary and replace enum with its value
         d = self.model_dump()
         d["event"] = d["event"].value  # Convert Enum to string
-        return json.dumps(d, **kwargs)
+        # Ensure UTF-8 encoding and handle Unicode characters properly
+        return json.dumps(d, ensure_ascii=False, **kwargs)
