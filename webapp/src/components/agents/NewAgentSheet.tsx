@@ -537,7 +537,7 @@ export const AgentSheet = ({
 							</p>
 						</div>
 					</SheetTitle>
-					<SheetDescription className='border-t border-gray-200 py-3 px-1'>
+					<div className='border-t border-gray-200 py-3 px-1'>
 						<form onSubmit={agentPost}>
 							<section className='pb-3 flex flex-col gap-4'>
 								<div className='flex justify-between gap-2'>
@@ -772,7 +772,7 @@ export const AgentSheet = ({
 								</Button>
 							</section>
 						</form>
-					</SheetDescription>
+					</div>
 				</SheetHeader>
 			</SheetContent>
 		</Sheet>
