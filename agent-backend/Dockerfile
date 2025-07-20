@@ -29,6 +29,10 @@ FROM python:3.11-slim as runtime
 
 WORKDIR /app
 
+ARG LOG_LEVEL
+
+ENV LOG_LEVEL=$LOG_LEVEL
+
 ENV VIRTUAL_ENV=/app/.venv \
     PATH="/app/.venv/bin:$PATH"
 
