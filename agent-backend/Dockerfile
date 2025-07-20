@@ -33,6 +33,12 @@ ARG LOG_LEVEL
 
 ENV LOG_LEVEL=$LOG_LEVEL
 
+# Set UTF-8 encoding for proper Unicode handling
+ENV PYTHONIOENCODING=utf-8 \
+    PYTHONUTF8=1 \
+    LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8
+
 ENV VIRTUAL_ENV=/app/.venv \
     PATH="/app/.venv/bin:$PATH"
 
