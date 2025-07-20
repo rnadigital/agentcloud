@@ -477,6 +477,15 @@ export const AgentSheet = ({
 		}
 	}, []);
 
+	// Cleanup effect to reset pointer events when component unmounts
+	useEffect(() => {
+		return () => {
+			document.body.style.pointerEvents = 'auto';
+			document.body.style.cursor = 'auto';
+			document.body.style.overflow = 'visible';
+		};
+	}, []);
+
 	function showPreview(e: React.ChangeEvent<HTMLInputElement>) {
 		const file = e.target.files?.[0];
 		if (file) {
@@ -496,6 +505,7 @@ export const AgentSheet = ({
 			open={openEditSheet}
 			onOpenChange={open => {
 				setOpenEditSheet(open);
+
 				// Reset form state when sheet closes
 				if (!open) {
 					setToolState(null);
@@ -506,6 +516,11 @@ export const AgentSheet = ({
 					setIcon(null);
 					setAllowDelegation(false);
 					setVerbose(false);
+
+					// Reset body styles when sheet closes
+					document.body.style.pointerEvents = 'auto';
+					document.body.style.overflow = 'visible';
+					document.body.style.cursor = 'auto';
 				}
 			}}>
 			{modal}
@@ -527,7 +542,18 @@ export const AgentSheet = ({
 				</SheetTrigger>
 			)}
 
-			<SheetContent size='md' className='text-foreground overflow-y-auto'>
+			<SheetContent
+				size='md'
+				className='text-foreground overflow-y-auto max-h-screen'
+				style={{
+					pointerEvents: 'auto'
+				}}
+				onPointerDownOutside={() => {
+					document.body.style.pointerEvents = 'auto';
+				}}
+				onEscapeKeyDown={() => {
+					document.body.style.pointerEvents = 'auto';
+				}}>
 				<SheetHeader>
 					<SheetTitle>
 						<div className='flex items-center gap-2'>
@@ -537,7 +563,7 @@ export const AgentSheet = ({
 							</p>
 						</div>
 					</SheetTitle>
-					<SheetDescription className='border-t border-gray-200 py-3 px-1'>
+					<div className='border-t border-gray-200 py-3 px-1'>
 						<form onSubmit={agentPost}>
 							<section className='pb-3 flex flex-col gap-4'>
 								<div className='flex justify-between gap-2'>
@@ -639,9 +665,8 @@ export const AgentSheet = ({
 										className='bg-gray-50 border border-gray-300'
 										id='role'
 										placeholder='e.g. Data Analyst'
-										defaultValue={selectedAgent?.role || role}
 										rows={3}
-										value={autocompleteRole.text || selectedAgent?.role}
+										value={autocompleteRole.text || selectedAgent?.role || role}
 										onChange={autocompleteRole.handleChange}
 										onKeyDown={autocompleteRole.handleKeyDown}
 									/>
@@ -687,8 +712,7 @@ export const AgentSheet = ({
 										id='goal'
 										className='resize-none h-20 bg-gray-50 border-gray-300'
 										placeholder='Extract actionable insights'
-										defaultValue={selectedAgent?.goal || goal}
-										value={autocompleteGoal.text || selectedAgent?.goal}
+										value={autocompleteGoal.text || selectedAgent?.goal || goal}
 										onChange={autocompleteGoal.handleChange}
 										onKeyDown={autocompleteGoal.handleKeyDown}
 									/>
@@ -713,8 +737,7 @@ export const AgentSheet = ({
 										id='backstory'
 										className='resize-none h-28 bg-gray-50 border-gray-300'
 										placeholder="e.g. You're a data analyst at a large company. You're responsible for analyzing data and providing insights to the business. You're currently working on a project to analyze the performance of our marketing campaigns."
-										defaultValue={selectedAgent?.backstory || backstory}
-										value={autocompleteBackstory.text || selectedAgent?.backstory}
+										value={autocompleteBackstory.text || selectedAgent?.backstory || backstory}
 										onChange={autocompleteBackstory.handleChange}
 										onKeyDown={autocompleteBackstory.handleKeyDown}
 									/>
@@ -731,6 +754,9 @@ export const AgentSheet = ({
 								</div>
 
 								<div className='grid w-full items-center gap-1.5'>
+									<Label className='text-gray-900 font-medium' htmlFor='model'>
+										Model
+									</Label>
 									<DropdownMenu>
 										<DropdownMenuTrigger className='bg-background border border-gray-300 flex items-center justify-between bg-gray-50 px-4 py-2 rounded-lg'>
 											<div className='flex items-center gap-2'>
@@ -772,7 +798,7 @@ export const AgentSheet = ({
 								</Button>
 							</section>
 						</form>
-					</SheetDescription>
+					</div>
 				</SheetHeader>
 			</SheetContent>
 		</Sheet>

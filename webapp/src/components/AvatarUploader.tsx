@@ -111,11 +111,10 @@ export default function AvatarUploader({
 				<label
 					{...getRootProps({ className: 'dropzone', onClick: e => e.stopPropagation() })}
 					htmlFor='file'
-					className='block text-center h-full cursor-pointer'
-				>
+					className='block text-center h-full cursor-pointer'>
 					<input id='file' {...getInputProps({ className: 'w-full h-full' })} />
 					{isDragActive ? (
-						<p>Drop the icon here ...</p>
+						<span>Drop the icon here ...</span>
 					) : uploading ? (
 						<ButtonSpinner className='ms-1 mt-9' size={20} />
 					) : files?.length > 0 ? (
