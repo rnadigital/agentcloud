@@ -65,7 +65,7 @@ async fn main() -> std::io::Result<()> {
     log::info!("Starting Vector DB Proxy APP...");
     let global_data = GLOBAL_DATA.read().await;
     let _ = set_all_env_vars().await;
-    let logging_level = global_data.logging_level.clone();
+    let logging_level = global_data.logging_level.clone().to_lowercase();
     let host = global_data.host.clone();
     let port = global_data.port.clone();
 
