@@ -22,7 +22,7 @@ QDRANT_HOST = f"{QDRANT_HOSTNAME}:{QDRANT_PORT}"
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
 REDIS_HOST = os.getenv("REDIS_HOST")
 REDIS_PORT = 6379
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO") or "INFO"
 GOOGLE_FUNCTION_LOCATION = os.getenv("GOOGLE_FUNCTION_LOCATION", "us-central1")
 PROJECT_ID = os.getenv("PROJECT_ID")
 GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME")
@@ -31,6 +31,7 @@ UPLOADS_BASE_PATH = os.getenv("UPLOADS_BASE_PATH")
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 VECTOR_DATABASE = os.getenv("VECTOR_DATABASE", VectorDatabase.Qdrant)
 HOSTED_PINECONE_API_KEY = os.getenv("HOSTED_PINECONE_API_KEY")
+
 
 def _set_max_threads() -> int:
     try:
