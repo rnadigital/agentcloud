@@ -6,7 +6,6 @@ import SessionChatbox from 'components/SessionChatbox';
 import { useAccountContext } from 'context/account';
 import { useChatContext } from 'context/chat';
 import { useSocketContext } from 'context/socket';
-import debug from 'debug';
 import useActiveTask from 'hooks/session/useActiveTask';
 import Head from 'next/head';
 import { usePathname, useSearchParams } from 'next/navigation';
@@ -16,7 +15,6 @@ import ContentLoader from 'react-content-loader';
 import { toast } from 'react-toastify';
 import { AppType } from 'struct/app';
 import { SessionStatus } from 'struct/session';
-const log = debug('webapp:socket');
 import SessionVariableForm from 'components/session/SessionVariableForm';
 import { SessionDataReturnType, SessionJsonReturnType } from 'controllers/session';
 
@@ -24,6 +22,8 @@ interface SessionProps extends SessionDataReturnType {
 	sessionId: string;
 	resourceSlug: string;
 }
+
+const log = createLogger('webapp:session');
 
 export default function Session(props: SessionProps) {
 	const scrollContainerRef = useRef(null);
@@ -179,7 +179,7 @@ export default function Session(props: SessionProps) {
 	}, [sessionId]);
 
 	function handleSocketJoined(joinMessage) {
-		log('Received chat joined %s', joinMessage);
+		log.info('Received chat joined %s', joinMessage);
 		updateChat();
 		scrollToBottom('smooth');
 	}

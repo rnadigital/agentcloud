@@ -1,8 +1,8 @@
-import debug from 'debug';
 import VectorDBProxyClient from 'lib/vectorproxy/client';
 import { pricingMatrix } from 'struct/billing';
+import { createLogger } from 'utils/logger';
 
-const log = debug('lib:vectorproxy:limit');
+const log = createLogger('lib:vectorproxy:limit');
 
 export async function isVectorLimitReached(resourceSlug, currentPlan) {
 	try {
@@ -10,7 +10,7 @@ export async function isVectorLimitReached(resourceSlug, currentPlan) {
 		const teamVectorStorage = await VectorDBProxyClient.getVectorStorageForTeam(resourceSlug);
 		const storageVectorCount = teamVectorStorage?.data?.total_points;
 
-		log('current team vector storage count:', storageVectorCount);
+		log.info('current team vector storage count:', storageVectorCount);
 
 		// Retrieve the plan limits
 		const planLimits = pricingMatrix[currentPlan];
@@ -20,7 +20,7 @@ export async function isVectorLimitReached(resourceSlug, currentPlan) {
 				planLimits.maxVectorStorageBytes / (1536 * (32 / 8))
 			); // Note: this is approximate
 
-			log('plan approx. max vector count:', approxVectorCountLimit);
+			log.info('plan approx. max vector count:', approxVectorCountLimit);
 
 			// Check if the storage vector count has reached or exceeded the limit
 			if (storageVectorCount >= approxVectorCountLimit) {
@@ -29,7 +29,7 @@ export async function isVectorLimitReached(resourceSlug, currentPlan) {
 		}
 		return false; // Limit not reached
 	} catch (error) {
-		log('Error checking vector limit:', error);
+		log.error('Error checking vector limit:', error);
 		return false; // In case of error, assume limit is not reached
 	}
 }

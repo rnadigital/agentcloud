@@ -30,17 +30,18 @@ import {
 } from 'db/session';
 import { getTaskById } from 'db/task';
 import { getVariableById } from 'db/variable';
-import debug from 'debug';
 import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
 import { sessionTaskQueue } from 'queue/bull';
 import { client } from 'redis/redis';
 import { v4 as uuidv4 } from 'uuid';
-const log = debug('webapp:controllers:session');
 import { App, AppType } from 'struct/app';
 import { SessionStatus } from 'struct/session';
 import { Variable } from 'struct/variable';
 import { chainValidations } from 'utils/validationutils';
+import { createLogger } from 'utils/logger';
+
+const log = createLogger('webapp:controllers:session');
 
 export async function sessionsData(req, res, _next) {
 	const before = req?.query?.before === 'null' ? null : req?.query?.before;
@@ -279,9 +280,9 @@ export async function sessionMessagesJson(req, res, next) {
 		const agent = await getAgentById(req.params.resourceSlug, app.chatAppConfig.agentId);
 		if (agent?.variableIds) {
 			if (agent?.variableIds.length === 0) {
-				log('activeSessionRooms in getsessionmessagesjson', activeSessionRooms);
+				log.info('activeSessionRooms in getsessionmessagesjson', activeSessionRooms);
 				if (!activeSessionRooms.includes(`_${sessionId}`)) {
-					log('Resuming session', sessionId);
+					log.info('Resuming session', sessionId);
 					activeSessionRooms.push(`_${sessionId}`);
 					sessionTaskQueue.add(
 						'execute_rag',
@@ -294,9 +295,9 @@ export async function sessionMessagesJson(req, res, next) {
 				}
 			}
 		} else {
-			log('activeSessionRooms in getsessionmessagesjson', activeSessionRooms);
+			log.info('activeSessionRooms in getsessionmessagesjson', activeSessionRooms);
 			if (!activeSessionRooms.includes(`_${sessionId}`)) {
-				log('Resuming session', sessionId);
+				log.info('Resuming session', sessionId);
 				activeSessionRooms.push(`_${sessionId}`);
 				sessionTaskQueue.add(
 					'execute_rag',
@@ -549,7 +550,7 @@ export async function sendMessage(req, res, next) {
 	try {
 		const { sessionId } = req.params;
 		const { messageText } = req.body;
-		log(
+		log.info(
 			`Sending message with found req.params = ${req.params.sessionId}\nand req.body.messageText = ${req.body.messageText}\nand req.body.sessionId = ${req.body.sessionId}`
 		);
 
@@ -579,7 +580,7 @@ export async function sendMessage(req, res, next) {
 
 		if (!activeSessionRooms.includes(activeRoomSessionId)) {
 			activeSessionRooms.forEach(v => {
-				log(`roomId: ${v}`);
+				log.info(`roomId: ${v}`);
 			});
 			return dynamicResponse(req, res, 400, {
 				error: 'Attempting to send message to inactive session.'
@@ -653,7 +654,7 @@ export async function sendMessage(req, res, next) {
 			message: 'Message sent successfully'
 		});
 	} catch (error) {
-		console.error(error);
+		log.error(error);
 		return dynamicResponse(req, res, 500, {
 			error: 'Internal server error'
 		});

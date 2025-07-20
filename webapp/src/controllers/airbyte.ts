@@ -13,7 +13,6 @@ import {
 	unsafeGetDatasourceById
 } from 'db/datasource';
 import { addNotification } from 'db/notification';
-import debug from 'debug';
 import * as airbyteSetup from 'lib/airbyte/setup';
 import posthog from 'lib/posthog';
 import { chainValidations } from 'lib/utils/validationutils';
@@ -24,10 +23,9 @@ import { NotificationDetails, NotificationType, WebhookType } from 'struct/notif
 import { v4 as uuidv4 } from 'uuid';
 
 import { getTeamById } from '../db/team';
-const warn = debug('webapp:controllers:airbyte:warning');
-warn.log = console.warn.bind(console); //set namespace to log
-const log = debug('webapp:controllers:airbyte');
-log.log = console.log.bind(console); //set namespace to log
+import { createLogger } from 'utils/logger';
+
+const log = createLogger('webapp:controllers:airbyte');
 
 export async function connectorsJson(req, res, next) {
 	const internalApi = await getAirbyteInternalApi();
@@ -138,11 +136,11 @@ export async function discoverSchemaApi(req, res, next) {
 		sourceId: datasource.sourceId,
 		disable_cache: true //Note: should this always be true? For now, yes
 	};
-	log('discoverSchemaBody %O', discoverSchemaBody);
+	log.info('discoverSchemaBody %O', discoverSchemaBody);
 	const discoveredSchema = await internalApi
 		.discoverSchemaForSource(null, discoverSchemaBody)
 		.then(res => res.data);
-	log('discoveredSchema %O', discoveredSchema);
+	log.info('discoveredSchema %O', discoveredSchema);
 
 	// Get stream properties to get correct sync modes from airbyte
 	let streamProperties;
@@ -152,16 +150,16 @@ export async function discoverSchemaApi(req, res, next) {
 			sourceId: datasource.sourceId,
 			destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID
 		};
-		log('streamPropertiesBody', streamPropertiesBody);
+		log.info('streamPropertiesBody', streamPropertiesBody);
 		streamProperties = await streamsApi
 			.getStreamProperties(streamPropertiesBody)
 			.then(res => res.data);
-		log('streamProperties', JSON.stringify(streamProperties, null, 2));
+		log.info('streamProperties', JSON.stringify(streamProperties, null, 2));
 		if (!streamProperties) {
 			return dynamicResponse(req, res, 400, { error: 'Stream properties not found' });
 		}
 	} catch (e) {
-		log(e);
+		log.error(e);
 		return dynamicResponse(req, res, 400, {
 			error: `Failed to discover datasource schema: ${e?.response?.data?.detail || e}`
 		});
@@ -183,7 +181,7 @@ async function extractWebhookDetails(responseData) {
 }
 
 export async function handleSuccessfulSyncWebhook(req, res, next) {
-	log('handleSuccessfulSyncWebhook body %O', req.body);
+	log.info('handleSuccessfulSyncWebhook body %O', req.body);
 
 	//TODO: validate some kind of webhook key
 
@@ -234,14 +232,14 @@ export async function handleSuccessfulSyncWebhook(req, res, next) {
 			io.to(datasource.teamId.toString()).emit('notification', notification);
 		}
 	} else {
-		warn(`No match found in sync-success webhook body: ${JSON.stringify(req.body)}`);
+		log.warn(`No match found in sync-success webhook body: ${JSON.stringify(req.body)}`);
 	}
 
 	return dynamicResponse(req, res, 200, {});
 }
 
 export async function handleProblemWebhook(req, res, next) {
-	log('handleProblemWebhook body %s', JSON.stringify(req.body));
+	log.info('handleProblemWebhook body %s', JSON.stringify(req.body));
 
 	//TODO: validate some kind of webhook key?
 
@@ -268,7 +266,7 @@ export async function handleProblemWebhook(req, res, next) {
 
 	const { jobId, datasourceId, logUrl } = await extractWebhookDetails(req.body || {});
 
-	log('extractWebhookDetails', { jobId, datasourceId, logUrl });
+	log.info('extractWebhookDetails', { jobId, datasourceId, logUrl });
 
 	if (datasourceId) {
 		const datasource = await unsafeGetDatasourceById(datasourceId);
@@ -294,7 +292,7 @@ export async function handleProblemWebhook(req, res, next) {
 			}
 		};
 		if (posthog) {
-			log('posthog.capture %O', posthogBody);
+			log.info('posthog.capture %O', posthogBody);
 			posthog.capture(posthogBody);
 		}
 	}
@@ -303,7 +301,7 @@ export async function handleProblemWebhook(req, res, next) {
 }
 
 export async function handleSuccessfulEmbeddingWebhook(req, res, next) {
-	log('handleSuccessfulEmbeddingWebhook body %O', req.body);
+	log.info('handleSuccessfulEmbeddingWebhook body %O', req.body);
 
 	//TODO: validate some kind of webhook key
 

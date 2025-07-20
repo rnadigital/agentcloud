@@ -3,9 +3,7 @@
 import { Account, getAccountById } from 'db/account';
 import { getKeyById } from 'db/apikey';
 import { getOrgById, Org } from 'db/org';
-import debug from 'debug';
 import jwt from 'jsonwebtoken';
-const log = debug('webapp:middleware:auth:usejwt');
 
 export type JWTData = {
 	accountId: string;

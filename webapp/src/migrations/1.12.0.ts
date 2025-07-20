@@ -1,11 +1,11 @@
-import debug from 'debug';
+import { createLogger } from 'utils/logger';
 import { CollectionName } from 'lib/struct/db';
 import { ObjectId } from 'mongodb';
 import { ToolType } from 'struct/tool';
-const log = debug('webapp:migration:1.12.0');
+const log = createLogger('webapp:migration:1.12.0');
 
 export default async function (db) {
-	log('Add new builtin firecrawl html scraper tool to tools db');
+	log.info('Add new builtin firecrawl html scraper tool to tools db');
 
 	//add the new tool into the db with no teamId or orgId (that should default it to every org and team as an option to add)
 	await db.collection('tools').insertOne({

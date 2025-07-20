@@ -1,6 +1,5 @@
 import { Logging } from '@google-cloud/logging';
 import archiver from 'archiver';
-import debug from 'debug';
 import { StandardRequirements, WrapToolCode } from 'function/base';
 import * as protofiles from 'google-proto-files';
 import StorageProviderFactory from 'lib/storage';
@@ -12,8 +11,9 @@ const protopath = protofiles.getProtoPath(
 const root = protofiles.loadSync(protopath);
 const auditLogProto = root.lookupType('google.cloud.audit.AuditLog');
 import FunctionProvider from './provider';
+import { createLogger } from 'utils/logger';
 
-const log = debug('webapp:function:google');
+const log = createLogger('webapp:function:google');
 
 class GoogleFunctionProvider extends FunctionProvider {
 	// TODO: type these?

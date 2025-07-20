@@ -1,14 +1,14 @@
 'use strict';
 
 import * as db from 'db/index';
-import debug from 'debug';
 import toObjectId from 'misc/toobjectid';
 import { UpdateResult } from 'mongodb'; //TODO: put these in all other db update* return types
 import { InsertResult } from 'struct/db';
 import GlobalTools from 'struct/globaltools';
 import { Tool, ToolState, ToolType } from 'struct/tool';
+import { createLogger } from 'utils/logger';
 
-const log = debug('webapp:db:tools');
+const log = createLogger('webapp:db:tools');
 
 export function ToolCollection(): any {
 	return db.db().collection('tools');
@@ -16,7 +16,7 @@ export function ToolCollection(): any {
 
 export async function initGlobalTools() {
 	if (GlobalTools.length === 0) {
-		log('No global tools found.');
+		log.info('No global tools found.');
 		return;
 	}
 

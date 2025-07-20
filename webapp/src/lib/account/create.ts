@@ -8,7 +8,6 @@ import { addAccount, OAuthRecordType } from 'db/account';
 import { addOrg, setOrgStripeCustomerId, updateOrgStripeCustomer } from 'db/org';
 import { addTeam } from 'db/team';
 import { addVerification, VerificationTypes } from 'db/verification';
-import debug from 'debug';
 import InviteEmail from 'emails/Invite';
 import VerificationEmail from 'emails/Verification';
 import * as ses from 'lib/email/ses';
@@ -21,8 +20,9 @@ import SecretKeys from 'secret/secretkeys';
 import { priceToPlanMap, SubscriptionPlan } from 'struct/billing';
 import { InsertResult } from 'struct/db';
 import { OAUTH_PROVIDER } from 'struct/oauth';
+import { createLogger } from 'utils/logger';
 
-const log = debug('webapp:middleware:lib:account:create');
+const log = createLogger('webapp:middleware:lib:account:create');
 
 interface CreateAccountArgs {
 	email: string;
@@ -138,7 +138,7 @@ export default async function createAccount({
 		let foundCheckoutSession;
 		if (checkoutSessionId) {
 			emailVerified = false;
-			log('Account creation attempted with checkoutSession %s', checkoutSessionId);
+			log.info('Account creation attempted with checkoutSession %s', checkoutSessionId);
 			//If passing a checkout session ID, try to fetch the customer ID and current sub details, and set it on the new account
 			foundCheckoutSession = await StripeClient.get().checkout.sessions.retrieve(checkoutSessionId);
 			const customerId = foundCheckoutSession?.customer as string;
@@ -171,7 +171,7 @@ export default async function createAccount({
 					}
 				}
 			});
-			log('Subscription created for new user: %O', subscription);
+			log.info('Subscription created for new user: %O', subscription);
 			await setOrgStripeCustomerId(orgId, stripeCustomer.id);
 			await updateOrgStripeCustomer(orgId, {
 				stripePlan: priceToPlanMap[process.env.STRIPE_PRO_PLAN_PRICE_ID],

@@ -1,14 +1,15 @@
-import debug from 'debug';
 import SecretProviderFactory from 'secret/index';
 import SecretKeys from 'secret/secretkeys';
 import Stripe from 'stripe';
-const log = debug('webapp:stripe');
+import { createLogger } from 'utils/logger';
+
+const log = createLogger('webapp:stripe');
 
 class StripeClient {
 	#stripeClient;
 
 	async init() {
-		log('Initializing stripe client');
+		log.info('Initializing stripe client');
 		try {
 			// Get stripe secret
 			const secretProvider = SecretProviderFactory.getSecretProvider();
@@ -19,9 +20,9 @@ class StripeClient {
 			// Initialize the Stripe client
 			this.#stripeClient = new Stripe(STRIPE_ACCOUNT_SECRET);
 		} catch (e) {
-			log(e);
+			log.error(e);
 		}
-		log('Stripe client initialized');
+		log.info('Stripe client initialized');
 	}
 
 	get() {

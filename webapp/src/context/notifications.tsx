@@ -1,11 +1,13 @@
 import * as API from '@api';
 import { useAccountContext } from 'context/account';
 import { useSocketContext } from 'context/socket';
-import debug from 'debug';
 import { useRouter } from 'next/router';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
-const log = debug('webapp:context:notifications');
+
+import { createLogger } from 'utils/logger';
+
+const log = createLogger('webapp:context:notifications');
 
 const NotificationContext = createContext({});
 
@@ -19,7 +21,7 @@ export function NotificationWrapper({ children }) {
 	const [socketContext]: any = useSocketContext();
 
 	function refreshNotificationContext() {
-		log('refreshNotificationContext()');
+		log.info('refreshNotificationContext()');
 		if (!resourceSlug) {
 			return;
 		}
@@ -28,7 +30,7 @@ export function NotificationWrapper({ children }) {
 				resourceSlug
 			},
 			data => {
-				log('refreshNotificationContext', data);
+				log.info('refreshNotificationContext', data);
 				setSharedState(data?.notifications);
 			},
 			null,

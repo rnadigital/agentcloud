@@ -1,10 +1,8 @@
 'use strict';
 
 import { createAdapter } from '@socket.io/redis-adapter';
-import debug from 'debug';
 import { client } from 'lib/redis/redis';
 import { Server } from 'socket.io';
-const log = debug('webapp:socket');
 import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
 dotenv.config({ path: '.env' });
@@ -27,7 +25,9 @@ import {
 import { SessionStatus } from 'struct/session';
 
 import { SharingMode } from './lib/struct/sharing';
+import { createLogger } from 'utils/logger';
 
+const log = createLogger('webapp:socket');
 export const io = new Server();
 
 //TODO: move this state into redis once we expand webapp beyond 1 pod
@@ -51,7 +51,7 @@ export function initSocket(rawHttpServer) {
 			socket.request['locals'] = {};
 		}
 		const backendToken = socket.request.headers['x-agent-backend-socket-token'] || '';
-		log('socket.id %O backendToken %O', socket.id, backendToken);
+		log.info('socket.id %O backendToken %O', socket.id, backendToken);
 		socket.request['locals'].isAgentBackend =
 			backendToken.length === process.env.AGENT_BACKEND_SOCKET_TOKEN.length &&
 			timingSafeEqual(
@@ -77,20 +77,20 @@ export function initSocket(rawHttpServer) {
 	// });
 
 	io.on('connection', async socket => {
-		log('socket.id "%s" connected', socket.id);
+		log.info('socket.id "%s" connected', socket.id);
 
 		socket.onAny((eventName, ...args) => {
-			log('socket.id "%s" event "%s" args: %O', socket.id, eventName, args);
+			log.debug('socket.id "%s" event "%s" args: %O', socket.id, eventName, args);
 		});
 
 		socket.on('leave_room', async (room: string) => {
-			log('socket.id "%s" leave_room %s', socket.id, room);
+			log.info('socket.id "%s" leave_room %s', socket.id, room);
 			socket.leave(room);
 		});
 
 		socket.on('join_room', async (room: string) => {
 			const socketRequest = socket.request as any;
-			log('socket.id "%s" join_room %s', socket.id, room);
+			log.info('socket.id "%s" join_room %s', socket.id, room);
 			if (!room) {
 				return;
 			}
@@ -100,7 +100,7 @@ export function initSocket(rawHttpServer) {
 				)
 			) {
 				// Room name is same as a team id
-				log('socket.id "%s" joined team notification room %s', socket.id, room);
+				log.info('socket.id "%s" joined team notification room %s', socket.id, room);
 				socket.join(room);
 				return socket.emit('joined', room);
 			}
@@ -119,7 +119,7 @@ export function initSocket(rawHttpServer) {
 			}
 
 			if (socketRequest.locals.isAgentBackend === false) {
-				log('emitting join to %s', room);
+				log.info('emitting join to %s', room);
 				socket.emit('joined', room); //only send to webapp clients
 			} else {
 				updateActiveSessionRooms();
@@ -132,7 +132,7 @@ export function initSocket(rawHttpServer) {
 				? unsafeGetSessionById(data.room)
 				: getSessionById(socketRequest?.locals?.account?.currentTeam, data.room));
 			if (!session) {
-				return log('socket.id "%s" stop_generating invalid session %O', socket.id, data);
+				return log.error('socket.id "%s" stop_generating invalid session %O', socket.id, data);
 			}
 			client.set(`${data.room}_stop`, '1');
 			await (socketRequest.locals.isAgentBackend === true
@@ -149,7 +149,7 @@ export function initSocket(rawHttpServer) {
 			const socketRequest = socket.request as any;
 			data.event = data.event || 'message';
 
-			log('socket.id "%s" event "message" args: %O', socket.id, data);
+			log.debug('socket.id "%s" event "message" args: %O', socket.id, data);
 
 			if (typeof data.message !== 'object') {
 				data.message = {
@@ -191,11 +191,15 @@ export function initSocket(rawHttpServer) {
 			};
 
 			if (!finalMessage.room || finalMessage.room.length !== 24) {
-				return log('socket.id "%s" finalMessage invalid room %s', socket.id, finalMessage.room);
+				return log.error(
+					'socket.id "%s" finalMessage invalid room %s',
+					socket.id,
+					finalMessage.room
+				);
 			}
 			const session = await unsafeGetSessionById(finalMessage.room);
 			if (!session) {
-				log('socket.id "%s" invalid session %s', socket.id, finalMessage.room);
+				log.error('socket.id "%s" invalid session %s', socket.id, finalMessage.room);
 				return;
 			}
 			await unsafeSetSessionUpdatedDate(finalMessage.room);
@@ -221,7 +225,7 @@ export function initSocket(rawHttpServer) {
 			const newStatus = finalMessage?.isFeedback ? SessionStatus.WAITING : SessionStatus.RUNNING;
 			if (newStatus !== session.status) {
 				//Note: chat messages can be received out of order
-				log(
+				log.info(
 					'socket.id "%s" updating session %s status to %s',
 					socket.id,
 					finalMessage.room,
@@ -233,7 +237,7 @@ export function initSocket(rawHttpServer) {
 				io.to(data.room).emit('status', newStatus);
 			}
 			if (finalMessage.message && finalMessage.incoming === true) {
-				log(
+				log.debug(
 					'socket.id "%s" relaying message %O to private room %s',
 					socket.id,
 					finalMessage,

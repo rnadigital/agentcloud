@@ -1,11 +1,11 @@
 'use strict';
 
-import debug from 'debug';
 import { OpenAPIClientAxios } from 'openapi-client-axios';
 import { expire, get, set } from 'redis/redis';
 const CACHE_KEY = 'airbyte_access_token';
 import { ListJobsBody } from 'struct/syncserver';
-const log = debug('airbyte:public-api');
+import { createLogger } from 'utils/logger';
+const log = createLogger('airbyte:public-api');
 
 export enum AirbyteApiType {
 	WORKSPACES,
@@ -31,10 +31,10 @@ export async function getAirbyteAuthToken() {
 	// Check if the token is already cached
 	let token = await get(CACHE_KEY);
 	if (token) {
-		log('Returning cached Airbyte auth token:', token);
+		log.info('Returning cached Airbyte auth token:', token);
 		return token;
 	}
-	log('Token not found in cache, fetching new token...');
+	log.info('Token not found in cache, fetching new token...');
 	return fetch(
 		`${process.env.AIRBYTE_WEB_URL}${process.env.AIRBYTE_WEB_URL === 'https://api.airbyte.com' ? '' : '/api'}/v1/applications/token`,
 		{
@@ -51,11 +51,11 @@ export async function getAirbyteAuthToken() {
 	)
 		.then(res => res.json())
 		.then(async json => {
-			log('getAirbyteAuthToken json:', JSON.stringify(json, null, 2));
+			log.info('getAirbyteAuthToken json:', JSON.stringify(json, null, 2));
 			const token = json?.access_token || '';
 			if (token) {
 				await set(CACHE_KEY, token, 60);
-				log('Token cached for 60 seconds.');
+				log.info('Token cached for 60 seconds.');
 			}
 			return token;
 		});
@@ -119,14 +119,14 @@ export async function fetchAllAirbyteJobs(options?: Partial<ListJobsBody>) {
 			const offsetUrl = new URL(jobsRes.next);
 			newOffset = offsetUrl?.searchParams?.get('offset');
 		} catch (e) {
-			log(e);
+			log.info(e);
 		}
 		// if an offset was able to be extracted from the URL, set it in the body for the next request
 		if (newOffset) {
 			listJobsBody.offset = newOffset;
 		}
 	}
-	log('combinedJobList', combinedJobList);
+	log.info('combinedJobList', combinedJobList);
 	return combinedJobList;
 }
 

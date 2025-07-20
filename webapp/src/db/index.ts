@@ -1,11 +1,11 @@
 'use strict';
 
-import debug from 'debug';
-const log = debug('webapp:db');
 import { MongoClient, ObjectId } from 'mongodb';
 import mongoose from 'mongoose';
+import { createLogger } from 'utils/logger';
 
 export type IdOrStr = string | ObjectId;
+const log = createLogger('webapp:db');
 
 let _client: MongoClient | null = null;
 
@@ -14,10 +14,10 @@ export async function connect() {
 		_client = new MongoClient(process.env.DB_URL, {
 			maxPoolSize: 10
 		});
-		log('connecting to mongodb');
+		log.info('connecting to mongodb');
 		await _client.connect();
 	} else {
-		log('mongodb connection already established');
+		log.info('mongodb connection already established');
 	}
 }
 
@@ -32,9 +32,9 @@ export function db() {
 export async function connectMongooseDB() {
 	try {
 		await mongoose.connect(process.env.DB_URL);
-		log('Mongoose connected successfully');
+		log.info('Mongoose connected successfully');
 	} catch (error) {
-		log('Mongoose connection error:', error);
+		log.error('Mongoose connection error:', error);
 		process.exit(1);
 	}
 }

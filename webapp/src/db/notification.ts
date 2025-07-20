@@ -1,13 +1,10 @@
 'use strict';
 
 import * as db from 'db/index';
-import debug from 'debug';
 import toObjectId from 'misc/toobjectid';
-import { ObjectId } from 'mongodb';
 import { InsertResult } from 'struct/db';
 import { Notification } from 'struct/notification';
-
-const log = debug('webapp:db:notifications');
+import { createLogger } from 'utils/logger';
 
 export function NotificationsCollection(): any {
 	return db.db().collection('notifications');

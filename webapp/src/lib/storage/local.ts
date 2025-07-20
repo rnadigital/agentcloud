@@ -1,10 +1,10 @@
-import debug from 'debug';
 import fs from 'fs';
 import StorageProvider from 'lib/storage/provider';
 import path from 'path';
 import util from 'util';
+import { createLogger } from 'utils/logger';
 
-const log = debug('webapp:storage:local');
+const log = createLogger('webapp:storage:local');
 
 let mkdir, unlink, writeFile;
 if (typeof fs?.mkdir === 'function') {
@@ -31,7 +31,7 @@ class LocalStorageProvider extends StorageProvider {
 		try {
 			await mkdir(this.#basePath, { recursive: true });
 		} catch (e) {
-			log(`Failed to create base directory: ${e.message}`);
+			log.error(`Failed to create base directory: ${e.message}`);
 			throw e;
 		}
 	}
@@ -40,9 +40,9 @@ class LocalStorageProvider extends StorageProvider {
 		const filePath = path.join(this.#basePath, filename);
 		try {
 			await writeFile(filePath, uploadedFile.data);
-			log(`File '${filename}' uploaded successfully.`);
+			log.info(`File '${filename}' uploaded successfully.`);
 		} catch (e) {
-			log(`Failed to upload file: ${e.message}`);
+			log.error(`Failed to upload file: ${e.message}`);
 			throw e;
 		}
 	}
@@ -56,9 +56,9 @@ class LocalStorageProvider extends StorageProvider {
 		const filePath = path.join(this.#basePath, filename);
 		try {
 			await writeFile(filePath, content);
-			log(`Buffer uploaded to '${filename}' successfully.`);
+			log.info(`Buffer uploaded to '${filename}' successfully.`);
 		} catch (e) {
-			log(`Failed to upload buffer: ${e.message}`);
+			log.error(`Failed to upload buffer: ${e.message}`);
 			throw e;
 		}
 	}
@@ -74,11 +74,11 @@ class LocalStorageProvider extends StorageProvider {
 			// Write the content to the destination file
 			await writeFile(destinationFilePath, fileContent);
 
-			log(`File cloned successfully from '${sourceFilename}' to '${destinationFilename}'`);
+			log.info(`File cloned successfully from '${sourceFilename}' to '${destinationFilename}'`);
 
 			return destinationFilePath;
 		} catch (err) {
-			log(`Failed to clone file: ${err.message}`);
+			log.error(`Failed to clone file: ${err.message}`);
 			throw err;
 		}
 	}
@@ -87,10 +87,10 @@ class LocalStorageProvider extends StorageProvider {
 		const filePath = path.join(this.#basePath, filename);
 		try {
 			await unlink(filePath);
-			log(`File '${filename}' deleted successfully.`);
+			log.info(`File '${filename}' deleted successfully.`);
 		} catch (e) {
 			if (!LocalStorageProvider.allowedDeleteErorCodes.includes(e?.code)) {
-				log(`Failed to delete file: ${e.message}`);
+				log.error(`Failed to delete file: ${e.message}`);
 				throw e;
 			}
 		}

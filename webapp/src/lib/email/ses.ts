@@ -1,10 +1,10 @@
 'use strict';
 
 import { SendEmailCommand, SESClient } from '@aws-sdk/client-ses';
-import debug from 'debug';
 import SecretKeys from 'lib/secret/secretkeys';
 import SecretProviderFactory from 'secret/index';
-const log = debug('webapp:email');
+import { createLogger } from 'utils/logger';
+const log = createLogger('webapp:email');
 
 let amazonAccessID;
 let amazonSecretAccessKey;
@@ -27,7 +27,7 @@ export async function init() {
 		});
 	} catch (e) {
 		console.error(e);
-		log('No aws ses keys found in secret manager, emails disabled');
+		log.debug('No aws ses keys found in secret manager, emails disabled');
 	}
 }
 
@@ -35,7 +35,7 @@ export async function sendEmail(options) {
 	if (!sesClient) {
 		return;
 	}
-	log('Sending email', options);
+	log.info('Sending email', options);
 	const emailParams = {
 		Source: options.from,
 		Destination: {

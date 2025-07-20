@@ -2,15 +2,14 @@
 
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import { Account, addAccount, getAccountByOAuthOrEmail, setAccountOauth } from 'db/account';
-import debug from 'debug';
 import createAccount from 'lib/account/create';
 import { ObjectId } from 'mongodb';
 import SecretKeys from 'secret/secretkeys';
 import { OAUTH_PROVIDER, OAuthStrategy } from 'struct/oauth';
 
 import { addOrg, getOrgById, Org } from '../db/org';
-import { addTeam } from '../db/team';
-const log = debug('webapp:oauth');
+import { createLogger } from 'utils/logger';
+const log = createLogger('webapp:oauth');
 
 //To reduce some boilerplace in the router, allows us to just loop and create handlers for each service
 import { Strategy as GitHubStrategy } from 'passport-github';
@@ -46,7 +45,7 @@ export const OAUTH_STRATEGIES: OAuthStrategy[] = [
 ];
 
 export async function githubCallback(accessToken, refreshToken, profile, done) {
-	log(`githubCallback profile: ${JSON.stringify(profile, null, '\t')}`);
+	log.info(`githubCallback profile: ${JSON.stringify(profile, null, '\t')}`);
 	const emails = await fetch('https://api.github.com/user/emails', {
 		headers: {
 			'User-Agent': 'Agentcloud',
@@ -61,7 +60,7 @@ export async function githubCallback(accessToken, refreshToken, profile, done) {
 		profile.provider,
 		profile.email
 	);
-	log('githubCallback account', account);
+	log.info('githubCallback account', account);
 	await createUpdateAccountOauth(
 		account,
 		profile.email,
@@ -73,7 +72,7 @@ export async function githubCallback(accessToken, refreshToken, profile, done) {
 }
 
 export async function googleCallback(accessToken, refreshToken, profile, done) {
-	log(`googleCallback profile: ${JSON.stringify(profile, null, '\t')}`);
+	log.info(`googleCallback profile: ${JSON.stringify(profile, null, '\t')}`);
 	const verifiedEmail = profile.emails.find(e => e.verified === true).value;
 	profile.provider = OAUTH_PROVIDER.GOOGLE;
 	profile.email = verifiedEmail;
@@ -82,7 +81,7 @@ export async function googleCallback(accessToken, refreshToken, profile, done) {
 		profile.provider,
 		profile.email
 	);
-	log('googleCallback account', account);
+	log.info('googleCallback account', account);
 	await createUpdateAccountOauth(
 		account,
 		verifiedEmail,
@@ -104,12 +103,12 @@ export async function googleCallback(accessToken, refreshToken, profile, done) {
 // }
 
 export async function serializeHandler(user, done) {
-	log('serializeHandler user', user);
+	log.info('serializeHandler user', user);
 	done(null, { oauthId: user.id, provider: user.provider });
 }
 
 export async function deserializeHandler(obj, done) {
-	log('deserializeHandler obj', obj);
+	log.info('deserializeHandler obj', obj);
 	const { oauthId, provider } = obj;
 	// Use provider information to retrieve the user e.g.
 	const account: Account = await getAccountByOAuthOrEmail(oauthId, provider, null);

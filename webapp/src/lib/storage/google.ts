@@ -1,9 +1,9 @@
 import { Storage } from '@google-cloud/storage';
-import debug from 'debug';
 
 import StorageProvider from './provider';
+import { createLogger } from 'utils/logger';
 
-const log = debug('webapp:storage:google');
+const log = createLogger('webapp:storage:google');
 
 class GoogleStorageProvider extends StorageProvider {
 	#storageClient: any;
@@ -31,20 +31,20 @@ class GoogleStorageProvider extends StorageProvider {
 				},
 				...options
 			});
-			log(`GCS Bucket ${bucket.name} created.`);
+			log.info(`GCS Bucket ${bucket.name} created.`);
 			return bucket;
 		} catch (e) {
 			if (e.code === 409) {
-				return log(`Warning when creating GCS bucket: ${e.message}`);
+				return log.warn(`Warning when creating GCS bucket: ${e.message}`);
 			}
-			log(`Failed to create GCS bucket: ${e.message}`);
+			log.error(`Failed to create GCS bucket: ${e.message}`);
 			throw e;
 		}
 	}
 
 	//Note: local file/assets just have an internal buffer, so we can probably remove this and use uploadBuffer everywhere
 	async uploadLocalFile(filename, uploadedFile, contentType, isPublic = false): Promise<any> {
-		log('Uploading file %s', filename);
+		log.info('Uploading file %s', filename);
 		const file = this.#storageClient
 			.bucket(
 				isPublic === true
@@ -58,12 +58,12 @@ class GoogleStorageProvider extends StorageProvider {
 					contentType
 				}
 			});
-			log('File uploaded successfully.');
+			log.info('File uploaded successfully.');
 			if (isPublic) {
 				await file.makePublic();
 			}
 		} catch (err) {
-			log('File upload error:', err);
+			log.error('File upload error:', err);
 			throw err;
 		}
 	}
@@ -73,7 +73,7 @@ class GoogleStorageProvider extends StorageProvider {
 		destinationFilename: string,
 		isPublic = false
 	): Promise<any> {
-		log('Cloning file from %s to %s', sourceFilename, destinationFilename);
+		log.info('Cloning file from %s to %s', sourceFilename, destinationFilename);
 		const bucket = this.#storageClient.bucket(
 			isPublic === true
 				? process.env.NEXT_PUBLIC_GCS_BUCKET_NAME
@@ -84,7 +84,7 @@ class GoogleStorageProvider extends StorageProvider {
 
 		try {
 			await sourceFile.copy(destinationFile);
-			log('File cloned successfully from %s to %s', sourceFilename, destinationFilename);
+			log.info('File cloned successfully from %s to %s', sourceFilename, destinationFilename);
 
 			// Optionally make the cloned file public if needed
 			if (isPublic) {
@@ -93,7 +93,7 @@ class GoogleStorageProvider extends StorageProvider {
 
 			return destinationFile;
 		} catch (err) {
-			log('File clone error:', err);
+			log.error('File clone error:', err);
 			throw err;
 		}
 	}
@@ -104,7 +104,7 @@ class GoogleStorageProvider extends StorageProvider {
 		contentType: string,
 		isPublic = false
 	): Promise<any> {
-		log('Uploading buffer to file %s', filename);
+		log.info('Uploading buffer to file %s', filename);
 		const file = this.#storageClient
 			.bucket(
 				isPublic === true
@@ -118,18 +118,18 @@ class GoogleStorageProvider extends StorageProvider {
 					contentType
 				}
 			});
-			log('Buffer uploaded successfully.');
+			log.info('Buffer uploaded successfully.');
 			if (isPublic) {
 				await file.makePublic();
 			}
 		} catch (err) {
-			log('Buffer upload error:', err);
+			log.error('Buffer upload error:', err);
 			throw err;
 		}
 	}
 
 	async deleteFile(filename: string, isPublic = false): Promise<any> {
-		log('Deleting file %s', filename);
+		log.info('Deleting file %s', filename);
 		const file = this.#storageClient
 			.bucket(
 				isPublic === true
