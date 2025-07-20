@@ -48,6 +48,7 @@ ARG UNSTRUCTURED_API_URL
 ARG VECTOR_DATABASE_API_KEY
 ARG VECTOR_DATABASE
 ARG VECTOR_DATABASE_URL
+ARG LOGGING_LEVEL
 # Set ENV variables
 ENV IS_RELEASE=$RELEASE
 ENV UNSTRUCTURED_API_URL=$UNSTRUCTURED_API_URL
@@ -55,6 +56,8 @@ ENV UNSTRUCTURED_API_KEY=$UNSTRUCTURED_API_KEY
 ENV VECTOR_DATABASE_API_KEY=$VECTOR_DATABASE_API_KEY
 ENV VECTOR_DATABASE=$VECTOR_DATABASE
 ENV VECTOR_DATABASE_URL=$VECTOR_DATABASE_URL
+ENV LOGGING_LEVEL=$LOGGING_LEVEL
+
 # Copy from builder step
 COPY --from=builder /usr/local/src/vector-db-proxy/target/release/vector-db-proxy /app/vector-db-proxy-release
 COPY --from=builder /usr/local/src/vector-db-proxy/target/debug/vector-db-proxy /app/vector-db-proxy-debug
