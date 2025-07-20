@@ -186,14 +186,14 @@ export default async function createAccount({
 	// If SES key is present, send verification email else set emailVerified to true
 	if (!emailVerified) {
 		const emailBody = invite
-			? render(
+			? await render(
 					InviteEmail({
 						inviteURL: `${process.env.URL_APP}/verify?token=${verificationToken}&newpassword=true`,
 						name,
 						teamName
 					})
 				)
-			: render(
+			: await render(
 					VerificationEmail({
 						verificationURL: `${process.env.URL_APP}/verify?token=${verificationToken}${checkoutSessionId ? '&newpassword=true&stripe=1' : !password ? '&newpassword=true' : ''}`
 					})
