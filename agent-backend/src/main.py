@@ -16,9 +16,9 @@ app_logger = logging.getLogger("app")
 
 app_logger.setLevel(LOG_LEVEL.upper())
 
-if app_logger.getEffectiveLevel() == logging.DEBUG:
-    set_debug(True)
-    set_verbose(True)
+# disable this once LOG_LEVEL is properly imported from .env
+set_debug(True)
+set_verbose(True)
 
 
 def sigint_handler(*args):
