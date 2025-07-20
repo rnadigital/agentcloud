@@ -4,10 +4,6 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { io } from 'socket.io-client';
 
-import { createLogger } from 'utils/logger';
-
-const log = createLogger('webapp:context:socket');
-
 let socketio;
 if (typeof window !== 'undefined') {
 	socketio = io({
@@ -42,7 +38,6 @@ export function SocketWrapper({ children }) {
 			return;
 		}
 		setRoom(oldRoom => {
-			log.info('Switching socket rooms, old room: %s, new room: %s', oldRoom, resourceSlug);
 			sharedSocket.emit('leave_room', oldRoom);
 			sharedSocket.emit('join_room', resourceSlug);
 			sharedSocket.off('notification', handleNotification);

@@ -2,8 +2,6 @@ import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-import { createLogger } from 'utils/logger';
-
 const ChatContext = createContext({});
 
 export function ChatWrapper({ children }) {

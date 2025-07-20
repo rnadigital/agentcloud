@@ -1,4 +1,3 @@
-import pino from 'pino';
 import chalk from 'chalk';
 
 const namespaceColorMap = new Map();
@@ -41,53 +40,107 @@ function getColorFn(namespace: string) {
 	return fn;
 }
 
-// Create the main Pino logger instance
-const pinoLogger = pino({
-	level: process.env.LOG_LEVEL || 'info',
-	transport:
-		process.env.NODE_ENV !== 'production'
-			? {
-					target: 'pino-pretty',
-					options: {
-						colorize: true,
-						translateTime: false,
-						ignore: 'pid,hostname,time'
-					}
-				}
-			: undefined
-});
+// Create a lazy-loaded Pino logger instance
+let pinoLogger: any = null;
+let pinoModule: any = null;
+
+async function getPinoLogger() {
+	if (typeof window !== 'undefined') {
+		// Return a no-op logger for browser environments
+		return {
+			error: () => {},
+			warn: () => {},
+			info: () => {},
+			debug: () => {},
+			trace: () => {}
+		};
+	}
+
+	if (!pinoLogger) {
+		try {
+			pinoModule = await import('pino');
+			pinoLogger = pinoModule.default({
+				level: process.env.LOG_LEVEL || 'info',
+				transport:
+					process.env.NODE_ENV !== 'production'
+						? {
+								target: 'pino-pretty',
+								options: {
+									colorize: true,
+									translateTime: false,
+									ignore: 'pid,hostname,time'
+								}
+							}
+						: undefined
+			});
+		} catch (error) {
+			console.error('Failed to load Pino logger:', error);
+			// Fallback to console logger
+			return {
+				error: (msg: string, meta?: any) => console.error(msg, meta),
+				warn: (msg: string, meta?: any) => console.warn(msg, meta),
+				info: (msg: string, meta?: any) => console.info(msg, meta),
+				debug: (msg: string, meta?: any) => console.debug(msg, meta),
+				trace: (msg: string, meta?: any) => console.trace(msg, meta)
+			};
+		}
+	}
+	return pinoLogger;
+}
 
 // Create a logger that provides Pino levels
 export const createLogger = (namespace: string) => {
 	const colorFn = getColorFn(namespace);
 
 	return {
-		error: (message: string, ...meta: any[]) => {
-			pinoLogger.error(`${colorFn(namespace)} ${message}`, { ...meta });
+		error: async (message: string, ...meta: any[]) => {
+			const logger = await getPinoLogger();
+			logger.error(`${colorFn(namespace)} ${message}`, { ...meta });
 		},
-		warn: (message: string, ...meta: any[]) => {
-			pinoLogger.warn(`${colorFn(namespace)} ${message}`, { ...meta });
+		warn: async (message: string, ...meta: any[]) => {
+			const logger = await getPinoLogger();
+			logger.warn(`${colorFn(namespace)} ${message}`, { ...meta });
 		},
-		info: (message: string, ...meta: any[]) => {
-			pinoLogger.info(`${colorFn(namespace)} ${message}`, { ...meta });
+		info: async (message: string, ...meta: any[]) => {
+			const logger = await getPinoLogger();
+			logger.info(`${colorFn(namespace)} ${message}`, { ...meta });
 		},
-		debug: (message: string, ...meta: any[]) => {
-			pinoLogger.debug(`${colorFn(namespace)} ${message}`, { ...meta });
+		debug: async (message: string, ...meta: any[]) => {
+			const logger = await getPinoLogger();
+			logger.debug(`${colorFn(namespace)} ${message}`, { ...meta });
 		},
-		verbose: (message: string, ...meta: any[]) => {
-			pinoLogger.trace(`${colorFn(namespace)} ${message}`, { ...meta });
+		verbose: async (message: string, ...meta: any[]) => {
+			const logger = await getPinoLogger();
+			logger.trace(`${colorFn(namespace)} ${message}`, { ...meta });
 		}
 	};
 };
 
 // Global logger instance
 export const logger = {
-	error: (message: string, ...meta: any[]) => pinoLogger.error({ ...meta }, message),
-	warn: (message: string, ...meta: any[]) => pinoLogger.warn({ ...meta }, message),
-	info: (message: string, ...meta: any[]) => pinoLogger.info({ ...meta }, message),
-	debug: (message: string, ...meta: any[]) => pinoLogger.debug({ ...meta }, message),
-	verbose: (message: string, ...meta: any[]) => pinoLogger.trace({ ...meta }, message)
+	error: async (message: string, ...meta: any[]) => {
+		const logger = await getPinoLogger();
+		logger.error({ ...meta }, message);
+	},
+	warn: async (message: string, ...meta: any[]) => {
+		const logger = await getPinoLogger();
+		logger.warn({ ...meta }, message);
+	},
+	info: async (message: string, ...meta: any[]) => {
+		const logger = await getPinoLogger();
+		logger.info({ ...meta }, message);
+	},
+	debug: async (message: string, ...meta: any[]) => {
+		const logger = await getPinoLogger();
+		logger.debug({ ...meta }, message);
+	},
+	verbose: async (message: string, ...meta: any[]) => {
+		const logger = await getPinoLogger();
+		logger.trace({ ...meta }, message);
+	}
 };
 
 // Export Pino logger for direct access if needed
-export { pinoLogger as pino };
+export const getPino = async () => {
+	return await getPinoLogger();
+};
