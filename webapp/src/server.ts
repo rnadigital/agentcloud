@@ -31,7 +31,7 @@ import { initSocket } from '@socketio';
 import * as db from 'db/index';
 import { migrate } from 'db/migrate';
 import { initGlobalTools } from 'db/tool';
-import debug from 'debug';
+import { createLogger } from 'lib/utils/logger';
 import * as airbyteSetup from 'lib/airbyte/setup';
 import * as ses from 'lib/email/ses';
 import FunctionProviderFactory from 'lib/function';
@@ -43,12 +43,11 @@ import StripeClient from 'lib/stripe';
 import { resyncAllDatasources } from 'utils/resync';
 import { v4 as uuidv4 } from 'uuid';
 
-const log = debug('webapp:server');
+const log = createLogger('server');
 
 app
 	.prepare()
 	.then(async () => {
-		
 		await airbyteSetup.init();
 		await db.connect();
 		await db.connectMongooseDB();
@@ -96,17 +95,17 @@ app
 
 		rawHttpServer.listen(parseInt(process.env.EXPRESS_PORT), process.env.EXPRESS_HOST, () => {
 			if (typeof process.send === 'function') {
-				log('SENT READY SIGNAL TO PM2');
+				log.info('SENT READY SIGNAL TO PM2');
 				process.send('ready');
 			}
-			log(
+			log.info(
 				`Ready on http${dev ? '' : 's'}://${process.env.EXPRESS_HOST}:${process.env.EXPRESS_PORT}`
 			);
 		});
 
 		//graceful stop handling
 		const gracefulStop = () => {
-			log('SIGINT SIGNAL RECEIVED');
+			log.info('SIGINT SIGNAL RECEIVED');
 			db.client().close();
 			redis.close();
 			process.exit(0);
