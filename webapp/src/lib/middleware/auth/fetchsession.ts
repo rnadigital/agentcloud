@@ -2,8 +2,6 @@
 
 import { Account, getAccountById, getAccountByOAuthOrEmail } from 'db/account';
 import { getOrgById, Org } from 'db/org';
-import debug from 'debug';
-const log = debug('webapp:session');
 
 export default async function fetchSession(req, res, next) {
 	if (req.session && (req.session.accountId || req.session.passport?.user)) {

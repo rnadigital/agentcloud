@@ -1,4 +1,3 @@
-import debug from 'debug';
 import FunctionProvider from './provider';
 
 class LocalFunctionProvider extends FunctionProvider {

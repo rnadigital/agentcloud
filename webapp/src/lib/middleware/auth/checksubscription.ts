@@ -2,9 +2,10 @@ import { dynamicResponse } from '@dr';
 import { getAccountById } from 'db/account';
 import { getOrgById } from 'db/org';
 import { getFunctionToolCountByTeam } from 'db/tool';
-import debug from 'debug';
 import { PlanLimitsKeys, pricingMatrix, SubscriptionPlan } from 'struct/billing';
-const log = debug('webapp:middleware:auth:checksubscription');
+import { createLogger } from 'utils/logger';
+
+const log = createLogger('webapp:middleware:auth:checksubscription');
 
 const cache = {};
 
@@ -38,7 +39,7 @@ export async function fetchUsage(req, res, next) {
 
 		next();
 	} catch (error) {
-		log('Error fetching usage:', error);
+		log.error('Error fetching usage:', error);
 		return dynamicResponse(req, res, 500, { error: 'Error fetching usage data' });
 	}
 }
@@ -102,7 +103,7 @@ export function checkSubscriptionLimit(limit: keyof typeof PlanLimitsKeys) {
 				limits.maxVectorStorageBytes += stripeAddons?.storage * (1024 * 1024 * 1024);
 			}
 
-			log(
+			log.info(
 				'plan: %O, addons: %O, limit: %O, usage: %O, usage[limit]: %O, limits[limit]: %O',
 				stripePlan,
 				stripeAddons,

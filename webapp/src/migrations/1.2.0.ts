@@ -1,8 +1,9 @@
-import debug from 'debug';
-const log = debug('webapp:migration:1.2.0');
+import { createLogger } from 'utils/logger';
+
+const log = createLogger('webapp:migration:1.2.0');
 
 export default async function (db) {
-	log('Updating apps collection with new properties');
+	log.info('Updating apps collection with new properties');
 	await db.collection('apps').updateMany(
 		{},
 		{
@@ -12,7 +13,7 @@ export default async function (db) {
 			}
 		}
 	);
-	log('Updating datasource collection with new properties');
+	log.info('Updating datasource collection with new properties');
 	await db.collection('apps').updateMany(
 		{},
 		{
@@ -26,7 +27,7 @@ export default async function (db) {
 		}
 	);
 
-	log('Making all non builtin tasks require human input');
+	log.info('Making all non builtin tasks require human input');
 	//NOTE: we don't use libs here e.g. SubscriptionPlan.RAW because that struct could change/not be importable anymore. all has to be encapsulated
 	await db.collection('apps').updateMany(
 		{

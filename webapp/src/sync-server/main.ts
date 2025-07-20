@@ -10,7 +10,6 @@ import { getDatasourceByConnectionId, setDatasourceStatus } from 'db/datasource'
 import * as db from 'db/index';
 import { migrate } from 'db/migrate';
 import { getOrgById } from 'db/org';
-import debug from 'debug';
 import * as redis from 'redis/redis';
 import { pricingMatrix } from 'struct/billing';
 import { AugmentedJob } from 'struct/syncserver';
@@ -18,7 +17,8 @@ import { AugmentedJob } from 'struct/syncserver';
 import getAirbyteInternalApi from '../lib/airbyte/internal';
 import { DatasourceStatus } from '../lib/struct/datasource';
 import VectorDBProxyClient from '../lib/vectorproxy/client';
-const log = debug('sync-server:main');
+import { createLogger } from 'utils/logger';
+const log = createLogger('sync-server:main');
 
 /*
 	// await vectorLimitTaskQueue.add(
@@ -63,7 +63,7 @@ async function augmentJobs(jobList) {
 					job.connection = foundConnection;
 				}
 			} catch (e) {
-				log(e);
+				log.error(e);
 			}
 
 			// fetch and attach the the datasource from mongo based on the jobs connectionId
@@ -83,7 +83,7 @@ async function augmentJobs(jobList) {
 					job.stripe = ownerOrg?.stripe;
 				}
 			} catch (e) {
-				log(e);
+				log.error(e);
 			}
 
 			return job;
@@ -96,7 +96,7 @@ async function main() {
 	await db.connect();
 	await migrate();
 	const gracefulStop = () => {
-		log('SIGINT SIGNAL RECEIVED');
+		log.info('SIGINT SIGNAL RECEIVED');
 		db.client().close();
 		redis.close();
 		process.exit(0);
@@ -104,7 +104,7 @@ async function main() {
 	process.on('SIGINT', gracefulStop);
 	process.on('message', message => message === 'shutdown' && gracefulStop());
 	if (typeof process.send === 'function') {
-		log('SENT READY SIGNAL TO PM2');
+		log.info('SENT READY SIGNAL TO PM2');
 		process.send('ready');
 	}
 
@@ -116,23 +116,23 @@ async function main() {
 		//TODO: move to worker
 		const augmentedJobs: AugmentedJob[] = await augmentJobs(jobList);
 		for (let job of augmentedJobs) {
-			log('job', job?.jobId, 'rows synced', job?.rowsSynced);
+			log.info('job', job?.jobId, 'rows synced', job?.rowsSynced);
 			const teamVectorStorage = await VectorDBProxyClient.getVectorStorageForTeam(
 				job?.datasource?.teamId
 			);
 			const storageVectorCount = teamVectorStorage?.data?.total_points;
-			log('current vector storage count:', storageVectorCount);
+			log.info('current vector storage count:', storageVectorCount);
 			let vectorCountLimit = 0;
 			const planLimits = pricingMatrix[job?.stripe?.stripePlan];
 			if (planLimits) {
 				const approxVectorCountLimit = Math.floor(
 					planLimits.maxVectorStorageBytes / (1536 * (32 / 8))
 				); //Note: inaccurate because there are other embedding models
-				log('plan approx. max vector count:', approxVectorCountLimit);
+				log.info('plan approx. max vector count:', approxVectorCountLimit);
 				vectorCountLimit = approxVectorCountLimit;
 			}
 			if (storageVectorCount + job?.rowsSynced > vectorCountLimit) {
-				log(
+				log.info(
 					'job',
 					job?.jobId,
 					'exceeded',
@@ -148,7 +148,7 @@ async function main() {
 						jobId: job.jobId
 					};
 					const resetJob = await jobsApi.cancelJob(jobBody).then(res => res.data);
-					log('cancelJob', resetJob);
+					log.info('cancelJob', resetJob);
 				} catch (e) {
 					// Continue but log a warning if the reset job api call fails
 					console.warn(e);

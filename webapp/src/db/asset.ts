@@ -1,12 +1,9 @@
-import debug from 'debug';
 import toObjectId from 'misc/toobjectid';
 import { Collection, InsertOneResult } from 'mongodb';
 import { Asset } from 'struct/asset'; // Ensure this path is correct
 import { CollectionName } from 'struct/db';
 
 import * as db from './index';
-
-const log = debug('webapp:db:assets');
 
 // Function to get the assets collection
 export function assetCollection(): Collection<Asset> {

@@ -1,9 +1,9 @@
-import debug from 'debug';
+import { createLogger } from 'utils/logger';
 import { CollectionName } from 'struct/db';
-const log = debug('webapp:migration:1.7.0');
+const log = createLogger('webapp:migration:1.8.0');
 
 export default async function (db) {
-	log(
+	log.info(
 		'adding a new index on datasources for "connectionId" so the enormous amount of queries from sync-server doesnt choke mongo'
 	);
 	await db.collection(CollectionName.Datasources).createIndex({ connectionId: 1 });

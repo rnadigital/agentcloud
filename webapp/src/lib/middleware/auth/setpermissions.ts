@@ -1,10 +1,8 @@
 'use strict';
 
 import Permission from '@permission';
-import debug from 'debug';
 import { ORG_BITS, TEAM_BITS } from 'permissions/bits';
 import Permissions from 'permissions/permissions';
-const log = debug('webapp:middleware:auth:setpermissions');
 
 export default function setPermissions(req, res, next) {
 	const { account, matchingOrg, matchingTeam } = res.locals;

@@ -4,9 +4,10 @@ import { SecretManagerServiceClient } from '@google-cloud/secret-manager';
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env' });
 
-import debug from 'debug';
 import SecretProvider from 'secret/provider';
-const log = debug('webapp:secret:google');
+import { createLogger } from 'utils/logger';
+
+const log = createLogger('webapp:secret:google');
 
 class GoogleSecretProvider extends SecretProvider {
 	#secretClient: any;
@@ -18,7 +19,7 @@ class GoogleSecretProvider extends SecretProvider {
 			if (process.env.LOCAL && process.env.GOOGLE_APPLICATION_CREDENTIALS) {
 				secretClientOptions['keyFilename'] = process.env.GOOGLE_APPLICATION_CREDENTIALS;
 			}
-			log('GoogleSecretProvider options:', secretClientOptions);
+			log.info('GoogleSecretProvider options:', secretClientOptions);
 			this.#secretClient = new SecretManagerServiceClient(secretClientOptions);
 		}
 		this.#cache = {};

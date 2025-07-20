@@ -1,8 +1,8 @@
-import debug from 'debug';
-const log = debug('webapp:migration:1.10.0');
+import { createLogger } from 'utils/logger';
+const log = createLogger('webapp:migration:1.10.0');
 
 export default async function (db) {
-	log('set empty ragFilters on all existing tools');
+	log.info('set empty ragFilters on all existing tools');
 	await db.collection('tools').updateMany(
 		{
 			type: 'rag',
@@ -16,7 +16,7 @@ export default async function (db) {
 			}
 		}
 	);
-	log('adding variableIds to all tasks and agents');
+	log.info('adding variableIds to all tasks and agents');
 	await db.collection('tasks').updateMany(
 		{ variableIds: { $exists: false } },
 		{

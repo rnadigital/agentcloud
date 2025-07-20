@@ -1,8 +1,9 @@
-import debug from 'debug';
-const log = debug('webapp:migration:0.2.0');
+import { createLogger } from 'utils/logger';
+
+const log = createLogger('webapp:migration:0.2.0');
 
 export default async function (db) {
-	log('Updating all existing "groups" in db to groupChat: true');
+	log.info('Updating all existing "groups" in db to groupChat: true');
 	await db.collection('groups').updateMany(
 		{},
 		{

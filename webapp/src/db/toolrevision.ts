@@ -1,14 +1,11 @@
 'use strict';
 
 import * as db from 'db/index';
-import debug from 'debug';
 import toObjectId from 'misc/toobjectid';
 import { UpdateResult } from 'mongodb';
 import { InsertResult } from 'struct/db';
 import { CollectionName } from 'struct/db';
 import { ToolRevision } from 'struct/toolrevision';
-
-const log = debug('webapp:db:toolrevisions');
 
 export function ToolRevisionCollection(): any {
 	return db.db().collection(CollectionName.Toolrevisions);

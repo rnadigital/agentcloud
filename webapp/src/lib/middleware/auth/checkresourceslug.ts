@@ -1,13 +1,11 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
-import { unsafeGetAppById } from 'db/app';
 import { getOrgById } from 'db/org';
-import { unsafeGetSessionById } from 'db/session';
 import { getTeamById } from 'db/team';
-import debug from 'debug';
+import { createLogger } from 'utils/logger';
 
-const log = debug('webapp:middleware:auth:checkresourceslug');
+const log = createLogger('webapp:middleware:auth:checkresourceslug');
 
 function getAllowedSlugs(orgs) {
 	return orgs.reduce((acc, org) => {
@@ -99,7 +97,7 @@ export async function setDefaultOrgAndTeam(req, res, next) {
 
 	const { currentOrg, currentTeam } = res?.locals?.account || {};
 	if (!currentOrg) {
-		log('No current organization available');
+		log.info('No current organization available');
 		req.session.destroy();
 		return dynamicResponse(req, res, 302, {
 			redirect: `/login?goto=${encodeURIComponent(req.originalUrl)}`
@@ -108,7 +106,7 @@ export async function setDefaultOrgAndTeam(req, res, next) {
 	//TODO: cache in redis
 	const foundOrg = await getOrgById(currentOrg);
 	if (!foundOrg) {
-		log('No permission, sending to welcome');
+		log.info('No permission, sending to welcome');
 		return dynamicResponse(req, res, 302, { redirect: '/welcome?noaccess=true' });
 	}
 	foundOrg['id'] = foundOrg._id;
@@ -118,7 +116,7 @@ export async function setDefaultOrgAndTeam(req, res, next) {
 	const matchingTeamId = foundOrg.teamIds.find(tid => tid.toString() === currentTeam.toString());
 	if (!matchingTeamId) {
 		// return res.status(403).send({ error: 'No permission' });
-		log('No permission');
+		log.info('No permission');
 		// req.session.destroy();
 		return dynamicResponse(req, res, 302, { redirect: '/welcome?noaccess=true' });
 	}
@@ -127,7 +125,7 @@ export async function setDefaultOrgAndTeam(req, res, next) {
 	const foundTeam = await getTeamById(currentTeam);
 	if (!foundTeam) {
 		// return res.status(403).send({ error: 'No permission' });
-		log('No permission');
+		log.info('No permission');
 		// req.session.destroy();
 		return dynamicResponse(req, res, 302, { redirect: '/welcome?noaccess=true' });
 	}
@@ -146,7 +144,7 @@ export async function setParamOrgAndTeam(req, res, next) {
 	const foundTeam = await getTeamById(resourceSlug);
 	if (!foundTeam) {
 		// return res.status(403).send({ error: 'No permission' });
-		log('No permission');
+		log.info('No permission');
 		// req.session.destroy();
 		return dynamicResponse(req, res, 302, { redirect: '/welcome?noaccess=true' });
 	}
@@ -158,7 +156,7 @@ export async function setParamOrgAndTeam(req, res, next) {
 	const foundOrg = await getOrgById(foundTeam.orgId);
 	if (!foundOrg) {
 		// return res.status(403).send({ error: 'No permission' });
-		log('No permission');
+		log.info('No permission');
 		// req.session.destroy();
 		return dynamicResponse(req, res, 302, { redirect: '/welcome?noaccess=true' });
 	}

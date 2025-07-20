@@ -1,7 +1,6 @@
 ('use strict');
 
 import * as db from 'db/index';
-import debug from 'debug';
 import toObjectId from 'misc/toobjectid';
 import {
 	Datasource,
@@ -11,8 +10,6 @@ import {
 } from 'struct/datasource';
 import { InsertResult } from 'struct/db';
 import { VectorDbType } from 'struct/vectordb';
-
-const log = debug('webapp:db:datasources');
 
 export function DatasourceCollection(): any {
 	return db.db().collection('datasources');

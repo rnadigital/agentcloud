@@ -1,7 +1,6 @@
 import * as dns from 'node:dns';
 import * as util from 'node:util';
 
-import debug from 'debug';
 import dotenv from 'dotenv';
 import fs from 'fs';
 // import fetch from 'node-fetch'; // Ensure node-fetch is installed or use a compatible fetch API
@@ -13,16 +12,11 @@ import getAirbyteApi, { AirbyteApiType, getAirbyteAuthToken } from 'airbyte/api'
 import SecretProviderFactory from 'lib/secret';
 
 import getAirbyteInternalApi from './internal';
+import { createLogger } from 'utils/logger';
 
 dotenv.config({ path: '.env' });
 
-const log = debug('webapp:airbyte:setup');
-
-// Note: is there an idiomatic way to do this?
-const logdebug = debug('webapp:airbyte:setup:debug');
-logdebug.log = console.debug.bind(console);
-const logerror = debug('webapp:airbyte:setup:error');
-logerror.log = console.error.bind(console);
+const log = createLogger('webapp:airbyte:setup');
 
 const provider = process.env.MESSAGE_QUEUE_PROVIDER;
 export const destinationDefinitionId =
@@ -33,11 +27,11 @@ export const destinationDefinitionId =
 // Function to fetch workspaces
 async function fetchWorkspaces() {
 	try {
-		log('Fetching airbyte workspaces...');
+		log.info('Fetching airbyte workspaces...');
 		const workspacesApi = await getAirbyteApi(AirbyteApiType.WORKSPACES);
 		return workspacesApi.listWorkspaces().then(res => res.data);
 	} catch (e) {
-		log('An error occurred while attempting to fetch Airbyte workspaces. %', e);
+		log.error('An error occurred while attempting to fetch Airbyte workspaces. %', e);
 	}
 }
 
@@ -114,9 +108,9 @@ export async function checkAirbyteStatus() {
 
 async function getDestinationConfiguration(provider: string) {
 	if (provider === 'rabbitmq') {
-		log(`RabbitMQ HOST: ${process.env.AIRBYTE_RABBITMQ_HOST}`);
+		log.info(`RabbitMQ HOST: ${process.env.AIRBYTE_RABBITMQ_HOST}`);
 		let host: string = process.env.AIRBYTE_RABBITMQ_HOST || '0.0.0.0';
-		log('getDestinationConfiguration host %s', host);
+		log.info('getDestinationConfiguration host %s', host);
 		return {
 			routing_key: 'key',
 			username: process.env.RABBITMQ_USERNAME || 'guest',
@@ -131,7 +125,7 @@ async function getDestinationConfiguration(provider: string) {
 		if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
 			const credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
 			if (!credentialsPath) {
-				log(
+				log.error(
 					'missing GOOGLE_APPLICATION_CREDENTIALS path, current value: %s',
 					process.env.GOOGLE_APPLICATION_CREDENTIALS
 				);
@@ -139,7 +133,7 @@ async function getDestinationConfiguration(provider: string) {
 			}
 			credentialsContent = fs.readFileSync(credentialsPath, 'utf8');
 			if (!credentialsContent) {
-				log(
+				log.error(
 					'Failed to read content of process.env.GOOGLE_APPLICATION_CREDENTIALS file at path: %s',
 					process.env.GOOGLE_APPLICATION_CREDENTIALS
 				);
@@ -148,7 +142,7 @@ async function getDestinationConfiguration(provider: string) {
 		} else if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
 			credentialsContent = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
 		} else {
-			log('google application credentials missing private_key, fetching from secret store');
+			log.error('google application credentials missing private_key, fetching from secret store');
 			const secretProvider = SecretProviderFactory.getSecretProvider('google');
 			await secretProvider.init();
 			const googleCreds = await secretProvider.getSecret('GOOGLE_APPLICATION_CREDENTIAL');
@@ -219,27 +213,27 @@ async function updateWebhookUrls(workspaceId: string) {
 // Main logic to handle Airbyte setup and configuration
 export async function init() {
 	try {
-		log('Initializing airbyte setup...');
+		log.info('Initializing airbyte setup...');
 		// Get workspaces
 		const workspacesList = await fetchWorkspaces();
-		log('workspacesList: %s', workspacesList);
-		log('workspacesList: %s', workspacesList?.data?.map(x => x.name)?.join());
+		log.info('workspacesList: %s', workspacesList);
+		log.info('workspacesList: %s', workspacesList?.data?.map(x => x.name)?.join());
 		const airbyteAdminWorkspaceId = workspacesList.data[0].workspaceId;
-		log('AIRBYTE_ADMIN_WORKSPACE_ID', airbyteAdminWorkspaceId);
+		log.info('AIRBYTE_ADMIN_WORKSPACE_ID', airbyteAdminWorkspaceId);
 		if (!airbyteAdminWorkspaceId) {
-			log('Failed to fetch airbyte admin workspace ID, exiting');
+			log.error('Failed to fetch airbyte admin workspace ID, exiting');
 			process.exit(1);
 		}
 		process.env.AIRBYTE_ADMIN_WORKSPACE_ID = airbyteAdminWorkspaceId;
 
 		// Get destination list
 		const destinationsList: any = await fetchDestinationList(airbyteAdminWorkspaceId);
-		log('destinationsList: %s', destinationsList?.data?.map(x => x.name)?.join());
+		log.info('destinationsList: %s', destinationsList?.data?.map(x => x.name)?.join());
 
 		let airbyteAdminDestination: any = destinationsList.data?.find(d =>
 			['RabbitMQ', 'Google Pub/Sub'].includes(d?.name)
 		);
-		log('AIRBYTE_ADMIN_DESTINATION_ID', airbyteAdminDestination?.destinationId);
+		log.info('AIRBYTE_ADMIN_DESTINATION_ID', airbyteAdminDestination?.destinationId);
 
 		if (airbyteAdminDestination) {
 			const currentConfig = airbyteAdminDestination.connectionConfiguration;
@@ -252,29 +246,31 @@ export async function init() {
 				return currentConfig && currentConfig[key] !== newConfig[key];
 			});
 			if (configMismatch) {
-				log('Destination configuration mismatch detected, attempting to delete and re-create...');
+				log.error(
+					'Destination configuration mismatch detected, attempting to delete and re-create...'
+				);
 				await deleteDestination(airbyteAdminDestination.destinationId);
 				airbyteAdminDestination = await createDestination(airbyteAdminWorkspaceId, provider);
 				if (!airbyteAdminDestination.destinationId) {
-					log('Failed to create new destination with updated config');
-					log(airbyteAdminDestination);
+					log.error('Failed to create new destination with updated config');
+					log.error(airbyteAdminDestination);
 					process.exit(1);
 				}
 			}
 		} else {
 			if (!provider) {
-				log(
+				log.error(
 					'Invalid process.env.MESSAGE_QUEUE_PROVIDER env value:',
 					process.env.MESSAGE_QUEUE_PROVIDER
 				);
 				process.exit(1);
 			}
-			log(`Creating ${provider} destination`);
+			log.info(`Creating ${provider} destination`);
 			airbyteAdminDestination = await createDestination(
 				airbyteAdminWorkspaceId,
 				provider as 'rabbitmq' | 'google'
 			);
-			log('Created destination:', JSON.stringify(airbyteAdminDestination, null, '\t'));
+			log.info('Created destination:', JSON.stringify(airbyteAdminDestination, null, '\t'));
 			if (!airbyteAdminDestination.destinationId) {
 				process.exit(1);
 			}
@@ -285,7 +281,7 @@ export async function init() {
 
 		// Update webhook URLs
 		const updatedWebhookUrls = await updateWebhookUrls(airbyteAdminWorkspaceId);
-		log('UPDATED_WEBHOOK_URLS', JSON.stringify(updatedWebhookUrls));
+		log.info('UPDATED_WEBHOOK_URLS', JSON.stringify(updatedWebhookUrls));
 
 		// log('Overriding default ClientID and client secret for datasource OAuth integration');
 		// for (let provider in AIRBYTE_OAUTH_PROVIDERS) {
@@ -295,6 +291,6 @@ export async function init() {
 		return true;
 	} catch (error) {
 		process.env.NEXT_PUBLIC_IS_AIRBYTE_ENABLED = 'false';
-		logerror('Error during Airbyte configuration:', error);
+		log.error('Error during Airbyte configuration:', error);
 	}
 }

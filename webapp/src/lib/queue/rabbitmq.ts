@@ -1,11 +1,11 @@
 import { Channel, connect, Connection } from 'amqplib';
-import debug from 'debug';
 import dotenv from 'dotenv';
 import MessageQueueProvider from 'queue/provider';
+import { createLogger } from 'utils/logger';
 
 dotenv.config({ path: '.env' });
 
-const log = debug('webapp:queue:rabbitmq');
+const log = createLogger('webapp:queue:rabbitmq');
 
 class RabbitMQProvider extends MessageQueueProvider {
 	#connection: Connection | null = null;
@@ -22,16 +22,16 @@ class RabbitMQProvider extends MessageQueueProvider {
 			);
 			this.#channel = await this.#connection.createChannel();
 			await this.#channel.assertExchange(process.env.QUEUE_NAME, 'direct', { durable: true });
-			log('RabbitMQ connection and channel established.');
+			log.info('RabbitMQ connection and channel established.');
 		} catch (error) {
-			log(`Failed to initialize RabbitMQ: ${error.message}`);
+			log.error(`Failed to initialize RabbitMQ: ${error.message}`);
 			throw error;
 		}
 	}
 
 	async sendMessage(message: string, metadata: any) {
-		log('message %O', message);
-		log('metadata %O', metadata);
+		log.info('message %O', message);
+		log.info('metadata %O', metadata);
 		try {
 			await this.#channel?.publish(
 				process.env.RABBITMQ_EXCHANGE,
@@ -39,9 +39,9 @@ class RabbitMQProvider extends MessageQueueProvider {
 				Buffer.from(message),
 				{ headers: metadata }
 			);
-			log('Message sent successfully.');
+			log.info('Message sent successfully.');
 		} catch (error) {
-			log(`Error in sending message: ${error.message}`);
+			log.error(`Error in sending message: ${error.message}`);
 			throw error;
 		}
 	}

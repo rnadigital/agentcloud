@@ -2,20 +2,21 @@ import { syncDatasourceApi } from 'controllers/datasource';
 import { getAccountById } from 'db/account';
 import { getAllDatasources } from 'db/datasource';
 import { getOrgById } from 'db/org';
-import debug from 'debug';
-const log = debug('webapp:utils:resync');
+import { createLogger } from 'utils/logger';
+
+const log = createLogger('webapp:utils:resync');
 
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env' });
 
 export async function resyncAllDatasources() {
-	log('process.env.FORCE_RESYNC_ALL_DATASOURCES:', process.env.FORCE_RESYNC_ALL_DATASOURCES);
+	log.info('process.env.FORCE_RESYNC_ALL_DATASOURCES:', process.env.FORCE_RESYNC_ALL_DATASOURCES);
 
 	if (process.env.FORCE_RESYNC_ALL_DATASOURCES?.toLowerCase() !== 'true') {
 		return;
 	}
 
-	log('resyncing all datasources...');
+	log.info('resyncing all datasources...');
 
 	// Fetch all datasources in the system
 	const allDatasources = await getAllDatasources({
@@ -28,14 +29,14 @@ export async function resyncAllDatasources() {
 		// Fetch the organization by orgId
 		const org = await getOrgById(datasource.orgId);
 		if (!org) {
-			log(`Org not found for datasource: ${datasource._id}`);
+			log.info(`Org not found for datasource: ${datasource._id}`);
 			continue;
 		}
 
 		// Fetch the owner account by org.ownerId
 		const account = await getAccountById(org.ownerId);
 		if (!account) {
-			log(`Account not found for org: ${org._id}`);
+			log.info(`Account not found for org: ${org._id}`);
 			continue;
 		}
 
@@ -61,9 +62,9 @@ export async function resyncAllDatasources() {
 		// Sync the datasource
 		try {
 			await syncDatasourceApi(mockReq, mockRes, mockNext);
-			log(`Successfully synced datasource: ${datasource._id}`);
+			log.info(`Successfully synced datasource: ${datasource._id}`);
 		} catch (error) {
-			log(`Failed to sync datasource: ${datasource._id}`, error);
+			log.error(`Failed to sync datasource: ${datasource._id}`, error);
 		}
 	}
 }

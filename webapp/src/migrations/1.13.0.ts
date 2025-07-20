@@ -1,12 +1,12 @@
-import debug from 'debug';
+import { createLogger } from 'utils/logger';
 
-const log = debug('webapp:migration:1.13.0');
+const log = createLogger('webapp:migration:1.13.0');
 
 export default async function (db) {
-	log('Starting stripe data migration from accounts to orgs');
+	log.info('Starting stripe data migration from accounts to orgs');
 
 	const orgs = await db.collection('orgs').find({}).toArray();
-	log(`Found ${orgs.length} organizations to process`);
+	log.info(`Found ${orgs.length} organizations to process`);
 
 	let migratedCount = 0;
 	let errorCount = 0;
@@ -18,12 +18,12 @@ export default async function (db) {
 			});
 
 			if (!ownerAccount) {
-				log(`No owner account found for org ${org._id}`);
+				log.warn(`No owner account found for org ${org._id}`);
 				continue;
 			}
 
 			if (!ownerAccount.stripe) {
-				log(`No stripe data found for owner of org ${org._id}`);
+				log.warn(`No stripe data found for owner of org ${org._id}`);
 				continue;
 			}
 
@@ -46,10 +46,10 @@ export default async function (db) {
 			);
 
 			migratedCount++;
-			log(`Successfully migrated stripe data for org ${org._id}`);
+			log.info(`Successfully migrated stripe data for org ${org._id}`);
 		} catch (error) {
 			errorCount++;
-			log(`Error processing org ${org._id}: ${error.message}`);
+			log.error(`Error processing org ${org._id}: ${error.message}`);
 		}
 	}
 
@@ -62,6 +62,8 @@ export default async function (db) {
 		}
 	);
 
-	log(`Migration complete. Successfully migrated ${migratedCount} orgs. Errors: ${errorCount}`);
-	log(`Cleaned up stripe data from ${result.modifiedCount} remaining accounts`);
+	log.info(
+		`Migration complete. Successfully migrated ${migratedCount} orgs. Errors: ${errorCount}`
+	);
+	log.info(`Cleaned up stripe data from ${result.modifiedCount} remaining accounts`);
 }

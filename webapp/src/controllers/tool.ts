@@ -28,7 +28,6 @@ import {
 	getRevisionsForTool,
 	getToolRevisionById
 } from 'db/toolrevision';
-import debug from 'debug';
 import FunctionProviderFactory from 'lib/function';
 import getDotProp from 'lib/misc/getdotprop';
 import StorageProviderFactory from 'lib/storage';
@@ -48,9 +47,11 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { RagFilterSchema } from '../lib/struct/editorschemas';
 import { cloneAssetInStorageProvider } from './asset';
+import { createLogger } from 'utils/logger';
 const ajv = new Ajv({ strict: 'log' });
 addFormats(ajv);
-const log = debug('webapp:controllers:tool');
+
+const log = createLogger('webapp:controllers:tool');
 
 export async function toolsData(req, res, _next) {
 	const [tools, datasources] = await Promise.all([
@@ -230,7 +231,7 @@ export async function addToolApi(req, res, next) {
 
 	if (Object.keys(ragFilters || {}).length > 0 && !isFunctionTool) {
 		const validate = ajv.compile(RagFilterSchema);
-		log('validate', validate);
+		log.info('validate', validate);
 		const validated = validate(ragFilters);
 		if (!validated) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid Filters' });
@@ -332,12 +333,12 @@ export async function addToolApi(req, res, next) {
 								},
 								date: new Date()
 							});
-							log('addToolApi functionId %s isActive %O', functionId, isActive);
+							log.info('addToolApi functionId %s isActive %O', functionId, isActive);
 							await new Promise(res => setTimeout(res, 30000));
 							const logs = await functionProvider.getFunctionLogs(functionId).catch(e => {
-								log(e);
+								log.info(e);
 							});
-							log('functionId %s logs %O', functionId, logs);
+							log.info('functionId %s logs %O', functionId, logs);
 							const editedRes = await editToolUnsafe(
 								{
 									_id: toObjectId(addedTool?.insertedId),
@@ -354,11 +355,11 @@ export async function addToolApi(req, res, next) {
 							if (editedRes.modifiedCount === 0) {
 								/* If there were multiple current depoyments and this one happened out of order (late)
 							  delete the function to not leave it orphaned*/
-								log('Deleting and returning to prevent orphan functionId %s', functionId);
+								log.info('Deleting and returning to prevent orphan functionId %s', functionId);
 								return functionProvider.deleteFunction(functionId);
 							} else if (!isActive) {
 								// Delete the broken function
-								log('Deleting broken functionId %s', functionId);
+								log.info('Deleting broken functionId %s', functionId);
 								functionProvider.deleteFunction(functionId);
 							}
 							const notification = {
@@ -384,7 +385,7 @@ export async function addToolApi(req, res, next) {
 							io.to(req.params.resourceSlug).emit('notification', notification);
 						})
 						.catch(e => {
-							log('An error occurred while async deplopying function %s, %O', functionId, e);
+							log.info('An error occurred while async deplopying function %s, %O', functionId, e);
 						});
 				});
 		} catch (e) {
@@ -457,7 +458,7 @@ export async function editToolApi(req, res, next) {
 
 	if (Object.keys(ragFilters || {}).length > 0 && !isFunctionTool) {
 		const validate = ajv.compile(RagFilterSchema);
-		log('validate', validate);
+		log.info('validate', validate);
 		const validated = validate(ragFilters);
 		if (!validated) {
 			return dynamicResponse(req, res, 400, { error: 'Invalid Filters' });
@@ -472,7 +473,7 @@ export async function editToolApi(req, res, next) {
 			const prev = getDotProp(existingTool, k);
 			return !isDeepStrictEqual(current, prev);
 		});
-	log(
+	log.info(
 		'Tool %s (%s) functionNeedsUpdate: %s',
 		existingTool?.name,
 		existingTool?._id,
@@ -491,7 +492,7 @@ export async function editToolApi(req, res, next) {
 		try {
 			metadata_field_info = getMetadataFieldInfo(foundDatasource?.streamConfig);
 		} catch (e) {
-			log(e);
+			log.info(e);
 			//supress
 		}
 	}
@@ -554,15 +555,15 @@ export async function editToolApi(req, res, next) {
 					functionProvider
 						.waitForFunctionToBeActive(functionId)
 						.then(async isActive => {
-							log('editToolApi functionId %s isActive %O', functionId, isActive);
+							log.info('editToolApi functionId %s isActive %O', functionId, isActive);
 							/* Note: don't remove this static sleep. The purpose is to wait for google
 							 * cloud logging to have the deployment failure message which comes after
 							 * a DELAY even when the function is already in "failed" state */
 							await new Promise(res => setTimeout(res, 30000));
 							const logs = await functionProvider.getFunctionLogs(functionId).catch(e => {
-								log(e);
+								log.error(e);
 							});
-							log('functionId %s logs %O', functionId, logs);
+							log.info('functionId %s logs %O', functionId, logs);
 							const addedRevision = await addToolRevision({
 								orgId: toObjectId(res.locals.matchingOrg.id),
 								teamId: toObjectId(req.params.resourceSlug),
@@ -591,7 +592,7 @@ export async function editToolApi(req, res, next) {
 							if (editedRes.modifiedCount === 0) {
 								/* If there were multiple current depoyments and this one happened out of order (late)
 							  delete the function to not leave it orphaned*/
-								log('Deleting and returning to prevent orphan functionId %s', functionId);
+								log.info('Deleting and returning to prevent orphan functionId %s', functionId);
 								return functionProvider.deleteFunction(functionId);
 							}
 							const notification = {
@@ -617,17 +618,17 @@ export async function editToolApi(req, res, next) {
 							io.to(req.params.resourceSlug).emit('notification', notification);
 							if (!isActive) {
 								// Delete the new broken function
-								log('Deleting new broken functionId %s', functionId);
+								log.info('Deleting new broken functionId %s', functionId);
 								functionProvider.deleteFunction(functionId);
 							}
 							if (isActive && existingTool?.functionId) {
 								//Delete the old function with old functionid
-								log('Deleting function with old functionId %s', functionId);
+								log.info('Deleting function with old functionId %s', functionId);
 								functionProvider.deleteFunction(existingTool.functionId);
 							}
 						})
 						.catch(e => {
-							log('An error occurred while async deplopying function %s, %O', functionId, e);
+							log.info('An error occurred while async deplopying function %s, %O', functionId, e);
 						});
 				});
 		} catch (e) {
@@ -701,10 +702,10 @@ export async function applyToolRevisionApi(req, res, next) {
 				functionProvider
 					.waitForFunctionToBeActive(functionId)
 					.then(async isActive => {
-						log('editToolApi functionId %s isActive %O', functionId, isActive);
+						log.info('editToolApi functionId %s isActive %O', functionId, isActive);
 						await new Promise(res => setTimeout(res, 30000));
 						const logs = await functionProvider.getFunctionLogs(functionId).catch(e => {
-							log(e);
+							log.info(e);
 						});
 						const editedRes = await editToolUnsafe(
 							{
@@ -724,7 +725,7 @@ export async function applyToolRevisionApi(req, res, next) {
 						if (editedRes.modifiedCount === 0) {
 							/* If there were multiple current depoyments and this one happened out of order (late)
 						  delete the function to not leave it orphaned*/
-							log('Deleting and returning to prevent orphan functionId %s', functionId);
+							log.info('Deleting and returning to prevent orphan functionId %s', functionId);
 							return functionProvider.deleteFunction(functionId);
 						}
 						const notification = {
@@ -751,16 +752,16 @@ export async function applyToolRevisionApi(req, res, next) {
 						if (!isActive) {
 							// Delete the new broken function
 							functionProvider.deleteFunction(functionId);
-							log('Deleting new broken functionId %s', functionId);
+							log.info('Deleting new broken functionId %s', functionId);
 						}
 						if (isActive && existingTool?.functionId) {
 							//Delete the old function with old functionid
-							log('Deleting function with old functionId %s', functionId);
+							log.info('Deleting function with old functionId %s', functionId);
 							functionProvider.deleteFunction(existingTool.functionId);
 						}
 					})
 					.catch(e => {
-						log('An error occurred while async deplopying function %s, %O', functionId, e);
+						log.info('An error occurred while async deplopying function %s, %O', functionId, e);
 					});
 			});
 	} catch (e) {
@@ -784,8 +785,9 @@ export async function applyToolRevisionApi(req, res, next) {
  * @apiParam {String} toolID tool id
  */
 export async function deleteToolApi(req, res, next) {
-	const log = debug('webapp:controllers:tool:delete');
-	log('Starting tool deletion for toolId: %s', req.body.toolId);
+	const log = createLogger('webapp:controllers:tool:delete');
+
+	log.info('Starting tool deletion for toolId: %s', req.body.toolId);
 
 	let validationError = chainValidations(
 		req.body,
@@ -794,30 +796,30 @@ export async function deleteToolApi(req, res, next) {
 	);
 
 	if (validationError) {
-		log('Validation error: %O', validationError);
+		log.info('Validation error: %O', validationError);
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
 	const { toolId } = req.body;
-	log('Fetching existing tool with id: %s', toolId);
+	log.info('Fetching existing tool with id: %s', toolId);
 
 	const existingTool: Tool = await getToolById(req.params.resourceSlug, toolId);
 
 	if (!existingTool) {
-		log('Tool not found: %s', toolId);
+		log.info('Tool not found: %s', toolId);
 		return dynamicResponse(req, res, 404, { error: 'Tool not found' });
 	}
 
-	log('Found tool: %s (type: %s)', existingTool.name, existingTool.type);
+	log.info('Found tool: %s (type: %s)', existingTool.name, existingTool.type);
 
 	if (existingTool.type === ToolType.FUNCTION_TOOL) {
-		log('Deleting function tool with functionId: %s', existingTool.functionId);
+		log.info('Deleting function tool with functionId: %s', existingTool.functionId);
 		const functionProvider = FunctionProviderFactory.getFunctionProvider();
 		try {
 			await functionProvider.deleteFunction(existingTool?.functionId);
-			log('Successfully deleted function');
+			log.info('Successfully deleted function');
 		} catch (e) {
-			log('Error deleting function: %O', e);
+			log.info('Error deleting function: %O', e);
 			if (e.code !== 5) {
 				return dynamicResponse(req, res, 400, {
 					error: 'Failed to update tool'
@@ -826,7 +828,7 @@ export async function deleteToolApi(req, res, next) {
 		}
 	} else if (existingTool.type === ToolType.RAG_TOOL) {
 		if (existingTool.datasourceId) {
-			log(
+			log.info(
 				'Checking RAG tool datasource dependencies for datasourceId: %s',
 				existingTool.datasourceId
 			);
@@ -834,9 +836,9 @@ export async function deleteToolApi(req, res, next) {
 				req.params.resourceSlug,
 				existingTool?.datasourceId
 			);
-			log('Found %d tools for datasource', existingToolsForDatasource?.length);
+			log.info('Found %d tools for datasource', existingToolsForDatasource?.length);
 			if (existingToolsForDatasource && existingToolsForDatasource.length === 1) {
-				log('Cannot delete - datasource requires at least one tool');
+				log.info('Cannot delete - datasource requires at least one tool');
 				return dynamicResponse(req, res, 409, {
 					error:
 						'This tool cannot be deleted as datasources require at least one tool associated with them. Please create another tool for this datasource if you would like to delete this tool.'
@@ -845,20 +847,20 @@ export async function deleteToolApi(req, res, next) {
 		}
 	}
 
-	log('Deleting tool from database');
+	log.info('Deleting tool from database');
 	const oldTool = await deleteToolByIdReturnTool(req.params.resourceSlug, toolId);
 	if (oldTool?.icon?.id) {
-		log('Deleting tool icon asset: %s', oldTool.icon.id);
+		log.info('Deleting tool icon asset: %s', oldTool.icon.id);
 		deleteAssetById(oldTool.icon.id);
 	}
 
-	log('Cleaning up tool dependencies');
+	log.info('Cleaning up tool dependencies');
 	await Promise.all([
 		removeAgentsTool(req.params.resourceSlug, toolId),
 		deleteRevisionsForTool(req.params.resourceSlug, toolId)
 	]);
 
-	log('Tool deletion completed successfully');
+	log.info('Tool deletion completed successfully');
 	return dynamicResponse(req, res, 200, {
 		/*redirect: `/${req.params.resourceSlug}/agents`*/
 	});

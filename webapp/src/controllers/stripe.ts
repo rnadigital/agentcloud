@@ -8,7 +8,6 @@ import {
 	updateOrgStripeCustomer
 } from 'db/org';
 import { addPortalLink } from 'db/portallink';
-import debug from 'debug';
 import StripeClient from 'lib/stripe';
 import {
 	planToPriceMap,
@@ -18,11 +17,13 @@ import {
 	SubscriptionPlanConfig,
 	subscriptionPlans
 } from 'struct/billing';
-const log = debug('webapp:stripe');
 import toObjectId from 'misc/toobjectid';
 import SecretProviderFactory from 'secret/index';
 import SecretKeys from 'secret/secretkeys';
+import { createLogger } from 'utils/logger';
 import { chainValidations } from 'utils/validationutils';
+
+const log = createLogger('webapp:stripe');
 
 function destructureSubscription(sub) {
 	let planItem, addonUsersItem, addonStorageItem;
@@ -75,7 +76,7 @@ export async function webhookHandler(req, res, next) {
 	const STRIPE_WEBHOOK_SECRET = await secretProvider.getSecret(SecretKeys.STRIPE_WEBHOOK_SECRET);
 
 	if (!STRIPE_WEBHOOK_SECRET) {
-		log('missing STRIPE_WEBHOOK_SECRET');
+		log.error('missing STRIPE_WEBHOOK_SECRET');
 		return res.status(400).send('missing STRIPE_WEBHOOK_SECRET');
 	}
 
@@ -84,11 +85,11 @@ export async function webhookHandler(req, res, next) {
 	try {
 		event = StripeClient.get().webhooks.constructEvent(req.body, sig, STRIPE_WEBHOOK_SECRET);
 	} catch (err) {
-		log(err);
+		log.error(err);
 		return res.status(400).send(`Webhook Error: ${err.message}`);
 	}
 
-	log(`Stripe webhook "${event.type}":`, JSON.stringify(event, null, '\t'));
+	log.info(`Stripe webhook "${event.type}":`, JSON.stringify(event, null, '\t'));
 
 	// Handle the event
 	switch (event.type) {
@@ -113,7 +114,7 @@ export async function webhookHandler(req, res, next) {
 				subscriptionUpdated.customer
 			);
 
-			log('Customer subscription update planItem %O', planItem);
+			log.info('Customer subscription update planItem %O', planItem);
 			//Note: null to not update them unless required
 			const update = {
 				...(planItem
@@ -128,13 +129,13 @@ export async function webhookHandler(req, res, next) {
 					: null,
 				stripeTrial: subscriptionUpdated?.status === 'trialing'
 			};
-			log('Customer subscription update 1 %O', update);
+			log.info('Customer subscription update 1 %O', update);
 			if (subscriptionUpdated['status'] === 'canceled') {
-				log(`${subscriptionUpdated.customer} canceled their subscription`);
+				log.info(`${subscriptionUpdated.customer} canceled their subscription`);
 				update['stripeEndsAt'] = subscriptionUpdated.cancel_at * 1000;
 				update['stripeCancelled'] = true;
 			} else if (subscriptionUpdated['cancel_at_period_end'] === true) {
-				log(`${subscriptionUpdated.customer} subscription will cancel at end of period`);
+				log.info(`${subscriptionUpdated.customer} subscription will cancel at end of period`);
 				update['stripeEndsAt'] = subscriptionUpdated.cancel_at * 1000;
 				update['stripeCancelled'] = true;
 			} else {
@@ -144,12 +145,12 @@ export async function webhookHandler(req, res, next) {
 			if (Date.now() >= update['stripeEndsAt'] && update['stripeCancelled'] === true) {
 				update['stripePlan'] = SubscriptionPlan.FREE;
 			}
-			log('Customer subscription update 2 %O', update);
+			log.info('Customer subscription update 2 %O', update);
 
 			// Get org by stripe customer ID
 			const org = await getOrgByStripeCustomerId(subscriptionUpdated.customer);
 			if (!org) {
-				log('No org found for stripe customer ID:', subscriptionUpdated.customer);
+				log.info('No org found for stripe customer ID:', subscriptionUpdated.customer);
 				return;
 			}
 			await updateOrgStripeCustomer(org._id, update);
@@ -160,7 +161,7 @@ export async function webhookHandler(req, res, next) {
 			const subscriptionDeleted = event.data.object;
 			const org = await getOrgByStripeCustomerId(subscriptionDeleted.customer);
 			if (!org) {
-				log('No org found for stripe customer ID:', subscriptionDeleted.customer);
+				log.info('No org found for stripe customer ID:', subscriptionDeleted.customer);
 				return;
 			}
 			await updateOrgStripeCustomer(org._id, {
@@ -176,7 +177,7 @@ export async function webhookHandler(req, res, next) {
 			const subscriptionPaused = event.data.object;
 			const org = await getOrgByStripeCustomerId(subscriptionPaused.customer);
 			if (!org) {
-				log('No org found for stripe customer ID:', subscriptionPaused.customer);
+				log.info('No org found for stripe customer ID:', subscriptionPaused.customer);
 				return;
 			}
 			await updateOrgStripeCustomer(org._id, {
@@ -189,7 +190,7 @@ export async function webhookHandler(req, res, next) {
 		}
 
 		default: {
-			log(`Unhandled stripe webhook event type "${event.type}"`);
+			log.info(`Unhandled stripe webhook event type "${event.type}"`);
 		}
 	}
 

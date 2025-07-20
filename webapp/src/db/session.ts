@@ -1,16 +1,17 @@
 'use strict';
 
 import * as db from 'db/index';
-import debug from 'debug';
 import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
 import { InsertResult } from 'struct/db';
 import { SessionStatus } from 'struct/session';
 import { SharingConfig, SharingMode } from 'struct/sharing';
-const log = debug('webapp:db:session');
 import { unsafeGetAppById } from 'db/app';
 
 import Permissions from '../lib/permissions/permissions';
+import { createLogger } from 'utils/logger';
+
+const log = createLogger('webapp:db:session');
 
 export type Session = {
 	_id?: ObjectId;
@@ -177,7 +178,7 @@ export async function checkCanAccessApp(
 	}
 	const foundApp = await unsafeGetAppById(appId);
 	if (!foundApp) {
-		log('checkCanAccessApp app id "%s" not found', appId);
+		log.info('checkCanAccessApp app id "%s" not found', appId);
 		return false;
 	}
 	switch (foundApp?.sharingConfig?.mode as SharingMode) {

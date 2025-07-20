@@ -1,6 +1,5 @@
 import { Logging } from '@google-cloud/logging';
 import archiver from 'archiver';
-import debug from 'debug';
 import { StandardRequirements, WrapToolCode } from 'function/base';
 import * as protofiles from 'google-proto-files';
 import StorageProviderFactory from 'lib/storage';
@@ -12,8 +11,9 @@ const protopath = protofiles.getProtoPath(
 const root = protofiles.loadSync(protopath);
 const auditLogProto = root.lookupType('google.cloud.audit.AuditLog');
 import FunctionProvider from './provider';
+import { createLogger } from 'utils/logger';
 
-const log = debug('webapp:function:google');
+const log = createLogger('webapp:function:google');
 
 class GoogleFunctionProvider extends FunctionProvider {
 	// TODO: type these?
@@ -38,7 +38,7 @@ class GoogleFunctionProvider extends FunctionProvider {
 		this.#projectId = process.env.PROJECT_ID;
 		this.#location = process.env.GOOGLE_FUNCTION_LOCATION;
 		this.#bucket = process.env.NEXT_PUBLIC_GCS_BUCKET_NAME_PRIVATE;
-		log('Google Function Provider initialized.');
+		log.info('Google Function Provider initialized.');
 	}
 
 	async getFunctionLogs(functionId: string, limit = 100): Promise<string> {
@@ -67,7 +67,7 @@ severity>=WARNING`;
 					//log(decodedJson);
 					return decodedJson?.status?.message;
 				} else if (textPayload) {
-					log('textPayload, %O', textPayload);
+					log.info('textPayload, %O', textPayload);
 					const severity = entry.metadata.severity || 'UNKNOWN';
 					return `${entry.metadata.timestamp} [${severity}] ${textPayload}`;
 				}
@@ -113,12 +113,12 @@ severity>=WARNING`;
 		let functionExists = false;
 		try {
 			const existingFunction = await this.#functionsClient.getFunction({ name: functionName });
-			log(existingFunction);
+			log.info(existingFunction);
 			functionExists = true;
 		} catch (err) {
 			if (err.code !== 5) {
 				// 5 means NOT_FOUND
-				log(err);
+				log.error(err);
 				throw err;
 			}
 		}
@@ -149,22 +149,22 @@ severity>=WARNING`;
 			parent: `projects/${this.#projectId}/locations/${this.#location}`,
 			functionId: `function-${id}`
 		};
-		log('Function create request for %s %O', functionName, request);
+		log.info('Function create request for %s %O', functionName, request);
 
 		try {
 			let response;
 			if (functionExists) {
 				[response] = await this.#functionsClient.updateFunction(request);
-				log(`Function updated successfully: ${functionName}`);
+				log.info(`Function updated successfully: ${functionName}`);
 			} else {
 				request.location = location;
 				[response] = await this.#functionsClient.createFunction(request);
-				log(
+				log.info(
 					`Function created successfully: ${functionName} https://console.cloud.google.com/functions/details/${this.#location}/${functionName}?env=gen2&project=${this.#projectId}&tab=source`
 				);
 			}
 		} catch (e) {
-			log(JSON.stringify(e, null, 2));
+			log.error(JSON.stringify(e, null, 2));
 			throw e;
 		}
 
@@ -175,9 +175,9 @@ severity>=WARNING`;
 		const functionName = `projects/${this.#projectId}/locations/${this.#location}/functions/function-${functionId}`;
 		try {
 			await this.#functionsClient.deleteFunction({ name: functionName });
-			log(`Function deleted successfully: ${functionName}`);
+			log.info(`Function deleted successfully: ${functionName}`);
 		} catch (err) {
-			log(err);
+			log.error(err);
 			throw err;
 		}
 	}
@@ -188,13 +188,13 @@ severity>=WARNING`;
 			const [response] = await this.#functionsClient.getFunction({ name: functionName });
 			return response.state;
 		} catch (err) {
-			log(err);
+			log.error(err);
 			return 'ERROR';
 		}
 	}
 
 	async waitForFunctionToBeActive(functionId: string, maxWaitTime = 120000): Promise<boolean> {
-		log('In waitForFunctionToBeActive loop for ID: %s', functionId);
+		log.info('In waitForFunctionToBeActive loop for ID: %s', functionId);
 		const startTime = Date.now();
 		while (Date.now() - startTime < maxWaitTime) {
 			const functionState = await this.getFunctionState(functionId);
@@ -203,7 +203,7 @@ severity>=WARNING`;
 			} else if (functionState !== 'DEPLOYING') {
 				return false; //Short circuit if it enters a state other than pending and isnt active
 			}
-			log('In waitForFunctionToBeActive loop for ID: %s', functionId);
+			log.info('In waitForFunctionToBeActive loop for ID: %s', functionId);
 			await new Promise(resolve => setTimeout(resolve, 5000));
 		}
 
@@ -223,7 +223,7 @@ severity>=WARNING`;
 			const responseData = await response.json();
 			return responseData;
 		} catch (error) {
-			log(error);
+			log.error(error);
 			throw error;
 		}
 	}

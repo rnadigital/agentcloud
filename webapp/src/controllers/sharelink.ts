@@ -7,7 +7,6 @@ import { getCrewById } from 'db/crew';
 import { addSession, checkCanAccessApp } from 'db/session';
 import { createShareLink, getShareLinkByShareId } from 'db/sharelink';
 import { getTaskById } from 'db/task';
-import debug from 'debug';
 import { chainValidations } from 'lib/utils/validationutils';
 import toObjectId from 'misc/toobjectid';
 import { sessionTaskQueue } from 'queue/bull';
@@ -15,7 +14,6 @@ import { App, AppType } from 'struct/app';
 import { SessionStatus } from 'struct/session';
 import { ShareLinkTypes } from 'struct/sharelink';
 import { SharingMode } from 'struct/sharing';
-const log = debug('webapp:controllers:sharelink');
 
 export async function addShareLinkApi(req, res, next) {
 	let validationError = chainValidations(

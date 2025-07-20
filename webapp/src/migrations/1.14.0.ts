@@ -1,9 +1,9 @@
-import debug from 'debug';
+import { createLogger } from 'utils/logger';
 
-const log = debug('webapp:migration:1.14.0');
+const log = createLogger('webapp:migration:1.14.0');
 
 export default async function (db) {
-	log('Starting vectordb type migration for datasources');
+	log.info('Starting vectordb type migration for datasources');
 
 	const datasources = await db
 		.collection('datasources')
@@ -12,7 +12,7 @@ export default async function (db) {
 		})
 		.toArray();
 
-	log(`Found ${datasources.length} datasources with vectorDbId to process`);
+	log.info(`Found ${datasources.length} datasources with vectorDbId to process`);
 
 	let vectorDbMigratedCount = 0;
 	let vectorDbErrorCount = 0;
@@ -24,7 +24,7 @@ export default async function (db) {
 			});
 
 			if (!vectorDb) {
-				log(`No vectordb found for datasource ${datasource._id}`);
+				log.warn(`No vectordb found for datasource ${datasource._id}`);
 				continue;
 			}
 
@@ -38,14 +38,14 @@ export default async function (db) {
 			);
 
 			vectorDbMigratedCount++;
-			log(`Successfully added vectordbtype for datasource ${datasource._id}`);
+			log.info(`Successfully added vectordbtype for datasource ${datasource._id}`);
 		} catch (error) {
 			vectorDbErrorCount++;
-			log(`Error processing datasource ${datasource._id}: ${error.message}`);
+			log.error(`Error processing datasource ${datasource._id}: ${error.message}`);
 		}
 	}
 
-	log(
+	log.info(
 		`VectorDB type migration complete. Successfully migrated ${vectorDbMigratedCount} datasources. Errors: ${vectorDbErrorCount}`
 	);
 }

@@ -21,7 +21,6 @@ import {
 import { getModelById, getModelsByTeam } from 'db/model';
 import { addTool, deleteToolsForDatasource, editToolsForDatasource } from 'db/tool';
 import { getVectorDbById, getVectorDbsByTeam } from 'db/vectordb';
-import debug from 'debug';
 import dotenv from 'dotenv';
 import { convertCronToQuartz, convertUnitToCron } from 'lib/airbyte/cronconverter';
 import { chainValidations } from 'lib/utils/validationutils';
@@ -47,8 +46,9 @@ import {
 import { Retriever, ToolType } from 'struct/tool';
 import { CloudRegionMap } from 'struct/vectorproxy';
 import formatSize from 'utils/formatsize';
+import { createLogger } from 'utils/logger';
 
-const log = debug('webapp:controllers:datasource');
+const log = createLogger('webapp:controllers:datasource');
 const ajv = new Ajv({ strict: 'log' });
 addFormats(ajv);
 dotenv.config({ path: '.env' });
@@ -190,16 +190,16 @@ export async function testDatasourceApi(req, res, next) {
 	spec.$schema = 'http://json-schema.org/draft-07/schema#';
 
 	try {
-		log('spec', JSON.stringify(spec, null, 2));
+		log.info('spec', JSON.stringify(spec, null, 2));
 		const validate = ajv.compile(spec);
-		log('validate', validate);
+		log.info('validate', validate);
 		const validated = validate(req.body.sourceConfig);
 		if (
 			validate?.errors?.filter(
 				p => p?.params?.pattern !== '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$'
 			)?.length > 0
 		) {
-			log('validate.errors', validate?.errors);
+			log.info('validate.errors', validate?.errors);
 			const error = validate.errors
 				.map(error => `Invalid input for ${error.instancePath.replace('/', '')}: ${error.message}`)
 				.join('; ');
@@ -226,11 +226,11 @@ export async function testDatasourceApi(req, res, next) {
 			workspaceId: process.env.AIRBYTE_ADMIN_WORKSPACE_ID,
 			name: `${datasourceName} (${newDatasourceId.toString()}) - ${res.locals.account.name} (${res.locals.account._id})`
 		};
-		log('sourceBody', sourceBody);
+		log.info('sourceBody', sourceBody);
 		createdSource = await sourcesApi.createSource(null, sourceBody).then(res => res.data);
-		log('createdSource', createdSource);
+		log.info('createdSource', createdSource);
 	} catch (e) {
-		log(e);
+		log.error(e);
 		return dynamicResponse(req, res, 400, {
 			error: `Failed to create datasource: ${e?.response?.data?.detail || e}`
 		});
@@ -243,18 +243,18 @@ export async function testDatasourceApi(req, res, next) {
 		const checkConnectionBody = {
 			sourceId: createdSource.sourceId
 		};
-		log('checkConnectionBody', checkConnectionBody);
+		log.info('checkConnectionBody', checkConnectionBody);
 		const connectionTest = await internalApi
 			.checkConnectionToSource(null, checkConnectionBody)
 			.then(res => res.data);
-		log('connectionTest', connectionTest);
+		log.info('connectionTest', connectionTest);
 		if (connectionTest?.status === 'failed') {
 			return dynamicResponse(req, res, 400, {
 				error: `Datasource connection test failed: ${connectionTest.message}`
 			});
 		}
 	} catch (e) {
-		console.error(e);
+		log.error(e);
 		return dynamicResponse(req, res, 400, {
 			error: `Datasource connection test failed: ${e?.response?.data?.detail || e}`
 		});
@@ -267,17 +267,17 @@ export async function testDatasourceApi(req, res, next) {
 			sourceId: createdSource.sourceId,
 			disable_cache: true
 		};
-		log('discoverSchemaBody', discoverSchemaBody);
+		log.info('discoverSchemaBody', discoverSchemaBody);
 		discoveredSchema = await internalApi
 			.discoverSchemaForSource(null, discoverSchemaBody)
 			.then(res => res.data);
-		log('discoveredSchema', JSON.stringify(discoveredSchema, null, 2));
+		log.info('discoveredSchema', JSON.stringify(discoveredSchema, null, 2));
 
 		if (!discoveredSchema.catalog) {
 			return dynamicResponse(req, res, 400, { error: 'Schema catalog not found' });
 		}
 	} catch (e) {
-		console.error(e);
+		log.error(e);
 		return dynamicResponse(req, res, 400, {
 			error: `Failed to discover datasource schema: ${e?.response?.data?.detail || e}`
 		});
@@ -291,16 +291,16 @@ export async function testDatasourceApi(req, res, next) {
 			sourceId: createdSource.sourceId,
 			destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID
 		};
-		log('streamPropertiesBody', streamPropertiesBody);
+		log.info('streamPropertiesBody', streamPropertiesBody);
 		streamProperties = await streamsApi
 			.getStreamProperties(streamPropertiesBody)
 			.then(res => res.data);
-		log('streamProperties', JSON.stringify(streamProperties, null, 2));
+		log.info('streamProperties', JSON.stringify(streamProperties, null, 2));
 		if (!streamProperties) {
 			return dynamicResponse(req, res, 400, { error: 'Stream properties not found' });
 		}
 	} catch (e) {
-		log(e);
+		log.error(e);
 		return dynamicResponse(req, res, 400, {
 			error: `Failed to discover datasource schema: ${e?.response?.data?.detail || e}`
 		});
@@ -422,11 +422,21 @@ export async function addDatasourceApi(req, res, next) {
 
 	// Backend validation for streamConfig
 	if (!streamConfig || typeof streamConfig !== 'object' || Object.keys(streamConfig).length === 0) {
-		return dynamicResponse(req, res, 400, { error: 'You must select at least one stream and one field before continuing.' });
+		return dynamicResponse(req, res, 400, {
+			error: 'You must select at least one stream and one field before continuing.'
+		});
 	}
 	for (const [streamName, config] of Object.entries(streamConfig)) {
-		if (!config || typeof config !== 'object' || !('syncMode' in config) || !('cursorField' in config) || !('primaryKey' in config)) {
-			return dynamicResponse(req, res, 400, { error: `Stream configuration for "${streamName}" is incomplete or malformed.` });
+		if (
+			!config ||
+			typeof config !== 'object' ||
+			!('syncMode' in config) ||
+			!('cursorField' in config) ||
+			!('primaryKey' in config)
+		) {
+			return dynamicResponse(req, res, 400, {
+				error: `Stream configuration for "${streamName}" is incomplete or malformed.`
+			});
 		}
 	}
 
@@ -530,7 +540,7 @@ export async function addDatasourceApi(req, res, next) {
 		jobType: 'sync'
 	};
 	const createdJob = await jobsApi.createJob(null, jobBody).then(res => res.data);
-	log('createdJob', createdJob);
+	log.info('createdJob', createdJob);
 
 	// Set status to processing after jub submission
 	await setDatasourceStatus(req.params.resourceSlug, datasourceId, DatasourceStatus.PROCESSING);
@@ -543,7 +553,7 @@ export async function addDatasourceApi(req, res, next) {
 		try {
 			metadata_field_info = getMetadataFieldInfo(datasource?.streamConfig);
 		} catch (e) {
-			log(e);
+			log.error(e);
 			//supress
 		}
 	}
@@ -628,12 +638,12 @@ export async function updateDatasourceScheduleApi(req, res, next) {
 			scheduleType: DatasourceScheduleType.MANUAL
 		};
 	}
-	log('connectionBody', JSON.stringify(connectionBody, null, 2));
+	log.info('connectionBody', JSON.stringify(connectionBody, null, 2));
 	try {
 		const updatedConnection = await connectionsApi
 			.patchConnection(datasource.connectionId, connectionBody)
 			.then(res => res.data);
-		log('updatedConnection', updatedConnection);
+		log.info('updatedConnection', updatedConnection);
 	} catch (e) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
@@ -683,11 +693,21 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 
 	// Backend validation for streamConfig
 	if (!streamConfig || typeof streamConfig !== 'object' || Object.keys(streamConfig).length === 0) {
-		return dynamicResponse(req, res, 400, { error: 'You must select at least one stream and one field before continuing.' });
+		return dynamicResponse(req, res, 400, {
+			error: 'You must select at least one stream and one field before continuing.'
+		});
 	}
 	for (const [streamName, config] of Object.entries(streamConfig)) {
-		if (!config || typeof config !== 'object' || !('syncMode' in config) || !('cursorField' in config) || !('primaryKey' in config)) {
-			return dynamicResponse(req, res, 400, { error: `Stream configuration for "${streamName}" is incomplete or malformed.` });
+		if (
+			!config ||
+			typeof config !== 'object' ||
+			!('syncMode' in config) ||
+			!('cursorField' in config) ||
+			!('primaryKey' in config)
+		) {
+			return dynamicResponse(req, res, 400, {
+				error: `Stream configuration for "${streamName}" is incomplete or malformed.`
+			});
 		}
 	}
 
@@ -698,7 +718,7 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 	try {
 		metadataFieldInfo = getMetadataFieldInfo(streamConfig);
 	} catch (e) {
-		log(e);
+		log.error(e);
 		//suppressed
 	}
 
@@ -770,7 +790,7 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 			jobType: 'sync'
 		};
 		const createdJob = await jobsApi.createJob(null, jobBody).then(res => res.data);
-		log('createdJob', createdJob);
+		log.info('createdJob', createdJob);
 	}
 
 	// Update the datasource with the connection settings and sync date
@@ -844,9 +864,9 @@ export async function syncDatasourceApi(req, res, next) {
 
 		try {
 			const createdJob = await jobsApi.createJob(null, jobBody).then(res => res.data);
-			log('createdJob', createdJob);
+			log.info('createdJob', createdJob);
 		} catch (e) {
-			log(e);
+			log.error(e);
 			return dynamicResponse(req, res, 400, { error: 'Error submitting sync job' });
 		}
 
@@ -885,7 +905,7 @@ export async function deleteDatasourceApi(req, res, next) {
 				jobType: 'reset'
 			};
 			const resetJob = await jobsApi.createJob(null, jobBody).then(res => res.data);
-			log('resetJob', resetJob);
+			log.info('resetJob', resetJob);
 		} catch (e) {
 			// Continue but log a warning if the reset job api call fails
 			console.warn(e);
@@ -913,7 +933,7 @@ export async function deleteDatasourceApi(req, res, next) {
 		} catch (err) {
 			//Ignoring when gcs file doesn't exist or was already deleted
 			if (!Array.isArray(err?.errors) || err.errors[0]?.reason !== 'notFound') {
-				log(err);
+				log.error(err);
 				return dynamicResponse(req, res, 400, { error: 'Error deleting datasource' });
 			}
 		}
@@ -928,7 +948,7 @@ export async function deleteDatasourceApi(req, res, next) {
 				.deleteSource(sourceBody, sourceBody)
 				.then(res => res.data);
 		} catch (e) {
-			log(e);
+			log.error(e);
 			if (e?.response?.data?.title !== 'resource-not-found') {
 				return dynamicResponse(req, res, 400, { error: 'Error deleting datasource' });
 			}

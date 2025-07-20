@@ -1,10 +1,6 @@
-import debug from 'debug';
 import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-
-import * as API from '../api';
-const log = debug('webapp:context');
 
 const ChatContext = createContext({});
 

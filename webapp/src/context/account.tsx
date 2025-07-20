@@ -1,11 +1,9 @@
 import * as API from '@api';
-import debug from 'debug';
 import { useRouter } from 'next/router';
-import posthog from 'posthog-js';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-const log = debug('webapp:context');
 import Permission from '@permission';
 import { usePostHog } from 'posthog-js/react';
+
 const AccountContext = createContext({});
 
 function getTeamAndOrgName(data) {
