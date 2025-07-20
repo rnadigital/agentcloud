@@ -4,7 +4,7 @@ import * as API from '@api';
 import ModelTypeRequirementsComponent from 'components/models/ModelTypeRequirements';
 import SubscriptionModal from 'components/SubscriptionModal';
 import { useAccountContext } from 'context/account';
-import cn from 'lib/cn';
+import cn from 'utils/cn';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useReducer } from 'react';
@@ -108,14 +108,9 @@ export default function ModelForm({
 				<div className='space-y-12'>
 					<div className='space-y-6'>
 						{!compact && !editing && (
-							<div>
-								<h2 className='text-base font-semibold leading-7 text-gray-900 dark:text-white'>
-									Model
-								</h2>
-								<p className='mt-1 text-sm leading-6 text-gray-600 dark:text-gray-50'>
-									Configure models to be used for agents and/or embedding data sources.
-								</p>
-							</div>
+							<p className='mt-1 text-sm leading-6 text-gray-600 dark:text-gray-50'>
+								Configure models to be used for agents and/or embedding data sources.
+							</p>
 						)}
 						<div>
 							<label

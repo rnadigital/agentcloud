@@ -48,6 +48,7 @@ interface Org {
 	ownerId: string;
 	teams: TeamSummary[];
 	permissions: Record<string, string>;
+	stripe?: Stripe;
 }
 
 interface TeamSummary {

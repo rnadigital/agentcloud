@@ -9,7 +9,9 @@ import InfoAlert from 'components/InfoAlert';
 import Link from 'next/link';
 import { useEffect, useReducer, useState } from 'react';
 import Select from 'react-tailwindcss-select';
+import { useConnectionsStore } from 'store/connections';
 import { FieldDescriptionMap, StreamConfig, StreamConfigMap, SyncModes } from 'struct/datasource';
+import { useShallow } from 'zustand/react/shallow';
 
 import SelectClassNames from '../lib/styles/SelectClassNames';
 import submittingReducer from '../lib/utils/submittingreducer';
@@ -19,15 +21,15 @@ export function StreamRow({
 	stream,
 	streamProperty,
 	readonly,
-	setStreamReducer,
 	streamState
 }: {
 	stream: any;
 	streamProperty: any;
 	readonly?: boolean;
-	setStreamReducer: Function;
 	streamState: StreamConfig;
 }) {
+	const setStreamState = useConnectionsStore(state => state.setStreamState);
+
 	const [isExpanded, setIsExpanded] = useState(streamState?.checkedChildren != null && !readonly);
 	const streamName = stream?.stream?.name || stream?.name;
 
@@ -84,7 +86,7 @@ export function StreamRow({
 	}
 
 	useEffect(() => {
-		setStreamReducer({
+		setStreamState({
 			[streamName]: {
 				checkedChildren,
 				primaryKey,
@@ -122,8 +124,7 @@ export function StreamRow({
 				)}
 				<div
 					className='flex items-center cursor-pointer select-none'
-					onClick={() => setIsExpanded(!isExpanded)}
-				>
+					onClick={() => setIsExpanded(!isExpanded)}>
 					<span>
 						{isExpanded ? (
 							<ChevronDownIcon className='h-4 w-4' />
@@ -136,15 +137,13 @@ export function StreamRow({
 			</div>
 			{stream?.stream?.jsonSchema && (
 				<div
-					className={`p-4 bg-gray-100 dark:bg-slate-800 rounded ${isExpanded ? '' : 'hidden'} dark:text-white space-y-2 flex flex-col`}
-				>
+					className={`p-4 bg-gray-100 dark:bg-slate-800 rounded ${isExpanded ? '' : 'hidden'} dark:text-white space-y-2 flex flex-col`}>
 					{sourceDefinedCursorField ? (
 						<div>
 							<InfoAlert
 								textColor='black'
 								className='col-span-full bg-blue-100 text-blue-900 p-4 text-sm rounded-md mt-2'
-								message='Source defined cursor field'
-							>
+								message='Source defined cursor field'>
 								The cursor field and primary key for this stream is source-defined and cannot be
 								deselected.
 							</InfoAlert>
@@ -162,8 +161,7 @@ export function StreamRow({
 											className='text-blue-600'
 											href={'https://docs.airbyte.com/using-airbyte/core-concepts/sync-modes/'}
 											rel='noopener noreferrer'
-											target='_blank'
-										>
+											target='_blank'>
 											Learn more about sync modes here
 										</Link>
 									</>
@@ -174,8 +172,7 @@ export function StreamRow({
 					<div>
 						<label
 							htmlFor='syncMode'
-							className='block text-sm font-medium text-gray-700 dark:text-gray-300'
-						>
+							className='block text-sm font-medium text-gray-700 dark:text-gray-300'>
 							Sync Mode
 						</label>
 						<select
@@ -187,8 +184,7 @@ export function StreamRow({
 								const newMode = e.target.value;
 								setSyncMode(newMode);
 							}}
-							disabled={readonly}
-						>
+							disabled={readonly}>
 							{SyncModes.map(mode => {
 								const modeAvailable =
 									mode === 'full_refresh_overwrite' || //Note: experimental, forcing to always allow full refresh
@@ -205,8 +201,7 @@ export function StreamRow({
 							<InfoAlert
 								textColor='black'
 								className='col-span-full bg-yellow-100 text-yellow-900 p-4 text-sm rounded-md mt-2'
-								message='Connector uses nested fields'
-							>
+								message='Connector uses nested fields'>
 								Cursor and primary key selection for nested fields is not yet supported.
 							</InfoAlert>
 						)}
@@ -215,15 +210,13 @@ export function StreamRow({
 						<div>
 							<label
 								htmlFor='primaryKey'
-								className='flex text-sm font-medium text-gray-700 dark:text-gray-300 py-1 space-x-1'
-							>
+								className='flex text-sm font-medium text-gray-700 dark:text-gray-300 py-1 space-x-1'>
 								<span>Primary Key</span>
 								<span>
 									<ToolTip
 										content='Select the primary key field, or choose multiple fields to form a compound primary key.'
 										placement='top'
-										arrow={true}
-									>
+										arrow={true}>
 										<InformationCircleIcon className='h-4 w-4' />
 									</ToolTip>
 								</span>
@@ -346,32 +339,35 @@ export function StreamsList({
 	streams,
 	streamProperties,
 	readonly,
-	streamState,
-	setStreamReducer
+	streamState
 }: {
 	streams?: any;
 	streamProperties?: any;
 	readonly?: boolean;
 	streamState?: StreamConfigMap;
-	setStreamReducer?: Function;
 }) {
 	return (
 		<div className='my-4'>
-			{streams?.map((stream, index) => {
-				const streamName = stream?.stream?.name;
-				const streamProperty = streamProperties?.find(sp => sp?.streamName === streamName);
-				const initialStreamState = streamState?.[streamName] || ({} as StreamConfig);
-				return (
-					<StreamRow
-						readonly={readonly}
-						key={index}
-						stream={stream}
-						streamProperty={streamProperty}
-						streamState={initialStreamState}
-						setStreamReducer={setStreamReducer}
-					/>
-				);
-			})}
+			{streams
+				?.filter(stream => {
+					const streamName = stream?.stream?.name;
+					const initialStreamState = streamState?.[streamName] || ({} as StreamConfig);
+					return initialStreamState?.checkedChildren?.length > 0;
+				})
+				.map((stream, index) => {
+					const streamName = stream?.stream?.name;
+					const streamProperty = streamProperties?.find(sp => sp?.streamName === streamName);
+					const initialStreamState = streamState?.[streamName] || ({} as StreamConfig);
+					return (
+						<StreamRow
+							readonly={readonly}
+							key={index}
+							stream={stream}
+							streamProperty={streamProperty}
+							streamState={initialStreamState}
+						/>
+					);
+				})}
 		</div>
 	);
 }

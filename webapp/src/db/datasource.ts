@@ -1,4 +1,4 @@
-'use strict';
+('use strict');
 
 import * as db from 'db/index';
 import debug from 'debug';
@@ -6,10 +6,11 @@ import toObjectId from 'misc/toobjectid';
 import {
 	Datasource,
 	DatasourceConnectionSettings,
-	DatasourceRecordCount,
+	DataSourceModel,
 	DatasourceStatus
 } from 'struct/datasource';
 import { InsertResult } from 'struct/db';
+import { VectorDbType } from 'struct/vectordb';
 
 const log = debug('webapp:db:datasources');
 
@@ -49,6 +50,14 @@ export function getDatasourcesById(
 				$in: datasourceIds.map(toObjectId)
 			},
 			teamId: toObjectId(teamId)
+		})
+		.toArray();
+}
+
+export function getDatasourcesByVectorDbId(vectorDbId: db.IdOrStr): Promise<Datasource[]> {
+	return DatasourceCollection()
+		.find({
+			vectorDbId: toObjectId(vectorDbId)
 		})
 		.toArray();
 }

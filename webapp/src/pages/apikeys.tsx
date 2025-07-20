@@ -1,27 +1,25 @@
 import * as API from '@api';
-import { HomeIcon, PlusIcon } from '@heroicons/react/20/solid';
 import { KeyIcon } from '@heroicons/react/24/outline';
-import ApiKeyLIst from 'components/ApiKeyList';
 import ApiKeyList from 'components/ApiKeyList';
+import CreateAPIKeyModal from 'components/CreateAPIKeyModal';
 import NewButtonSection from 'components/NewButtonSection';
-import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
+import { CirclePlus, PlusIcon } from 'lucide-react';
 import Head from 'next/head';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 
 export default function APIKeys(props) {
 	const router = useRouter();
 	const [accountContext]: any = useAccountContext();
-	const { teamName, account, csrf } = accountContext as any;
-	const { resourceSlug } = router.query;
+	const { account, csrf } = accountContext as any;
 	const [loading, setLoading] = useState(true);
 	const [state, dispatch] = useState(props);
-	const [existingKeys, setExistingKeys] = useState(false);
 	const [error, setError] = useState();
 	const { keys } = state;
+	const [createKeyOpen, setCreateKeyOpen] = useState(false);
+
 	function fetchKeys(ownerId) {
 		API.getKeys({ ownerId, _csrf: csrf }, dispatch, setError, router);
 	}
@@ -42,16 +40,21 @@ export default function APIKeys(props) {
 				<title>{`keys - ${account?.name}`}</title>
 			</Head>
 
-			<PageTitleWithNewButton
-				list={keys}
-				title='API Keys'
-				buttonText='New Key'
-				href='/apikey/add'
-				slug={false}
-			/>
+			<div className='flex justify-between'>
+				<h1 className='font-semibold text-2xl text-foreground'>Variables</h1>
+
+				<button
+					onClick={() => setCreateKeyOpen(true)}
+					className='flex items-center gap-2 bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white py-2.5 px-4 rounded-lg'
+				>
+					<CirclePlus width={14} />
+					<p className='font-semibold text-sm'>New Key</p>
+				</button>
+			</div>
+
 			{keys?.length === 0 ? (
 				<NewButtonSection
-					link={`/apikey/add`}
+					setOpen={setCreateKeyOpen}
 					emptyMessage={'No keys'}
 					icon={<KeyIcon className='mx-auto w-12 h-12 text-gray-500' />}
 					message={'Get started by creating a new key.'}
@@ -66,6 +69,15 @@ export default function APIKeys(props) {
 					}
 				</div>
 			)}
+
+			<CreateAPIKeyModal
+				open={createKeyOpen}
+				setOpen={setCreateKeyOpen}
+				callback={() => {
+					fetchKeys(account?._id);
+					setCreateKeyOpen(false);
+				}}
+			/>
 		</>
 	);
 }

@@ -1,6 +1,8 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
+import { Pinecone } from '@pinecone-database/pinecone';
+import { QdrantClient } from '@qdrant/js-client-rest';
 import getAirbyteApi, { AirbyteApiType } from 'airbyte/api';
 import getConnectors, { getConnectorSpecification } from 'airbyte/getconnectors';
 import getAirbyteInternalApi from 'airbyte/internal';
@@ -18,6 +20,7 @@ import {
 } from 'db/datasource';
 import { getModelById, getModelsByTeam } from 'db/model';
 import { addTool, deleteToolsForDatasource, editToolsForDatasource } from 'db/tool';
+import { getVectorDbById, getVectorDbsByTeam } from 'db/vectordb';
 import debug from 'debug';
 import dotenv from 'dotenv';
 import { convertCronToQuartz, convertUnitToCron } from 'lib/airbyte/cronconverter';
@@ -42,6 +45,7 @@ import {
 	UnstructuredPartitioningStrategySet
 } from 'struct/datasource';
 import { Retriever, ToolType } from 'struct/tool';
+import { CloudRegionMap } from 'struct/vectorproxy';
 import formatSize from 'utils/formatsize';
 
 const log = debug('webapp:controllers:datasource');
@@ -50,16 +54,20 @@ addFormats(ajv);
 dotenv.config({ path: '.env' });
 
 export async function datasourcesData(req, res, _next) {
-	const [datasources, models] = await Promise.all([
+	const [datasources, models, vectorDbs] = await Promise.all([
 		getDatasourcesByTeam(req.params.resourceSlug),
-		getModelsByTeam(req.params.resourceSlug)
+		getModelsByTeam(req.params.resourceSlug),
+		getVectorDbsByTeam(req.params.resourceSlug)
 	]);
 	return {
 		csrf: req.csrfToken(),
 		datasources,
-		models
+		models,
+		vectorDbs
 	};
 }
+
+export type DatasourcesDataReturnType = Awaited<ReturnType<typeof datasourcesData>>;
 
 /**
  * GET /[resourceSlug]/datasources
@@ -71,6 +79,12 @@ export async function datasourcesPage(app, req, res, next) {
 	return app.render(req, res, `/${req.params.resourceSlug}/datasources`);
 }
 
+export async function connectionsPage(app, req, res, next) {
+	const data = await datasourceData(req, res, next);
+	res.locals.data = { ...data, account: res.locals.account };
+	return app.render(req, res, `/${req.params.resourceSlug}/connections`);
+}
+
 /**
  * GET /[resourceSlug]/datasources.json
  * team datasources json data
@@ -80,15 +94,19 @@ export async function datasourcesJson(req, res, next) {
 	return res.json({ ...data, account: res.locals.account });
 }
 
+export type DatasourceDataReturnType = Awaited<ReturnType<typeof datasourceData>>;
+
 export async function datasourceData(req, res, _next) {
-	const [datasource, models] = await Promise.all([
+	const [datasource, models, vectorDbs] = await Promise.all([
 		getDatasourceById(req.params.resourceSlug, req.params.datasourceId),
-		getModelsByTeam(req.params.resourceSlug)
+		getModelsByTeam(req.params.resourceSlug),
+		getVectorDbsByTeam(req.params.resourceSlug)
 	]);
 	return {
 		csrf: req.csrfToken(),
 		datasource,
-		models
+		models,
+		vectorDbs
 	};
 }
 
@@ -149,7 +167,6 @@ export async function testDatasourceApi(req, res, next) {
 	}
 
 	const connector = (await getConnectorSpecification(connectorId)) as any;
-	log('connector', connector);
 
 	const connectorList = await getConnectors();
 	const submittedConnector = connectorList.find(c => c.definitionId === connectorId);
@@ -332,8 +349,16 @@ export async function addDatasourceApi(req, res, next) {
 		retriever_config,
 		timeUnit,
 		chunkingConfig,
-		enableConnectorChunking
+		enableConnectorChunking,
+		vectorDbId,
+		byoVectorDb,
+		collectionName,
+		noRedirect,
+		region,
+		cloud
 	} = req.body;
+
+	const collection = collectionName || datasourceId;
 
 	const currentPlan = res.locals?.subscription?.stripePlan;
 	const allowedPeriods = pricingMatrix[currentPlan]?.cronProps?.allowedPeriods || [];
@@ -368,6 +393,10 @@ export async function addDatasourceApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: validationError });
 	}
 
+	if (!byoVectorDb && (!region || region === '')) {
+		return dynamicResponse(req, res, 400, { error: 'Region is required' });
+	}
+
 	const limitReached = await isVectorLimitReached(
 		req.params.resourceSlug,
 		res.locals?.subscription?.stripePlan
@@ -391,18 +420,31 @@ export async function addDatasourceApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
+	// Backend validation for streamConfig
+	if (!streamConfig || typeof streamConfig !== 'object' || Object.keys(streamConfig).length === 0) {
+		return dynamicResponse(req, res, 400, { error: 'You must select at least one stream and one field before continuing.' });
+	}
+	for (const [streamName, config] of Object.entries(streamConfig)) {
+		if (!config || typeof config !== 'object' || !('syncMode' in config) || !('cursorField' in config) || !('primaryKey' in config)) {
+			return dynamicResponse(req, res, 400, { error: `Stream configuration for "${streamName}" is incomplete or malformed.` });
+		}
+	}
+
 	const connectionsApi = await getAirbyteApi(AirbyteApiType.CONNECTIONS);
 	const connectionBody = {
 		name: datasource._id.toString(),
 		sourceId: datasource.sourceId,
 		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
 		configurations: {
-			streams: Object.entries(streamConfig).map((e: [string, StreamConfig]) => ({
-				name: e[0],
-				syncMode: e[1].syncMode,
-				cursorField: e[1].cursorField.length > 0 ? e[1].cursorField : null,
-				primaryKey: e[1].primaryKey.length > 0 ? e[1].primaryKey.map(x => [x]) : null
-			}))
+			streams: Object.entries(streamConfig).map((e: [string, StreamConfig]) => {
+				const streamData = e[1];
+				return {
+					name: e[0],
+					syncMode: streamData.syncMode,
+					cursorField: streamData.cursorField?.length > 0 ? streamData.cursorField : null,
+					primaryKey: streamData.primaryKey?.length > 0 ? streamData.primaryKey.map(x => [x]) : null
+				};
+			})
 		},
 		dataResidency: 'auto',
 		namespaceDefinition: 'destination',
@@ -458,12 +500,22 @@ export async function addDatasourceApi(req, res, next) {
 					overlap_all: overlap_all === 'true',
 					file_type
 				}
-			: null //TODO: validation
+			: null, //TODO: validation
+		vectorDbId: toObjectId(vectorDbId),
+		byoVectorDb,
+		region,
+		cloud,
+		collectionName: collection,
+		namespace: datasourceId
 	});
 
-	// Create the collection in qdrant
 	try {
-		await VectorDBProxyClient.createCollection(datasourceId);
+		await VectorDBProxyClient.createCollection(datasourceId, {
+			cloud,
+			region,
+			collection_name: collectionName,
+			index_name: collectionName
+		});
 	} catch (e) {
 		console.error(e);
 		return dynamicResponse(req, res, 400, {
@@ -507,7 +559,7 @@ export async function addDatasourceApi(req, res, next) {
 		datasourceId: toObjectId(datasourceId),
 		schema: null,
 		retriever_type: retriever || null,
-		retriever_config: { ...retriever_config, metadata_field_info } || {}, //TODO: validation
+		retriever_config: { ...retriever_config, metadata_field_info }, //TODO: validation
 		data: {
 			builtin: false,
 			name: toSnakeCase(datasourceName)
@@ -519,6 +571,11 @@ export async function addDatasourceApi(req, res, next) {
 				}
 			: null
 	});
+	if (noRedirect) {
+		return dynamicResponse(req, res, 200, {
+			toolId: addedTool.insertedId
+		});
+	}
 
 	return dynamicResponse(req, res, 302, {
 		redirect: `/${req.params.resourceSlug}/datasources`,
@@ -578,7 +635,6 @@ export async function updateDatasourceScheduleApi(req, res, next) {
 			.then(res => res.data);
 		log('updatedConnection', updatedConnection);
 	} catch (e) {
-		console.log(JSON.stringify(e, null, 2));
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
@@ -625,6 +681,16 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 		return dynamicResponse(req, res, 400, { error: 'Invalid inputs' });
 	}
 
+	// Backend validation for streamConfig
+	if (!streamConfig || typeof streamConfig !== 'object' || Object.keys(streamConfig).length === 0) {
+		return dynamicResponse(req, res, 400, { error: 'You must select at least one stream and one field before continuing.' });
+	}
+	for (const [streamName, config] of Object.entries(streamConfig)) {
+		if (!config || typeof config !== 'object' || !('syncMode' in config) || !('cursorField' in config) || !('primaryKey' in config)) {
+			return dynamicResponse(req, res, 400, { error: `Stream configuration for "${streamName}" is incomplete or malformed.` });
+		}
+	}
+
 	//update the metadata map of tools if found
 	//TODO: move these fields to be stored on tools and fetch the schema on frontend with the tools datasource ID
 	//NOTE: combines for all streams, may cause conflicts, needs BIG discussion how to overhaul for multi-stream support
@@ -646,12 +712,15 @@ export async function updateDatasourceStreamsApi(req, res, next) {
 		sourceId: datasource.sourceId,
 		destinationId: process.env.AIRBYTE_ADMIN_DESTINATION_ID,
 		configurations: {
-			streams: Object.entries(streamConfig).map((e: [string, StreamConfig]) => ({
-				name: e[0],
-				syncMode: e[1].syncMode,
-				cursorField: e[1].cursorField.length > 0 ? e[1].cursorField : null,
-				primaryKey: e[1].primaryKey.length > 0 ? e[1].primaryKey.map(x => [x]) : null
-			}))
+			streams: Object.entries(streamConfig).map((e: [string, StreamConfig]) => {
+				const streamData = e[1];
+				return {
+					name: e[0],
+					syncMode: streamData.syncMode,
+					cursorField: streamData.cursorField?.length > 0 ? streamData.cursorField : null,
+					primaryKey: streamData.primaryKey?.length > 0 ? streamData.primaryKey.map(x => [x]) : null
+				};
+			})
 		},
 		dataResidency: 'auto',
 		namespaceDefinition: 'destination',
@@ -778,7 +847,6 @@ export async function syncDatasourceApi(req, res, next) {
 			log('createdJob', createdJob);
 		} catch (e) {
 			log(e);
-			console.log(e);
 			return dynamicResponse(req, res, 400, { error: 'Error submitting sync job' });
 		}
 

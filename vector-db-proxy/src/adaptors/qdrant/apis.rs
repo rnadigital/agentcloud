@@ -11,15 +11,18 @@ use anyhow::anyhow;
 use async_trait::async_trait;
 use backoff::backoff::Backoff;
 use backoff::{exponential, ExponentialBackoff, SystemClock};
+use futures_util::stream::{self, StreamExt};
 use qdrant_client::prelude::point_id::PointIdOptions;
 use qdrant_client::prelude::{CreateCollection, PointStruct, QdrantClient, SearchPoints};
+use qdrant_client::qdrant::condition::ConditionOneOf::HasId;
 use qdrant_client::qdrant::points_selector::PointsSelectorOneOf;
 use qdrant_client::qdrant::vectors_config::Config;
 use qdrant_client::qdrant::with_vectors_selector::SelectorOptions;
 use qdrant_client::qdrant::{
-    Condition, Filter, PointId, PointsSelector, ScrollPoints, VectorParams, VectorParamsMap,
-    VectorsConfig, WithVectorsSelector,
+    Condition, Filter, HasIdCondition, PointId, PointsSelector, ScrollPoints, VectorParams,
+    VectorParamsMap, VectorsConfig, WithVectorsSelector,
 };
+use serde_json::to_value;
 use std::time::Duration;
 
 #[async_trait]
@@ -38,6 +41,8 @@ impl VectorDatabase for QdrantClient {
         &self,
         search_request: SearchRequest,
     ) -> Result<CollectionsResult, VectorDatabaseError> {
+        log::debug!("Qdrant URI: {:?}", &self.cfg.uri);
+        log::debug!("Qdrant API KEY: {:?}", &self.cfg.api_key);
         let collection_id = search_request.collection;
         match self.collection_exists(collection_id.clone()).await {
             Ok(collection_exists) => match collection_exists {
@@ -60,6 +65,8 @@ impl VectorDatabase for QdrantClient {
         &self,
         collection_create: CollectionCreate,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
+        log::info!("Creating collection: {}", collection_create.collection_name);
+
         let mut config: Option<VectorsConfig> = Some(VectorsConfig::default());
         match collection_create.vector_name {
             Some(name) => {
@@ -140,6 +147,7 @@ impl VectorDatabase for QdrantClient {
         search_request: SearchRequest,
         point: Point,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
+        log::debug!("Qdrant URI: {:?}", &self.cfg.uri);
         let collection_id = search_request.clone().collection;
         let mut backoff: exponential::ExponentialBackoff<SystemClock> =
             exponential::ExponentialBackoff::<SystemClock> {
@@ -234,37 +242,41 @@ impl VectorDatabase for QdrantClient {
             ..ExponentialBackoff::default()
         };
 
+        let list_of_points: Vec<PointStruct> = stream::iter(points)
+            .filter_map(|point| async move {
+                // Safely handle the payload to avoid potential panics with `unwrap()`
+                if let Some(payload) = point.payload {
+                    construct_point_struct(&point.vector, payload, None, point.index).await
+                } else {
+                    // Handle the case where payload is None, if necessary
+                    None
+                }
+            })
+            .collect()
+            .await;
+
         match search_request.search_type {
             SearchType::ChunkedRow => {
-                let ids: Vec<String> = points.iter().map(|p| p.index.clone().unwrap()).collect();
-                let filter_conditions: Vec<Condition> = ids
-                    .iter()
-                    .map(|id| Condition::matches("index", id.clone()))
-                    .collect();
-                let qdrant_points = PointsSelector {
+                let ids: Vec<PointId> =
+                    list_of_points.iter().filter_map(|p| p.id.clone()).collect();
+
+                let points_to_delete = PointsSelector {
                     points_selector_one_of: Option::from(PointsSelectorOneOf::Filter(Filter {
-                        should: filter_conditions,
+                        should: vec![Condition {
+                            condition_one_of: Some(HasId(HasIdCondition { has_id: ids })),
+                        }],
                         must: vec![],
                         must_not: vec![],
                         min_should: None,
                     })),
                 };
                 let _ = self
-                    .delete_points_blocking(collection_id.clone(), None, &qdrant_points, None)
+                    .delete_points_blocking(collection_id.clone(), None, &points_to_delete, None)
                     .await;
             }
             _ => {}
         }
 
-        let mut list_of_points: Vec<PointStruct> = vec![];
-        for point in points {
-            if let Some(point_struct) =
-                construct_point_struct(&point.vector, point.payload.unwrap(), None, point.index)
-                    .await
-            {
-                list_of_points.push(point_struct)
-            }
-        }
         let retry_result = async {
             loop {
                 match self
@@ -467,11 +479,15 @@ impl VectorDatabase for QdrantClient {
                         .payload
                         .to_owned()
                         .iter()
-                        .map(|(k, v)| (k.clone(), v.to_string()))
+                        .map(|(k, v)| (k.clone(), to_value(v).unwrap()))
                         .collect(),
                 ),
             });
         }
         Ok(response_data)
+    }
+
+    async fn display_config(&self) {
+        log::debug!("Qdrant Host: {}", &self.cfg.uri)
     }
 }

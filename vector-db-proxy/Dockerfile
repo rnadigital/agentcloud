@@ -1,4 +1,4 @@
-FROM rust:1.78.0 as builder
+FROM rust:1.88.0 as builder
 ARG RELEASE
 WORKDIR /usr/local/src/vector-db-proxy
 RUN mkdir -p src
@@ -39,18 +39,22 @@ RUN mkdir /onnxruntime \
 	&& cp lib/libonnxruntime.so.1.17.1 /usr/lib
 
 # Final Stage (using rust image to be safe so we have important libs like libssl, etc)
-FROM rust:1.77.2
+FROM rust:1.88.0
 WORKDIR /app
 # Set arguments
 ARG RELEASE
 ARG UNSTRUCTURED_API_KEY
 ARG UNSTRUCTURED_API_URL
-ARG PINECONE_API_KEY
+ARG VECTOR_DATABASE_API_KEY
+ARG VECTOR_DATABASE
+ARG VECTOR_DATABASE_URL
 # Set ENV variables
 ENV IS_RELEASE=$RELEASE
 ENV UNSTRUCTURED_API_URL=$UNSTRUCTURED_API_URL
 ENV UNSTRUCTURED_API_KEY=$UNSTRUCTURED_API_KEY
-ENV PINECONE_API_KEY=$PINECONE_API_KEY
+ENV VECTOR_DATABASE_API_KEY=$VECTOR_DATABASE_API_KEY
+ENV VECTOR_DATABASE=$VECTOR_DATABASE
+ENV VECTOR_DATABASE_URL=$VECTOR_DATABASE_URL
 # Copy from builder step
 COPY --from=builder /usr/local/src/vector-db-proxy/target/release/vector-db-proxy /app/vector-db-proxy-release
 COPY --from=builder /usr/local/src/vector-db-proxy/target/debug/vector-db-proxy /app/vector-db-proxy-debug

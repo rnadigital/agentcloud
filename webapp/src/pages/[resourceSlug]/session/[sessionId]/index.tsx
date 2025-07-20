@@ -357,9 +357,8 @@ export default function Session(props: SessionProps) {
 				<title>{app?.name || 'Agentcloud'}</title>
 			</Head>
 			<div
-				className='-mx-3 sm:-mx-6 lg:-mx-8 -my-10 flex flex-col flex-1 align-center'
-				style={{ maxHeight: 'calc(100vh - 110px)' }}
-			>
+				className='-mx-3 sm:-mx-6 lg:-mx-8 my-2 flex flex-col flex-1 align-center'
+				style={{ maxHeight: 'calc(100vh - 110px)' }}>
 				{sessionVariableFormOpen && (
 					<SessionVariableForm variables={paramsArray} onSubmit={handleSessionVariableSubmit} />
 				)}
@@ -450,8 +449,7 @@ export default function Session(props: SessionProps) {
 											terminated ? (
 												<p
 													id='session-terminated'
-													className='text-center h-full me-14 pb-2 pt-1 dark:text-white'
-												>
+													className='text-center h-full me-14 pb-2 pt-1 dark:text-white'>
 													This session was terminated.
 												</p>
 											) : (
@@ -472,8 +470,7 @@ export default function Session(props: SessionProps) {
 												height={30}
 												viewBox='0 0 100% 10'
 												backgroundColor='#e5e5e5'
-												foregroundColor='#ffffff'
-											>
+												foregroundColor='#ffffff'>
 												<rect x='0' y='10' rx='5' width='100%' height='10' />
 											</ContentLoader>
 										)}
@@ -496,5 +493,5 @@ export async function getServerSideProps({
 	locales,
 	defaultLocale
 }) {
-	return JSON.parse(JSON.stringify({ props: { ...res?.locals?.data, ...query } || {} }));
+	return JSON.parse(JSON.stringify({ props: { ...res?.locals?.data, ...query } }));
 }

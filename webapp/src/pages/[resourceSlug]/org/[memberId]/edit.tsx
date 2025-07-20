@@ -43,6 +43,9 @@ export default function EditOrgMember(props) {
 			</div>
 
 			<PermissionsEditor
+				memberName={orgMember?.name}
+				memberEmail={orgMember?.email}
+				initialRole={orgMember?.role}
 				editingPermission={new Permission(orgMember?.permissions)}
 				filterBits={ORG_BITS}
 			/>

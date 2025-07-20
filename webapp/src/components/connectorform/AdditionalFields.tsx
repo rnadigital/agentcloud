@@ -72,18 +72,15 @@ const AdditionalFields = () => {
 					<button
 						className='border border-red-500 p-1 ml-auto mr-2 h-fit rounded-md text-red-500'
 						type='button'
-						onClick={() => deleteField(index)}
-					>
+						onClick={() => deleteField(index)}>
 						Delete
 					</button>
 				</div>
 			))}
-
 			<button
 				className='border border-indigo-500 p-1  mr-auto mt-2 rounded-md text-indigo-500'
 				type='button'
-				onClick={addField}
-			>
+				onClick={addField}>
 				Add additional key value pairs
 			</button>
 		</div>

@@ -19,6 +19,7 @@ export default function Team(props) {
 	const [state, dispatch] = useState(props);
 	const [error, setError] = useState();
 	const [modalOpen, setModalOpen]: any = useState(false);
+	const [searchQuery, setSearchQuery] = useState(''); // Search query state
 	const { team, invites } = state;
 
 	async function fetchTeam() {
@@ -57,6 +58,13 @@ export default function Team(props) {
 		return <Spinner />;
 	}
 
+	// Filter members based on the search query
+	const filteredMembers = team?.members?.filter(member =>
+		member.name.toLowerCase().includes(searchQuery.toLowerCase())
+	);
+
+	const memberCount = filteredMembers?.length || 0; // Count of members
+
 	let modal;
 	switch (modalOpen) {
 		case 'member':
@@ -78,10 +86,7 @@ export default function Team(props) {
 
 			{permissions.get(Permissions.EDIT_TEAM) && (
 				<>
-					<div className='border-b pb-2 my-2'>
-						<h3 className='pl-2 font-semibold text-gray-900 dark:text-gray-50'>Settings</h3>
-					</div>
-					<TeamSettingsForm callback={refreshTeam} />
+					<TeamSettingsForm callback={refreshTeam} memberCount={memberCount} />
 				</>
 			)}
 
@@ -91,11 +96,13 @@ export default function Team(props) {
 				buttonText='Invite Member'
 				onClick={() => setModalOpen('member')}
 				showButton={permissions.get(Permissions.ADD_TEAM_MEMBER)}
+				searchQuery={searchQuery}
+				setSearchQuery={setSearchQuery}
 			/>
 
 			<MemberList
 				permissions={team?.permissions}
-				members={team?.members}
+				members={filteredMembers} // Pass the filtered list here
 				fetchTeam={fetchTeam}
 				deleteCallback={deleteCallback}
 			/>

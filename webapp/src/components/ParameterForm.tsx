@@ -1,5 +1,5 @@
 import { TrashIcon } from '@heroicons/react/20/solid';
-import cn from 'lib/cn';
+import cn from 'utils/cn';
 import React from 'react';
 
 export default function ParameterForm({
@@ -22,7 +22,7 @@ export default function ParameterForm({
 	};
 
 	const updateParameter = (index, field, value) => {
-		const newParameters = parameters.map((param, i) => {
+		const newParameters = parameters?.map((param, i) => {
 			if (i === index) {
 				return { ...param, [field]: value };
 			}
@@ -38,7 +38,7 @@ export default function ParameterForm({
 	return (
 		<div className='mb-0'>
 			{title && <label className='text-base font-semibold text-gray-900'>{title}</label>}
-			{parameters.map((param, index) => (
+			{parameters?.map((param, index) => (
 				<div key={index} className='grid grid-cols-1 md:grid-cols-4 gap-4 mb-4'>
 					<input
 						readOnly={readonlyKeys}

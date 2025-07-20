@@ -10,3 +10,8 @@ doc/
 static/*
 tsconfig.tsbuildinfo
 coverage/
+/test
+/tests
+/tests-examples
+playwright.*
+playwright-report

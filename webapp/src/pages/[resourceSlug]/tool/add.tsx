@@ -63,6 +63,9 @@ export default function AddTool(props) {
 			)}
 
 			<ToolForm
+				setDisplayScreen={() => {}}
+				fetchTools={() => {}}
+				setActiveTab={() => {}}
 				datasources={datasources}
 				fetchFormData={fetchTools}
 				initialType={cloneState?.tool?.type}

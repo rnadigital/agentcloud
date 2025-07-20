@@ -2,7 +2,7 @@ import { InformationCircleIcon } from '@heroicons/react/20/solid';
 import clsx from 'clsx';
 import ToolTip from 'components/shared/ToolTip';
 import dayjs from 'dayjs';
-import cn from 'lib/cn';
+import cn from 'utils/cn';
 import { ChangeEvent } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 import { FormFieldProps } from 'struct/form';

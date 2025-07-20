@@ -10,13 +10,15 @@ use crate::routes;
 
 use crate::adaptors::mongo::client::start_mongo_connection;
 use crate::adaptors::mongo::models::Model;
-use crate::adaptors::mongo::queries::{get_model, get_team_datasources};
+use crate::adaptors::mongo::queries::{get_datasource, get_model, get_team_datasources};
 use crate::routes::helpers::format_error_message;
 use crate::routes::models::CollectionStorageSizeResponse;
+use crate::vector_databases::error::VectorDatabaseError;
+use crate::vector_databases::helpers::check_byo_vector_database;
 use crate::vector_databases::models::{
-    CollectionCreate, Point, SearchRequest, SearchType, VectorDatabaseStatus,
+    CollectionCreate, Point, Region, SearchRequest, SearchType, VectorDatabaseStatus,
 };
-use crate::vector_databases::vector_database::VectorDatabase;
+use crate::vector_databases::vector_database::{default_vector_db_client, VectorDatabase};
 use routes::models::{ResponseBody, Status};
 use serde_json::json;
 use std::vec;
@@ -56,20 +58,59 @@ pub async fn health_check() -> Result<impl Responder> {
 ///
 /// ```
 #[wherr]
-#[get("/list-collections")]
-pub async fn list_collections(
-    app_data: Data<Arc<RwLock<dyn VectorDatabase>>>,
-) -> Result<impl Responder> {
-    let vector_database = app_data.get_ref().clone();
-    let vector_database_client = vector_database.read().await;
-    let results = vector_database_client.get_list_of_collections().await?;
-    Ok(HttpResponse::Ok()
-        .content_type(ContentType::json())
-        .json(json!(ResponseBody {
-            status: Status::Success,
-            data: Some(json!({"list_of_collection": results})),
-            error_message: None
-        })))
+#[get("/list-collections/{collection_name}")]
+pub async fn list_collections(Path(collection_name): Path<String>) -> Result<impl Responder> {
+    let datasource_id = collection_name.clone();
+    let mongodb_connection = start_mongo_connection().await?;
+    match get_datasource(&mongodb_connection, datasource_id.as_str()).await {
+        Ok(option) => match option {
+            Some(datasource) => {
+                let vector_database_client =
+                    check_byo_vector_database(datasource, &mongodb_connection)
+                        .await
+                        .unwrap_or(default_vector_db_client().await);
+                let vector_database_client = vector_database_client.read().await;
+                let results = vector_database_client.get_list_of_collections().await?;
+                Ok(HttpResponse::Ok()
+                    .content_type(ContentType::json())
+                    .json(json!(ResponseBody {
+                        status: Status::Success,
+                        data: Some(json!({"list_of_collection": results})),
+                        error_message: None
+                    })))
+            }
+            None => Ok(HttpResponse::NotFound()
+                .content_type(ContentType::json())
+                .json(json!(ResponseBody {
+                    status: Status::Failure,
+                    data: None,
+                    error_message: Some(json!({
+                        "errorMessage": format!("No datasource associated with the ID : '{}'",
+                            collection_name)
+                    }))
+                }))),
+        },
+        Err(e) => {
+            let error_message_json = format_error_message(VectorDatabaseError::AnyhowError(e));
+            Ok(HttpResponse::InternalServerError()
+                .content_type(ContentType::json())
+                .json(json!(ResponseBody {
+                    status: Status::Failure,
+                    data: None,
+                    error_message: Some(match error_message_json {
+                        Some(json_value) => json!({
+                            "errorMessage": "An error occurred while checking if datasource \
+                            exists.",
+                            "errorDetails": json_value
+                        }),
+                        None => json!({
+                            "errorMessage": "An unknown error occurred while checking if the \
+                            datasource exists.".to_string()
+                        }),
+                    })
+                })))
+        }
+    }
 }
 
 ///
@@ -89,143 +130,214 @@ pub async fn list_collections(
 #[wherr]
 #[get("/check-collection-exists/{collection_name}")]
 pub async fn check_collection_exists(
-    app_data: Data<Arc<RwLock<dyn VectorDatabase>>>,
-    Path(collection_name): Path<String>,
+    //app_data: Data<Arc<RwLock<dyn VectorDatabase>>>,
+    Path(collection_name): Path<String>, // Datasource ID
 ) -> Result<HttpResponse> {
     let collection_id = collection_name.clone();
-    let vector_database = app_data.get_ref().clone();
-    let vector_database_client = vector_database.read().await;
-    let search_request = SearchRequest::new(SearchType::Collection, collection_id);
-    match vector_database_client
+    let mongodb_connection = start_mongo_connection().await?;
+    let mut search_request = SearchRequest::new(SearchType::Collection, collection_id.clone());
+    match get_datasource(&mongodb_connection, collection_id.as_str()).await {
+        Ok(option) => match option {
+            Some(datasource) => {
+                let vector_database_client =
+                    check_byo_vector_database(datasource.clone(), &mongodb_connection)
+                        .await
+                        .unwrap_or(default_vector_db_client().await);
+                let vector_database_client = vector_database_client.read().await;
+                search_request.byo_vector_db = datasource.byo_vector_db;
+                search_request.collection = datasource.collection_name.map_or(collection_id, |d| d);
+                search_request.namespace = datasource.namespace;
+                search_request.region = datasource
+                    .region
+                    .as_ref()
+                    .map(|r| Some(Region::from_str(r.as_str())))
+                    .unwrap_or(Some(Region::default()));
+
+                match vector_database_client
         .check_collection_exists(search_request)
         .await
-    {
-        Ok(collection_result) => match collection_result.status {
-            VectorDatabaseStatus::Ok => Ok(HttpResponse::Ok()
-                .content_type(ContentType::json())
-                .json(json!(ResponseBody {
-                    status: Status::Success,
-                    data: None,
-                    error_message: None
-                }))),
-            VectorDatabaseStatus::Error(e) => Ok(HttpResponse::NotFound()
+            {
+                Ok(collection_result) => match collection_result.status {
+                    VectorDatabaseStatus::Ok => Ok(HttpResponse::Ok()
+                        .content_type(ContentType::json())
+                        .json(json!(ResponseBody {
+                            status: Status::Success,
+                            data: None,
+                            error_message: None
+                        }))),
+                    VectorDatabaseStatus::Error(e) => Ok(HttpResponse::NotFound()
+                        .content_type(ContentType::json())
+                        .json(json!(ResponseBody {
+                            status: Status::Failure,
+                            data: None,
+                            error_message: Some(json!({
+                                "errorMessage": format!("An error occurred during check operation: {}", e)
+                            }))
+                        }))),
+                    VectorDatabaseStatus::NotFound => Ok(HttpResponse::NotFound()
+                        .content_type(ContentType::json())
+                        .json(json!(ResponseBody {
+                            status: Status::Failure,
+                            data: None,
+                            error_message: Some(json!({
+                                "errorMessage": format!("The Collection: '{}' does not exists",
+                                    collection_name)
+                            }))
+                        }))),
+                    _ => Ok(HttpResponse::BadRequest()
+                        .content_type(ContentType::json())
+                        .json(json!(ResponseBody {
+                            status: Status::Failure,
+                            data: None,
+                            error_message: Some(json!({
+                                "errorMessage": format!("Could not check collection exists: '{}' due to an \
+                                unknown error", collection_name)
+                            }))
+                        }))),
+                },
+                Err(e) => {
+                    let error_message_json = format_error_message(e.clone());
+                    Ok(HttpResponse::InternalServerError()
+                        .content_type(ContentType::json())
+                        .json(json!(ResponseBody {
+                            status: Status::Failure,
+                            data: None,
+                            error_message: Some(match error_message_json {
+                                Some(json_value) => json!({
+                                    "errorMessage": "An error occurred while checking if collection exists.",
+                                    "errorDetails": json_value
+                                }),
+                                None => json!({
+                                    "errorMessage": format!("An error occurred while checking if collection exists. \
+                                    Error: {}", e)
+                                })
+                            })
+                        })))
+                }
+            }
+            }
+            None => Ok(HttpResponse::NotFound()
                 .content_type(ContentType::json())
                 .json(json!(ResponseBody {
                     status: Status::Failure,
                     data: None,
                     error_message: Some(json!({
-                        "errorMessage": format!("An error occurred during check operation: {}", e)
-                    }))
-                }))),
-            VectorDatabaseStatus::NotFound => Ok(HttpResponse::NotFound()
-                .content_type(ContentType::json())
-                .json(json!(ResponseBody {
-                    status: Status::Failure,
-                    data: None,
-                    error_message: Some(json!({
-                        "errorMessage": format!("The Collection: '{}' does not exists",
+                        "errorMessage": format!("The datasource: '{}' does not exists in the \
+                        database",
                             collection_name)
                     }))
                 }))),
-            _ => Ok(HttpResponse::BadRequest()
-                .content_type(ContentType::json())
-                .json(json!(ResponseBody {
-                    status: Status::Failure,
-                    data: None,
-                    error_message: Some(json!({
-                        "errorMessage": format!("Could not delete collection: '{}' due to an \
-                        unknown error", collection_name)
-                    }))
-                }))),
         },
-        Err(e) => {
-            let error_message_json = format_error_message(e.clone());
-            Ok(HttpResponse::InternalServerError()
-                .content_type(ContentType::json())
-                .json(json!(ResponseBody {
-                    status: Status::Failure,
-                    data: None,
-                    error_message: Some(match error_message_json {
-                        Some(json_value) => json!({
-                            "errorMessage": "An error occurred while checking if collection exists.",
-                            "errorDetails": json_value
-                        }),
-                        None => json!({
-                            "errorMessage": format!("An error occurred while checking if collection exists. \
-                            Error: {}", e)
-                        })
-                    })
-                })))
-        }
+        Err(e) => Ok(HttpResponse::BadRequest()
+            .content_type(ContentType::json())
+            .json(json!(ResponseBody {
+                status: Status::Failure,
+                data: None,
+                error_message: Some(json!({
+                    "errorMessage": format!("Could not check collection exists: '{}' due to an \
+                    unknown error. Error: {}", collection_name, e)
+                }))
+            }))),
     }
 }
 
 #[wherr]
 #[post("/create-collection/")]
 pub async fn create_collection(
-    app_data: Data<Arc<RwLock<dyn VectorDatabase>>>,
+    //app_data: Data<Arc<RwLock<dyn VectorDatabase>>>,
     data: web::Json<CollectionCreate>,
 ) -> Result<HttpResponse> {
     let collection_id = data.clone().collection_name;
-    let vector_database = app_data.get_ref().clone();
-    let vector_database_client = vector_database.read().await;
-    match vector_database_client.create_collection(data.clone()).await {
-        Ok(collection_result) => match collection_result {
-            VectorDatabaseStatus::Ok => Ok(HttpResponse::Ok()
-                .content_type(ContentType::json())
-                .json(json!(ResponseBody {
-                    status: Status::Success,
-                    data: None,
-                    error_message: None
-                }))),
-            VectorDatabaseStatus::Error(e) => Ok(HttpResponse::NotFound()
+    let mongodb_connection = start_mongo_connection().await?;
+    match get_datasource(&mongodb_connection, collection_id.as_str()).await {
+        Ok(option) => match option {
+            Some(datasource) => {
+                let vector_database_client =
+                    check_byo_vector_database(datasource, &mongodb_connection)
+                        .await
+                        .unwrap_or(default_vector_db_client().await);
+                let vector_database_client = vector_database_client.read().await;
+                match vector_database_client.create_collection(data.clone()).await {
+                    Ok(collection_result) => match collection_result {
+                        VectorDatabaseStatus::Ok => Ok(HttpResponse::Ok()
+                            .content_type(ContentType::json())
+                            .json(json!(ResponseBody {
+                                status: Status::Success,
+                                data: None,
+                                error_message: None
+                            }))),
+                        VectorDatabaseStatus::Error(e) => Ok(HttpResponse::NotFound()
+                            .content_type(ContentType::json())
+                            .json(json!(ResponseBody {
+                                status: Status::Failure,
+                                data: None,
+                                error_message: Some(json!({
+                                    "errorMessage": format!("An error occurred during create operation: {}", e)
+                                }))
+                            }))),
+                        VectorDatabaseStatus::NotFound => Ok(HttpResponse::NotFound()
+                            .content_type(ContentType::json())
+                            .json(json!(ResponseBody {
+                                status: Status::Failure,
+                                data: None,
+                                error_message: Some(json!({
+                                    "errorMessage": format!("Collection: '{}' does not exists", 
+                                        collection_id.clone())
+                                }))
+                            }))),
+                        _ => Ok(HttpResponse::InternalServerError()
+                            .content_type(ContentType::json())
+                            .json(json!(ResponseBody {
+                                status: Status::Failure,
+                                data: None,
+                                error_message: Some(json!({
+                                    "errorMessage": format!("Could not create collection: '{}' due to an \
+                                    unknown error", collection_id)
+                                }))
+                            }))),
+                    },
+                    Err(e) => {
+                        let error_message_json = format_error_message(e.clone());
+                        Ok(HttpResponse::InternalServerError()
+                            .content_type(ContentType::json())
+                            .json(json!(ResponseBody {
+                                status: Status::Failure,
+                                data: None,
+                                error_message: Some(match error_message_json {
+                                    Some(json_value) => json!({
+                                        "errorMessage": "An error occurred while creating collection.",
+                                        "errorDetails": json_value
+                                    }),
+                                    None => json!({
+                                        "errorMessage": format!("An error occurred while creating collection. \
+                                        Error: {}", e)
+                                    }),
+                                })
+                            })))
+                    }
+                }
+            }
+            None => Ok(HttpResponse::NotFound()
                 .content_type(ContentType::json())
                 .json(json!(ResponseBody {
                     status: Status::Failure,
                     data: None,
                     error_message: Some(json!({
-                        "errorMessage": format!("An error occurred during create operation: {}", e)
-                    }))
-                }))),
-            VectorDatabaseStatus::NotFound => Ok(HttpResponse::NotFound()
-                .content_type(ContentType::json())
-                .json(json!(ResponseBody {
-                    status: Status::Failure,
-                    data: None,
-                    error_message: Some(json!({
-                        "errorMessage": format!("Collection: '{}' does not exists", collection_id)
-                    }))
-                }))),
-            _ => Ok(HttpResponse::InternalServerError()
-                .content_type(ContentType::json())
-                .json(json!(ResponseBody {
-                    status: Status::Failure,
-                    data: None,
-                    error_message: Some(json!({
-                        "errorMessage": format!("Could not create collection: '{}' due to an \
-                        unknown error", collection_id)
+                        "errorMessage": format!("No datasource associated with the ID : '{}'",
+                            collection_id)
                     }))
                 }))),
         },
-        Err(e) => {
-            let error_message_json = format_error_message(e.clone());
-            Ok(HttpResponse::InternalServerError()
-                .content_type(ContentType::json())
-                .json(json!(ResponseBody {
-                    status: Status::Failure,
-                    data: None,
-                    error_message: Some(match error_message_json {
-                        Some(json_value) => json!({
-                            "errorMessage": "An error occurred while creating collection.",
-                            "errorDetails": json_value
-                        }),
-                        None => json!({
-                            "errorMessage": format!("An error occurred while creating collection. \
-                            Error: {}", e)
-                        }),
-                    })
-                })))
-        }
+        Err(e) => Ok(HttpResponse::BadRequest()
+            .content_type(ContentType::json())
+            .json(json!(ResponseBody {
+                status: Status::Failure,
+                data: None,
+                error_message: Some(json!({
+                    "errorMessage": format!("Could not create collection exists: '{}' due to an \
+                    unknown error. Error: {}", collection_id, e)
+                }))
+            }))),
     }
 }
 
@@ -434,14 +546,26 @@ pub async fn scroll_data(
 #[wherr]
 #[delete("/collection/{dataset_id}")]
 pub async fn delete_collection(
-    app_data: Data<Arc<RwLock<dyn VectorDatabase>>>,
+    //app_data: Data<Arc<RwLock<dyn VectorDatabase>>>,
     Path(dataset_id): Path<String>,
 ) -> Result<impl Responder> {
     let collection_id = dataset_id.clone();
-    let vector_database = app_data.get_ref().clone();
-    let vector_database_client = vector_database.read().await;
-    let search_request = SearchRequest::new(SearchType::Collection, collection_id);
-    match vector_database_client
+    let mongodb_connection = start_mongo_connection().await?;
+    match get_datasource(&mongodb_connection, collection_id.as_str()).await {
+        Ok(option) => match option {
+            Some(datasource) => {
+                let vector_database_client =
+                    check_byo_vector_database(datasource.clone(), &mongodb_connection)
+                        .await
+                        .unwrap_or(default_vector_db_client().await);
+                let vector_database_client = vector_database_client.read().await;
+                let mut search_request = SearchRequest::new(SearchType::Collection, collection_id);
+                search_request.byo_vector_db = Some(true);
+                search_request.collection = datasource
+                    .collection_name
+                    .map_or(datasource.id.to_string(), |d| d);
+                search_request.namespace = datasource.namespace;
+                match vector_database_client
         .delete_collection(search_request)
         .await
     {
@@ -492,87 +616,152 @@ pub async fn delete_collection(
                 }))
             }))),
     }
-}
-#[wherr]
-#[get("/collection-info/{dataset_id}")]
-pub async fn get_collection_info(
-    app_data: Data<Arc<RwLock<dyn VectorDatabase>>>,
-    Path(dataset_id): Path<String>,
-) -> Result<impl Responder> {
-    let collection_id = dataset_id.clone();
-    let vector_database = app_data.get_ref().clone();
-    let vector_database_client = vector_database.read().await;
-    let search_request = SearchRequest::new(SearchType::Collection, collection_id);
-    match vector_database_client
-        .get_collection_info(search_request)
-        .await
-    {
-        Ok(Some(info)) => Ok(HttpResponse::Ok()
-            .content_type(ContentType::json())
-            .json(json!(ResponseBody {
-                status: Status::Success,
-                data: Some(json!(info)),
-                error_message: None
-            }))),
-        Ok(None) => Ok(HttpResponse::NotFound()
+            }
+            None => Ok(HttpResponse::NotFound()
+                .content_type(ContentType::json())
+                .json(json!(ResponseBody {
+                    status: Status::Failure,
+                    data: None,
+                    error_message: Some(json!({
+                        "errorMessage": format!("The datasource: '{}' does not exists in the \
+                        database",
+                            collection_id)
+                    }))
+                }))),
+        },
+        Err(e) => Ok(HttpResponse::BadRequest()
             .content_type(ContentType::json())
             .json(json!(ResponseBody {
                 status: Status::Failure,
                 data: None,
                 error_message: Some(json!({
-                    "errorMessage": format!("Collection: '{}' returned no information", dataset_id)
+                    "errorMessage": format!("Could not delete collection: '{}' due to an \
+                    unknown error. Error: {}", collection_id, e)
                 }))
             }))),
-        Err(e) => {
-            let error_message_json = format_error_message(e.clone());
-            Ok(HttpResponse::InternalServerError()
+    }
+}
+#[wherr]
+#[get("/collection-info/{dataset_id}")]
+pub async fn get_collection_info(
+    //app_data: Data<Arc<RwLock<dyn VectorDatabase>>>,
+    Path(dataset_id): Path<String>,
+) -> Result<impl Responder> {
+    let collection_id = dataset_id.clone();
+    let mongodb_connection = start_mongo_connection().await?;
+    match get_datasource(&mongodb_connection, collection_id.as_str()).await {
+        Ok(option) => match option {
+            Some(datasource) => {
+                let vector_database_client =
+                    check_byo_vector_database(datasource.clone(), &mongodb_connection)
+                        .await
+                        .unwrap_or(default_vector_db_client().await);
+                let vector_database_client = vector_database_client.read().await;
+                let mut search_request = SearchRequest::new(SearchType::Collection, collection_id);
+                search_request.byo_vector_db = Some(true);
+                search_request.collection = datasource
+                    .collection_name
+                    .map_or(datasource.id.to_string(), |d| d);
+                search_request.namespace = datasource.namespace;
+                match vector_database_client
+                    .get_collection_info(search_request)
+                    .await
+                {
+                    Ok(Some(info)) => Ok(HttpResponse::Ok()
+                        .content_type(ContentType::json())
+                        .json(json!(ResponseBody {
+                            status: Status::Success,
+                            data: Some(json!(info)),
+                            error_message: None
+                        }))),
+                    Ok(None) => Ok(HttpResponse::NotFound()
+                        .content_type(ContentType::json())
+                        .json(json!(ResponseBody {
+                            status: Status::Failure,
+                            data: None,
+                            error_message: Some(json!({
+                                "errorMessage": format!("Collection: '{}' returned no information", dataset_id)
+                            }))
+                        }))),
+                    Err(e) => {
+                        let error_message_json = format_error_message(e.clone());
+                        Ok(HttpResponse::InternalServerError()
+                            .content_type(ContentType::json())
+                            .json(json!(ResponseBody {
+                                status: Status::Failure,
+                                data: None,
+                                error_message: Some(match error_message_json {
+                                    Some(json_value) => json!({
+                                        "errorMessage": "An error occurred while collecting collection info.",
+                                        "errorDetails": json_value
+                                    }),
+                                    None => json!({
+                                        "errorMessage": format!("An error occurred while collecting collection info. \
+                                        Error: {}", e)
+                                    })
+                                })
+                            })))
+                    }
+                }
+            }
+            None => Ok(HttpResponse::NotFound()
                 .content_type(ContentType::json())
                 .json(json!(ResponseBody {
                     status: Status::Failure,
                     data: None,
-                    error_message: Some(match error_message_json {
-                        Some(json_value) => json!({
-                            "errorMessage": "An error occurred while collecting collection info.",
-                            "errorDetails": json_value
-                        }),
-                        None => json!({
-                            "errorMessage": format!("An error occurred while collecting collection info. \
-                            Error: {}", e)
-                        })
-                    })
-                })))
-        }
+                    error_message: Some(json!({
+                        "errorMessage": format!("The datasource: '{}' does not exists in the \
+                        database",
+                            collection_id)
+                    }))
+                }))),
+        },
+        Err(e) => Ok(HttpResponse::BadRequest()
+            .content_type(ContentType::json())
+            .json(json!(ResponseBody {
+                status: Status::Failure,
+                data: None,
+                error_message: Some(json!({
+                    "errorMessage": format!("Could not get collection info for collection: '{}' \
+                    due to an unknown error. Error: {}", collection_id, e)
+                }))
+            }))),
     }
 }
 
 #[wherr]
 #[get("/storage-size/{team_id}")]
-pub async fn get_storage_size(
-    app_data: Data<Arc<RwLock<dyn VectorDatabase>>>,
-    Path(team_id): Path<String>,
-) -> Result<impl Responder> {
+pub async fn get_storage_size(Path(team_id): Path<String>) -> Result<impl Responder> {
     let mut collection_size_response = CollectionStorageSizeResponse {
         list_of_datasources: vec![],
         total_size: 0.0,
         total_points: 0,
     };
-    let vector_database = app_data.get_ref().clone();
-    let vector_database_client = vector_database.read().await;
     let team_id = team_id.clone();
     let mongodb_connection = start_mongo_connection().await?;
+
     let list_of_team_datasources =
         get_team_datasources(&mongodb_connection, team_id.as_str()).await?;
     for datasource in list_of_team_datasources {
+        let vector_database_client =
+            check_byo_vector_database(datasource.clone(), &mongodb_connection)
+                .await
+                .unwrap_or(default_vector_db_client().await);
+        let vector_database_client = vector_database_client.read().await;
         let model_result = get_model(&mongodb_connection, datasource.id.to_string().as_str()).await;
         match model_result {
             Ok(Some(embedding_model)) => {
-                let search_request =
+                let mut search_request =
                     SearchRequest::new(SearchType::Collection, datasource.id.to_string());
+                search_request.byo_vector_db = Some(true);
+                search_request.collection = datasource
+                    .collection_name
+                    .map_or(datasource.id.to_string(), |d| d);
+                search_request.namespace = datasource.namespace;
                 if let Ok(Some(collection_storage_info)) = vector_database_client
                     .get_storage_size(search_request, embedding_model.embeddingLength as usize)
                     .await
                 {
-                    // println!("collection_storage_info: {:?}", collection_storage_info);
                     collection_size_response.total_points +=
                         collection_storage_info.points_count.unwrap();
                     collection_size_response.total_size += collection_storage_info.size.unwrap();
@@ -585,9 +774,10 @@ pub async fn get_storage_size(
                 continue;
             }
             Err(e) => {
-                println!(
+                log::error!(
                     "Error retrieving model for datasource {}: {:?}",
-                    datasource.id, e
+                    datasource.id,
+                    e
                 );
                 continue;
             }

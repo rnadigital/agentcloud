@@ -1,4 +1,4 @@
-use crate::adaptors::mongo::models::{DataSources, EmbeddingConfig, Model};
+use crate::adaptors::mongo::models::{DataSources, EmbeddingConfig, Model, VectorDbs};
 use anyhow::{anyhow, Result};
 use futures_util::StreamExt;
 use mongodb::bson::doc;
@@ -36,7 +36,6 @@ pub async fn get_model(db: &Database, datasource_id: &str) -> Result<Option<Mode
         .await
     {
         Ok(Some(datasource)) => {
-            println!("Datasource retrieved from Mongo: {}", datasource.id);
             // If datasource is found, attempt to find the related model.
             match models_collection
                 .find_one(doc! {"_id": datasource.model_id}, None)
@@ -59,30 +58,11 @@ pub async fn get_model(db: &Database, datasource_id: &str) -> Result<Option<Mode
 
 pub async fn get_model_and_embedding_key(
     db: &Database,
-    datasource_id: &str,
+    datasource: DataSources,
     stream_config_key: Option<String>,
 ) -> Result<EmbeddingConfig> {
-    let datasources_collection = db.collection::<DataSources>("datasources");
     let models_collection = db.collection::<Model>("models");
     let mut embedding_config = EmbeddingConfig::default();
-
-    // Fetch the datasource
-    let datasource = match datasources_collection
-        .find_one(doc! {"_id": ObjectId::from_str(datasource_id)?}, None)
-        .await
-    {
-        Ok(Some(ds)) => ds,
-        Ok(None) => {
-            log::warn!("Datasource not found for ID: {}", datasource_id);
-            return Ok(embedding_config);
-        }
-        Err(e) => {
-            log::error!("Failed to find datasource: {}", e);
-            return Err(anyhow!("Failed to find datasource: {}", e));
-        }
-    };
-
-    log::debug!("Found datasource: {}", datasource.id);
 
     // Fetch the model
     let model = match models_collection
@@ -158,9 +138,14 @@ pub async fn set_record_count_total(db: &Database, datasource_id: &str, total: i
     }
 }
 
-pub async fn set_datasource_state(db: &Database, datasource_id: &str, state: &str) -> Result<()> {
+pub async fn set_datasource_state(
+    db: &Database,
+    datasource: DataSources,
+    state: &str,
+) -> Result<()> {
     let datasources_collection = db.collection::<DataSources>("datasources");
-    let filter = doc! {"_id": ObjectId::from_str(datasource_id)?};
+    let datasource_id = datasource.id;
+    let filter = doc! {"_id": datasource_id};
     match datasources_collection
         .update_one(
             filter,
@@ -222,4 +207,26 @@ pub async fn get_team_datasources(db: &Database, team_id: &str) -> Result<Vec<Da
         }
     };
     Ok(list_of_datasources)
+}
+
+pub async fn get_vector_db_details(db: &Database, vector_db_id: ObjectId) -> Option<VectorDbs> {
+    let vector_db_collections = db.collection::<VectorDbs>("vectordbs");
+    let filter = doc! {"_id": vector_db_id};
+    match vector_db_collections.find_one(filter, None).await {
+        Ok(vector_db) => {
+            if let Some(db) = vector_db {
+                Some(db)
+            } else {
+                log::debug!("Returned None....");
+                None
+            }
+        }
+        Err(e) => {
+            log::error!(
+                "There was an error when fetching vector DB details from mongo: {}",
+                e
+            );
+            None
+        }
+    }
 }

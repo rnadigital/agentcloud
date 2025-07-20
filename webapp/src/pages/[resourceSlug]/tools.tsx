@@ -4,6 +4,7 @@ import NewButtonSection from 'components/NewButtonSection';
 import PageTitleWithNewButton from 'components/PageTitleWithNewButton';
 import Spinner from 'components/Spinner';
 import ToolList from 'components/ToolList';
+import ToolList2 from 'components/ToolList2';
 import ToolForm from 'components/tools/ToolForm';
 import { useAccountContext } from 'context/account';
 import { useSocketContext } from 'context/socket';
@@ -53,15 +54,9 @@ export default function Tools(props) {
 				<title>{`Tools - ${teamName}`}</title>
 			</Head>
 
-			<PageTitleWithNewButton
-				list={filteredTools}
-				title='Tools'
-				buttonText='New Tool'
-				href='/tool/add'
-			/>
-
 			{tools.length === 0 && (
 				<NewButtonSection
+					setOpen={() => {}}
 					link={`/${resourceSlug}/tool/add`}
 					emptyMessage={'No tools'}
 					icon={
@@ -70,16 +65,14 @@ export default function Tools(props) {
 							fill='none'
 							viewBox='0 0 24 24'
 							stroke='currentColor'
-							aria-hidden='true'
-						>
+							aria-hidden='true'>
 							<svg
 								xmlns='http://www.w3.org/2000/svg'
 								fill='none'
 								viewBox='0 0 24 24'
 								strokeWidth={1.5}
 								stroke='currentColor'
-								className='w-6 h-6'
-							>
+								className='w-6 h-6'>
 								<path
 									strokeLinecap='round'
 									strokeLinejoin='round'
@@ -93,10 +86,11 @@ export default function Tools(props) {
 					buttonMessage={'New Tool'}
 				/>
 			)}
-			<ToolList tools={filteredTools} fetchTools={fetchTools} />
+			{/* <ToolList tools={filteredTools} fetchTools={fetchTools} />
 			<div className='mt-4' />
 			<PageTitleWithNewButton list={installableTools} title='Unconfigured tools' />
-			<ToolList tools={installableTools} fetchTools={fetchTools} />
+			<ToolList tools={installableTools} fetchTools={fetchTools} /> */}
+			<ToolList2 tools={tools} fetchTools={fetchTools} />
 		</>
 	);
 }

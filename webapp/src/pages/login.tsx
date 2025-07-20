@@ -1,13 +1,16 @@
 import * as API from '@api';
-import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { CubeIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import animationData from 'animations/SignInAnimationTransparent.json';
 import ButtonSpinner from 'components/ButtonSpinner';
 import ErrorAlert from 'components/ErrorAlert';
 import InputField from 'components/form/InputField';
 import InfoAlert from 'components/InfoAlert';
+import LeftFrame from 'components/onboarding/LeftFrame';
 import SuccessAlert from 'components/SuccessAlert';
 import { useSocketContext } from 'context/socket';
 import { useThemeContext } from 'context/themecontext';
 import passwordPattern from 'lib/misc/passwordpattern';
+import Lottie from 'lottie-react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -60,26 +63,23 @@ export default function Login() {
 				<title>Login</title>
 			</Head>
 
-			<div className='flex min-h-full flex-1 flex-col justify-center py-12 sm:px-6 lg:px-8'>
-				<div className='sm:mx-auto sm:w-full sm:max-w-md'>
-					<img
-						className='mx-auto h-16 w-auto sm:h-20'
-						src={
-							theme === 'dark'
-								? '/images/agentcloud-full-white-bg-trans.png'
-								: '/images/agentcloud-full-black-bg-trans.png'
-						}
-						alt='Your Company'
-					/>
-				</div>
+			<div className='flex flex-col md:flex-row md:flex-1 bg-white'>
+				<LeftFrame showAnimation>
+					<div className='flex justify-center h-full flex-col'>
+						<div className='hidden md:block text-5xl leading-normal font-bold'>
+							Seamless Data Integration
+						</div>
+						<div className='hidden md:block text-xl leading-7 mt-4'>
+							Connect your favorite platforms like HubSpot, Jira, and BigQuery in just a few clicks.
+							Enjoy hassle-free integration that saves you time and effort.
+						</div>
+					</div>
+				</LeftFrame>
 
-				<div className='mt-8 sm:mx-auto sm:w-full sm:max-w-[512px]'>
-					<div className='bg-white dark:bg-slate-800 px-6 py-8 shadow sm:rounded-lg sm:px-8'>
+				<div className='flex justify-center items-center w-full text-gray-500 px-4 pt-4 md:pt-0'>
+					<div className='w-full max-w-md'>
 						{error && <ErrorAlert error={error} />}
 
-						<h2 className='text-2xl font-bold leading-9 tracking-tight text-gray-900 mb-5 mt-2 dark:text-white'>
-							Welcome back
-						</h2>
 						<form className='space-y-2' onSubmit={handleSubmit(login)}>
 							{verifysuccess && <SuccessAlert message='Email verified, you may now sign in.' />}
 							{changepassword && <SuccessAlert message='Password updated, you may now sign in.' />}
@@ -133,7 +133,7 @@ export default function Login() {
 							<div>
 								<button
 									type='submit'
-									className='flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+									className='flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 mt-4'
 								>
 									{submitting && <ButtonSpinner className='mt-1 me-1' />}
 									Sign in

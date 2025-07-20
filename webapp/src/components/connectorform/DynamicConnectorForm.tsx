@@ -12,6 +12,7 @@ interface DynamicFormProps {
 	schema: Schema;
 	datasourcePost: (arg: any) => Promise<void>;
 	error?: string;
+	formId?: string;
 }
 
 const ISODatePattern = '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$';
@@ -100,7 +101,12 @@ function updateDateStrings(
 	});
 }
 
-const DynamicConnectorForm = ({ schema, datasourcePost, error }: DynamicFormProps) => {
+const DynamicConnectorForm = ({
+	schema,
+	datasourcePost,
+	error,
+	formId = 'connector_form'
+}: DynamicFormProps) => {
 	const { handleSubmit } = useFormContext();
 	const [submitting, setSubmitting] = useState(false);
 
@@ -123,19 +129,17 @@ const DynamicConnectorForm = ({ schema, datasourcePost, error }: DynamicFormProp
 		<form onSubmit={handleSubmit(onSubmit)}>
 			<FormSection properties={schema.properties} requiredFields={schema.required} />
 			{schema.additionalProperties && <AdditionalFields />}
-
 			{error && (
 				<div className='mb-4'>
 					<ErrorAlert error={error} />
 				</div>
 			)}
 			<button
-				disabled={submitting}
+				className='bg-white w-fit flex p-4 items-center px-5 py-2 bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white rounded-md ml-auto'
 				type='submit'
-				className='w-full rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 mt-3'
-			>
+				disabled={submitting}>
 				{submitting && <ButtonSpinner />}
-				{submitting ? 'Testing connection...' : 'Submit'}
+				{submitting ? 'Testing connection...' : 'Connect'}
 			</button>
 		</form>
 	);

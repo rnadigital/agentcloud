@@ -1,8 +1,9 @@
+use crate::embeddings::helpers::clean_text;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 // Unstructured IO Response struct
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UnstructuredIOResponse {
     #[serde(rename = "type")]
     pub field_type: String,
@@ -10,7 +11,7 @@ pub struct UnstructuredIOResponse {
     pub text: String,
     pub metadata: Metadata,
 }
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Metadata {
     pub filetype: String,
     pub languages: Vec<String>,
@@ -26,7 +27,7 @@ impl From<&UnstructuredIOResponse> for HashMap<String, String> {
         // Convert fields of UnstructuredIOResponse to strings and insert them into the map
         map.insert("ac_type".to_string(), value.field_type.clone());
         map.insert("ac_element_id".to_string(), value.element_id.clone());
-        map.insert("page_content".to_string(), value.text.clone());
+        map.insert("page_content".to_string(), clean_text(value.text.clone()));
         // Convert fields of Metadata to strings and insert them into the map
         map.insert("ac_filetype".to_string(), value.metadata.filetype.clone());
         map.insert(

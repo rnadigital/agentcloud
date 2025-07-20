@@ -22,7 +22,7 @@ class GoogleStorageProvider(StorageProvider):
             # Initialize the storage client with the credentials
             self.storage_client = storage.Client(credentials=credentials, project=PROJECT_ID)
         else:
-            logging.warn('GOOGLE_APPLICATION_CREDENTIALS_JSON environment variable is not set.')
+            logging.warning('GOOGLE_APPLICATION_CREDENTIALS_JSON environment variable is not set.')
             self.storage_client = storage.Client(project=PROJECT_ID)
 
     async def init(self):

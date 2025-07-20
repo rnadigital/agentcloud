@@ -1,16 +1,20 @@
 import * as API from '@api';
+import { CubeIcon } from '@heroicons/react/24/outline';
+import animationData from 'animations/SignInAnimationTransparent.json';
 import ButtonSpinner from 'components/ButtonSpinner';
 import ErrorAlert from 'components/ErrorAlert';
 import InputField from 'components/form/InputField';
-import SuccessAlert from 'components/SuccessAlert';
+import LeftFrame from 'components/onboarding/LeftFrame';
 import { useThemeContext } from 'context/themecontext';
 import passwordPattern from 'lib/misc/passwordpattern';
+import Lottie from 'lottie-react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import cn from 'utils/cn';
 
 export interface RegisterFormValues {
 	name: string;
@@ -24,14 +28,18 @@ export default function Register() {
 	const [error, setError] = useState();
 	const [submitting, setSubmitting] = useState(false);
 	const posthog = usePostHog();
-	const { control, handleSubmit } = useForm<RegisterFormValues>();
+	const {
+		control,
+		handleSubmit,
+		register,
+		formState: { errors }
+	} = useForm<RegisterFormValues>();
 	const { theme } = useThemeContext();
 
-	async function register(data: RegisterFormValues) {
+	async function registerAccount(data: RegisterFormValues) {
 		setSubmitting(true);
 		try {
 			posthog.capture('signUp', {
-				name: data.name,
 				email: data.email
 			});
 			await API.register(data, null, setError, router);
@@ -46,36 +54,30 @@ export default function Register() {
 				<title>Register</title>
 			</Head>
 
-			<div className='flex min-h-full flex-1 flex-col justify-center sm:py-12 sm:px-6 lg:px-8'>
-				<div className='sm:mx-auto sm:w-full sm:max-w-md'>
-					<img
-						className='mx-auto h-16 w-auto sm:h-20'
-						src={
-							theme === 'dark'
-								? '/images/agentcloud-full-white-bg-trans.png'
-								: '/images/agentcloud-full-black-bg-trans.png'
-						}
-						alt='Your Company'
-						height={128}
-						width={128}
-					/>
-				</div>
-
-				<div className='mt-8 sm:mx-auto sm:w-full sm:max-w-[512px]'>
-					<div className='bg-white dark:bg-slate-800 px-6 py-8 shadow sm:rounded-lg sm:px-8'>
-						<h2 className='text-2xl font-bold leading-9 tracking-tight text-gray-900 mb-5 dark:text-white'>
-							Create your account
-						</h2>
-
-						<form className='space-y-2' onSubmit={handleSubmit(register)}>
+			<div className='flex flex-col md:flex-row md:flex-1 bg-white'>
+				<LeftFrame showAnimation>
+					<div className='flex justify-center h-full flex-col pb-4'>
+						<div className='hidden md:block text-2xl md:text-5xl leading-normal font-bold'>
+							Seamless Data Integration
+						</div>
+						<div className='hidden md:block text-xl leading-7 mt-4'>
+							Connect your favorite platforms like HubSpot, Jira, and BigQuery in just a few clicks.
+							Enjoy hassle-free integration that saves you time and effort.
+						</div>
+					</div>
+				</LeftFrame>
+				<div className='flex justify-center items-center w-full text-gray-500 px-4 pt-4 md:pt-0'>
+					<div>
+						<form className='space-y-2' onSubmit={handleSubmit(registerAccount)}>
 							<InputField<RegisterFormValues>
 								name='name'
 								control={control}
 								rules={{
-									required: 'Name is required'
+									required: 'name is required'
 								}}
+								placeholder='Agent Cloud'
 								label='Name'
-								type='text'
+								type='string'
 								disabled={false}
 							/>
 
@@ -89,6 +91,7 @@ export default function Register() {
 										message: 'Invalid email address'
 									}
 								}}
+								placeholder='agent@agentcloud.com'
 								label='Email'
 								type='email'
 								disabled={false}
@@ -113,8 +116,18 @@ export default function Register() {
 							</div>
 
 							<div className='flex items-center justify-start'>
-								<label htmlFor='tos' className='block text-sm text-gray-900 dark:text-slate-100'>
-									By using Agent Cloud, you agree to the{' '}
+								<input
+									type='checkbox'
+									id='tos'
+									className={cn('mr-2 bg-gray-50 rounded-sm border-gray-300', {
+										'border-red-500': errors.tos
+									})}
+									{...register('tos', {
+										required: 'You must agree to the terms of service and privacy policy'
+									})}
+								/>
+								<label htmlFor='tos' className='block text-sm'>
+									By signing up, you agree to the{' '}
 									<a
 										href='https://www.agentcloud.dev/legal/terms'
 										target='_blank'
@@ -134,6 +147,7 @@ export default function Register() {
 									</a>
 									.
 								</label>
+								{error}
 							</div>
 
 							<div>
@@ -148,7 +162,6 @@ export default function Register() {
 
 							{error && <ErrorAlert error={error} />}
 						</form>
-
 						<p className='mt-4 text-sm text-gray-900 dark:text-gray-50'>
 							Already have an account?{' '}
 							<Link
@@ -158,16 +171,13 @@ export default function Register() {
 								Sign in
 							</Link>
 						</p>
-
 						<div>
 							<div className='relative mt-6'>
 								<div className='absolute inset-0 flex items-center' aria-hidden='true'>
 									<div className='w-full border-t border-gray-200' />
 								</div>
-								<div className='relative flex justify-center text-sm font-medium leading-6'>
-									<span className='bg-white px-6 text-gray-500 dark:bg-slate-800 dark:text-gray-50'>
-										or
-									</span>
+								<div className='relative flex justify-center text-sm leading-6'>
+									<span>or</span>
 								</div>
 							</div>
 

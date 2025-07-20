@@ -7,8 +7,8 @@ use crate::vector_databases::models::{
 use crate::vector_databases::utils::calculate_vector_storage_size;
 use crate::vector_databases::vector_database::VectorDatabase;
 use async_trait::async_trait;
-use pinecone_sdk::models::{Cloud as PineconeCloud, Metadata};
-use pinecone_sdk::models::{DeletionProtection, Metric, Namespace, Vector, WaitPolicy};
+use pinecone_sdk::models::{Cloud, DeletionProtection, Metadata, Metric, WaitPolicy};
+use pinecone_sdk::models::{Namespace, Vector};
 use pinecone_sdk::pinecone::PineconeClient;
 use prost_types::value::Kind;
 use prost_types::Value;
@@ -44,7 +44,7 @@ impl VectorDatabase for PineconeClient {
             collection_name: search_request.collection.clone(),
             collection_metadata: None,
         };
-        let index_name = Region::to_str(search_request.region.unwrap_or_default());
+        let index_name = search_request.clone().collection;
         match get_index_model(&self, index_name.to_string()).await {
             Ok(index_model) => {
                 collection_results.status = VectorDatabaseStatus::Ok;
@@ -64,18 +64,42 @@ impl VectorDatabase for PineconeClient {
         &self,
         collection_create: CollectionCreate,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
-        let index_name = Region::to_str(collection_create.region.unwrap_or_default());
-        match get_index_model(&self, index_name.to_string()).await {
+        log::debug!("Creating collection: {:?}", collection_create);
+
+        let index_name = collection_create
+            .index_name
+            .clone()
+            .filter(|s| !s.is_empty())
+            .unwrap_or_else(|| {
+                collection_create
+                    .region
+                    .clone()
+                    .unwrap_or_default()
+                    .to_string()
+            });
+        log::debug!("Index name: {}", index_name);
+
+        match get_index_model(&self, index_name.clone()).await {
             Ok(_) => Ok(VectorDatabaseStatus::Ok),
             Err(e) => match e {
                 VectorDatabaseError::NotFound(_) => {
+                    log::info!("creating index...{}", index_name);
                     match self
                         .create_serverless_index(
-                            Region::to_str(collection_create.region.unwrap_or_default()),
+                            index_name.as_str(),
                             collection_create.dimensions as i32,
                             Metric::from(collection_create.distance),
-                            PineconeCloud::from(collection_create.cloud.unwrap_or_default()),
-                            Region::to_str(collection_create.region.unwrap_or_default()),
+                            collection_create
+                                .cloud
+                                .as_ref()
+                                .map(|cloud| match cloud.as_str() {
+                                    "gcp" => Cloud::Gcp,
+                                    "aws" => Cloud::Aws,
+                                    "azure" => Cloud::Azure,
+                                    _ => Cloud::default(),
+                                })
+                                .unwrap_or(Cloud::default()),
+                            collection_create.region.as_deref().unwrap_or_default(),
                             DeletionProtection::Disabled,
                             WaitPolicy::NoWait,
                         )
@@ -94,8 +118,14 @@ impl VectorDatabase for PineconeClient {
         &self,
         search_request: SearchRequest,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
-        let region = search_request.clone().region.unwrap_or(Region::US);
-        if let Ok(index_model) = get_index_model(&self, Region::to_str(region).to_string()).await {
+        let region = search_request.clone().region.unwrap_or(Region::US_EAST_1);
+        let index_name = search_request
+            .byo_vector_db
+            .map_or(Region::to_str(region), |_k| {
+                search_request.collection.as_str()
+            })
+            .to_string();
+        if let Ok(index_model) = get_index_model(&self, index_name).await {
             // Need to figure out the the default index name here
             let mut index = self.index(index_model.host.as_str()).await.unwrap();
             let pinecone_namespace = Namespace::from(search_request.collection.as_str());
@@ -112,23 +142,55 @@ impl VectorDatabase for PineconeClient {
         search_request: SearchRequest,
         point: Point,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
-        let region = search_request.clone().region.unwrap_or(Region::US);
+        let region = search_request.clone().region.unwrap_or(Region::US_EAST_1);
         let vector = Vector::from(point);
-        let namespace = search_request.clone().collection;
-        match get_index_model(&self, Region::to_str(region).to_string()).await {
+        let namespace = search_request
+            .clone()
+            .namespace
+            .map_or(search_request.clone().collection, |n| n);
+        let index_name = search_request
+            .byo_vector_db
+            .filter(|k| *k == true)
+            .map_or(Region::to_str(region), |_| {
+                search_request.collection.as_str()
+            })
+            .to_string();
+        match get_index_model(&self, index_name).await {
             Ok(index_model) => {
+                log::debug!("Sending to Pinecone index: {:?}", index_model);
                 let index = self.index(index_model.host.as_str()).await.unwrap();
                 match search_request.search_type {
-                    SearchType::ChunkedRow => match &self.delete_point(search_request).await {
-                        Ok(_) => match upsert(index, &[vector], &namespace.into()).await {
-                            Ok(_) => Ok(VectorDatabaseStatus::Ok),
-                            Err(e) => Err(e),
-                        },
-                        Err(e) => Err(e.to_owned()),
-                    },
+                    SearchType::ChunkedRow => {
+                        match &self.delete_point(search_request.clone()).await {
+                            Ok(_) => match upsert(index, &[vector], &namespace.into()).await {
+                                Ok(_) => {
+                                    log::debug!("Upsert Successful");
+                                    Ok(VectorDatabaseStatus::Ok)
+                                }
+                                Err(e) => {
+                                    log::error!("Upsert failed due to error: {}", e);
+                                    Err(e)
+                                }
+                            },
+                            Err(e) => {
+                                log::error!("Upsert failed due to error: {}", e);
+                                Err(e.to_owned())
+                            }
+                        }
+                    }
                     _ => match upsert(index, &[vector], &namespace.into()).await {
-                        Ok(_) => Ok(VectorDatabaseStatus::Ok),
-                        Err(e) => Err(e),
+                        Ok(_) => {
+                            log::debug!("Upsert Successful");
+                            Ok(VectorDatabaseStatus::Ok)
+                        }
+                        Err(e) => {
+                            log::error!(
+                                "An error occurred while attempting to upsert. Error: {}",
+                                e.clone()
+                            );
+                            log::error!("Upsert failed due to error: {}", e);
+                            Err(e)
+                        }
                     },
                 }
             }
@@ -140,12 +202,25 @@ impl VectorDatabase for PineconeClient {
         &self,
         search_request: SearchRequest,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
-        let region = search_request.region.unwrap_or(Region::US);
-        let pinecone_filters = search_request.filters.map_or(None, |filter_conditions| {
-            Some(Metadata::from(filter_conditions))
-        });
-        let namespace = search_request.collection;
-        match get_index_model(&self, Region::to_str(region).to_string()).await {
+        let region = search_request.region.unwrap_or(Region::US_EAST_1);
+        let pinecone_filters = search_request
+            .clone()
+            .filters
+            .map_or(None, |filter_conditions| {
+                Some(Metadata::from(filter_conditions))
+            });
+        let namespace = search_request
+            .clone()
+            .namespace
+            .map_or(search_request.clone().collection, |n| n);
+        let index_name = search_request
+            .byo_vector_db
+            .filter(|k| *k == true)
+            .map_or(Region::to_str(region), |_| {
+                search_request.collection.as_str()
+            })
+            .to_string();
+        match get_index_model(&self, index_name).await {
             Ok(index_model) => match self.index(index_model.host.as_str()).await {
                 Ok(mut index) => {
                     match index
@@ -167,21 +242,41 @@ impl VectorDatabase for PineconeClient {
         search_request: SearchRequest,
         points: Vec<Point>,
     ) -> Result<VectorDatabaseStatus, VectorDatabaseError> {
-        let region = search_request.clone().region.unwrap_or(Region::US);
+        let region = search_request.clone().region.unwrap_or(Region::US_EAST_1);
         let vectors: Vec<Vector> = points.iter().map(|p| Vector::from(p.to_owned())).collect();
-        let namespace = search_request.collection;
+        let namespace = search_request
+            .clone()
+            .namespace
+            .map_or(search_request.clone().collection, |n| n);
+        let index_name = search_request
+            .byo_vector_db
+            .filter(|k| *k == true)
+            .map_or(Region::to_str(region), |_| {
+                search_request.collection.as_str()
+            })
+            .to_string();
 
-        if let Ok(index_model) = get_index_model(&self, Region::to_str(region).to_string()).await {
+        if let Ok(index_model) = get_index_model(&self, index_name).await {
             // Need to figure out the the default index name here
             let mut index = self.index(index_model.host.as_str()).await.unwrap();
             match search_request.search_type {
                 SearchType::ChunkedRow => {
                     // Collect indices into a Vec<&str>
-                    let indices: Vec<&str> =
-                        points.iter().filter_map(|p| p.index.as_deref()).collect();
-                    println!("Ids to delete {:?}", indices);
-                    //println!("namespace to delete from {:?}", &namespace.clone());
-                    for idx in indices {
+                    let indices: Result<Vec<String>, _> = points
+                        .iter()
+                        .map(|p| {
+                            p.index
+                                .as_ref()
+                                .ok_or("Index is None")?
+                                .as_str()
+                                .ok_or("Index is not a string")
+                                .map(|s| s.to_string())
+                        })
+                        .collect();
+
+                    log::debug!("Ids to delete {:?}", indices);
+                    //log::debug!("namespace to delete from {:?}", &namespace.clone());
+                    for idx in indices.unwrap() {
                         // Use the collected ids directly in the delete_by_id method
                         let mut fields = BTreeMap::new();
                         fields.insert(
@@ -205,10 +300,14 @@ impl VectorDatabase for PineconeClient {
                         if let Ok(points) = query_response {
                             let ids: Vec<&str> =
                                 points.matches.iter().map(|j| j.id.as_str()).collect();
-                            let _ = index
-                                .delete_by_id(&ids, &namespace.clone().into())
-                                .await
-                                .unwrap();
+                            match index.delete_by_id(&ids, &namespace.clone().into()).await {
+                                Ok(_) => log::debug!("Point deleted successfully"),
+                                Err(e) => log::error!(
+                                    "An error occurred while attempting to delete \
+                                point. Error: {}",
+                                    e
+                                ),
+                            }
                         };
                     }
                 }
@@ -216,7 +315,10 @@ impl VectorDatabase for PineconeClient {
             }
             return match upsert(index, &vectors, &namespace.into()).await {
                 Ok(_) => Ok(VectorDatabaseStatus::Ok),
-                Err(e) => Err(e),
+                Err(e) => {
+                    log::error!("Upsert failed due to error: {}", e);
+                    Err(e)
+                }
             };
         };
         Err(VectorDatabaseError::NotFound(
@@ -228,7 +330,7 @@ impl VectorDatabase for PineconeClient {
         &self,
         search_request: SearchRequest,
     ) -> Result<Option<CollectionMetadata>, VectorDatabaseError> {
-        let region = search_request.clone().region.unwrap_or(Region::US);
+        let region = search_request.clone().region.unwrap_or(Region::US_EAST_1);
         if let Ok(index_model) = get_index_model(&self, Region::to_str(region).to_string()).await {
             let mut index = self.index(index_model.host.as_str()).await.unwrap();
             let index_stats = index.describe_index_stats(None).await.unwrap();
@@ -275,7 +377,7 @@ impl VectorDatabase for PineconeClient {
         &self,
         search_request: SearchRequest,
     ) -> Result<Vec<SearchResult>, VectorDatabaseError> {
-        let region = search_request.clone().region.unwrap_or(Region::US);
+        let region = search_request.clone().region.unwrap_or(Region::US_EAST_1);
         if let Ok(index_model) = get_index_model(&self, Region::to_str(region).to_string()).await {
             let mut index = self.index(index_model.host.as_str()).await.unwrap();
             let namespace = Namespace::from(search_request.collection.as_str());
@@ -319,5 +421,13 @@ impl VectorDatabase for PineconeClient {
             };
         }
         Ok(vec![])
+    }
+
+    async fn display_config(&self) {
+        let list_of_index = &self.list_indexes().await.unwrap();
+        log::debug!(
+            "Pinecone Host: {}",
+            list_of_index.clone().indexes.unwrap()[0].host
+        );
     }
 }

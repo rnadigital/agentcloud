@@ -1,12 +1,14 @@
+use crate::embeddings::helpers::clean_text;
 use crate::utils::conversions::{condition_to_hash_map, convert_hashmap_to_qdrant_filters};
 use crate::vector_databases::error::VectorDatabaseError;
-use crate::vector_databases::models::Cloud::GCP;
+use crate::vector_databases::helpers;
 use pinecone_sdk::models::Cloud as PineconeCloud;
 use pinecone_sdk::models::{Metric, Vector};
 use prost_types::value::Kind;
-use prost_types::{ListValue, Struct as Metadata, Struct};
+use prost_types::Struct as Metadata;
 use qdrant_client::qdrant::Filter;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};
 use uuid::Uuid;
 
@@ -23,16 +25,16 @@ pub enum CreateDisposition {
 }
 #[derive(Clone, Deserialize, Debug)]
 pub struct Point {
-    pub index: Option<String>,
+    pub index: Option<Value>,
     pub vector: Vec<f32>,
-    pub payload: Option<HashMap<String, String>>,
+    pub payload: Option<HashMap<String, Value>>,
 }
 
 impl Point {
     pub fn new(
-        index: Option<String>,
+        index: Option<Value>,
         vector: Vec<f32>,
-        payload: Option<HashMap<String, String>>,
+        payload: Option<HashMap<String, Value>>,
     ) -> Self {
         Point {
             index,
@@ -46,7 +48,7 @@ impl Point {
 pub struct SearchResult {
     pub id: String,
     pub score: Option<f32>,
-    pub payload: Option<HashMap<String, String>>,
+    pub payload: Option<HashMap<String, Value>>,
     pub vector: Option<Vec<f32>>,
 }
 
@@ -161,7 +163,7 @@ pub struct SearchResponseParams {
 }
 
 // This will dictate the type of search that is conducted
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum SearchType {
     Collection,
     Point,
@@ -179,11 +181,13 @@ impl Default for SearchType {
 pub struct SearchRequest {
     pub search_type: SearchType,
     pub collection: String,
+    pub namespace: Option<String>,
     pub id: Option<String>,
     pub vector: Option<Vec<f32>>,
     pub filters: Option<FilterConditions>,
     pub search_response_params: Option<SearchResponseParams>,
     pub region: Option<Region>,
+    pub byo_vector_db: Option<bool>,
     pub cloud: Option<Cloud>,
     pub top_k: Option<u32>,
 }
@@ -193,40 +197,55 @@ impl SearchRequest {
         Self {
             search_type,
             collection,
+            namespace: None,
             id: None,
             vector: None,
             filters: None,
             top_k: None,
+            byo_vector_db: None,
             search_response_params: None,
-            region: Some(Region::US),
-            cloud: Some(GCP),
+            region: Some(Region::US_EAST_1),
+            cloud: Some(Cloud::AWS),
         }
     }
 }
+
 #[derive(Serialize, Deserialize, Clone, Debug, Copy)]
 pub enum Region {
-    US,
-    EU,
+    US_EAST_1,
+    US_WEST_2,
+    EU_WEST_1,
+    US_CENTRAL_1,
+    EU_WEST_4,
+    EAST_US_2,
 }
+
 impl Default for Region {
     fn default() -> Self {
-        Self::US
+        Self::US_EAST_1
     }
 }
 
 impl Region {
     pub fn to_str<'a>(region: Self) -> &'a str {
         match region {
-            Self::US => "us-central1",
-            Self::EU => "europe-west4",
+            Self::US_EAST_1 => "us-east-1",
+            Self::US_WEST_2 => "us-west-2",
+            Self::EU_WEST_1 => "eu-west-1",
+            Self::US_CENTRAL_1 => "us-central1",
+            Self::EU_WEST_4 => "europe-west4",
+            Self::EAST_US_2 => "eastus2",
         }
     }
-
     pub fn from_str(region: &str) -> Self {
         match region {
-            "us-central1" => Region::US,
-            "europe-west4" => Region::EU,
-            _ => panic!("Unknown Pinecone serverless region"),
+            "us-east-1" => Region::US_EAST_1,
+            "us-west-2" => Region::US_WEST_2,
+            "eu-west-1" => Region::EU_WEST_1,
+            "us-central1" => Region::US_CENTRAL_1,
+            "europe-west4" => Region::EU_WEST_4,
+            "eastus2" => Region::EAST_US_2,
+            _ => panic!("Unknown Pinecone serverless region: {}", region),
         }
     }
 }
@@ -344,15 +363,18 @@ pub struct CollectionCreate {
     pub namespace: Option<String>,
     pub distance: Distance,
     pub vector_name: Option<String>,
-    pub region: Option<Region>,
-    pub cloud: Option<Cloud>,
+    pub region: Option<String>,
+    pub cloud: Option<String>,
+    pub index_name: Option<String>,
 }
 impl CollectionCreate {
     pub fn new(
         collection_name: String,
         dimensions: usize,
         distance: Distance,
-        region: Region,
+        region: String,
+        cloud: String,
+        index_name: String,
     ) -> Self {
         Self {
             collection_name: collection_name.clone(),
@@ -360,8 +382,9 @@ impl CollectionCreate {
             distance,
             namespace: None,
             vector_name: None,
-            cloud: Some(Cloud::AWS),
+            cloud: Some(cloud),
             region: Some(region),
+            index_name: Some(index_name),
         }
     }
 }
@@ -394,7 +417,7 @@ impl From<FilterConditions> for Metadata {
                 btree_map.insert(
                     k,
                     prost_types::Value {
-                        kind: Some(Kind::StringValue(format!("{}", v.replace("\"", "")))),
+                        kind: Some(Kind::StringValue(format!("{}", clean_text(v)))),
                     },
                 );
             }
@@ -403,7 +426,7 @@ impl From<FilterConditions> for Metadata {
         Self { fields: btree_map }
     }
 }
-impl From<Point> for BTreeMap<String, String> {
+impl From<Point> for BTreeMap<String, Value> {
     fn from(value: Point) -> Self {
         BTreeMap::from_iter(value.payload.unwrap_or(HashMap::new()))
     }
@@ -416,7 +439,10 @@ impl From<Point> for Metadata {
             btree_map.insert(
                 k,
                 prost_types::Value {
-                    kind: Some(Kind::StringValue(format!("{}", v.replace("\"", "")))),
+                    kind: Some(Kind::StringValue(format!(
+                        "{}",
+                        v.to_string().replace("\"", "")
+                    ))),
                 },
             );
         }
@@ -424,46 +450,12 @@ impl From<Point> for Metadata {
         Self { fields: btree_map }
     }
 }
-fn list_value_to_string(list_value: &ListValue) -> Option<String> {
-    let values: Vec<String> = list_value
-        .values
-        .iter()
-        .filter_map(|v| value_to_string(&v.kind)) // Recursively handle each value in the list
-        .collect();
-
-    Some(format!("[{}]", values.join(", ")))
-}
-fn struct_value_to_string(struct_value: &Struct) -> Option<String> {
-    let mut map = HashMap::new();
-
-    for (key, value) in &struct_value.fields {
-        if let Some(value_str) = value_to_string(&value.kind) {
-            // Recursively handle each value in the struct
-            map.insert(key.clone(), value_str);
-        }
-    }
-    // Return the map as a JSON string
-    Some(serde_json::to_string(&map).unwrap_or_else(|_| "{}".to_string()))
-}
-fn value_to_string(value: &Option<Kind>) -> Option<String> {
-    match value {
-        Some(kind) => match kind {
-            Kind::StringValue(s) => Some(s.to_owned().as_str().to_string()),
-            Kind::NumberValue(n) => Some(n.to_string()),
-            Kind::BoolValue(b) => Some(b.to_string()),
-            Kind::NullValue(i) => Some(i.to_string()),
-            Kind::ListValue(l) => list_value_to_string(l),
-            Kind::StructValue(s) => struct_value_to_string(s),
-        },
-        None => None,
-    }
-}
 impl From<Metadata> for Point {
     fn from(value: Metadata) -> Self {
         let mut hash_map = HashMap::new();
 
         for (k, v) in value.fields {
-            hash_map.insert(k, value_to_string(&v.kind).unwrap());
+            hash_map.insert(k, helpers::prost_to_serde(&v));
         }
         Point {
             index: None,
@@ -477,7 +469,10 @@ impl From<Point> for Vector {
     fn from(value: Point) -> Self {
         let metadata = Some(Metadata::from(value.clone()));
         Self {
-            id: value.index.unwrap_or(Uuid::new_v4().to_string()),
+            id: value
+                .index
+                .unwrap_or(Value::String(Uuid::new_v4().to_string()))
+                .to_string(),
             values: value.vector,
             sparse_values: None,
             metadata,

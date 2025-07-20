@@ -90,8 +90,17 @@ class CrewAIBuilder:
             raise
 
     def build_models(self):
+        print("DEBUG: Building models...")
         for key, model in self.models_models.items():
-            self.crew_models[key] = language_model_factory(model)  # , credential)
+            print(f"  Processing model key: {key}")
+            print(f"  Model data: {model}")
+            print(f"  Model type: {model.type}")
+            
+            created_model = language_model_factory(model)
+            print(f"  Created model type: {type(created_model)}")
+            print(f"  Created model: {created_model}")
+            
+            self.crew_models[key] = created_model
 
     def build_tools_and_their_datasources(self):
         for key, tool in self.tools_models.items():
@@ -120,7 +129,7 @@ class CrewAIBuilder:
                         if linked_tool:
                             tool_name = linked_tool.data.name
                         else:
-                            logging.warn(f"linked tool ID {tool.linkedToolId} not found for installed tool {tool.id}")
+                            logging.warning(f"linked tool ID {tool.linkedToolId} not found for installed tool {tool.id}")
                     tool_class = BuiltinTools.get_tool_class(tool_name)
             # Assign tool models and datasources
             datasources = search_subordinate_keys(self.datasources_models, key)
@@ -138,8 +147,38 @@ class CrewAIBuilder:
             self.crew_tools[key] = tool_instance
 
     def build_agents(self):
+        # Debug available models
+        print("DEBUG: Available models in crew_models:")
+        for model_key, model_obj in self.crew_models.items():
+            print(f"  Key: {model_key}, Type: {type(model_obj)}, Object: {model_obj}")
+        
         for key, agent in self.agents_models.items():
-            model_obj = match_key(self.crew_models, key, exact=True)
+            model_obj = match_key(self.crew_models, keyset(agent.modelId), exact=True)
+            
+            # Debug what model is being matched
+            print(f"DEBUG: Agent {agent.name} modelId: {agent.modelId}")
+            print(f"DEBUG: Model object type: {type(model_obj)}")
+            print(f"DEBUG: Model object: {model_obj}")
+            
+            # Check if model_obj is actually an embeddings object
+            if model_obj is not None and hasattr(model_obj, 'embed_query'):
+                print(f"ERROR: Agent {agent.name} got embeddings model instead of LLM")
+                # Try to find a language model in the available models
+                language_model = None
+                for model_key, model_candidate in self.crew_models.items():
+                    if hasattr(model_candidate, 'invoke') and not hasattr(model_candidate, 'embed_query'):
+                        print(f"Found language model: {type(model_candidate)}")
+                        language_model = model_candidate
+                        break
+                
+                if language_model is None:
+                    print(f"No language model found, creating default OpenAI model for agent {agent.name}")
+                    # Create a default language model
+                    from langchain_openai import ChatOpenAI
+                    language_model = ChatOpenAI(model="gpt-4")
+                
+                model_obj = language_model
+            
             agent_tools_objs = search_subordinate_keys(self.crew_tools, key)
             self.crew_agents[key] = Agent(
                 **agent.model_dump(
@@ -168,6 +207,11 @@ class CrewAIBuilder:
             agent_obj = match_key(self.crew_agents, keyset(task.agentId), exact=True)
 
             task_tools_objs = get_task_tools(task, self.crew_tools)
+            
+            # if task_tools_objs:
+            #     for tool_id, tool in task_tools_objs.items():
+            #         if hasattr(tool, 'type') and tool.type == "rag":
+            #             task_tools_objs[tool_id] = self.wrap_rag_tool_with_agent_llm(tool, agent_obj)
 
             context_task_objs = get_context_tasks(task, self.crew_tasks)
 
@@ -193,7 +237,7 @@ class CrewAIBuilder:
                     "storeTaskOutput", "taskOutputFileName", "isStructuredOutput", "taskOutputVariableName" 
                 }),
                 agent=agent_obj,
-                tools=task_tools_objs.values() if task_tools_objs else None,
+                tools=list(task_tools_objs.values()) if task_tools_objs else [],
                 context=context_task_objs,
                 human_input=task.requiresHumanInput,
                 stream_only_final_output=task.displayOnlyFinalOutput,
@@ -204,6 +248,30 @@ class CrewAIBuilder:
         for task_key, task in self.crew_tasks.items():
             print(f"Task Callback for {task_key}: {task.callback}")
     
+
+    # def wrap_rag_tool_with_agent_llm(self, tool, agent):
+    #     """
+    #     Wraps a RAG tool to use the agent's LLM for query formatting.
+        
+    #     Args:
+    #         tool: The RAG tool to wrap
+    #         agent: The agent whose LLM will be used for query formatting
+    #     """
+    #     original_run = tool.run
+        
+    #     def wrapped_run(*args, **kwargs):
+    #         if 'input' in kwargs:
+    #             query_prompt = f"""Format the following task or question into a clear, concise search query.
+    #             Task/Question: {kwargs.get('input', '')}
+    #             Format the query to be most effective for retrieving relevant information."""
+                
+    #             formatted_query = agent.llm.invoke(query_prompt)
+    #             kwargs['query'] = formatted_query
+                
+    #         return original_run(*args, **kwargs)
+        
+    #     tool.run = wrapped_run
+    #     return tool
 
     def make_user_question(self):
         if self.chat_history and len(self.chat_history) > 0:

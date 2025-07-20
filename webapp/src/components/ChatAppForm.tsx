@@ -316,7 +316,6 @@ export default function ChatAppForm({
 	};
 
 	async function createDatasourceCallback(createdDatasource) {
-		console.log('createDatasourceCallback', createdDatasource);
 		(await fetchFormData) && fetchFormData();
 		setDatasourceState(oldDatasources => {
 			const newOption = { label: createdDatasource.name, value: createdDatasource.datasourceId };
@@ -326,14 +325,12 @@ export default function ChatAppForm({
 	}
 
 	async function modelCallback(addedModelId) {
-		console.log('addedModelId', addedModelId);
 		(await fetchFormData) && fetchFormData();
 		setModelId(addedModelId);
 		setModalOpen(false);
 	}
 
 	async function toolCallback(addedToolId, addedTool) {
-		console.log('addedToolId', addedToolId);
 		(await fetchFormData) && fetchFormData();
 		if ((addedTool?.type as ToolType) == ToolType.RAG_TOOL) {
 			setDatasourceState(oldDatasourcesState =>
@@ -461,12 +458,16 @@ export default function ChatAppForm({
 						<div className='sm:col-span-12'>
 							<label
 								htmlFor='name'
-								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-							>
+								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								Avatar
 							</label>
 							<div className='mt-2'>
-								<AvatarUploader existingAvatar={icon} callback={iconCallback} />
+								<AvatarUploader
+									existingAvatar={icon}
+									callback={iconCallback}
+									isDialogOpen={modalOpen === 'avatar'}
+									setIsDialogOpen={setModalOpen}
+								/>
 							</div>
 						</div>
 					</div>
@@ -476,8 +477,7 @@ export default function ChatAppForm({
 							<div className='sm:col-span-12'>
 								<label
 									htmlFor='appName'
-									className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-								>
+									className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 									App Name
 								</label>
 								<input
@@ -497,8 +497,7 @@ export default function ChatAppForm({
 								<div className='w-full'>
 									<label
 										htmlFor='description'
-										className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-									>
+										className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 										App Description
 									</label>
 									<textarea
@@ -549,8 +548,7 @@ export default function ChatAppForm({
 							<div className='sm:col-span-'>
 								<label
 									htmlFor='maxMessages'
-									className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-								>
+									className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 									Max Messages
 								</label>
 								<input
@@ -588,8 +586,7 @@ export default function ChatAppForm({
 									<div className='sm:col-span-12'>
 										<label
 											htmlFor='agentName'
-											className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-										>
+											className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 											Agent Name
 										</label>
 										<input
@@ -609,16 +606,14 @@ export default function ChatAppForm({
 										<div className='space-y-px rounded-md shadow-sm w-full'>
 											<label
 												htmlFor='systemMessage'
-												className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mb-2'
-											>
+												className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400 mb-2'>
 												System Message
 											</label>
 
 											<div className='bg-white dark:bg-slate-800 relative rounded-md rounded-b-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
 												<label
 													htmlFor='role'
-													className='p-2 pb-0 block text-xs font-medium text-gray-900 dark:text-slate-400'
-												>
+													className='p-2 pb-0 block text-xs font-medium text-gray-900 dark:text-slate-400'>
 													Role
 												</label>
 												<textarea
@@ -648,8 +643,7 @@ export default function ChatAppForm({
 											<div className='bg-white dark:bg-slate-800 relative rounded-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
 												<label
 													htmlFor='goal'
-													className='p-2 pb-0 block text-xs font-medium text-gray-900 dark:text-slate-400'
-												>
+													className='p-2 pb-0 block text-xs font-medium text-gray-900 dark:text-slate-400'>
 													Goal
 												</label>
 												<textarea
@@ -678,8 +672,7 @@ export default function ChatAppForm({
 											<div className='bg-white dark:bg-slate-800 relative rounded-md rounded-t-none px-0 ring-1 ring-outset ring-gray-300 focus-within:z-10 focus-within:ring-2 focus-within:ring-indigo-600'>
 												<label
 													htmlFor='backstory'
-													className='p-2 pb-0 block text-xs font-medium text-gray-900 dark:text-slate-400'
-												>
+													className='p-2 pb-0 block text-xs font-medium text-gray-900 dark:text-slate-400'>
 													Backstory
 												</label>
 												<textarea
@@ -748,21 +741,18 @@ export default function ChatAppForm({
 						onClick={e => {
 							e.preventDefault();
 							step > 0 ? setStep(0) : router.push(`/${resourceSlug}/apps`);
-						}}
-					>
+						}}>
 						<svg
 							className='h-4 w-4 mr-2'
 							fill='none'
 							stroke='currentColor'
 							viewBox='0 0 24 24'
-							xmlns='http://www.w3.org/2000/svg'
-						>
+							xmlns='http://www.w3.org/2000/svg'>
 							<path
 								strokeLinecap='round'
 								strokeLinejoin='round'
 								strokeWidth='2'
-								d='M15 19l-7-7 7-7'
-							></path>
+								d='M15 19l-7-7 7-7'></path>
 						</svg>
 						<span>Back</span>
 					</button>
@@ -775,15 +765,13 @@ export default function ChatAppForm({
 								}
 								setRun(false);
 							}}
-							className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-						>
+							className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'>
 							Save
 						</button>
 						<button
 							type='submit'
 							onClick={() => setRun(true)}
-							className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 inline-flex items-center'
-						>
+							className='rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 inline-flex items-center'>
 							<PlayIcon className='h-4 w-4 mr-2' />
 							Save and Run
 						</button>

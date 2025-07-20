@@ -2,7 +2,7 @@ import { TasksDataReturnType } from 'controllers/task';
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 
 interface UseAutocompleteDropdownProps {
-	options: { label: string; value: string }[];
+	options?: { label: string; value: string }[];
 	value?: string;
 	setValue: Dispatch<SetStateAction<string>>;
 	setSelectedVariables: React.Dispatch<React.SetStateAction<string[]>>;
@@ -18,7 +18,7 @@ interface DropdownPosition {
 }
 
 const useAutocompleteDropdown = ({
-	options,
+	options = [],
 	value,
 	setValue,
 	setSelectedVariables,

@@ -1,4 +1,3 @@
-use std::sync::Arc;
 use crate::adaptors::rabbitmq::models::RabbitConnect;
 use amqp_serde::types::{FieldTable, FieldValue, ShortStr};
 use amqprs::channel::{Channel, ExchangeDeclareArguments};
@@ -8,6 +7,8 @@ use amqprs::{
     connection::{Connection, OpenConnectionArguments},
 };
 use lazy_static::lazy_static;
+use log::log;
+use std::sync::Arc;
 use tokio::sync::RwLock;
 
 lazy_static! {
@@ -21,16 +22,19 @@ pub(crate) async fn connect_rabbitmq(connection_details: &RabbitConnect) -> Conn
             &connection_details.username,
             &connection_details.password,
         )
-            .heartbeat(10) // Set heartbeat interval to 10 seconds
-            .virtual_host("/"),
+        .heartbeat(10) // Set heartbeat interval to 10 seconds
+        .virtual_host("/"),
     )
-        .await;
+    .await;
 
     let mut connection_attempts = 0;
     while res.is_err() {
         connection_attempts += 1;
         let time_to_sleep = 2 + (connection_attempts * 2);
-        println!("Going to sleep for '{}' seconds then will try to re-connect...", time_to_sleep);
+        log::warn!(
+            "Going to sleep for '{}' seconds then will try to re-connect...",
+            time_to_sleep
+        );
         tokio::time::sleep(tokio::time::Duration::from_secs(time_to_sleep)).await;
         res = Connection::open(
             &OpenConnectionArguments::new(
@@ -39,9 +43,9 @@ pub(crate) async fn connect_rabbitmq(connection_details: &RabbitConnect) -> Conn
                 &connection_details.username,
                 &connection_details.password,
             )
-                .heartbeat(10) // Set heartbeat interval to 10 seconds
+            .heartbeat(10), // Set heartbeat interval to 10 seconds
         )
-            .await;
+        .await;
     }
 
     let connection = res.unwrap();
@@ -53,7 +57,9 @@ pub(crate) async fn connect_rabbitmq(connection_details: &RabbitConnect) -> Conn
     connection
 }
 
-pub(crate) async fn ensure_connection(connection_details: &RabbitConnect) -> Arc<RwLock<Connection>> {
+pub(crate) async fn ensure_connection(
+    connection_details: &RabbitConnect,
+) -> Arc<RwLock<Connection>> {
     let global_conn = Arc::clone(&GLOBAL_CONNECTION);
     {
         let mut conn_guard = global_conn.write().await;
@@ -65,7 +71,6 @@ pub(crate) async fn ensure_connection(connection_details: &RabbitConnect) -> Arc
     let conn_guard = global_conn.read().await;
     Arc::new(RwLock::new(conn_guard.as_ref().unwrap().clone()))
 }
-
 
 pub async fn channel_rabbitmq(connection: &Connection) -> Channel {
     let channel = connection.open_channel(None).await.unwrap();
@@ -97,9 +102,12 @@ pub async fn bind_queue_to_exchange(
             prefetch_size: 0,
             global: false,
         })
-        .await {
+        .await
+    {
         Ok(_) => {}
-        Err(e) => { log::error!("An error occurred while setting up the channel:{}", e) }
+        Err(e) => {
+            log::error!("An error occurred while setting up the channel:{}", e)
+        }
     }
     // adding queue type as custom arguments to the queue declaration
     let mut args: FieldTable = FieldTable::new();
@@ -115,7 +123,8 @@ pub async fn bind_queue_to_exchange(
                 .arguments(args)
                 .finish(),
         )
-        .await {
+        .await
+    {
         Ok(queue_option) => {
             match queue_option {
                 Some((queue, _, _)) => {

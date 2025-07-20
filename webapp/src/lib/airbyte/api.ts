@@ -64,7 +64,7 @@ export async function getAirbyteAuthToken() {
 async function getAirbyteApi(type: AirbyteApiType) {
 	if (apiCache[type]) {
 		apiCache[type].defaults.headers = {
-			authorization: `Bearer ${await getAirbyteAuthToken()}`
+			// authorization: `Bearer ${await getAirbyteAuthToken()}`
 		};
 		return apiCache[type];
 	}
@@ -72,7 +72,7 @@ async function getAirbyteApi(type: AirbyteApiType) {
 		definition: definitions[type],
 		axiosConfigDefaults: {
 			headers: {
-				authorization: `Bearer ${await getAirbyteAuthToken()}`
+				// authorization: `Bearer ${await getAirbyteAuthToken()}`
 			}
 		}
 	});

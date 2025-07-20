@@ -1,4 +1,4 @@
-import cn from 'lib/cn';
+import cn from 'utils/cn';
 import SelectClassNames from 'lib/styles/SelectClassNames';
 import { useEffect, useRef } from 'react';
 

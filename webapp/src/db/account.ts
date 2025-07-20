@@ -3,7 +3,7 @@
 import Permission from '@permission';
 import * as db from 'db/index';
 import { Binary, ObjectId } from 'mongodb';
-import { AccountStripeData, SubscriptionPlan } from 'struct/billing';
+import { SubscriptionPlan } from 'struct/billing';
 import { InsertResult } from 'struct/db';
 import { OAUTH_PROVIDER } from 'struct/oauth';
 
@@ -43,7 +43,6 @@ export type Account = {
 	emailVerified: boolean;
 	apiJwt?: string;
 	token?: string;
-	stripe?: AccountStripeData;
 	oauth?: OAuthRecordType;
 	permissions: Binary;
 	onboarded: boolean;
@@ -311,55 +310,6 @@ export function setAccountOauth(
 	);
 }
 
-export function setStripePlan(stripeCustomerId: string, plan: SubscriptionPlan): Promise<any> {
-	return AccountCollection().updateOne(
-		{
-			'stripe.stripeCustomerId': stripeCustomerId
-		},
-		{
-			$set: {
-				'stripe.stripePlan': plan
-			}
-		}
-	);
-}
-
-export function setStripeCustomerId(userId: db.IdOrStr, stripeCustomerId: string): Promise<any> {
-	return AccountCollection().updateOne(
-		{
-			_id: toObjectId(userId)
-		},
-		{
-			$set: {
-				'stripe.stripeCustomerId': stripeCustomerId
-			}
-		}
-	);
-}
-
-export function updateStripeCustomer(
-	stripeCustomerId: string,
-	update: Partial<AccountStripeData>
-): Promise<any> {
-	return AccountCollection().updateOne(
-		{
-			'stripe.stripeCustomerId': stripeCustomerId
-		},
-		{
-			$set: {
-				...(update.stripeCustomerId ? { 'stripe.stripeCustomerId': update.stripeCustomerId } : {}),
-				...(update.stripeEndsAt ? { 'stripe.stripeEndsAt': update.stripeEndsAt } : {}),
-				...(update.stripeCancelled != null
-					? { 'stripe.stripeCancelled': update.stripeCancelled }
-					: {}),
-				...(update.stripePlan ? { 'stripe.stripePlan': update.stripePlan } : {}),
-				...(update.stripeAddons ? { 'stripe.stripeAddons': update.stripeAddons } : {}),
-				...(update.stripeTrial != null ? { 'stripe.stripeTrial': update.stripeTrial } : {})
-			}
-		}
-	);
-}
-
 export function setAccountPermissions(userId: db.IdOrStr, permissions: Permission): Promise<any> {
 	return AccountCollection().updateOne(
 		{
@@ -412,6 +362,19 @@ export function updateRoleAndMarkOnboarded(userId: db.IdOrStr, role: string): Pr
 		{
 			$set: {
 				role,
+				onboarded: true
+			}
+		}
+	);
+}
+
+export function markOnboarded(userId: db.IdOrStr): Promise<any> {
+	return AccountCollection().updateOne(
+		{
+			_id: toObjectId(userId)
+		},
+		{
+			$set: {
 				onboarded: true
 			}
 		}

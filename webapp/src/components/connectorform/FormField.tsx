@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Select from 'react-tailwindcss-select';
 import { Option, SelectValue } from 'react-tailwindcss-select/dist/components/type';
 import { Property } from 'struct/form';
+import { useDatasourceStore } from 'store/datasource';
 
 import ArrayField from './ArrayField';
 import FormSection from './FormSection';
@@ -37,11 +38,23 @@ const FormField = ({ name, property, requiredFields, level = 0 }: FormFieldProps
 
 	const [selectedOption, setSelectedOption] = useState<Property>();
 
+	const { saveOneOfSelection, loadOneOfSelection, clearOneOfSelection } = useDatasourceStore();
+
+	useEffect(() => {
+		if (property.oneOf) {
+			const savedOption = loadOneOfSelection(name);
+			if (savedOption) {
+				setSelectedOption(savedOption);
+			}
+		}
+	}, [name, property.oneOf, loadOneOfSelection]);
+
 	const handleOptionChangeTwo = (e: SelectValue, oneOf?: Property[]) => {
 		const selectedTitle = (e as Option).value;
 		const selected = oneOf?.find(option => option.title === selectedTitle) || null;
 		if (selected) {
 			setSelectedOption(selected);
+			saveOneOfSelection(name, selected);
 		}
 	};
 

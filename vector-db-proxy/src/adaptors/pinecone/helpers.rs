@@ -39,7 +39,7 @@ pub async fn get_index_model(
     match client.describe_index(collection_name.as_str()).await {
         Ok(index_model) => Ok(index_model),
         Err(e) => {
-            println!("Pinecone Error: {}", e);
+            log::error!("Pinecone Error: {}", e);
             Err(VectorDatabaseError::NotFound(e.to_string()))
         }
     }

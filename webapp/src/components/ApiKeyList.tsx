@@ -5,11 +5,10 @@ import { ArrowPathIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/20/
 import DeleteModal from 'components/DeleteModal';
 import ErrorAlert from 'components/ErrorAlert';
 import { useAccountContext } from 'context/account';
-import cn from 'lib/cn';
+import cn from 'utils/cn';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import { ModelContextWindow, ModelKnowledgeCutoff } from 'struct/model';
 
 import { CopyToClipboardButton } from './chat/message';
 import ConfirmModal from './ConfirmModal';

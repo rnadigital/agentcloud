@@ -1,8 +1,8 @@
+use crate::adaptors::mongo::models::DataSources;
 use crate::adaptors::rabbitmq::client::bind_queue_to_exchange;
 use crate::init::env_variables::GLOBAL_DATA;
 use crate::messages::models::{MessageQueueConnection, QueueConnectionTypes};
 use crate::messages::tasks::process_message;
-use crate::vector_databases::vector_database::VectorDatabase;
 use amqp_serde::types::ShortStr;
 use amqprs::channel::{BasicAckArguments, BasicConsumeArguments, Channel};
 use crossbeam::channel::Sender;
@@ -51,9 +51,9 @@ impl MessageQueueConnection for RabbitConnect {
 
 pub async fn rabbit_consume(
     streaming_queue: &Channel,
-    vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
+    //vector_database_client: Arc<RwLock<dyn VectorDatabase>>,
     mongo_client: Arc<RwLock<Database>>,
-    sender: Sender<(String, Option<String>, String)>,
+    sender: Sender<(DataSources, Option<String>, String)>,
 ) {
     let global_data = GLOBAL_DATA.read().await;
     let queue_name = global_data.rabbitmq_stream.as_str();
@@ -90,15 +90,13 @@ pub async fn rabbit_consume(
                                 if let Ok(message_string) = String::from_utf8(msg.clone().to_vec())
                                 {
                                     let sender_clone = sender.clone();
-                                    let vector_database_client =
-                                        Arc::clone(&vector_database_client);
                                     let mongo_client = Arc::clone(&mongo_client);
                                     process_message(
                                         message_string,
                                         stream_type,
                                         datasource_id,
                                         stream_config_key,
-                                        vector_database_client,
+                                        //vector_database_client,
                                         mongo_client,
                                         sender_clone,
                                     )
@@ -117,13 +115,7 @@ pub async fn rabbit_consume(
                     "There was an error when consuming messages from rabbitMQ. Error: {}",
                     e
                 );
-                break; // Break out of the loop to reconnect
             }
         }
     }
-    // todo: need to implement reconnection logic
-    // // Reconnect on error
-    // self.connect(MessageQueueProvider::RABBITMQ).await;
-    // // Sleep before retrying to avoid tight loop in case of persistent issues
-    // tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
 }

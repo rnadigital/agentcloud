@@ -1,7 +1,7 @@
 'use strict';
 
 import { dynamicResponse } from '@dr';
-import { activeSessionRooms } from '@socketio';
+import { activeSessionRooms, io } from '@socketio';
 import {
 	getAgentById,
 	getAgentNameMap,
@@ -9,11 +9,13 @@ import {
 	getAgentsByTeam,
 	unsafeGetAgentNameMap
 } from 'db/agent';
-import { getAppById, unsafeGetAppById } from 'db/app';
+import { getAppById, getAppsByTeam, unsafeGetAppById } from 'db/app';
 import {
+	ChatChunk,
 	getChatMessageAfterId,
 	getChatMessagesBySession,
-	unsafeGetChatMessagesBySession
+	unsafeGetChatMessagesBySession,
+	upsertOrUpdateChatMessage
 } from 'db/chat';
 import { getCrewById, getCrewsByTeam, unsafeGetCrewById } from 'db/crew';
 import {
@@ -33,6 +35,7 @@ import toObjectId from 'misc/toobjectid';
 import { ObjectId } from 'mongodb';
 import { sessionTaskQueue } from 'queue/bull';
 import { client } from 'redis/redis';
+import { v4 as uuidv4 } from 'uuid';
 const log = debug('webapp:controllers:session');
 import { App, AppType } from 'struct/app';
 import { SessionStatus } from 'struct/session';
@@ -42,9 +45,15 @@ import { chainValidations } from 'utils/validationutils';
 export async function sessionsData(req, res, _next) {
 	const before = req?.query?.before === 'null' ? null : req?.query?.before;
 	const sessions = await getSessionsByTeam(req.params.resourceSlug, before, 10);
+	const apps = await getAppsByTeam(req.params.resourceSlug);
+
+	const sessionsWithApps = sessions.map(session => {
+		const app = apps.find(app => app._id.equals(session.appId));
+		return { ...session, app };
+	});
 	return {
 		csrf: req.csrfToken(),
-		sessions
+		sessions: sessionsWithApps
 	};
 }
 
@@ -52,6 +61,7 @@ export async function sessionsData(req, res, _next) {
  * GET /[resourceSlug]/sessions.json
  * team sessions json data
  */
+export type SessionJSONReturnType = Awaited<ReturnType<typeof sessionsData>>;
 export async function sessionsJson(req, res, next) {
 	let validationError = chainValidations(
 		req.query,
@@ -396,7 +406,6 @@ export async function addSessionApi(req, res, next) {
 	if (!skipRun && !hasVariables) {
 		const newSessionId = addedSession.insertedId.toString();
 		activeSessionRooms.push(`_${newSessionId}`);
-		console.log('activeSessionRooms after push', activeSessionRooms);
 		sessionTaskQueue.add(
 			'execute_rag',
 			{
@@ -534,6 +543,121 @@ export async function editSessionApi(req, res, next) {
 		message: 'Session updated successfully',
 		session: updatedSession
 	});
+}
+
+export async function sendMessage(req, res, next) {
+	try {
+		const { sessionId } = req.params;
+		const { messageText } = req.body;
+		log(
+			`Sending message with found req.params = ${req.params.sessionId}\nand req.body.messageText = ${req.body.messageText}\nand req.body.sessionId = ${req.body.sessionId}`
+		);
+
+		let validationError = chainValidations(
+			req.body,
+			[
+				{
+					field: 'messageText',
+					validation: { notEmpty: true, ofType: 'string' }
+				}
+			],
+			{
+				messageText: 'Message Text'
+			}
+		);
+
+		if (validationError) {
+			return dynamicResponse(req, res, 400, { error: validationError });
+		}
+
+		const session = await unsafeGetSessionById(sessionId);
+		if (!session) {
+			return dynamicResponse(req, res, 400, { error: 'Session not found' });
+		}
+
+		const activeRoomSessionId = `_${sessionId}`;
+
+		if (!activeSessionRooms.includes(activeRoomSessionId)) {
+			activeSessionRooms.forEach(v => {
+				log(`roomId: ${v}`);
+			});
+			return dynamicResponse(req, res, 400, {
+				error: 'Attempting to send message to inactive session.'
+			});
+		}
+
+		const messagePayload = {
+			room: activeRoomSessionId,
+			authorName: res.locals?.account?.name || 'External API',
+			message: {
+				type: 'text',
+				text: messageText
+			},
+			event: 'message'
+		};
+
+		const message = messagePayload.message;
+
+		const messageTimestamp = Date.now();
+
+		const authorName = res.locals?.account?.name || 'External API';
+
+		const finalMessage = {
+			...messagePayload,
+			message: {
+				...message,
+				chunkId: uuidv4()
+			},
+			incoming: true,
+			authorName,
+			ts: messageTimestamp
+		};
+
+		const chunk: ChatChunk = {
+			ts: finalMessage.ts,
+			chunk: finalMessage.message.text,
+			tokens: 0
+		};
+
+		const updatedMessage = {
+			orgId: session.orgId,
+			teamId: session.teamId,
+			sessionId: session._id,
+			authorId: null,
+			authorName: finalMessage.authorName,
+			ts: finalMessage.ts || messageTimestamp,
+			isFeedback: false,
+			chunkId: finalMessage.message.chunkId || null,
+			message: finalMessage
+		};
+		await upsertOrUpdateChatMessage(session._id, updatedMessage, chunk);
+
+		io.to(activeRoomSessionId).emit('message', messagePayload);
+
+		// // Persist the message in the database
+		// await upsertOrUpdateChatMessage(sessionId, {
+		// 	orgId: session.orgId,
+		// 	teamId: session.teamId,
+		// 	sessionId: session._id,
+		// 	authorId: res.locals?.account?._id || null, // API-triggered, no user ID
+		// 	authorName: res.locals?.account?.name || "External API",
+		// 	ts: Date.now(),
+		// 	message: messagePayload.message
+		// }, {
+		// 	ts: Date.now(),
+		// 	chunk: messagePayload.message,
+		// 	tokens: 0 // Update if tokenization is relevant
+		// });
+
+		return dynamicResponse(req, res, 200, {
+			message: 'Message sent successfully'
+		});
+	} catch (error) {
+		console.error(error);
+		return dynamicResponse(req, res, 500, {
+			error: 'Internal server error'
+		});
+	}
 }
 
 export async function startSession(req, res, next) {

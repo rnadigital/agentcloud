@@ -80,7 +80,7 @@ export default function Org(props) {
 				message={`Are you sure you want to remove this member from the org, including from all teams? This action cannot be undone.`}
 			/>
 			<Head>
-				<title>{`Organisation - ${orgName}`}</title>
+				<title>{`Organization - ${orgName}`}</title>
 			</Head>
 
 			{permissions.get(Permissions.EDIT_TEAM) && (
@@ -93,6 +93,8 @@ export default function Org(props) {
 			)}
 
 			<PageTitleWithNewButton
+				searchQuery=''
+				setSearchQuery={() => {}}
 				list={members}
 				title='Org Members'
 				buttonText='Invite Member'

@@ -14,7 +14,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { usePostHog } from 'posthog-js/react';
 import React, { useEffect, useState } from 'react';
-import Select from 'react-tailwindcss-select';
+import SelectOld from 'react-tailwindcss-select';
 import { toast } from 'react-toastify';
 import { NotificationType } from 'struct/notification';
 import { FormFieldConfig, Task } from 'struct/task';
@@ -29,6 +29,18 @@ import InfoAlert from './InfoAlert';
 import ToolTip from './shared/ToolTip';
 import CreateVariableModal from './variables/CreateVariableModal';
 import AutocompleteDropdown from './variables/VariableDropdown';
+import { Input } from 'modules/components/ui/input';
+import { Textarea } from 'modules/components/ui/textarea';
+import { MultiSelect } from 'modules/components/multi-select';
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue
+} from 'modules/components/ui/select';
+import { Database, PlusCircleIcon, User } from 'lucide-react';
+import { WrenchScrewdriverIcon } from '@heroicons/react/24/outline';
 
 const jsonPlaceholder = `{
 	"schema": {
@@ -196,10 +208,9 @@ export default function TaskForm({
 	}
 	async function taskPost(e) {
 		e.preventDefault();
-		const toolIds = toolState ? toolState.map(x => x?.value) : [];
-		const datasourceIds = datasourceState ? datasourceState.map(x => x?.value) : [];
+		const toolIds = toolState ? toolState : [];
+		const datasourceIds = datasourceState ? datasourceState : [];
 		const dedupedCombinedToolIds = [...new Set([...toolIds, ...datasourceIds])];
-
 		const displayOnlyFinalOutput =
 			taskState?.requiresHumanInput && (!formFields || formFields.length === 0)
 				? false
@@ -403,28 +414,26 @@ export default function TaskForm({
 						<div className='col-span-full'>
 							<label
 								htmlFor='task_name'
-								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-							>
+								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								Name<span className='text-red-700'> *</span>
 							</label>
-							<input
+							<Input
 								required
 								type='text'
 								id='task_name'
 								name='task_name'
-								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 								defaultValue={taskState?.name}
+								placeholder='A concise name that summarizes the task purpose'
 							/>
 						</div>
 
 						<div className='col-span-full'>
 							<label
 								htmlFor='task_description'
-								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-							>
+								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 								Task Description<span className='text-red-700'> *</span>
 							</label>
-							<textarea
+							<Textarea
 								ref={autocompleteDescription.inputRef}
 								value={description}
 								onChange={autocompleteDescription.handleChange}
@@ -434,7 +443,6 @@ export default function TaskForm({
 								name='task_description'
 								placeholder='A clear, concise statement of what the task entails.'
 								rows={4}
-								className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 								defaultValue={taskState?.description}
 							/>
 							{autocompleteDescription.showDropdown &&
@@ -453,8 +461,7 @@ export default function TaskForm({
 							<div className='flex w-full mb-2 items-center'>
 								<label
 									htmlFor='expectedOutput'
-									className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-								>
+									className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
 									Expected Output<span className='text-red-700'> *</span>
 								</label>
 
@@ -464,8 +471,7 @@ export default function TaskForm({
 								<Switch
 									checked={isStructuredOutput}
 									onChange={setIsStructuredOutput}
-									className='group inline-flex h-5 w-11 items-center rounded-full bg-gray-400 transition data-[checked]:bg-blue-600'
-								>
+									className='group inline-flex h-5 w-11 items-center rounded-full bg-gray-400 transition data-[checked]:bg-blue-600'>
 									<span className='size-3 translate-x-1 rounded-full bg-white transition group-data-[checked]:translate-x-6' />
 								</Switch>
 							</div>
@@ -491,19 +497,17 @@ export default function TaskForm({
 										className='text-sm text-blue-500 dark:text-blue-400 underline'
 										href='https://docs.agentcloud.dev/documentation/guides/structure-output'
 										target='_blank'
-										rel='noreferrer'
-									>
+										rel='noreferrer'>
 										Instructions on how to create a schema for structure output
 									</a>
 								</>
 							) : (
-								<textarea
+								<Textarea
 									ref={autocompleteExpectedOutput.inputRef}
 									id='expectedOutput'
 									name='expectedOutput'
 									placeholder='Clear and detailed definition of expected output for the task.'
 									rows={4}
-									className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
 									defaultValue={taskState?.expectedOutput}
 									value={autocompleteExpectedOutput.text}
 									onChange={autocompleteExpectedOutput.handleChange}
@@ -522,239 +526,331 @@ export default function TaskForm({
 								)}
 						</div>
 
+						<div className='p-6 bg-gray-100 rounded-md text-sm col-span-full '>
+							<div>Optimize Your Task Execution</div>
+							<div className='text-gray-600 mt-2'>
+								Assign the most suitable agent and equip them with the necessary tools and data to
+								ensure your task is executed efficiently.
+							</div>
+
+							{/* Tool selection */}
+							<MultiSelect
+								className='bg-white mt-4'
+								placeholder={
+									<div className='flex items-center gap-2'>
+										<Database className='h-4 w-4' />
+										<p>Tools</p>
+									</div>
+								}
+								newCallback={() => setModalOpen('datasource')}
+								newLabel='New Datasource'
+								options={tools
+									.filter(t => (t?.type as ToolType) !== ToolType.RAG_TOOL)
+									.map(t => ({
+										label: t.name,
+										value: t._id.toString()
+									}))}
+								onValueChange={values => setToolState(values)}
+								value={toolState}
+							/>
+
+							{/* Tool selection */}
+							<MultiSelect
+								className='bg-white mt-4'
+								placeholder={
+									<div className='flex items-center gap-2'>
+										<Database className='h-4 w-4' />
+										<p>Connections</p>
+									</div>
+								}
+								newCallback={() => setModalOpen('datasource')}
+								newLabel='New Datasource'
+								options={tools
+									.filter(t => (t?.type as ToolType) === ToolType.RAG_TOOL)
+									.map(t => ({
+										label: t.name,
+										value: t._id.toString()
+									}))}
+								onValueChange={values => {
+									setDatasourceState(values);
+								}}
+								value={datasourceState}
+							/>
+
+							{/* Preferred agent */}
+							<Select
+								value={preferredAgent?._id.toString()}
+								onValueChange={value => {
+									if (value == 'new') {
+										return setModalOpen('agent');
+									}
+									if (value) {
+										setTask(oldTask => {
+											return {
+												...oldTask,
+												agentId: value
+											};
+										});
+									}
+								}}>
+								<SelectTrigger className='bg-white mt-4'>
+									<SelectValue
+										placeholder={
+											<div className='flex items-center gap-2 text-gray-600'>
+												<User className='h-4 w-4' />
+												<p>Agent</p>
+											</div>
+										}
+									/>
+								</SelectTrigger>
+								<SelectContent className='bg-white'>
+									<SelectItem value='new'>
+										<div className='flex items-center w-full'>
+											<PlusCircleIcon className='h-4 w-4 mr-2' />
+											Create new agent
+										</div>
+									</SelectItem>
+									{agents.map(a => (
+										<SelectItem key={a._id.toString()} value={a._id.toString()}>
+											{a.name}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+
+							{showToolConflictWarning && (
+								<InfoAlert
+									textColor='black'
+									className='col-span-full bg-yellow-100 text-yellow-900 p-4 text-sm rounded-md mt-3'
+									message='Agent Tool Conflict Warning'>
+									We noticed you have added an agent with a tool associated to them. Please note,
+									since the tools are associated to the agents, they can be used on any task where
+									the agent is working. If you would like a more deterministic approach, please only
+									associate the tool to the task.
+								</InfoAlert>
+							)}
+						</div>
+
+						<div className='p-6 bg-gray-100 rounded-md text-sm col-span-full '>
+							<div>Context Tasks</div>
+							<div className='text-gray-600 mt-2'>
+								Select any existing tasks that provide relevant background or are prerequisites
+							</div>
+
+							<MultiSelect
+								className='bg-white mt-4'
+								placeholder={
+									<div className='flex items-center gap-2'>
+										<WrenchScrewdriverIcon className='h-4 w-4' />
+										<p>Tasks</p>
+									</div>
+								}
+								options={taskChoices.map(a => ({ label: a.name, value: a._id.toString() }))}
+								onValueChange={values => {
+									setTask(oldTask => {
+										return {
+											...oldTask,
+											context: values
+										};
+									});
+								}}
+							/>
+						</div>
+
+						<div className='p-6 bg-gray-100 rounded-md text-sm col-span-full '>
+							<div>User Input Questions</div>
+							<div className='text-gray-600 mt-2'>
+								Specify the questions or fields to gather input from the user during this task.
+							</div>
+
+							{/* Commenting out tooltip for human input */}
+							{/*<ToolTip
+								content='Use human input when the task description and expected output require a human response instead of an AI response. This input will be used for the next task in a process app.'
+								placement='top-start'
+								arrow={false}>*/}
+							<Select
+								value={requiredHumanInput ? (formFields?.length > 0 ? 'form' : 'freeText') : 'off'}
+								onValueChange={value => {
+									setTask(oldTask => ({
+										...oldTask,
+										requiresHumanInput: value !== 'off',
+										...(value === 'off' || value === 'form' ? { taskOutputVariableName: null } : {})
+									}));
+									if (value === 'form') {
+										setFormFields(
+											task?.formFields?.length > 0
+												? task.formFields
+												: [{ position: '1', type: 'string' }]
+										);
+									} else {
+										setFormFields(null);
+									}
+								}}>
+								<SelectTrigger className='bg-white mt-2'>
+									<SelectValue placeholder='Select a human input type' />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value='off'>Human Input - OFF</SelectItem>
+									<SelectItem value='freeText'>Human Input - Free text feedback to AI</SelectItem>
+									<SelectItem value='form'>Human Input - Form input</SelectItem>
+								</SelectContent>
+							</Select>
+							{/*</ToolTip>*/}
+
+							{/* Form builder for human input */}
+							{requiredHumanInput && formFields?.length > 0 && (
+								<div className='col-span-full'>
+									<FormConfig
+										formFields={formFields}
+										setFormFields={setFormFields}
+										variables={variables}
+										fetchTaskFormData={fetchTaskFormData}
+									/>
+								</div>
+							)}
+						</div>
+
 						{!isStructuredOutput && (
-							<div className='col-span-full'>
-								<ToolTip
-									content='Save task ouput to a variable. This variable will be available in next tasks as well as arguments for tools.'
-									placement='top-start'
-									arrow={false}
-								>
+							<div className='p-6 bg-gray-100 rounded-md text-sm col-span-full '>
+								<label
+									htmlFor='requiresHumanInput'
+									className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+									Assign Task Output to Variable
+								</label>
+
+								<div className='col-span-full'>
+									{/* Commenting out tooltip for task output variable */}
+									{/*<ToolTip
+										content='Save task ouput to a variable. This variable will be available in next tasks as well as arguments for tools.'
+										placement='top-start'
+										arrow={false}>*/}
 									<div className='mt-2'>
 										<div className='sm:col-span-12'>
-											<label
-												htmlFor='requiresHumanInput'
-												className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-											>
-												Assign Task Output to Variable
-											</label>
 											<Select
-												primaryColor='indigo'
-												value={
-													taskOutputVariable
-														? {
-																label: taskOutputVariable.name,
-																value: taskOutputVariable._id.toString()
-															}
-														: null
-												}
-												onChange={(v: any) => {
-													/* Note: using a unique non objectid valud e.g. "new" instead of null because
-										   isClearable selects that aren't isMultiple have an empty value of null, which conflicts
-										   and triggers the new modal every time the input is cleared */
-													if (v?.value == 'new') {
+												value={taskOutputVariable?.name}
+												onValueChange={value => {
+													if (value == 'new') {
 														return setModalOpen('variable');
 													}
 													setTask(oldTask => {
 														return {
 															...oldTask,
-															taskOutputVariableName: v?.label
+															taskOutputVariableName: value
+														};
+													});
+												}}>
+												<SelectTrigger className='bg-white'>
+													<SelectValue placeholder='Select a variable' />
+												</SelectTrigger>
+												<SelectContent>
+													<SelectItem value='new'>+ Create new variable</SelectItem>
+													{variables.map(v => (
+														<SelectItem key={v._id.toString()} value={v.name}>
+															{v.name}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+										</div>
+									</div>
+									{/*</ToolTip>*/}
+								</div>
+							</div>
+						)}
+
+						<div className='p-6 bg-gray-100 rounded-md text-sm col-span-full '>
+							<div>Output Preferences</div>
+							<div className='text-gray-600 mt-2'>
+								Streamline user experience and retain important information for future reference.
+							</div>
+							<ToolTip
+								content='Hides intermediate thought messages from agents and only display the final task output.'
+								placement='top-start'
+								arrow={false}>
+								<div className='mt-2'>
+									<div className='sm:col-span-12'>
+										<label
+											htmlFor='displayOnlyFinalOutput'
+											className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+											<input
+												type='checkbox'
+												id='displayOnlyFinalOutput'
+												name='displayOnlyFinalOutput'
+												disabled={
+													taskState?.requiresHumanInput && (!formFields || formFields.length === 0)
+												}
+												checked={
+													taskState?.requiresHumanInput && (!formFields || formFields.length === 0)
+														? false
+														: taskState?.displayOnlyFinalOutput === true
+												}
+												onChange={e => {
+													setTask(oldTask => {
+														return {
+															...oldTask,
+															displayOnlyFinalOutput: e.target.checked
 														};
 													});
 												}}
-												options={[{ label: '+ Create new variable', value: 'new' }].concat(
-													variables.map(a => ({
-														label: a.name.toString(),
-														value: a._id.toString()
-													}))
-												)}
-												classNames={{
-													menuButton: () =>
-														'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-slate-800 dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
-													menu: 'absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-slate-700 dark:border-slate-600',
-													list: 'dark:bg-slate-700',
-													listGroupLabel: 'dark:bg-slate-700',
-													listItem: (value?: { isSelected?: boolean }) =>
-														`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`
-												}}
+												className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:bg-gray-500'
 											/>
-										</div>
+											Display Only Final Output
+										</label>
 									</div>
-								</ToolTip>
-							</div>
-						)}
+								</div>
+							</ToolTip>
+							<ToolTip
+								content='Stores the task output in a file that can be downloaded by the user after the task is completed.'
+								placement='top-start'
+								arrow={false}>
+								<div className='mt-2'>
+									<div className='sm:col-span-12'>
+										<label
+											htmlFor='storeTaskOutput'
+											className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+											<input
+												type='checkbox'
+												id='storeTaskOutput'
+												name='storeTaskOutput'
+												checked={taskState?.storeTaskOutput === true}
+												onChange={e => {
+													setTask(oldTask => {
+														return {
+															...oldTask,
+															storeTaskOutput: e.target.checked
+														};
+													});
+												}}
+												className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
+											/>
+											Store Task Output
+										</label>
+									</div>
+								</div>
+							</ToolTip>
 
-						<div className='sm:col-span-full'>
-							<label
-								htmlFor='members'
-								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-							>
-								Context
-							</label>
-							<div className='mt-2'>
-								<Select
-									isMultiple
-									isSearchable
-									isClearable
-									primaryColor={'indigo'}
-									classNames={{
-										menuButton: () =>
-											'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-slate-800 dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
-										menu: 'absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-slate-700 dark:border-slate-600',
-										list: 'dark:bg-slate-700',
-										listGroupLabel: 'dark:bg-slate-700',
-										listItem: (value?: { isSelected?: boolean }) =>
-											`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`
-									}}
-									value={
-										taskState?.context?.length > 0
-											? taskState?.context?.map(x => ({
-													value: x.toString(),
-													label: taskChoices.find(tx => tx._id === x)?.name
-												}))
-											: null
-									}
-									onChange={(v: any) => {
-										if (v?.some(val => val?.disabled)) {
-											return;
-										}
-										if (v?.some(vals => vals.value === null)) {
-											return setModalOpen('task');
-										}
-										setTask(oldTask => {
-											return {
-												...oldTask,
-												context: v?.map(x => x.value)
-											};
-										});
-									}}
-									options={[{ label: '+ New task', value: null }].concat(
-										taskChoices.map(a => ({ label: a.name, value: a._id }))
-									)}
-									formatOptionLabel={(data: any) => {
-										const optionTask = taskChoices.find(tc => tc._id === data.value);
-										return (
-											<li
-												className={`transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 justify-between flex hover:overflow-visible ${
-													data.isSelected ? 'bg-blue-100 text-blue-500' : 'dark:text-white'
-												}`}
-											>
-												{data.label}
-												{optionTask ? ` (${optionTask.description})` : null}
-											</li>
-										);
-									}}
-								/>
-							</div>
-						</div>
-
-						{/* Tool selection */}
-						<div className='col-span-full'>
-							<ToolsSelect
-								tools={tools.filter(t => (t?.type as ToolType) !== ToolType.RAG_TOOL)}
-								toolState={toolState}
-								onChange={toolState => setToolState(toolState)}
-								setModalOpen={setModalOpen}
-							/>
-
-							<ToolsSelect
-								title='Datasources'
-								addNewTitle='+ New Datasource'
-								tools={tools.filter(t => (t?.type as ToolType) === ToolType.RAG_TOOL)}
-								toolState={datasourceState}
-								onChange={setDatasourceState}
-								setModalOpen={x => setModalOpen('datasource')}
-								enableAddNew={true}
-							/>
-						</div>
-
-						{showToolConflictWarning && (
-							<InfoAlert
-								textColor='black'
-								className='col-span-full bg-yellow-100 text-yellow-900 p-4 text-sm rounded-md'
-								message='Agent Tool Conflict Warning'
-							>
-								We noticed you have added an agent with a tool associated to them. Please note,
-								since the tools are associated to the agents, they can be used on any task where the
-								agent is working. If you would like a more deterministic approach, please only
-								associate the tool to the task.
-							</InfoAlert>
-						)}
-
-						{/* Preferred agent */}
-						<div className='col-span-full'>
-							<label
-								htmlFor='preferredAgent'
-								className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-							>
-								Preferred Agent
-							</label>
-							<div className='mt-2'>
-								<Select
-									isClearable
-									isSearchable
-									primaryColor={'indigo'}
-									classNames={{
-										menuButton: () =>
-											'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-slate-800 dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
-										menu: 'absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-slate-700 dark:border-slate-600',
-										list: 'dark:bg-slate-700',
-										listGroupLabel: 'dark:bg-slate-700',
-										listItem: (value?: { isSelected?: boolean }) =>
-											`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`
-									}}
-									value={
-										preferredAgent
-											? { label: preferredAgent.name, value: preferredAgent._id.toString() }
-											: null
-									}
-									onChange={(v: any) => {
-										/* Note: using a unique non objectid valud e.g. "new" instead of null because
-										   isClearable selects that aren't isMultiple have an empty value of null, which conflicts
-										   and triggers the new modal every time the input is cleared */
-										if (v?.value == 'new') {
-											return setModalOpen('agent');
-										}
-										setTask(oldTask => {
-											return {
-												...oldTask,
-												agentId: v?.value
-											};
-										});
-									}}
-									options={[
-										{ label: '+ Create new agent', value: 'new', allowDelegation: false }
-									].concat(
-										agents.map(a => ({
-											label: a.name.toString(),
-											value: a._id.toString(),
-											allowDelegation: a.allowDelegation
-										}))
-									)}
-									formatOptionLabel={(data: any) => {
-										const optionAgent = agents.find(ac => ac._id === data.value);
-										return (
-											<li
-												className={`transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded hover:bg-blue-100 hover:text-blue-500 justify-between flex hover:overflow-visible ${
-													data.isSelected ? 'bg-blue-100 text-blue-500' : 'dark:text-white'
-												}`}
-											>
-												{data.label}
-												{optionAgent ? ` - ${optionAgent.role}` : null}
-												{data.allowDelegation && (
-													<span className='tooltip z-100'>
-														<span className='h-5 w-5 inline-flex items-center rounded-full bg-green-100 mx-1 px-2 py-1 text-xs font-semibold text-green-700'>
-															<HandRaisedIcon className='h-3 w-3 absolute -ms-1' />
-														</span>
-														<span className='tooltiptext'>
-															This agent allows automatic task delegation.
-														</span>
-													</span>
-												)}
-											</li>
-										);
-									}}
-								/>
-							</div>
+							{taskState?.storeTaskOutput && (
+								// <ToolTip
+								// 	content='Task output file name can only be .txt or .csv'
+								// 	placement='top-start'
+								// 	arrow={false}>
+								<div className='mt-2'>
+									<label
+										htmlFor='name'
+										className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'>
+										Task Output File Name<span className='text-red-700'> *</span>
+									</label>
+									<input
+										required
+										type='text'
+										id='taskOutputFileName'
+										name='taskOutputFileName'
+										className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
+										defaultValue={taskState?.taskOutputFileName}
+									/>
+								</div>
+								// </ToolTip>
+							)}
 						</div>
 
 						{/* Async execution checkbox 
@@ -783,179 +879,7 @@ export default function TaskForm({
 							</div>
 						</div>*/}
 
-						<div className='col-span-full'>
-							<ToolTip
-								content='Use human input when the task description and expected output require a human response instead of an AI response. This input will be used for the next task in a process app.'
-								placement='top-start'
-								arrow={false}
-							>
-								<div className='mt-2'>
-									<div className='sm:col-span-12'>
-										<label
-											htmlFor='requiresHumanInput'
-											className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-										>
-											Human Input
-										</label>
-										<Select
-											primaryColor='indigo'
-											value={
-												requiredHumanInput
-													? formFields?.length > 0
-														? { label: 'Human Input - Form input', value: 'form' }
-														: { label: 'Human Input - Free text feedback to AI', value: 'freeText' }
-													: { label: 'Human Input - OFF', value: 'off' }
-											}
-											onChange={(v: any) => {
-												setTask(oldTask => ({
-													...oldTask,
-													requiresHumanInput: v.value !== 'off',
-													...(v.value === 'off' || v.value === 'form'
-														? { taskOutputVariableName: null }
-														: {})
-												}));
-												if (v.value === 'form') {
-													setFormFields(
-														task?.formFields?.length > 0
-															? task.formFields
-															: [{ position: '1', type: 'string' }]
-													);
-												} else {
-													setFormFields(null);
-												}
-											}}
-											options={[
-												{ label: 'Human Input - OFF', value: 'off' },
-												{ label: 'Human Input - Free text feedback to AI', value: 'freeText' },
-												{ label: 'Human Input - Form input', value: 'form' }
-											]}
-											classNames={{
-												menuButton: () =>
-													'flex text-sm text-gray-500 dark:text-slate-400 border border-gray-300 rounded shadow-sm transition-all duration-300 focus:outline-none bg-white dark:bg-slate-800 dark:border-slate-600 hover:border-gray-400 focus:border-indigo-500 focus:ring focus:ring-indigo-500/20',
-												menu: 'absolute z-10 w-full bg-white shadow-lg border rounded py-1 mt-1.5 text-sm text-gray-700 dark:bg-slate-700 dark:border-slate-600',
-												list: 'dark:bg-slate-700',
-												listGroupLabel: 'dark:bg-slate-700',
-												listItem: (value?: { isSelected?: boolean }) =>
-													`block transition duration-200 px-2 py-2 cursor-pointer select-none truncate rounded dark:text-white ${value.isSelected ? 'text-white bg-indigo-500' : 'dark:hover:bg-slate-600'}`
-											}}
-										/>
-									</div>
-								</div>
-							</ToolTip>
-						</div>
-
-						{/* Form builder for human input */}
-						{requiredHumanInput && formFields?.length > 0 && (
-							<div className='col-span-full'>
-								<FormConfig
-									formFields={formFields}
-									setFormFields={setFormFields}
-									variables={variables}
-									fetchTaskFormData={fetchTaskFormData}
-								/>
-							</div>
-						)}
-
 						{/* displayOnlyFinalOutput tool checkbox */}
-						<div className='col-span-full'>
-							<ToolTip
-								content='Hides intermediate thought messages from agents and only display the final task output.'
-								placement='top-start'
-								arrow={false}
-							>
-								<div className='mt-2'>
-									<div className='sm:col-span-12'>
-										<label
-											htmlFor='displayOnlyFinalOutput'
-											className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-										>
-											<input
-												type='checkbox'
-												id='displayOnlyFinalOutput'
-												name='displayOnlyFinalOutput'
-												disabled={
-													taskState?.requiresHumanInput && (!formFields || formFields.length === 0)
-												}
-												checked={
-													taskState?.requiresHumanInput && (!formFields || formFields.length === 0)
-														? false
-														: taskState?.displayOnlyFinalOutput === true
-												}
-												onChange={e => {
-													setTask(oldTask => {
-														return {
-															...oldTask,
-															displayOnlyFinalOutput: e.target.checked
-														};
-													});
-												}}
-												className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:bg-gray-500'
-											/>
-											Display Only Final Output
-										</label>
-									</div>
-								</div>
-							</ToolTip>
-						</div>
-
-						<div className='col-span-full'>
-							<ToolTip
-								content='Stores the task output in a file that can be downloaded by the user after the task is completed.'
-								placement='top-start'
-								arrow={false}
-							>
-								<div className='mt-2'>
-									<div className='sm:col-span-12'>
-										<label
-											htmlFor='storeTaskOutput'
-											className='select-none flex items-center text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-										>
-											<input
-												type='checkbox'
-												id='storeTaskOutput'
-												name='storeTaskOutput'
-												checked={taskState?.storeTaskOutput === true}
-												onChange={e => {
-													setTask(oldTask => {
-														return {
-															...oldTask,
-															storeTaskOutput: e.target.checked
-														};
-													});
-												}}
-												className='mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
-											/>
-											Store Task Output
-										</label>
-									</div>
-								</div>
-							</ToolTip>
-						</div>
-
-						{taskState?.storeTaskOutput && (
-							<ToolTip
-								content='Task output file name can only be .txt or .csv'
-								placement='top-start'
-								arrow={false}
-							>
-								<div className='col-span-full'>
-									<label
-										htmlFor='name'
-										className='block text-sm font-medium leading-6 text-gray-900 dark:text-slate-400'
-									>
-										Task Output File Name<span className='text-red-700'> *</span>
-									</label>
-									<input
-										required
-										type='text'
-										id='taskOutputFileName'
-										name='taskOutputFileName'
-										className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 dark:bg-slate-800 dark:ring-slate-600 dark:text-white'
-										defaultValue={taskState?.taskOutputFileName}
-									/>
-								</div>
-							</ToolTip>
-						)}
 					</div>
 				</div>
 
@@ -963,8 +887,7 @@ export default function TaskForm({
 					{!compact && <Link href={`/${resourceSlug}/tasks`}>Back</Link>}
 					<button
 						type='submit'
-						className={`rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${compact ? 'w-full' : ''}`}
-					>
+						className={`rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${compact ? 'w-full' : ''}`}>
 						Save
 					</button>
 				</div>

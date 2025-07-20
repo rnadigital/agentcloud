@@ -1,12 +1,16 @@
 import * as API from '@api';
 import { CheckBadgeIcon } from '@heroicons/react/24/outline';
 import ChatAppForm from 'components/ChatAppForm';
+import ChatAppForm2 from 'components/ChatAppForm2';
 import CrewAppForm from 'components/CrewAppForm';
+import CrewAppForm2 from 'components/CrewAppForm2';
 import Spinner from 'components/Spinner';
 import { useAccountContext } from 'context/account';
 import { useStepContext } from 'context/stepwrapper';
 import { useThemeContext } from 'context/themecontext';
 import { AppsDataReturnType } from 'controllers/app';
+import { Button } from 'modules/components/ui/button';
+import { Sheet, SheetContent, SheetTrigger } from 'modules/components/ui/sheet';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
@@ -40,6 +44,7 @@ export default function AddApp(props: AppsDataReturnType) {
 	const [loading, setLoading] = useState(true);
 	const { apps, tools, agents, tasks, models, datasources, teamMembers, variables } = state;
 
+	const [moalOpen, setModalOpen] = useState(false);
 	const { theme } = useThemeContext();
 
 	async function fetchAppFormData() {
@@ -111,11 +116,11 @@ export default function AddApp(props: AppsDataReturnType) {
 						</h2>
 						<div className='md:flex gap-8 w-full mt-10'>
 							<div className='flex-1 border border-gray-200 dark:border-slate-700 p-4 rounded-md group dark:bg-slate-800'>
-								<ReactSVG
+								<img
 									src={
 										theme === 'dark'
-											? '/images/get-started/create-chat-app-dark.svg'
-											: '/images/get-started/create-chat-app.svg'
+											? '/images/get-started/create-chat-app-dark.jpg'
+											: '/images/get-started/create-chat-app.png'
 									}
 								/>
 								<div className='flex flex-col md:flex-row border-t border-gray-200 dark:border-slate-700 pt-4'>
@@ -135,12 +140,12 @@ export default function AddApp(props: AppsDataReturnType) {
 										</div>
 									</div>
 
-									<button
-										className='w-full md:w-24 h-9 disabled:bg-primary-200 group-hover:bg-primary-500 group-hover:text-white rounded-lg flex justify-center items-center text-sm mt-4 md:mt-auto max-w-sm border border-gray-200 dark:text-white ml-auto'
+									<Button
+										className='flex items-center gap-2 bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white rounded-lg mt-2 md:mt-0'
 										onClick={handleCreateChatApp}
 									>
 										+ Create
-									</button>
+									</Button>
 								</div>
 								<div className='flex flex-col md:flex-row gap-4 flex-wrap mt-4'>
 									{chatAppTaglines.map((tagline, index) => (
@@ -150,11 +155,11 @@ export default function AddApp(props: AppsDataReturnType) {
 							</div>
 
 							<div className='flex-1 border border-gray-200 dark:border-slate-700 p-4 rounded-md group dark:bg-slate-800'>
-								<ReactSVG
+								<img
 									src={
 										theme === 'dark'
-											? '/images/get-started/create-process-app-dark.svg'
-											: '/images/get-started/create-process-app.svg'
+											? '/images/get-started/create-process-app-dark.jpg'
+											: '/images/get-started/create-process-app.png'
 									}
 								/>
 								<div className='flex flex-col md:flex-row border-t border-gray-200 dark:border-slate-700 pt-4'>
@@ -173,12 +178,12 @@ export default function AddApp(props: AppsDataReturnType) {
 										</div>
 									</div>
 
-									<button
-										className='w-full md:w-24 h-9 disabled:bg-primary-200 group-hover:bg-primary-500 group-hover:text-white rounded-lg flex justify-center items-center text-sm mt-4 md:mt-auto max-w-sm border border-gray-200 dark:text-white ml-auto'
+									<Button
+										className='flex items-center gap-2 bg-gradient-to-r from-[#4F46E5] to-[#612D89] text-white rounded-lg mt-2 md:mt-0'
 										onClick={handleCreateProcessApp}
 									>
 										+ Create
-									</button>
+									</Button>
 								</div>
 								<div className='flex flex-col md:flex-row gap-4 flex-wrap mt-4'>
 									{processAppTaglines.map((tagline, index) => (
@@ -191,7 +196,7 @@ export default function AddApp(props: AppsDataReturnType) {
 				);
 			case 1:
 				return (
-					<ChatAppForm
+					<ChatAppForm2
 						fetchFormData={fetchAppFormData}
 						agentChoices={agents}
 						modelChoices={models}
@@ -203,7 +208,7 @@ export default function AddApp(props: AppsDataReturnType) {
 				);
 			case 2:
 				return (
-					<CrewAppForm
+					<CrewAppForm2
 						agentChoices={agents}
 						taskChoices={tasks}
 						modelChoices={models}
@@ -212,6 +217,7 @@ export default function AddApp(props: AppsDataReturnType) {
 						crew={cloneState?.app?.crew}
 						variableChoices={variables}
 						whiteListSharingChoices={teamMembers}
+						toolChoices={tools}
 					/>
 				);
 			default:
@@ -224,6 +230,7 @@ export default function AddApp(props: AppsDataReturnType) {
 			<Head>
 				<title>{`New App - ${teamName}`}</title>
 			</Head>
+
 			{renderStepContent()}
 		</>
 	);

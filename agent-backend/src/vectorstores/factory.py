@@ -1,12 +1,18 @@
-import logging
+import os
 
 from models.vectordatabase import VectorDatabase
-from init.env_variables import VECTOR_DATABASE
+from langchain_core.embeddings import Embeddings
 
-def vectorstore_factory(embedding_model, collection_name, tool):
-    match VECTOR_DATABASE:
+def vectorstore_factory(embedding_model: Embeddings, collection_name: str, tool, type: str, api_key: str = None, url: str = None, namespace: str = None, byoVectorDb: bool = False):
+    if byoVectorDb is False:
+        type = VectorDatabase.Pinecone
+    elif type is None:
+        raise ValueError("Vector database type must be specified when byoVectorDb is True")
+
+    match type:
         case VectorDatabase.Qdrant:
-            from init.env_variables import QDRANT_HOST
+            print("Creating Qdrant CLIENT")
+            from init.env_variables import QDRANT_HOST, QDRANT_API_KEY
             from langchain_community.vectorstores.qdrant import Qdrant
             from qdrant_client import QdrantClient
 
@@ -139,20 +145,23 @@ def vectorstore_factory(embedding_model, collection_name, tool):
                     for result in results
                 ]
             Qdrant.similarity_search_with_score_by_vector = similarity_search_with_score_by_vector_with_filter
-
+            print("Using arguments for Qdrant:", url, api_key, collection_name)
+            
             return Qdrant.from_existing_collection(
                 embedding=embedding_model,
                 path=None,
                 collection_name=collection_name,
                 # vector_name=embedding_model.model,
-                url=QDRANT_HOST
+                url=url[:-5] if url and url.endswith(':6334') else url if url is not None else QDRANT_HOST,
+                api_key=api_key
             )
         case VectorDatabase.Pinecone:
 
-            from langchain_community.vectorstores.pinecone import Pinecone
+            from langchain_community.vectorstores.pinecone import Pinecone, _import_pinecone,_is_pinecone_v3
             from typing import List, Optional, Tuple, Dict, Union
             from langchain_community.docstore.document import Document
             from tools.retrievers.filters import create_pinecone_filters
+            
             my_filters = create_pinecone_filters(tool.ragFilters)
             def similarity_search_by_vector_with_score_with_filter(
                 self,
@@ -187,9 +196,16 @@ def vectorstore_factory(embedding_model, collection_name, tool):
                 return docs
 
             Pinecone.similarity_search_by_vector_with_score = similarity_search_by_vector_with_score_with_filter
+
+            if api_key is None:
+                from init.env_variables import HOSTED_PINECONE_API_KEY
+                os.environ['PINECONE_API_KEY'] = HOSTED_PINECONE_API_KEY
+            else:
+                os.environ['PINECONE_API_KEY'] = api_key
+
             return Pinecone.from_existing_index(
-                index_name="us-central1", #TODO: make customisable
+                index_name=collection_name, #TODO: make customisable
                 embedding=embedding_model,
                 text_key="page_content", #TODO: check
-                namespace=collection_name,
+                namespace=namespace,
             )

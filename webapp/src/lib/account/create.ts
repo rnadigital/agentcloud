@@ -4,8 +4,8 @@ import Permission from '@permission';
 import { render } from '@react-email/render';
 import bcrypt from 'bcrypt';
 import { getSubscriptionsDetails } from 'controllers/stripe';
-import { addAccount, OAuthRecordType, setStripeCustomerId, updateStripeCustomer } from 'db/account';
-import { addOrg } from 'db/org';
+import { addAccount, OAuthRecordType } from 'db/account';
+import { addOrg, setOrgStripeCustomerId, updateOrgStripeCustomer } from 'db/org';
 import { addTeam } from 'db/team';
 import { addVerification, VerificationTypes } from 'db/verification';
 import debug from 'debug';
@@ -15,7 +15,6 @@ import * as ses from 'lib/email/ses';
 import StripeClient from 'lib/stripe';
 import toObjectId from 'misc/toobjectid';
 import { Binary, ObjectId } from 'mongodb';
-import Permissions from 'permissions/permissions';
 import { OrgRoleKey, OrgRoles, REGISTERED_USER, TeamRoleKey, TeamRoles } from 'permissions/roles';
 import SecretProviderFactory from 'secret/index';
 import SecretKeys from 'secret/secretkeys';
@@ -120,19 +119,19 @@ export default async function createAccount({
 			emailVerified,
 			oauth,
 			permissions: new Binary(REGISTERED_USER.array),
-			stripe: {
-				stripeCustomerId: null,
-				stripePlan: process.env.SKIP_STRIPE ? SubscriptionPlan.ENTERPRISE : SubscriptionPlan.FREE,
-				stripeAddons: {
-					users: 0,
-					storage: 0
-				},
-				stripeTrial: false
-			},
 			onboarded: false,
 			dateCreated: new Date()
 		}),
-		addVerification(newAccountId, VerificationTypes.VERIFY_EMAIL)
+		addVerification(newAccountId, VerificationTypes.VERIFY_EMAIL),
+		updateOrgStripeCustomer(orgId, {
+			stripeCustomerId: null,
+			stripePlan: process.env.SKIP_STRIPE ? SubscriptionPlan.ENTERPRISE : SubscriptionPlan.FREE,
+			stripeAddons: {
+				users: 0,
+				storage: 0
+			},
+			stripeTrial: false
+		})
 	]);
 
 	if (STRIPE_ACCOUNT_SECRET) {
@@ -145,8 +144,8 @@ export default async function createAccount({
 			const customerId = foundCheckoutSession?.customer as string;
 			const { planItem, addonUsersItem, addonStorageItem } =
 				await getSubscriptionsDetails(customerId);
-			await setStripeCustomerId(newAccountId, customerId);
-			await updateStripeCustomer(customerId, {
+			await setOrgStripeCustomerId(orgId, customerId);
+			await updateOrgStripeCustomer(orgId, {
 				stripePlan: priceToPlanMap[planItem.price.id],
 				stripeAddons: {
 					users: addonUsersItem ? addonUsersItem.quantity : 0,
@@ -173,8 +172,8 @@ export default async function createAccount({
 				}
 			});
 			log('Subscription created for new user: %O', subscription);
-			await setStripeCustomerId(newAccountId, stripeCustomer.id);
-			await updateStripeCustomer(stripeCustomer.id, {
+			await setOrgStripeCustomerId(orgId, stripeCustomer.id);
+			await updateOrgStripeCustomer(orgId, {
 				stripePlan: priceToPlanMap[process.env.STRIPE_PRO_PLAN_PRICE_ID],
 				stripeEndsAt: subscription.current_period_end * 1000,
 				stripeTrial: true
@@ -187,14 +186,14 @@ export default async function createAccount({
 	// If SES key is present, send verification email else set emailVerified to true
 	if (!emailVerified) {
 		const emailBody = invite
-			? render(
+			? await render(
 					InviteEmail({
 						inviteURL: `${process.env.URL_APP}/verify?token=${verificationToken}&newpassword=true`,
 						name,
 						teamName
 					})
 				)
-			: render(
+			: await render(
 					VerificationEmail({
 						verificationURL: `${process.env.URL_APP}/verify?token=${verificationToken}${checkoutSessionId ? '&newpassword=true&stripe=1' : !password ? '&newpassword=true' : ''}`
 					})

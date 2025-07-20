@@ -35,6 +35,7 @@ export default function Datasource(props) {
 	const router = useRouter();
 	const { resourceSlug, datasourceId } = router.query;
 	const [state, dispatch] = useState(props);
+	const [airbyteState, setAirbyteState] = useState(null);
 	const [jobsList, setJobsList] = useState(null);
 	const [tab, setTab] = useState(0);
 	const [schemaDiscoverState, setSchemaDiscoverState] = useState(null);
@@ -79,6 +80,7 @@ export default function Datasource(props) {
 			setError,
 			router
 		);
+		await API.checkAirbyteConnection({ resourceSlug }, setAirbyteState, setError, router);
 	}
 
 	async function fetchJobsList() {
@@ -210,8 +212,6 @@ export default function Datasource(props) {
 		return <Spinner />;
 	}
 
-	console.log('datasource.streamConfig', datasource.streamConfig);
-
 	return (
 		<>
 			<Head>
@@ -225,8 +225,7 @@ export default function Datasource(props) {
 				<button
 					onClick={() => deleteDatasource(datasource._id)}
 					className='inline-flex items-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 disabled:bg-gray-300 disabled:text-gray-700 disabled:cursor-not-allowed'
-					disabled={submitting['deleteDatasource']}
-				>
+					disabled={submitting['deleteDatasource']}>
 					{submitting['deleteDatasource'] ? (
 						<ButtonSpinner />
 					) : (
@@ -245,29 +244,30 @@ export default function Datasource(props) {
 						<form
 							onSubmit={e => {
 								e.preventDefault();
-							}}
-						>
+							}}>
 							<StreamsList
 								streams={discoveredSchema.catalog.streams}
 								streamProperties={streamProperties}
-								setStreamReducer={setStreamReducer}
+								// setStreamReducer={setStreamReducer as any}
 								streamState={datasource.streamConfig}
 							/>
 							<button
 								onClick={e => updateStreams(e)}
 								disabled={submitting['updateStreams'] || submitting['updateStreamssync']}
 								type='submit'
-								className='me-4 rounded-md disabled:bg-slate-400 bg-gray-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600'
-							>
+								className='me-4 rounded-md disabled:bg-slate-400 bg-gray-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600'>
 								{submitting['updateStreams'] && <ButtonSpinner />}
 								{submitting['updateStreams'] ? 'Saving...' : 'Save'}
 							</button>
 							<button
 								onClick={e => updateStreams(e, true)}
-								disabled={submitting['updateStreamssync'] || submitting['updateStreams']}
+								disabled={
+									submitting['updateStreamssync'] ||
+									submitting['updateStreams'] ||
+									!airbyteState?.isEnabled
+								}
 								type='submit'
-								className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-							>
+								className='rounded-md disabled:bg-slate-400 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'>
 								{submitting['updateStreamssync'] && <ButtonSpinner />}
 								{submitting['updateStreamssync'] ? 'Saving...' : 'Save and Sync'}
 							</button>
@@ -287,39 +287,33 @@ export default function Datasource(props) {
 								<tr>
 									<th
 										scope='col'
-										className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'
-									>
+										className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'>
 										Job ID
 									</th>
 									<th
 										scope='col'
-										className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'
-									>
+										className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'>
 										Status
 									</th>
 									{/*<th scope='col' className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Job Type</th>*/}
 									<th
 										scope='col'
-										className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'
-									>
+										className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'>
 										Connection ID
 									</th>
 									<th
 										scope='col'
-										className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'
-									>
+										className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'>
 										Start Time
 									</th>
 									<th
 										scope='col'
-										className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'
-									>
+										className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'>
 										Last Updated
 									</th>
 									<th
 										scope='col'
-										className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'
-									>
+										className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider'>
 										Duration
 									</th>
 								</tr>
@@ -370,8 +364,7 @@ export default function Datasource(props) {
 							type='submit'
 							className={
 								'flex rounded-md bg-indigo-600 px-2 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-200'
-							}
-						>
+							}>
 							Save
 						</button>
 						{editingSchedule && (
@@ -382,8 +375,7 @@ export default function Datasource(props) {
 								type='submit'
 								className={
 									'flex rounded-md disabled:bg-slate-400 bg-gray-600 px-2 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600'
-								}
-							>
+								}>
 								Cancel
 							</button>
 						)}

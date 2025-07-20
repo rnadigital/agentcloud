@@ -16,7 +16,7 @@ pub async fn subscribe_to_topic(connection_details: PubSubConnect) -> Result<Mes
         .exists(None)
         .await?
     {
-        println!(
+        log::debug!(
             "Topic: {} does not exist. Creating it now...",
             connection_details.topic.as_str()
         );
@@ -24,7 +24,7 @@ pub async fn subscribe_to_topic(connection_details: PubSubConnect) -> Result<Mes
             .topic(connection_details.topic.as_str())
             .create(Some(TopicConfig::default()), None)
             .await?;
-        println!(
+        log::debug!(
             "Topic: {} created successfully",
             connection_details.topic.as_str()
         );
@@ -34,7 +34,7 @@ pub async fn subscribe_to_topic(connection_details: PubSubConnect) -> Result<Mes
     // Create subscription
     let subscription = client.subscription(connection_details.topic.as_str());
     if !subscription.exists(None).await? {
-        println!(
+        log::debug!(
             "Subscription: {} does not exist. Creating it now...",
             connection_details.subscription.as_str()
         );
@@ -45,12 +45,12 @@ pub async fn subscribe_to_topic(connection_details: PubSubConnect) -> Result<Mes
                 None,
             )
             .await?;
-        println!(
+        log::debug!(
             "Subscription: {} created successfully",
             connection_details.subscription.as_str()
         );
     }
-    println!(
+    log::info!(
         "Listening to messages on subscription: {}",
         subscription.fully_qualified_name()
     );

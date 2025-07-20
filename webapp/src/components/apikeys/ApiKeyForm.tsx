@@ -39,7 +39,7 @@ const dropdownOptions = [
 	}
 ];
 
-export default function ApiKeyForm() {
+export default function ApiKeyForm({ callback }: { callback: () => void }) {
 	const [accountContext]: any = useAccountContext();
 	const { account, csrf } = accountContext;
 	const posthog = usePostHog();
@@ -70,10 +70,11 @@ export default function ApiKeyForm() {
 				},
 				null,
 				setError,
-				router
+				callback ? null : router
 			);
 		} finally {
 			setSubmitting(false);
+			callback && callback();
 		}
 	};
 
@@ -90,7 +91,7 @@ export default function ApiKeyForm() {
 					method='POST'
 					className='space-y-4'
 				>
-					<div className='w-full md:w-1/2'>
+					<div className='w-full'>
 						<InputField<ApiKeyFormValues>
 							name='name'
 							control={control}
@@ -103,7 +104,7 @@ export default function ApiKeyForm() {
 						/>
 					</div>
 
-					<div className='w-full md:w-1/2'>
+					<div className='w-full'>
 						<InputField<ApiKeyFormValues>
 							name='description'
 							control={control}
@@ -118,7 +119,7 @@ export default function ApiKeyForm() {
 					<div className='col-span-full'>
 						<p className='text-sm text-gray-900 pb-2'>Expiration</p>
 						<div className='flex flex-row w-full gap-4'>
-							<div className='w-full md:w-1/2'>
+							<div className='w-full'>
 								<Controller
 									render={({ field: { onChange, onBlur, value, ref } }) => {
 										const label = dropdownOptions.find(x => x.value === value)?.label;

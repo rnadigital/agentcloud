@@ -1,5 +1,5 @@
 import NProgress from 'nprogress';
-import { GetTaskByNameDispatch, GetTeamModelsDispatch, GetVariableDispatch } from 'struct/dispatchtypes';
+import { GetTaskByNameDispatch, GetTeamModelsDispatch, GetVariableDispatch, GetVectorDbDispatch } from 'struct/dispatchtypes';
 
 // Account
 export function getAccount(body, dispatch, errorCallback, router) {
@@ -60,6 +60,17 @@ export function updateRole(body, dispatch, errorCallback, router) {
 	const queryString = new URLSearchParams({ resourceSlug: body?.resourceSlug });
 	return ApiCall(
 		`/forms/account/role?${queryString}`,
+		'POST',
+		body,
+		dispatch,
+		errorCallback,
+		router
+	);
+}
+
+export function markOnboarded(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/forms/account/onboard`,
 		'POST',
 		body,
 		dispatch,
@@ -704,6 +715,17 @@ export function getDatasourceSchema(body, dispatch, errorCallback, router) {
 	);
 }//@TEST
 
+export function checkAirbyteConnection(body, dispatch, errorCallback, router) {
+	return ApiCall(
+		`/${body.resourceSlug}/airbyte/connection`,
+		'GET',
+		null,
+		dispatch,
+		errorCallback,
+		router
+	);
+}
+
 //Temp datasource stuff
 export function uploadDatasourceFileTemp(body, dispatch, errorCallback, router) {
 	return ApiCall(
@@ -926,6 +948,26 @@ export function updateVariable(body, dispatch , errorCallback, router) {
 
 export function deleteVariable(body, dispatch, errorCallback, router) {
     return ApiCall(`/${body.resourceSlug}/forms/variable/${body.variableId}`, 'DELETE', body, dispatch, errorCallback, router);
+}
+
+export function getVectorDbs(body, dispatch, errorCallback, router) {
+    return ApiCall(`/${body.resourceSlug}/vectordbs.json`, 'GET', null, dispatch, errorCallback, router);
+}
+
+export function getVectorDb(body, dispatch:GetVectorDbDispatch, errorCallback, router) {
+    return ApiCall(`/${body.resourceSlug}/vectordb/${body.vectorDbId}.json`, 'GET', null, dispatch, errorCallback, router);
+}
+
+export function addVectorDb(body, dispatch, errorCallback, router) {
+    return ApiCall(`/${body.resourceSlug}/forms/vectordb/add`, 'POST', body, dispatch, errorCallback, router);
+}
+
+export function updateVectorDb(body, dispatch , errorCallback, router) {
+    return ApiCall(`/${body.resourceSlug}/forms/vectordb/${body.vectorDbId}/edit`, 'POST', body, dispatch, errorCallback, router);
+}
+
+export function deleteVectorDb(body, dispatch, errorCallback, router) {
+    return ApiCall(`/${body.resourceSlug}/forms/vectordb/${body.vectorDbId}`, 'DELETE', body, dispatch, errorCallback, router);
 }
 
 function buildOptions(_route, method, body) {
