@@ -23,8 +23,6 @@ interface SessionProps extends SessionDataReturnType {
 	resourceSlug: string;
 }
 
-const log = createLogger('webapp:session');
-
 export default function Session(props: SessionProps) {
 	const scrollContainerRef = useRef(null);
 	const { sessionId, resourceSlug } = props;
@@ -179,7 +177,6 @@ export default function Session(props: SessionProps) {
 	}, [sessionId]);
 
 	function handleSocketJoined(joinMessage) {
-		log.info('Received chat joined %s', joinMessage);
 		updateChat();
 		scrollToBottom('smooth');
 	}
