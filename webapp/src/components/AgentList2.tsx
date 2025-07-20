@@ -137,6 +137,15 @@ export default function AgentList2({ agents, fetchAgents }) {
 		);
 	}, [searchTerm]);
 
+	// Cleanup effect to reset pointer events when component unmounts
+	useEffect(() => {
+		return () => {
+			document.body.style.pointerEvents = 'auto';
+			document.body.style.cursor = 'auto';
+			document.body.style.overflow = 'visible';
+		};
+	}, []);
+
 	async function deleteAgent(agentId) {
 		if (!agentId) return;
 
@@ -326,6 +335,36 @@ export default function AgentList2({ agents, fetchAgents }) {
 						} else {
 							setOpenNewAgentSheet(open);
 						}
+
+						// Additional check for pointer events with comprehensive cleanup
+						setTimeout(() => {
+							if (document.body.style.pointerEvents === 'none') {
+								document.body.style.pointerEvents = 'auto';
+							}
+
+							// Additional cleanup
+							document.body.style.cursor = 'auto';
+							document.body.style.overflow = 'visible';
+
+							// Clean up any remaining overlays
+							const overlays = document.querySelectorAll('[data-radix-dialog-overlay]');
+							overlays.forEach(overlay => {
+								if (overlay instanceof HTMLElement) {
+									overlay.style.pointerEvents = 'none';
+								}
+							});
+
+							// Clean up any remaining portals
+							const portals = document.querySelectorAll('[data-radix-portal]');
+							portals.forEach(portal => {
+								if (
+									portal instanceof HTMLElement &&
+									!portal.querySelector('[data-radix-dialog-content]')
+								) {
+									portal.remove();
+								}
+							});
+						}, 50);
 					}}
 					editing={!!selectedAgent}
 					agentId={selectedAgent?._id}

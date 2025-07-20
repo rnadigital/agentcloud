@@ -157,7 +157,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 				setSelectedValues(newValues);
 				setHasSelection(newValues.length > 0);
 			}
-		}, [value]);
+		}, [value, options]);
 
 		const [isPopoverOpen, setIsPopoverOpen] = React.useState(false);
 		const [isAnimating, setIsAnimating] = React.useState(false);
@@ -285,16 +285,33 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 				</PopoverTrigger>
 				<PopoverContent
 					className={cn(
-						'p-0 min-w-[var(--radix-popover-trigger-width)] w-full pointer-events-auto',
+						'p-0 min-w-[var(--radix-popover-trigger-width)] w-full pointer-events-auto z-[99999]',
 						'[&]:pointer-events-auto',
 						'[&>*]:pointer-events-auto',
 						'[&_input]:pointer-events-auto'
 					)}
 					align='start'
-					onEscapeKeyDown={() => setIsPopoverOpen(false)}>
-					<Command>
-						<CommandInput placeholder='Search...' onKeyDown={handleInputKeyDown} />
-						<CommandList>
+					onEscapeKeyDown={() => setIsPopoverOpen(false)}
+					style={{
+						zIndex: 99999,
+						position: 'fixed'
+					}}>
+					<Command className='z-[9999]'>
+						{/* <CommandInput placeholder='Search...' onKeyDown={handleInputKeyDown} /> */}
+						<CommandList
+							className='max-h-[150px] overflow-y-auto'
+							style={{ overflowY: 'auto' }}
+							onWheel={e => {
+								e.preventDefault();
+								e.stopPropagation();
+								const target = e.currentTarget;
+								const scrollAmount = e.deltaY;
+								target.scrollTop += scrollAmount;
+							}}
+							onTouchMove={e => {
+								e.preventDefault();
+								e.stopPropagation();
+							}}>
 							<CommandEmpty>No results found.</CommandEmpty>
 							<CommandGroup>
 								{newCallback && newLabel && (

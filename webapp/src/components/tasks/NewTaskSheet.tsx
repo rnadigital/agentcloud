@@ -63,7 +63,7 @@ export default function NewTaskSheet({
 
 	return (
 		<Sheet open={open} onOpenChange={setOpen}>
-			<SheetContent className='text-foreground sm:max-w-[576px] overflow-auto'>
+			<SheetContent size='md' className='text-foreground overflow-auto'>
 				<SheetTitle>
 					<div className='flex items-center gap-2'>
 						<BookText width={15} />

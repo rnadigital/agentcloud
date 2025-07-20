@@ -45,8 +45,7 @@ export const AgentSelectDisplay = ({
 					<Button
 						asChild
 						className='order-1 lg:order-2 bg-background border border-gray-300 hover:bg-background text-foreground'
-						onClick={() => setOpenEditSheet(true)}
-					>
+						onClick={() => setOpenEditSheet(true)}>
 						<div className='w-full lg:w-fit text-xs font-medium flex items-center gap-2 cursor-pointer'>
 							<CirclePlus width={15} color='#6B7280' />
 							<p>New Agent</p>
@@ -55,16 +54,15 @@ export const AgentSelectDisplay = ({
 				</div>
 			</div>
 			<div className='gap-4 p-4 grid grid-cols-1 lg:grid-cols-3 md:grid-cols-2'>
-				{agentChoices?.map(agent => {
+				{agentChoices?.map((agent, index) => {
 					const agentTools = toolChoices.filter(tool =>
 						agent.toolIds.includes(tool._id.toString())
 					);
 
 					return (
 						<Card
-							key={agent._id.toString()}
-							className='w-full rounded-2xl py-2 px-4 gap-[21px] flex flex-col border-0 shadow-none lg:border lg:border-gray-200'
-						>
+							key={index}
+							className='w-full rounded-2xl py-2 px-4 gap-[21px] flex flex-col border-0 shadow-none lg:border lg:border-gray-200'>
 							<CardHeader>
 								<CardTitle>
 									<div className='flex flex-col gap-2'>
@@ -75,12 +73,11 @@ export const AgentSelectDisplay = ({
 								<CardDescription>{agent.role}</CardDescription>
 							</CardHeader>
 							<CardContent className='h-full overflow-auto max-h-[100px]'>
-								{agentTools?.map(tools => {
+								{agentTools?.map((tools, index) => {
 									return (
 										<div
-											key={tools.id}
-											className='bg-background flex items-center gap-1 py-1 px-2 rounded text-sm text-gray-500 font-medium'
-										>
+											key={index}
+											className='bg-background flex items-center gap-1 py-1 px-2 rounded text-sm text-gray-500 font-medium'>
 											{tools.type === ToolType.RAG_TOOL ? (
 												<Database width={15} color='#9CA3AF' />
 											) : (
@@ -95,8 +92,7 @@ export const AgentSelectDisplay = ({
 								<Button
 									onClick={() => setSelectedAgent(agent)}
 									asChild
-									className='w-full cursor-pointer bg-background border border-gray-300 mt-2 hover:bg-background text-foreground'
-								>
+									className='w-full cursor-pointer bg-background border border-gray-300 mt-2 hover:bg-background text-foreground'>
 									<p>Select</p>
 								</Button>
 							</CardFooter>

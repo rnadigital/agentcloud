@@ -53,7 +53,7 @@ export default function Variables(props) {
 
 			<VariableTable variables={filteredVariables} fetchVariables={fetchVariables} />
 
-			{variables.length === 0 && (
+			{/* {variables.length === 0 && (
 				<NewButtonSection
 					link={`/${resourceSlug}/variable/add`}
 					emptyMessage={'No variables'}
@@ -61,7 +61,7 @@ export default function Variables(props) {
 					buttonIcon={<PlusIcon className='-ml-0.5 mr-1.5 h-5 w-5' aria-hidden='true' />}
 					buttonMessage={'Add Variable'}
 				/>
-			)}
+			)} */}
 			<CreateVariableModal
 				open={createVariableOpen}
 				setOpen={setCreateVariableOpen}

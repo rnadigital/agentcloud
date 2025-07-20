@@ -477,6 +477,15 @@ export const AgentSheet = ({
 		}
 	}, []);
 
+	// Cleanup effect to reset pointer events when component unmounts
+	useEffect(() => {
+		return () => {
+			document.body.style.pointerEvents = 'auto';
+			document.body.style.cursor = 'auto';
+			document.body.style.overflow = 'visible';
+		};
+	}, []);
+
 	function showPreview(e: React.ChangeEvent<HTMLInputElement>) {
 		const file = e.target.files?.[0];
 		if (file) {
@@ -496,6 +505,7 @@ export const AgentSheet = ({
 			open={openEditSheet}
 			onOpenChange={open => {
 				setOpenEditSheet(open);
+
 				// Reset form state when sheet closes
 				if (!open) {
 					setToolState(null);
@@ -506,6 +516,11 @@ export const AgentSheet = ({
 					setIcon(null);
 					setAllowDelegation(false);
 					setVerbose(false);
+
+					// Reset body styles when sheet closes
+					document.body.style.pointerEvents = 'auto';
+					document.body.style.overflow = 'visible';
+					document.body.style.cursor = 'auto';
 				}
 			}}>
 			{modal}
@@ -527,7 +542,18 @@ export const AgentSheet = ({
 				</SheetTrigger>
 			)}
 
-			<SheetContent className='text-foreground sm:max-w-[576px] overflow-y-auto'>
+			<SheetContent
+				size='md'
+				className='text-foreground overflow-y-auto max-h-screen'
+				style={{
+					pointerEvents: 'auto'
+				}}
+				onPointerDownOutside={() => {
+					document.body.style.pointerEvents = 'auto';
+				}}
+				onEscapeKeyDown={() => {
+					document.body.style.pointerEvents = 'auto';
+				}}>
 				<SheetHeader>
 					<SheetTitle>
 						<div className='flex items-center gap-2'>
@@ -537,7 +563,7 @@ export const AgentSheet = ({
 							</p>
 						</div>
 					</SheetTitle>
-					<SheetDescription className='border-t border-gray-200 py-3 px-1'>
+					<div className='border-t border-gray-200 py-3 px-1'>
 						<form onSubmit={agentPost}>
 							<section className='pb-3 flex flex-col gap-4'>
 								<div className='flex justify-between gap-2'>
@@ -567,135 +593,6 @@ export const AgentSheet = ({
 										defaultValue={selectedAgent?.name || ''}
 										name='name'
 									/>
-								</div>
-
-								<div className='grid w-full items-center gap-1.5 relative'>
-									<Label className='text-gray-900 font-medium' htmlFor='role'>
-										Role
-									</Label>
-									<Textarea
-										name='role'
-										ref={autocompleteRole.inputRef}
-										className='bg-gray-50 border border-gray-300'
-										id='role'
-										placeholder='e.g. Data Analyst'
-										defaultValue={selectedAgent?.role || role}
-										rows={3}
-										value={autocompleteRole.text || selectedAgent?.role}
-										onChange={autocompleteRole.handleChange}
-										onKeyDown={autocompleteRole.handleKeyDown}
-									/>
-									{autocompleteRole.showDropdown && autocompleteRole.filteredOptions.length > 0 && (
-										<AutocompleteDropdown
-											closeDropdown={autocompleteRole.closeDropdown}
-											options={autocompleteRole.filteredOptions}
-											highlightedIndex={autocompleteRole.highlightedIndex}
-											dropdownPosition={autocompleteRole.dropdownPosition}
-											handleOptionSelect={autocompleteRole.handleOptionSelect}
-										/>
-									)}
-
-									<div className='flex gap-2 items-center text-xs'>
-										<p>Suggestions:</p>
-										<div className='flex items-center gap-2'>
-											<p
-												className='text-gray-900 py-1 px-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors'
-												onClick={() => setRole('Technical Support')}>
-												Technical Support
-											</p>
-											<p
-												className='text-gray-900 py-1 px-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors'
-												onClick={() => setRole('Code Helper')}>
-												Code Helper
-											</p>
-											<p
-												className='text-gray-900 py-1 px-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors'
-												onClick={() => setRole('API Integrator')}>
-												API Integrator
-											</p>
-										</div>
-									</div>
-								</div>
-
-								<div className='grid w-full items-center gap-1.5 relative'>
-									<Label className='text-gray-900 font-medium' htmlFor='goal'>
-										Goal
-									</Label>
-									<Textarea
-										name='goal'
-										ref={autocompleteGoal.inputRef}
-										id='goal'
-										className='resize-none h-20 bg-gray-50 border-gray-300'
-										placeholder='Extract actionable insights'
-										defaultValue={selectedAgent?.goal || goal}
-										value={autocompleteGoal.text || selectedAgent?.goal}
-										onChange={autocompleteGoal.handleChange}
-										onKeyDown={autocompleteGoal.handleKeyDown}
-									/>
-									{autocompleteGoal.showDropdown && autocompleteGoal.filteredOptions.length > 0 && (
-										<AutocompleteDropdown
-											closeDropdown={autocompleteGoal.closeDropdown}
-											options={autocompleteGoal.filteredOptions}
-											highlightedIndex={autocompleteGoal.highlightedIndex}
-											dropdownPosition={autocompleteGoal.dropdownPosition}
-											handleOptionSelect={autocompleteGoal.handleOptionSelect}
-										/>
-									)}
-								</div>
-
-								<div className='grid w-full items-center gap-1.5 relative'>
-									<Label className='text-gray-900 font-medium' htmlFor='backstory'>
-										Backstory
-									</Label>
-									<Textarea
-										name='backstory'
-										ref={autocompleteBackstory.inputRef}
-										id='backstory'
-										className='resize-none h-28 bg-gray-50 border-gray-300'
-										placeholder="e.g. You're a data analyst at a large company. You're responsible for analyzing data and providing insights to the business. You're currently working on a project to analyze the performance of our marketing campaigns."
-										defaultValue={selectedAgent?.backstory || backstory}
-										value={autocompleteBackstory.text || selectedAgent?.backstory}
-										onChange={autocompleteBackstory.handleChange}
-										onKeyDown={autocompleteBackstory.handleKeyDown}
-									/>
-									{autocompleteBackstory.showDropdown &&
-										autocompleteBackstory.filteredOptions.length > 0 && (
-											<AutocompleteDropdown
-												closeDropdown={autocompleteBackstory.closeDropdown}
-												options={autocompleteBackstory.filteredOptions}
-												highlightedIndex={autocompleteBackstory.highlightedIndex}
-												dropdownPosition={autocompleteBackstory.dropdownPosition}
-												handleOptionSelect={autocompleteBackstory.handleOptionSelect}
-											/>
-										)}
-								</div>
-
-								<div className='grid w-full items-center gap-1.5'>
-									<DropdownMenu>
-										<DropdownMenuTrigger className='bg-background border border-gray-300 flex items-center justify-between bg-gray-50 px-4 py-2 rounded-lg'>
-											<div className='flex items-center gap-2'>
-												<Cpu width={15} />
-												<p className='text-sm text-gray-900'>
-													{models?.find(m => m._id === modelId)?.name || 'Select Model'}
-												</p>
-											</div>
-											<ChevronDown width={25} color='#6B7280' />
-										</DropdownMenuTrigger>
-										<DropdownMenuContent>
-											{models?.map(model => (
-												<DropdownMenuItem
-													key={model._id.toString()}
-													onClick={() =>
-														setAgent(oldAgent => ({
-															...oldAgent,
-															modelId: model._id
-														}))
-													}>
-													{model.name}
-												</DropdownMenuItem>
-											))}
-										</DropdownMenuContent>
-									</DropdownMenu>
 								</div>
 
 								<div className='bg-gray-100 p-4 rounded-lg flex flex-col gap-2'>
@@ -757,7 +654,137 @@ export const AgentSheet = ({
 										/>
 									</div>
 								</div>
+
+								<div className='grid w-full items-center gap-1.5 relative'>
+									<Label className='text-gray-900 font-medium' htmlFor='role'>
+										Role
+									</Label>
+									<Textarea
+										name='role'
+										ref={autocompleteRole.inputRef}
+										className='bg-gray-50 border border-gray-300'
+										id='role'
+										placeholder='e.g. Data Analyst'
+										rows={3}
+										value={autocompleteRole.text || selectedAgent?.role || role}
+										onChange={autocompleteRole.handleChange}
+										onKeyDown={autocompleteRole.handleKeyDown}
+									/>
+									{autocompleteRole.showDropdown && autocompleteRole.filteredOptions.length > 0 && (
+										<AutocompleteDropdown
+											closeDropdown={autocompleteRole.closeDropdown}
+											options={autocompleteRole.filteredOptions}
+											highlightedIndex={autocompleteRole.highlightedIndex}
+											dropdownPosition={autocompleteRole.dropdownPosition}
+											handleOptionSelect={autocompleteRole.handleOptionSelect}
+										/>
+									)}
+
+									<div className='flex gap-2 items-center text-xs'>
+										<p>Suggestions:</p>
+										<div className='flex items-center gap-2'>
+											<p
+												className='text-gray-900 py-1 px-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors'
+												onClick={() => setRole('Technical Support')}>
+												Technical Support
+											</p>
+											<p
+												className='text-gray-900 py-1 px-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors'
+												onClick={() => setRole('Code Helper')}>
+												Code Helper
+											</p>
+											<p
+												className='text-gray-900 py-1 px-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors'
+												onClick={() => setRole('API Integrator')}>
+												API Integrator
+											</p>
+										</div>
+									</div>
+								</div>
+
+								<div className='grid w-full items-center gap-1.5 relative'>
+									<Label className='text-gray-900 font-medium' htmlFor='goal'>
+										Goal
+									</Label>
+									<Textarea
+										name='goal'
+										ref={autocompleteGoal.inputRef}
+										id='goal'
+										className='resize-none h-20 bg-gray-50 border-gray-300'
+										placeholder='Extract actionable insights'
+										value={autocompleteGoal.text || selectedAgent?.goal || goal}
+										onChange={autocompleteGoal.handleChange}
+										onKeyDown={autocompleteGoal.handleKeyDown}
+									/>
+									{autocompleteGoal.showDropdown && autocompleteGoal.filteredOptions.length > 0 && (
+										<AutocompleteDropdown
+											closeDropdown={autocompleteGoal.closeDropdown}
+											options={autocompleteGoal.filteredOptions}
+											highlightedIndex={autocompleteGoal.highlightedIndex}
+											dropdownPosition={autocompleteGoal.dropdownPosition}
+											handleOptionSelect={autocompleteGoal.handleOptionSelect}
+										/>
+									)}
+								</div>
+
+								<div className='grid w-full items-center gap-1.5 relative'>
+									<Label className='text-gray-900 font-medium' htmlFor='backstory'>
+										Backstory
+									</Label>
+									<Textarea
+										name='backstory'
+										ref={autocompleteBackstory.inputRef}
+										id='backstory'
+										className='resize-none h-28 bg-gray-50 border-gray-300'
+										placeholder="e.g. You're a data analyst at a large company. You're responsible for analyzing data and providing insights to the business. You're currently working on a project to analyze the performance of our marketing campaigns."
+										value={autocompleteBackstory.text || selectedAgent?.backstory || backstory}
+										onChange={autocompleteBackstory.handleChange}
+										onKeyDown={autocompleteBackstory.handleKeyDown}
+									/>
+									{autocompleteBackstory.showDropdown &&
+										autocompleteBackstory.filteredOptions.length > 0 && (
+											<AutocompleteDropdown
+												closeDropdown={autocompleteBackstory.closeDropdown}
+												options={autocompleteBackstory.filteredOptions}
+												highlightedIndex={autocompleteBackstory.highlightedIndex}
+												dropdownPosition={autocompleteBackstory.dropdownPosition}
+												handleOptionSelect={autocompleteBackstory.handleOptionSelect}
+											/>
+										)}
+								</div>
+
+								<div className='grid w-full items-center gap-1.5'>
+									<Label className='text-gray-900 font-medium' htmlFor='model'>
+										Model
+									</Label>
+									<DropdownMenu>
+										<DropdownMenuTrigger className='bg-background border border-gray-300 flex items-center justify-between bg-gray-50 px-4 py-2 rounded-lg'>
+											<div className='flex items-center gap-2'>
+												<Cpu width={15} />
+												<p className='text-sm text-gray-900'>
+													{models?.find(m => m._id === modelId)?.name || 'Select Model'}
+												</p>
+											</div>
+											<ChevronDown width={25} color='#6B7280' />
+										</DropdownMenuTrigger>
+										<DropdownMenuContent>
+											{models?.map(model => (
+												<DropdownMenuItem
+													key={model._id.toString()}
+													onClick={() =>
+														setAgent(oldAgent => ({
+															...oldAgent,
+															modelId: model._id
+														}))
+													}>
+													{model.name}
+												</DropdownMenuItem>
+											))}
+										</DropdownMenuContent>
+									</DropdownMenu>
+								</div>
 							</section>
+
 							<section className='border-t border-gray-200 pt-4 flex justify-between sticky bottom-0 bg-white text-sm'>
 								<Button
 									onClick={() => setOpenEditSheet(false)}
@@ -771,7 +798,7 @@ export const AgentSheet = ({
 								</Button>
 							</section>
 						</form>
-					</SheetDescription>
+					</div>
 				</SheetHeader>
 			</SheetContent>
 		</Sheet>
