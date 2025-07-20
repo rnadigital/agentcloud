@@ -477,6 +477,15 @@ export const AgentSheet = ({
 		}
 	}, []);
 
+	// Cleanup effect to reset pointer events when component unmounts
+	useEffect(() => {
+		return () => {
+			document.body.style.pointerEvents = 'auto';
+			document.body.style.cursor = 'auto';
+			document.body.style.overflow = 'visible';
+		};
+	}, []);
+
 	function showPreview(e: React.ChangeEvent<HTMLInputElement>) {
 		const file = e.target.files?.[0];
 		if (file) {
@@ -496,6 +505,7 @@ export const AgentSheet = ({
 			open={openEditSheet}
 			onOpenChange={open => {
 				setOpenEditSheet(open);
+
 				// Reset form state when sheet closes
 				if (!open) {
 					setToolState(null);
@@ -506,6 +516,30 @@ export const AgentSheet = ({
 					setIcon(null);
 					setAllowDelegation(false);
 					setVerbose(false);
+
+					// Force reset pointer events and cursor with delay
+					setTimeout(() => {
+						// Force reset pointer events if they're blocked
+						if (document.body.style.pointerEvents === 'none') {
+							document.body.style.pointerEvents = 'auto';
+						}
+
+						// Force reset overflow if it's hidden
+						if (document.body.style.overflow === 'hidden') {
+							document.body.style.overflow = 'visible';
+						}
+
+						// Additional cleanup for cursor
+						document.body.style.cursor = 'auto';
+
+						// Force cleanup of any remaining overlays
+						const overlays = document.querySelectorAll('[data-radix-dialog-overlay]');
+						overlays.forEach(overlay => {
+							if (overlay instanceof HTMLElement) {
+								overlay.style.pointerEvents = 'none';
+							}
+						});
+					}, 100);
 				}
 			}}>
 			{modal}
@@ -527,7 +561,19 @@ export const AgentSheet = ({
 				</SheetTrigger>
 			)}
 
-			<SheetContent size='md' className='text-foreground overflow-y-auto'>
+			<SheetContent
+				size='md'
+				className='text-foreground overflow-y-auto'
+				style={{
+					pointerEvents: 'auto',
+					overflow: 'visible'
+				}}
+				onPointerDownOutside={() => {
+					document.body.style.pointerEvents = 'auto';
+				}}
+				onEscapeKeyDown={() => {
+					document.body.style.pointerEvents = 'auto';
+				}}>
 				<SheetHeader>
 					<SheetTitle>
 						<div className='flex items-center gap-2'>
