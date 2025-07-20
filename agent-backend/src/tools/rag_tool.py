@@ -12,13 +12,13 @@ from models.mongo import Model, Tool, Datasource
 
 from vectorstores.factory import vectorstore_factory
 
-from langchain_community.vectorstores.qdrant import Qdrant #TODO: remove
-from langchain_community.vectorstores.pinecone import Pinecone #TODO: remove
+from langchain_community.vectorstores.qdrant import Qdrant  # TODO: remove
+from langchain_community.vectorstores.pinecone import Pinecone  # TODO: remove
 
 from .retrievers import BaseToolRetriever, retriever_factory
 
 
-###### INSTANTIATE FROM FACTORY CLASS (AT BOTTOM) UNLESS YOU KNOW REALLY MEAN IT ######
+# INSTANTIATE FROM FACTORY CLASS (AT BOTTOM) UNLESS YOU KNOW REALLY MEAN IT
 
 
 class RagToolArgsSchema(BaseModel):
@@ -42,7 +42,7 @@ class RagTool(GlobalBaseTool):
                          Document retrieval, where the result causes the entire related document
                          from the document store to be retrieved. Contextual compression is another example.
                          Results can be further filtered, re-ranked based on the document metadata.
-        
+
         further examples of pre and post processors: https://python.langchain.com/docs/modules/data_connection/retrievers/
     """
 
@@ -54,18 +54,23 @@ class RagTool(GlobalBaseTool):
     retriever: BaseToolRetriever
 
     @classmethod
-    def factory(cls, tool: Tool, datasources: List[Datasource], models: List[Tuple[Any, Model]],
-                llm: BaseLanguageModel = None) -> BaseTool:
+    def factory(
+        cls,
+        tool: Tool,
+        datasources: List[Datasource],
+        models: List[Tuple[Any, Model]],
+        llm: BaseLanguageModel = None,
+    ) -> BaseTool:
         assert len(datasources) == 1
         assert isinstance(datasources[0], Datasource)
 
         datasource = datasources[0]
 
-        assertion_message = f"The model for the datasource \"{datasource.name}\" used by RAG tool \"{tool.name}\" has an invalid or missing model."
+        assertion_message = f'The model for the datasource "{datasource.name}" used by RAG tool "{tool.name}" has an invalid or missing model.'
         assert len(models) == 1, assertion_message
         assert isinstance(models[0][0], Embeddings), assertion_message
         assert isinstance(models[0][1], Model), assertion_message
-        
+
         embedding_model = models[0][0]
 
         vector_db = datasource.vector_db if datasource.byoVectorDb else None
@@ -73,39 +78,60 @@ class RagTool(GlobalBaseTool):
         api_key = vector_db.apiKey if vector_db else None
         url = vector_db.url if vector_db else None
         namespace = datasource.namespace
-        collection = datasource.collectionName if datasource.byoVectorDb else datasource.region
+        collection = (
+            datasource.collectionName if datasource.byoVectorDb else datasource.region
+        )
 
-        vector_store = vectorstore_factory(embedding_model=embedding_model, collection_name=collection, tool=tool,  api_key=api_key, url=url, type=type, namespace=namespace, byoVectorDb=datasource.byoVectorDb)
+        vector_store = vectorstore_factory(
+            embedding_model=embedding_model,
+            collection_name=collection,
+            tool=tool,
+            api_key=api_key,
+            url=url,
+            type=type,
+            namespace=namespace,
+            byoVectorDb=datasource.byoVectorDb,
+        )
 
         # Check if llm is actually an embeddings object (which would cause the error)
-        if llm is not None and hasattr(llm, 'embed_query'):
-            print("WARNING: llm parameter is actually an embeddings object, falling back to raw retriever")
+        if llm is not None and hasattr(llm, "embed_query"):
+            print(
+                "WARNING: llm parameter is actually an embeddings object, falling back to raw retriever"
+            )
             # Temporarily change the retriever type to raw
             original_retriever_type = tool.retriever_type
             tool.retriever_type = "raw"
-            result = RagTool(name=tool.name,
-                           description=tool.description,
-                           retriever=retriever_factory(tool, vector_store, embedding_model, None))
+            result = RagTool(
+                name=tool.name,
+                description=tool.description,
+                retriever=retriever_factory(tool, vector_store, embedding_model, None),
+            )
             # Restore the original retriever type
             tool.retriever_type = original_retriever_type
             return result
 
         # If llm is None and we're using self_query retriever, fall back to raw retriever
         if llm is None and tool.retriever_type == "self_query":
-            print("WARNING: llm is None for self_query retriever, falling back to raw retriever")
+            print(
+                "WARNING: llm is None for self_query retriever, falling back to raw retriever"
+            )
             # Temporarily change the retriever type to raw
             original_retriever_type = tool.retriever_type
             tool.retriever_type = "raw"
-            result = RagTool(name=tool.name,
-                           description=tool.description,
-                           retriever=retriever_factory(tool, vector_store, embedding_model, llm))
+            result = RagTool(
+                name=tool.name,
+                description=tool.description,
+                retriever=retriever_factory(tool, vector_store, embedding_model, llm),
+            )
             # Restore the original retriever type
             tool.retriever_type = original_retriever_type
             return result
 
-        return RagTool(name=tool.name,
-                       description=tool.description,
-                       retriever=retriever_factory(tool, vector_store, embedding_model, llm))
+        return RagTool(
+            name=tool.name,
+            description=tool.description,
+            retriever=retriever_factory(tool, vector_store, embedding_model, llm),
+        )
 
     def __init__(self, **kwargs):
         # Monkey-patching `similarity_search` because that's what's called by
@@ -116,14 +142,22 @@ class RagTool(GlobalBaseTool):
 
     @staticmethod
     def extract_query_value(query):
-        res = re.findall('["\']?(?:query|text)["\']?:\s*["\']?([\w\s]+)["\']?', query)
+        res = re.findall("[\"']?(?:query|text)[\"']?:\s*[\"']?([\w\s]+)[\"']?", query)
         return res[0] if res else query
 
     def _run(self, query):
-        print(f"{self.__class__.__name__} received {query}")
+        # Ensure Unicode-safe printing
+        try:
+            print(f"{self.__class__.__name__} received {query}")
+        except UnicodeEncodeError:
+            print(f"{self.__class__.__name__} received {repr(query)}")
         # TODO: should figure a better way to do this... ideally using LLM itself
         query_value = self.extract_query_value(query)
-        print("query_value => ", query_value)
+        # Ensure Unicode-safe printing
+        try:
+            print("query_value => ", query_value)
+        except UnicodeEncodeError:
+            print("query_value => ", repr(query_value))
         """ Returns search results via configured retriever """
         return self.retriever.run(query_value)
 

@@ -1,21 +1,18 @@
-import sys
 from typing import Dict, Type
-from langchain.tools import BaseTool
 import json
-import subprocess
 
 from init.env_variables import GOOGLE_FUNCTION_LOCATION
-from langchain_core.pydantic_v1 import create_model, Field
+from langchain_core.pydantic_v1 import create_model
 from .global_tools import GlobalBaseTool
 from models.mongo import Tool
 
 
 import requests
-import os
 import google.oauth2.id_token
 import google.auth.transport.requests
 from google.cloud import logging_v2
 from google.api_core.exceptions import GoogleAPIError
+
 
 class GoogleCloudFunctionTool(GlobalBaseTool):
     """
@@ -26,6 +23,7 @@ class GoogleCloudFunctionTool(GlobalBaseTool):
         properties_dict (dict): dictionary of tool.data.parameters.properties { property_name: { type: string | number | boolean, ... } }
                                 this dict is used to create a dynamic pydantic model for "args_schema"
     """
+
     name: str = ""
     description: str = ""
     function_name: str
@@ -34,7 +32,10 @@ class GoogleCloudFunctionTool(GlobalBaseTool):
     function_id: str = None
 
     def post_init(self):
-        self.args_schema = create_model(f"{self.function_name}_model", **self.convert_args_dict_to_type(self.properties_dict))
+        self.args_schema = create_model(
+            f"{self.function_name}_model",
+            **self.convert_args_dict_to_type(self.properties_dict),
+        )
 
     @classmethod
     def factory(cls, tool: Tool, **kargs):
@@ -43,12 +44,16 @@ class GoogleCloudFunctionTool(GlobalBaseTool):
             description=tool.description,
             function_name=tool.data.name,
             code=tool.data.code,
-            properties_dict=tool.data.parameters.properties if tool.data.parameters.properties else [],
-            function_id=str(tool.functionId)
+            properties_dict=(
+                tool.data.parameters.properties
+                if tool.data.parameters.properties
+                else []
+            ),
+            function_id=str(tool.functionId),
         )
         google_cloud_function_tool.post_init()
         return google_cloud_function_tool
-    
+
     def convert_args_dict_to_type(self, args_schema: Dict):
         args_schema_pydantic = dict()
         for k, v in args_schema.items():
@@ -60,7 +65,11 @@ class GoogleCloudFunctionTool(GlobalBaseTool):
         for k, v in args.items():
             prop = self.properties_dict.get(k)
             if prop:
-                typed_args[k] = bool(v) if prop.type == "boolean" else (int(v) if prop.type == "integer" else str(v))
+                typed_args[k] = (
+                    bool(v)
+                    if prop.type == "boolean"
+                    else (int(v) if prop.type == "integer" else str(v))
+                )
                 return typed_args
 
     def query_log_entries(self, limit):
@@ -68,17 +77,17 @@ class GoogleCloudFunctionTool(GlobalBaseTool):
         filter_str = f'resource.type="cloud_run_revision" severity>=WARNING resource.labels.service_name="function-{self.function_id}"'
         try:
             entries = client.list_entries(
-                filter_=filter_str,
-                page_size=limit,
-                order_by='timestamp desc'
+                filter_=filter_str, page_size=limit, order_by="timestamp desc"
             )
             # Convert entries to a list to access the entries
             entries_list = list(entries)
-            combined_payloads = '\n'.join(entry.payload for entry in entries_list if entry.payload is not None)
+            combined_payloads = "\n".join(
+                entry.payload for entry in entries_list if entry.payload is not None
+            )
             return combined_payloads
         except GoogleAPIError as e:
             print(f"An error occurred: {e}")
-            return "" # TODO: what is a sensible value here?
+            return ""  # TODO: what is a sensible value here?
 
     def _run(self, **kwargs):
         typed_args = self.convert_str_args_to_correct_type(kwargs)
@@ -91,8 +100,11 @@ class GoogleCloudFunctionTool(GlobalBaseTool):
             TOKEN = google.oauth2.id_token.fetch_id_token(request, audience)
             r = requests.post(
                 audience,
-                headers={'Authorization': f"Bearer {TOKEN}", "Content-Type": "application/json"},
-                data=json.dumps(typed_args)
+                headers={
+                    "Authorization": f"Bearer {TOKEN}",
+                    "Content-Type": "application/json",
+                },
+                data=json.dumps(typed_args, ensure_ascii=False),
             )
             print(f"status code: {r.status_code}")
             print(f"response body: {r.text}")
