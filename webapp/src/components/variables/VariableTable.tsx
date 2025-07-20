@@ -40,7 +40,7 @@ export default function VariableTable({
 				},
 				() => {},
 				err => {
-					toast.error(err);
+					// toast.error(err);
 				},
 				router
 			);
@@ -89,33 +89,28 @@ export default function VariableTable({
 						<tr>
 							<th
 								scope='col'
-								className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'
-							>
+								className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'>
 								Name
 							</th>
 							<th
 								scope='col'
-								className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'
-							>
+								className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'>
 								Default Value
 							</th>
 							<th
 								scope='col'
-								className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'
-							>
+								className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'>
 								Created By
 							</th>
 							<th
 								scope='col'
-								className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'
-							>
+								className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'>
 								Created On
 							</th>
 
 							<th
 								scope='col'
-								className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'
-							>
+								className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-50'>
 								Actions
 							</th>
 						</tr>
@@ -130,12 +125,10 @@ export default function VariableTable({
 									deletingMap[variable._id]
 										? 'bg-red-400'
 										: 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-500 dark:text-gray-50'
-								)}
-							>
+								)}>
 								<td
 									className='px-6 py-4 whitespace-nowrap'
-									onClick={() => router.push(`/${resourceSlug}/variable/${variable._id}/edit`)}
-								>
+									onClick={() => router.push(`/${resourceSlug}/variable/${variable._id}/edit`)}>
 									<div className='text-sm text-gray-900 dark:text-white'>{variable.name}</div>
 								</td>
 								<td className='px-6 py-4 whitespace-nowrap'>
@@ -159,8 +152,7 @@ export default function VariableTable({
 											setDeletingVariable(variable);
 											setOpen(true);
 										}}
-										className='text-red-500 hover:text-red-700'
-									>
+										className='text-red-500 hover:text-red-700'>
 										<TrashIcon className='h-5 w-5' aria-hidden='true' />
 									</button>
 								</td>

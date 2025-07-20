@@ -517,29 +517,10 @@ export const AgentSheet = ({
 					setAllowDelegation(false);
 					setVerbose(false);
 
-					// Force reset pointer events and cursor with delay
-					setTimeout(() => {
-						// Force reset pointer events if they're blocked
-						if (document.body.style.pointerEvents === 'none') {
-							document.body.style.pointerEvents = 'auto';
-						}
-
-						// Force reset overflow if it's hidden
-						if (document.body.style.overflow === 'hidden') {
-							document.body.style.overflow = 'visible';
-						}
-
-						// Additional cleanup for cursor
-						document.body.style.cursor = 'auto';
-
-						// Force cleanup of any remaining overlays
-						const overlays = document.querySelectorAll('[data-radix-dialog-overlay]');
-						overlays.forEach(overlay => {
-							if (overlay instanceof HTMLElement) {
-								overlay.style.pointerEvents = 'none';
-							}
-						});
-					}, 100);
+					// Reset body styles when sheet closes
+					document.body.style.pointerEvents = 'auto';
+					document.body.style.overflow = 'visible';
+					document.body.style.cursor = 'auto';
 				}
 			}}>
 			{modal}
@@ -563,10 +544,9 @@ export const AgentSheet = ({
 
 			<SheetContent
 				size='md'
-				className='text-foreground overflow-y-auto'
+				className='text-foreground overflow-y-auto max-h-screen'
 				style={{
-					pointerEvents: 'auto',
-					overflow: 'visible'
+					pointerEvents: 'auto'
 				}}
 				onPointerDownOutside={() => {
 					document.body.style.pointerEvents = 'auto';
@@ -774,6 +754,9 @@ export const AgentSheet = ({
 								</div>
 
 								<div className='grid w-full items-center gap-1.5'>
+									<Label className='text-gray-900 font-medium' htmlFor='model'>
+										Model
+									</Label>
 									<DropdownMenu>
 										<DropdownMenuTrigger className='bg-background border border-gray-300 flex items-center justify-between bg-gray-50 px-4 py-2 rounded-lg'>
 											<div className='flex items-center gap-2'>
