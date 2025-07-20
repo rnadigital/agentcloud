@@ -639,9 +639,8 @@ export const AgentSheet = ({
 										className='bg-gray-50 border border-gray-300'
 										id='role'
 										placeholder='e.g. Data Analyst'
-										defaultValue={selectedAgent?.role || role}
 										rows={3}
-										value={autocompleteRole.text || selectedAgent?.role}
+										value={autocompleteRole.text || selectedAgent?.role || role}
 										onChange={autocompleteRole.handleChange}
 										onKeyDown={autocompleteRole.handleKeyDown}
 									/>
@@ -687,8 +686,7 @@ export const AgentSheet = ({
 										id='goal'
 										className='resize-none h-20 bg-gray-50 border-gray-300'
 										placeholder='Extract actionable insights'
-										defaultValue={selectedAgent?.goal || goal}
-										value={autocompleteGoal.text || selectedAgent?.goal}
+										value={autocompleteGoal.text || selectedAgent?.goal || goal}
 										onChange={autocompleteGoal.handleChange}
 										onKeyDown={autocompleteGoal.handleKeyDown}
 									/>
@@ -713,8 +711,7 @@ export const AgentSheet = ({
 										id='backstory'
 										className='resize-none h-28 bg-gray-50 border-gray-300'
 										placeholder="e.g. You're a data analyst at a large company. You're responsible for analyzing data and providing insights to the business. You're currently working on a project to analyze the performance of our marketing campaigns."
-										defaultValue={selectedAgent?.backstory || backstory}
-										value={autocompleteBackstory.text || selectedAgent?.backstory}
+										value={autocompleteBackstory.text || selectedAgent?.backstory || backstory}
 										onChange={autocompleteBackstory.handleChange}
 										onKeyDown={autocompleteBackstory.handleKeyDown}
 									/>
