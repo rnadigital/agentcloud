@@ -79,10 +79,10 @@ class CustomTimeWeightedVectorStoreRetriever(BaseRetriever):
         return datetime.datetime.now()
 
     def _get_combined_score(
-        self,
-        document: Document,
-        vector_relevance: Optional[float],
-        current_time: datetime.datetime,
+            self,
+            document: Document,
+            vector_relevance: Optional[float],
+            current_time: datetime.datetime,
     ) -> float:
         """Return the combined score for a document."""
         hours_passed = _get_hours_passed(
@@ -103,11 +103,7 @@ class CustomTimeWeightedVectorStoreRetriever(BaseRetriever):
         docs_and_scores = self.vectorstore.similarity_search_with_relevance_scores(
             query, **self.search_kwargs
         )
-        # Ensure Unicode-safe printing
-        try:
-            print(f"docs_and_scores: {docs_and_scores}")
-        except UnicodeEncodeError:
-            print(f"docs_and_scores: {repr(docs_and_scores)}")
+        print(f"docs_and_scores: {docs_and_scores}")
         results = {}
         for idx, (fetched_doc, relevance) in enumerate(docs_and_scores):
             if "buffer_idx" in fetched_doc.metadata:
@@ -135,7 +131,7 @@ class CustomTimeWeightedVectorStoreRetriever(BaseRetriever):
         return results
 
     def _get_rescored_docs(
-        self, docs_and_scores: Dict[Any, Tuple[Document, Optional[float]]]
+            self, docs_and_scores: Dict[Any, Tuple[Document, Optional[float]]]
     ) -> List[Document]:
         current_time = datetime.datetime.now()
         rescored_docs = [
@@ -154,22 +150,22 @@ class CustomTimeWeightedVectorStoreRetriever(BaseRetriever):
         # return result
 
     def _get_relevant_documents(
-        self, query: str, *, run_manager: CallbackManagerForRetrieverRun
+            self, query: str, *, run_manager: CallbackManagerForRetrieverRun
     ) -> List[Document]:
         docs_and_scores = {
             doc.metadata["buffer_idx"]: (doc, self.default_salience)
-            for doc in self.memory_stream[-self.k :]
+            for doc in self.memory_stream[-self.k:]
         }
         # If a doc is considered salient, update the salience score
         docs_and_scores.update(self.get_salient_docs(query))
         return self._get_rescored_docs(docs_and_scores)
 
     async def _aget_relevant_documents(
-        self, query: str, *, run_manager: AsyncCallbackManagerForRetrieverRun
+            self, query: str, *, run_manager: AsyncCallbackManagerForRetrieverRun
     ) -> List[Document]:
         docs_and_scores = {
             doc.metadata["buffer_idx"]: (doc, self.default_salience)
-            for doc in self.memory_stream[-self.k :]
+            for doc in self.memory_stream[-self.k:]
         }
         # If a doc is considered salient, update the salience score
         docs_and_scores.update(await self.aget_salient_docs(query))
@@ -192,7 +188,7 @@ class CustomTimeWeightedVectorStoreRetriever(BaseRetriever):
         return self.vectorstore.add_documents(dup_docs, **kwargs)
 
     async def aadd_documents(
-        self, documents: List[Document], **kwargs: Any
+            self, documents: List[Document], **kwargs: Any
     ) -> List[str]:
         """Add documents to vectorstore."""
         current_time = kwargs.get("current_time")

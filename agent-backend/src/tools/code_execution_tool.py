@@ -1,12 +1,12 @@
 import sys
 from typing import Dict, Type
+from langchain.tools import BaseTool
 import json
 import subprocess
 
-from langchain_core.pydantic_v1 import create_model
+from langchain_core.pydantic_v1 import create_model, Field
 from .global_tools import GlobalBaseTool
 from models.mongo import Tool
-
 
 class CodeExecutionTool(GlobalBaseTool):
     """
@@ -16,7 +16,6 @@ class CodeExecutionTool(GlobalBaseTool):
         properties_dict (dict): dictionary of tool.data.parameters.properties { proeprty_name: { type: string | number | boolean, ... } }
                                 this dict is used to create a dynamic pydantic model for "args_schema"
     """
-
     name: str = ""
     description: str = ""
     code: str
@@ -25,10 +24,8 @@ class CodeExecutionTool(GlobalBaseTool):
     args_schema: Type = None
 
     def post_init(self):
-        self.args_schema = create_model(
-            f"{self.function_name}_model",
-            **self.convert_args_dict_to_type(self.properties_dict),
-        )
+        self.args_schema = create_model(f"{self.function_name}_model", **self.convert_args_dict_to_type(self.properties_dict))
+
 
     @classmethod
     def factory(cls, tool: Tool, **kargs):
@@ -37,40 +34,30 @@ class CodeExecutionTool(GlobalBaseTool):
             description=tool.description,
             function_name=tool.data.name,
             code=tool.data.code,
-            properties_dict=(
-                tool.data.parameters.properties
-                if tool.data.parameters.properties
-                else []
-            ),
+            properties_dict=tool.data.parameters.properties if tool.data.parameters.properties else []
         )
         code_execution_tool.post_init()
         return code_execution_tool
-
+    
     def convert_args_dict_to_type(self, args_schema: Dict):
         args_schema_pydantic = dict()
         for k, v in args_schema.items():
-            args_schema_pydantic[k] = (str, None)
+            args_schema_pydantic[k]=((str, None))
         return args_schema_pydantic
-
+    
     def convert_str_args_to_correct_type(self, args):
         typed_args = dict()
         for k, v in args.items():
             prop = self.properties_dict[k]
             if prop:
-                typed_args[k] = (
-                    bool(v)
-                    if prop.type == "boolean"
-                    else (int(v) if prop.type == "integer" else str(v))
-                )
+                typed_args[k]=bool(v) if prop.type == "boolean" else (int(v) if prop.type == "integer" else str(v))
         return typed_args
-
+    
     def _run(self, args_str: Dict):
         args = json.loads(args_str)
         typed_args = self.convert_str_args_to_correct_type(args)
         indented_code = self.code.replace("\n", "\n    ")
-        function_parameters = ", ".join(
-            args.keys()
-        )  # Extract the keys as parameter names
+        function_parameters = ", ".join(args.keys())  # Extract the keys as parameter names
         formatted_function = f"""def {self.function_name}({function_parameters}):
     {indented_code}
 res = {self.function_name}({", ".join([f"{k}={repr(v)}" for k, v in typed_args.items()])})
@@ -79,16 +66,8 @@ print(res)
         if sys.platform != "win32":
             formatted_function = formatted_function.replace("\r\n", "\n")
         try:
-            output = subprocess.check_output(
-                ["python", "-c", formatted_function], timeout=5
-            )  # 5 seconds
-            # Decode output as UTF-8 and handle any encoding issues
-            try:
-                decoded_output = output.decode("utf-8")
-            except UnicodeDecodeError:
-                # Fallback to replace problematic characters
-                decoded_output = output.decode("utf-8", errors="replace")
-            print(decoded_output)
-            return decoded_output
+            output = subprocess.check_output(['python', '-c', formatted_function], timeout=5) # 5 seconds
+            print(output)
+            return output
         except TimeoutError:
-            return "Not data returned because the call to Code Execution Tool timedout"
+                return "Not data returned because the call to Code Execution Tool timedout"

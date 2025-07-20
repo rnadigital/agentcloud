@@ -2,7 +2,6 @@ import logging
 import signal
 import threading
 import time
-import sys
 
 from asyncio import CancelledError
 
@@ -12,13 +11,6 @@ from messaging.client import consume_tasks
 from init.env_variables import MAX_THREADS, LOG_LEVEL
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-
-# Configure logging to handle Unicode characters properly
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[logging.StreamHandler(sys.stdout)],
-)
 
 app_logger = logging.getLogger("app")
 
