@@ -1,4 +1,5 @@
 import os
+import ftfy
 
 from models.vectordatabase import VectorDatabase
 from langchain_core.embeddings import Embeddings
@@ -54,21 +55,41 @@ def vectorstore_factory(
 
             def custom_init(cls, host: str = None, **kwargs: Any) -> None:
                 cls.host = host
-                cls.middleware: MiddlewareT = BaseMiddleware()
+                cls.middleware = BaseMiddleware()
                 if "vector_name" in kwargs:
                     kwargs.pop("vector_name")
                     kwargs.pop("filter")
-                cls._client = Client(**kwargs)
+
+                # Clean kwargs to remove problematic Unicode characters
+                cleaned_kwargs = {}
+                for key, value in kwargs.items():
+                    if isinstance(value, str):
+                        cleaned_value = ftfy.fix_text(value)
+                        cleaned_kwargs[key] = cleaned_value
+                    else:
+                        cleaned_kwargs[key] = value
+
+                cls._client = Client(**cleaned_kwargs)
 
             ApiClient.__init__ = custom_init
 
             def a_custom_imit(self, host: str = None, **kwargs: Any) -> None:
                 self.host = host
-                self.middleware: AsyncMiddlewareT = BaseAsyncMiddleware()
+                self.middleware = BaseAsyncMiddleware()
                 if "vector_name" in kwargs:
                     kwargs.pop("vector_name")
                     kwargs.pop("filter")
-                self._async_client = AsyncClient(**kwargs)
+
+                # Clean kwargs to remove problematic Unicode characters
+                cleaned_kwargs = {}
+                for key, value in kwargs.items():
+                    if isinstance(value, str):
+                        cleaned_value = ftfy.fix_text(value)
+                        cleaned_kwargs[key] = cleaned_value
+                    else:
+                        cleaned_kwargs[key] = value
+
+                self._async_client = AsyncClient(**cleaned_kwargs)
 
             AsyncApiClient.__init__ = a_custom_imit
 
@@ -186,20 +207,7 @@ def vectorstore_factory(
             Qdrant.similarity_search_with_score_by_vector = (
                 similarity_search_with_score_by_vector_with_filter
             )
-            # Safely log Qdrant arguments, handling potential Unicode characters
-            try:
-                safe_url = str(url) if url else "None"
-                safe_api_key = str(api_key) if api_key else "None"
-                safe_collection_name = (
-                    str(collection_name) if collection_name else "None"
-                )
-                print(
-                    f"Using arguments for Qdrant: {safe_url} {safe_api_key} {safe_collection_name}"
-                )
-            except UnicodeEncodeError as e:
-                print(
-                    f"Using arguments for Qdrant: [URL: {'None' if url is None else 'Present'}] [API_KEY: {'None' if api_key is None else 'Present'}] [COLLECTION: {'None' if collection_name is None else 'Present'}] (Unicode encoding error: {e})"
-                )
+            print("Using arguments for Qdrant:", url, api_key, collection_name)
 
             return Qdrant.from_existing_collection(
                 embedding=embedding_model,
