@@ -60,6 +60,8 @@ def vectorstore_factory(
                     kwargs.pop("vector_name")
                     kwargs.pop("filter")
 
+                print(f"Before ftfy - kwargs: {kwargs}")
+
                 # Clean kwargs to remove problematic Unicode characters
                 cleaned_kwargs = {}
                 for key, value in kwargs.items():
@@ -68,6 +70,8 @@ def vectorstore_factory(
                         cleaned_kwargs[key] = cleaned_value
                     else:
                         cleaned_kwargs[key] = value
+
+                print(f"After ftfy - cleaned_kwargs: {cleaned_kwargs}")
 
                 cls._client = Client(**cleaned_kwargs)
 
@@ -80,6 +84,8 @@ def vectorstore_factory(
                     kwargs.pop("vector_name")
                     kwargs.pop("filter")
 
+                print(f"Before ftfy (async) - kwargs: {kwargs}")
+
                 # Clean kwargs to remove problematic Unicode characters
                 cleaned_kwargs = {}
                 for key, value in kwargs.items():
@@ -88,6 +94,8 @@ def vectorstore_factory(
                         cleaned_kwargs[key] = cleaned_value
                     else:
                         cleaned_kwargs[key] = value
+
+                print(f"After ftfy (async) - cleaned_kwargs: {cleaned_kwargs}")
 
                 self._async_client = AsyncClient(**cleaned_kwargs)
 
