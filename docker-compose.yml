@@ -79,8 +79,8 @@ services:
       - AGENT_BACKEND_SOCKET_TOKEN=changeme
       - PROJECT_ID=${PROJECT_ID}
       - FROM_EMAIL_ADDRESS=noreply@agentcloud.dev
-      - WEBAPP_WEBHOOK_HOST=http://webapp_next:3000
-      - URL_APP=http://127.0.0.1:3000
+      - WEBAPP_WEBHOOK_HOST=http://localhost:3000
+      - URL_APP=http://localhost:3000
       - DEBUG=webapp:*
       - STRIPE_WEBHOOK_SECRET=
       - STRIPE_ACCOUNT_SECRET=
@@ -174,7 +174,7 @@ services:
       - LOCAL=True
       - MAX_THREADS=50
       - BASE_PATH=/app
-      - SOCKET_URL=http://webapp_next:3000/
+      - SOCKET_URL=http://host.docker.internal:3000
       - DB_URL=mongodb://docker_mongo:27017/test
       - REDIS_HOST=docker_redis
       - QDRANT_HOST=http://qdrant
@@ -224,7 +224,7 @@ services:
       - QDRANT_PORT=6334
       - REDIS_HOST=docker_redis
       - REDIS_PORT=6379
-      - WEBAPP_HOST=webapp_next
+      - WEBAPP_HOST=localhost
       - THREAD_PERCENTAGE_UTILISATION=0.8
       - USE_GPU=false
       - LOGGING_LEVEL=warn
