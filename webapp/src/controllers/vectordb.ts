@@ -12,6 +12,14 @@ import {
 import toObjectId from 'misc/toobjectid';
 import { VectorDb } from 'struct/vectordb';
 
+function cleanTextInput(text: string): string {
+	if (!text) return text;
+	return text
+		.replace(/[\u2028\u2029\u0085]/g, '') // Remove line separators and next line
+		.replace(/[\u200B-\u200D\uFEFF]/g, '') // Remove zero-width spaces
+		.trim(); // Remove leading/trailing whitespace
+}
+
 export async function vectorDbsData(req, res, _next) {
 	const vectorDbs = await getVectorDbsByTeam(req.params.resourceSlug);
 	return {
@@ -69,10 +77,10 @@ export async function addVectorDbApi(req, res, next) {
 	const newVectorDb: VectorDb = {
 		orgId: toObjectId(res.locals.matchingOrg.id),
 		teamId: toObjectId(req.params.resourceSlug),
-		apiKey: req.body.apiKey,
-		url: req.body.url,
-		type: req.body.type,
-		name: req.body.name
+		apiKey: cleanTextInput(req.body.apiKey),
+		url: cleanTextInput(req.body.url),
+		type: cleanTextInput(req.body.type),
+		name: cleanTextInput(req.body.name)
 	};
 
 	try {
@@ -89,10 +97,10 @@ export async function addVectorDbApi(req, res, next) {
  */
 export async function editVectorDbApi(req, res, next) {
 	const updatedVectorDB: Partial<VectorDb> = {
-		type: req.body.type,
-		apiKey: req.body.apiKey,
-		url: req.body.url,
-		name: req.body.name
+		type: cleanTextInput(req.body.type),
+		apiKey: cleanTextInput(req.body.apiKey),
+		url: cleanTextInput(req.body.url),
+		name: cleanTextInput(req.body.name)
 	};
 
 	await updateVectorDb(req.params.vectorDbId, updatedVectorDB);
