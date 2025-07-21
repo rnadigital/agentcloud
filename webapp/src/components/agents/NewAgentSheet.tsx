@@ -174,7 +174,7 @@ export const AgentSheet = ({
 				initialDatasources: []
 			}
 		);
-		setToolState(initialTools.length > 0 ? initialTools : null);
+		setToolState(initialTools.length > 0 ? initialTools.map(t => t.value) : []);
 		if (models && models.length > 0 && !modelId) {
 			setAgent({
 				...agentState,
@@ -183,7 +183,7 @@ export const AgentSheet = ({
 			});
 		}
 
-		setDatasourceState(initialDatasources.length > 0 ? initialDatasources : null);
+		setDatasourceState(initialDatasources.length > 0 ? initialDatasources.map(d => d.value) : []);
 	}, [cloneState?.agent?._id]);
 
 	const { initialTools, initialDatasources } = (cloneState?.agent?.toolIds || []).reduce(
@@ -194,30 +194,24 @@ export const AgentSheet = ({
 		}
 	);
 
-	const [toolState, setToolState] = useState(() => {
+	const [toolState, setToolState] = useState<string[]>(() => {
 		if (selectedAgentTools) {
 			const formattedTools = selectedAgentTools
 				.filter(tool => tool.type !== ToolType.RAG_TOOL)
-				.map(tool => ({
-					label: tool.name,
-					value: tool._id.toString()
-				}));
-			return formattedTools.length > 0 ? formattedTools : null;
+				.map(tool => tool._id.toString());
+			return formattedTools.length > 0 ? formattedTools : [];
 		}
-		return initialTools.length > 0 ? initialTools : null;
+		return initialTools.length > 0 ? initialTools.map(t => t.value) : [];
 	});
 
-	const [datasourceState, setDatasourceState] = useState(() => {
+	const [datasourceState, setDatasourceState] = useState<string[]>(() => {
 		if (selectedAgentTools) {
 			const formattedDatasources = selectedAgentTools
 				.filter(tool => tool.type === ToolType.RAG_TOOL)
-				.map(tool => ({
-					label: tool.name,
-					value: tool._id.toString()
-				}));
-			return formattedDatasources.length > 0 ? formattedDatasources : null;
+				.map(tool => tool._id.toString());
+			return formattedDatasources.length > 0 ? formattedDatasources : [];
 		}
-		return initialDatasources.length > 0 ? initialDatasources : null;
+		return initialDatasources.length > 0 ? initialDatasources.map(d => d.value) : [];
 	});
 
 	useEffect(() => {
@@ -249,7 +243,7 @@ export const AgentSheet = ({
 			if (selectedAgentTools) {
 				const { initialTools, initialDatasources } = selectedAgentTools.reduce(
 					(acc, tool) => {
-						const toolValue = tool._id;
+						const toolValue = tool._id.toString();
 						if (tool.type !== ToolType.RAG_TOOL) {
 							acc.initialTools.push(toolValue);
 						} else {
@@ -259,8 +253,8 @@ export const AgentSheet = ({
 					},
 					{ initialTools: [], initialDatasources: [] }
 				);
-				setToolState(initialTools.length > 0 ? initialTools : null);
-				setDatasourceState(initialDatasources.length > 0 ? initialDatasources : null);
+				setToolState(initialTools.length > 0 ? initialTools : []);
+				setDatasourceState(initialDatasources.length > 0 ? initialDatasources : []);
 			}
 		}
 	}, [selectedAgent, selectedAgentTools]);
@@ -280,7 +274,7 @@ export const AgentSheet = ({
 			role: e.target.role.value,
 			goal: e.target.goal.value,
 			backstory: e.target.backstory.value,
-			toolIds: [...(toolState || []), ...(datasourceState.map(d => d.value) || [])],
+			toolIds: [...toolState, ...datasourceState],
 			iconId: icon?.id,
 			variableIds:
 				Array.from(
@@ -295,57 +289,67 @@ export const AgentSheet = ({
 
 		posthog.capture(editing ? 'updateAgent' : 'createAgent', {
 			name: e.target.name.value,
-			tools: (toolState || []).length,
-			datasources: (datasourceState || []).length,
+			tools: toolState.length,
+			datasources: datasourceState.length,
 			modelId,
 			functionModelId
 		});
 
 		if (editing) {
-			await API.editAgent(
-				agentState._id,
-				body,
-				() => {
-					toast.success('Agent Updated');
-					setOpenEditSheet(false);
-					// Reset all form state
-					setToolState(null);
-					setDatasourceState(null);
-					setBackstory('');
-					setGoal('');
-					setRole('');
-					setIcon(null);
-					setAllowDelegation(false);
-					setVerbose(false);
-					callback && callback(agentState._id.toString(), body);
-				},
-				res => {
-					toast.error(res);
-				},
-				null
-			);
+			try {
+				await API.editAgent(
+					agentState._id,
+					body,
+					() => {
+						toast.success('Agent Updated');
+						setOpenEditSheet(false);
+						// Reset all form state
+						setToolState([]);
+						setDatasourceState([]);
+						setBackstory('');
+						setGoal('');
+						setRole('');
+						setIcon(null);
+						setAllowDelegation(false);
+						setVerbose(false);
+						// Refresh agent list
+						fetchAgentFormData();
+						callback && callback(agentState._id.toString(), body);
+					},
+					res => {
+						toast.error(res);
+					},
+					null
+				);
+			} catch (error) {}
 		} else {
-			const addedAgent: any = await API.addAgent(
-				body,
-				() => {
-					toast.success('Added new agent');
-					setOpenEditSheet(false);
-					// Reset all form state
-					setToolState(null);
-					setDatasourceState(null);
-					setBackstory('');
-					setGoal('');
-					setRole('');
-					setIcon(null);
-					setAllowDelegation(false);
-					setVerbose(false);
-					callback && addedAgent && callback(addedAgent._id, body);
-				},
-				res => {
-					toast.error(res);
-				},
-				null
-			);
+			try {
+				const addedAgent: any = await API.addAgent(
+					body,
+					() => {},
+					res => {
+						toast.error(res);
+					},
+					router
+				);
+
+				toast.success('Added new agent');
+				setOpenEditSheet(false);
+				// Reset all form state
+				setToolState([]);
+				setDatasourceState([]);
+				setBackstory('');
+				setGoal('');
+				setRole('');
+				setIcon(null);
+				setAllowDelegation(false);
+				setVerbose(false);
+				// Refresh agent list
+				fetchAgentFormData();
+				callback && addedAgent && callback(addedAgent._id, body);
+			} catch (error) {
+				console.log('API call failed with error:', error);
+			}
 		}
 	}
 
@@ -363,7 +367,7 @@ export const AgentSheet = ({
 
 	async function createDatasourceCallback(createdDatasource) {
 		(await fetchAgentFormData) && fetchAgentFormData();
-		setDatasourceState({ label: createdDatasource.name, value: createdDatasource.datasourceId });
+		setDatasourceState([createdDatasource.datasourceId]);
 		setModalOpen(false);
 	}
 
@@ -508,8 +512,8 @@ export const AgentSheet = ({
 
 				// Reset form state when sheet closes
 				if (!open) {
-					setToolState(null);
-					setDatasourceState(null);
+					setToolState([]);
+					setDatasourceState([]);
 					setBackstory('');
 					setGoal('');
 					setRole('');
@@ -627,7 +631,7 @@ export const AgentSheet = ({
 												const formattedValues = Array.isArray(values) ? values : [];
 												setToolState(formattedValues);
 											}}
-											value={toolState || []}
+											value={toolState}
 										/>
 
 										<MultiSelect
@@ -650,7 +654,7 @@ export const AgentSheet = ({
 												const formattedValues = Array.isArray(values) ? values : [];
 												setDatasourceState(formattedValues);
 											}}
-											value={datasourceState || []}
+											value={datasourceState}
 										/>
 									</div>
 								</div>
